@@ -2,8 +2,9 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -147,6 +148,10 @@ export default function UnitPage() {
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
   const [isReportDialog, setIsReportDialog] = useState(false);
   
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+
   useEffect(() => {
     const unitCode = searchParams.get('unitCode');
     if (unitCode) {
@@ -238,7 +243,14 @@ export default function UnitPage() {
     setIsSaving(true);
     try {
       // Note: In a real app, file uploads for custom fields would need special handling (e.g., upload to a storage service)
-      const result = await saveUnitData({ unitData, particulars, customFieldsData });
+      const dataToSave = {
+        unitData,
+        particulars,
+        customFieldsData,
+        unitPhoto: uploadedImage // In a real app, you'd upload the file and save the URL
+      };
+
+      const result = await saveUnitData(dataToSave);
       if (result.success) {
         toast({
           title: "Success",
@@ -268,7 +280,7 @@ export default function UnitPage() {
   }
 
   const handleCloseClick = () => {
-    router.push('/property/units');
+    router.push('/');
   };
 
   const handleDelete = () => {
@@ -345,6 +357,29 @@ export default function UnitPage() {
     const dataString = encodeURIComponent(JSON.stringify(reportData));
     router.push(`/property/unit/report?data=${dataString}`);
     setIsReportDialog(false);
+  };
+
+  const handleFileSelect = (file: File | null) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Invalid File",
+            description: "Please select an image file."
+        })
+    }
+  };
+
+  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!isEditing) return;
+    const file = e.dataTransfer.files?.[0];
+    handleFileSelect(file || null);
   };
   
   const pageTitle = searchParams.get('unitCode') ? 'Edit Unit' : 'Add New Unit';
@@ -603,26 +638,44 @@ export default function UnitPage() {
               {/* Photo Upload Section */}
               {visibleSections.photoUpload && (
                 <div className="col-span-1 md:col-span-3 mt-6">
-                    <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <div 
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 relative"
+                    onDrop={handleImageDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                  >
+                    {uploadedImage ? (
+                      <Image src={uploadedImage} alt="Unit preview" layout="fill" objectFit="contain" className="rounded-lg" />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 mb-4 text-gray-500" />
                         <p className="mb-2 text-sm text-gray-500">
-                            Drag a photo here
+                          <span className="font-semibold">Click to upload</span> or drag and drop
                         </p>
-                        </div>
-                    </div>
-                    <div className="flex justify-center mt-2 gap-2">
-                         <Button variant="link" size="sm" disabled={!isEditing}>
-                            <Upload className="mr-2 h-4 w-4" /> Upload
-                        </Button>
-                        <Button variant="link" size="sm" className="text-destructive" disabled={!isEditing}>
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </Button>
-                         <Button variant="link" size="sm" disabled={!isEditing}>
-                            Pop-Up
-                        </Button>
-                    </div>
+                        <p className="text-xs text-gray-500">PNG, JPG, or GIF (MAX. 800x400px)</p>
+                      </div>
+                    )}
+                    <Input 
+                      ref={fileInputRef}
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div className="flex justify-center mt-2 gap-2">
+                    <Button variant="link" size="sm" disabled={!isEditing} onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="mr-2 h-4 w-4" /> Upload
+                    </Button>
+                    <Button variant="link" size="sm" className="text-destructive" disabled={!isEditing || !uploadedImage} onClick={() => setUploadedImage(null)}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </Button>
+                    <Button variant="link" size="sm" disabled={!isEditing}>
+                      Pop-Up
+                    </Button>
+                  </div>
                 </div>
-                )}
+              )}
                 
               {visibleSections.discountAndRent && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
@@ -1163,20 +1216,20 @@ export default function UnitPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {customFields.map((field) => (
-                    <FormItem key={field.id} className="space-y-2">
-                      <Label htmlFor={field.id}>{field.label}</Label>
-                      <Input
-                        id={field.id}
-                        type={field.type}
-                        disabled={!isEditing}
-                        value={field.type !== 'file' ? customFieldsData[field.id] || '' : undefined}
-                        onChange={(e) =>
-                          handleCustomFieldChange(
-                            field.id,
-                            field.type === 'file' ? e.target.files : e.target.value
-                          )
-                        }
-                      />
+                     <FormItem key={field.id}>
+                        <Label htmlFor={field.id}>{field.label}</Label>
+                        <Input
+                            id={field.id}
+                            type={field.type}
+                            disabled={!isEditing}
+                            value={field.type !== 'file' ? customFieldsData[field.id] || '' : undefined}
+                            onChange={(e) =>
+                            handleCustomFieldChange(
+                                field.id,
+                                field.type === 'file' ? e.target.files : e.target.value
+                            )
+                            }
+                        />
                     </FormItem>
                   ))}
                 </div>
@@ -1213,3 +1266,5 @@ export default function UnitPage() {
     </div>
   );
 }
+
+    
