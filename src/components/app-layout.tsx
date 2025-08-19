@@ -202,12 +202,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === '/financials'}
-                tooltip="Finance"
+                isActive={pathname === '/landlord-management'}
+                tooltip="Landlord Management"
               >
-                <Link href="/financials">
-                  <Banknote />
-                  <span>Finance</span>
+                <Link href="/landlord-management">
+                  <UserCog />
+                  <span>Landlord Management</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -407,7 +407,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger asChild>
-                <Link href="/workflow" className="flex items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground cursor-pointer">
+                <Link href="/workflow" className={cn(buttonVariants({ variant: 'ghost' }), "flex items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground h-10 border-0 cursor-pointer")}>
                   <GitBranchPlus className="h-4 w-4 mr-2" />
                   Document Flow
                 </Link>
