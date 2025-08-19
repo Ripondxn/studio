@@ -1121,7 +1121,8 @@ export default function UnitPage() {
                         id={field.id}
                         type={field.type}
                         disabled={!isEditing}
-                        value={customFieldsData[field.id] || ''}
+                        value={field.type !== 'file' ? customFieldsData[field.id] || '' : undefined}
+                        defaultValue={field.type === 'file' ? '' : undefined}
                         onChange={(e) =>
                           handleCustomFieldChange(
                             field.id,
