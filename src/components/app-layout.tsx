@@ -218,12 +218,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
           <Menubar className="border-t-0 border-x-0 rounded-none h-auto">
             <MenubarMenu>
-                <Link href="/" passHref>
-                  <MenubarTrigger className="cursor-pointer">
-                    <Home className="h-4 w-4 mr-2" />
-                    HOME
-                  </MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer" asChild>
+                <Link href="/">
+                  <Home className="h-4 w-4 mr-2" />
+                  HOME
                 </Link>
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
