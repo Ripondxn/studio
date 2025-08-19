@@ -45,6 +45,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function UnitPage() {
   return (
@@ -531,7 +532,57 @@ export default function UnitPage() {
                   </div>
                  </TabsContent>
                  <TabsContent value="unit-other-details">
-                  <div className="p-4 border rounded-md mt-2 text-muted-foreground">Other unit details will be shown here.</div>
+                  <div className="p-4 border rounded-md mt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="other-unit-no">Unit No.</Label>
+                          <Input id="other-unit-no" />
+                        </div>
+                        <div>
+                          <Label htmlFor="other-area-sqft">Area (SQFT)</Label>
+                          <Input id="other-area-sqft" type="number" />
+                        </div>
+                        <div>
+                          <Label htmlFor="other-landlord">Landlord</Label>
+                          <Input id="other-landlord" />
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="other-building">Building</Label>
+                          <Input id="other-building" />
+                        </div>
+                        <div>
+                          <Label htmlFor="other-location">Location</Label>
+                          <Input id="other-location" />
+                        </div>
+                        <div>
+                          <Label htmlFor="other-sub-location">Sub Location</Label>
+                          <Input id="other-sub-location" />
+                        </div>
+                      </div>
+                       <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="other-status">Status</Label>
+                           <Select>
+                            <SelectTrigger id="other-status">
+                              <SelectValue placeholder="Select Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="available">Available</SelectItem>
+                              <SelectItem value="occupied">Occupied</SelectItem>
+                              <SelectItem value="maintenance">Maintenance</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="other-remarks">Remarks</Label>
+                          <Textarea id="other-remarks" placeholder="Enter remarks" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                  </TabsContent>
                  <TabsContent value="payables">
                   <div className="p-4 border rounded-md mt-2 text-muted-foreground">Payables details will be shown here.</div>
@@ -604,5 +655,3 @@ export default function UnitPage() {
     </div>
   );
 }
-
-    
