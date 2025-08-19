@@ -307,7 +307,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Building2 className="h-4 w-4 mr-2" />
                 PROPERTY
               </MenubarTrigger>
-              <MenubarContent className="w-screen max-w-6xl bg-popover/25 backdrop-blur-lg">
+              <MenubarContent className="w-screen max-w-6xl bg-transparent backdrop-blur-lg">
                 <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
                   <div>
                     <h3 className="font-bold text-sm mb-2">Properties</h3>
