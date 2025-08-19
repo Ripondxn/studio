@@ -409,18 +409,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 PROJECTS
               </MenubarTrigger>
             </MenubarMenu>
-            <MenubarMenu>
+             <MenubarMenu>
               <MenubarTrigger asChild className="cursor-pointer">
                 <Link href="/workflow">
                   <GitBranchPlus className="h-4 w-4 mr-2" />
                   Document Flow
                 </Link>
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <Heart className="h-4 w-4 mr-2" />
-                Favorites
               </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
