@@ -186,6 +186,7 @@ const initialPropertyData = {
 
 export default function PropertyPage() {
   const [isEditing, setIsEditing] = useState(false);
+  const [isNewRecord, setIsNewRecord] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isFinding, setIsFinding] = useState(false);
   const { toast } = useToast();
@@ -243,10 +244,14 @@ export default function PropertyPage() {
   useEffect(() => {
     const propertyCode = searchParams.get('code');
     if (propertyCode) {
+      setIsNewRecord(false);
       setPropertyData(prev => ({...prev, code: propertyCode}));
       handleFindClick(propertyCode);
     } else {
+        setIsNewRecord(true);
         setIsEditing(true); 
+        setInitialData(initialPropertyData);
+        setPropertyData(initialPropertyData);
     }
   }, [searchParams]);
 
@@ -517,7 +522,7 @@ export default function PropertyPage() {
       if (result.success) {
         toast({
           title: "Success",
-          description: "Property data saved successfully.",
+          description: `Property data for "${propertyData.name}" saved successfully.`,
         });
         setIsEditing(false);
         setInitialData(propertyData);
@@ -531,6 +536,9 @@ export default function PropertyPage() {
         setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
         setInitialNotes(JSON.parse(JSON.stringify(notes)));
         setInitialAgents(JSON.parse(JSON.stringify(agents)));
+        if (isNewRecord) {
+            router.push(`/property/properties/list`);
+        }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -546,22 +554,22 @@ export default function PropertyPage() {
   }
 
   const handleCancelClick = () => {
-     if (isEditing) {
-      setPropertyData(initialData);
-      setParticulars(initialParticulars);
-      setVatItems(initialVatItems);
-      setOtherDetails(initialOtherDetails);
-      setSpecialConditions(initialSpecialConditions);
-      setAttachments(initialAttachments);
-      setParkings(initialParkings);
-      setAssignments(initialAssignments);
-      setShareHolders(initialShareHolders);
-      setNotes(initialNotes);
-      setAgents(initialAgents);
-      setIsEditing(false);
-    } else {
-      router.push('/property/properties/list');
-    }
+     if (isNewRecord) {
+        router.push('/property/properties/list');
+     } else {
+        setPropertyData(initialData);
+        setParticulars(initialParticulars);
+        setVatItems(initialVatItems);
+        setOtherDetails(initialOtherDetails);
+        setSpecialConditions(initialSpecialConditions);
+        setAttachments(initialAttachments);
+        setParkings(initialParkings);
+        setAssignments(initialAssignments);
+        setShareHolders(initialShareHolders);
+        setNotes(initialNotes);
+        setAgents(initialAgents);
+        setIsEditing(false);
+     }
   }
 
   const handleFindClick = async (code?: string) => {
@@ -644,7 +652,7 @@ export default function PropertyPage() {
     handleFileSelect(file || null);
   };
   
-  const pageTitle = searchParams.get('code') ? 'Edit Property' : 'Add New Property';
+  const pageTitle = isNewRecord ? 'Add New Property' : 'Edit Property';
 
 
   return (
@@ -697,9 +705,9 @@ export default function PropertyPage() {
                   <div className="flex items-end gap-2">
                     <div className="flex-grow">
                         <Label htmlFor="code">Code</Label>
-                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isEditing && !!searchParams.get('code')} />
+                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord && !isEditing} />
                     </div>
-                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || (!!searchParams.get('code') && !isEditing)}>
+                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || isEditing}>
                         {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                     </Button>
                   </div>
