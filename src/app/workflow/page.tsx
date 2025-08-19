@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   File,
   User,
@@ -47,6 +47,8 @@ import {
 import { type Transaction, type Role, type Status, type ApprovalHistory } from './types';
 import { transactions as initialTransactions } from './data';
 import { format } from 'date-fns';
+import { type UserRole } from '@/app/admin/user-roles/schema';
+import { useRouter } from 'next/navigation';
 
 const statusConfig: {
   [key in Status]: {
@@ -75,6 +77,9 @@ const roleIcons: { [key in Role]: React.ReactNode } = {
   USER: <User className="h-5 w-5" />,
   ADMIN: <Shield className="h-5 w-5" />,
   SUPER_ADMIN: <UserCheck className="h-5 w-5" />,
+  // Add other roles as needed, or a default
+  'Property Manager': <User className="h-5 w-5" />,
+  'Accountant': <User className="h-5 w-5" />,
 };
 
 const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHistory[], transactionId: string }) => {
@@ -120,7 +125,21 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
 
 export default function WorkflowPage() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
-  const [currentUserRole, setCurrentUserRole] = useState<Role>('USER');
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole['role']>('User');
+  const router = useRouter();
+
+
+  useEffect(() => {
+    // This effect runs on the client and gets the user's role from session storage
+    const storedProfile = sessionStorage.getItem('userProfile');
+    if (storedProfile) {
+      const profile = JSON.parse(storedProfile);
+      setCurrentUserRole(profile.role || 'User');
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
+
 
   const handleAction = (
     transactionId: string,
@@ -142,19 +161,19 @@ export default function WorkflowPage() {
             }
             break;
           case 'APPROVE':
-            if (t.currentStatus === 'PENDING_ADMIN_APPROVAL' && currentUserRole === 'ADMIN') {
+            if (t.currentStatus === 'PENDING_ADMIN_APPROVAL' && currentUserRole === 'Admin') {
               newStatus = 'PENDING_SUPER_ADMIN_APPROVAL';
               historyAction = 'Approved by Admin';
-            } else if (t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL' && currentUserRole === 'SUPER_ADMIN') {
+            } else if (t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL' && currentUserRole === 'Super Admin') {
               newStatus = 'POSTED';
               historyAction = 'Final Approval & Posted';
             }
             break;
           case 'REJECT':
-             if (t.currentStatus === 'PENDING_ADMIN_APPROVAL' && currentUserRole === 'ADMIN') {
+             if (t.currentStatus === 'PENDING_ADMIN_APPROVAL' && currentUserRole === 'Admin') {
                 newStatus = 'REJECTED';
                 historyAction = 'Rejected by Admin';
-            } else if (t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL' && currentUserRole === 'SUPER_ADMIN') {
+            } else if (t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL' && currentUserRole === 'Super Admin') {
                 newStatus = 'REJECTED';
                 historyAction = 'Rejected by Super Admin';
             }
@@ -185,60 +204,57 @@ export default function WorkflowPage() {
   
   const filteredTransactions = useMemo(() => {
     switch (currentUserRole) {
-      case 'USER':
-        return transactions; // User sees all their transactions
-      case 'ADMIN':
-        return transactions.filter(t => t.currentStatus === 'PENDING_ADMIN_APPROVAL');
-      case 'SUPER_ADMIN':
+      case 'User':
+      case 'Property Manager':
+      case 'Accountant':
+        return transactions; // These roles see all transactions for simplicity here
+      case 'Admin':
+        return transactions.filter(t => t.currentStatus === 'PENDING_ADMIN_APPROVAL' || t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL');
+      case 'Super Admin':
         return transactions.filter(t => t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL');
       default:
-        return [];
+        return transactions;
     }
   }, [currentUserRole, transactions]);
 
 
   const getActionButtons = (transaction: Transaction) => {
-    switch (currentUserRole) {
-      case 'USER':
-        if (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED') {
-          return (
-            <Button size="sm" onClick={() => handleAction(transaction.id, 'SUBMIT')}>
-              <Send className="mr-2 h-4 w-4" /> Submit
-            </Button>
-          );
-        }
-        return null;
-      case 'ADMIN':
-        if (transaction.currentStatus === 'PENDING_ADMIN_APPROVAL') {
-          return (
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => handleAction(transaction.id, 'APPROVE')}>
-                <Check className="mr-2 h-4 w-4" /> Approve
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => handleAction(transaction.id, 'REJECT')}>
-                <X className="mr-2 h-4 w-4" /> Reject
-              </Button>
-            </div>
-          );
-        }
-        return null;
-      case 'SUPER_ADMIN':
-        if (transaction.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL') {
-          return (
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => handleAction(transaction.id, 'APPROVE')}>
-                <Check className="mr-2 h-4 w-4" /> Approve & Post
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => handleAction(transaction.id, 'REJECT')}>
-                <X className="mr-2 h-4 w-4" /> Reject
-              </Button>
-            </div>
-          );
-        }
-        return null;
-      default:
-        return null;
+    const canSubmit = ['User', 'Property Manager', 'Accountant'];
+    if (canSubmit.includes(currentUserRole) && (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED')) {
+      return (
+        <Button size="sm" onClick={() => handleAction(transaction.id, 'SUBMIT')}>
+          <Send className="mr-2 h-4 w-4" /> Submit
+        </Button>
+      );
     }
+    
+    if (currentUserRole === 'Admin' && transaction.currentStatus === 'PENDING_ADMIN_APPROVAL') {
+      return (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleAction(transaction.id, 'APPROVE')}>
+            <Check className="mr-2 h-4 w-4" /> Approve
+          </Button>
+          <Button size="sm" variant="destructive" onClick={() => handleAction(transaction.id, 'REJECT')}>
+            <X className="mr-2 h-4 w-4" /> Reject
+          </Button>
+        </div>
+      );
+    }
+    
+    if (currentUserRole === 'Super Admin' && transaction.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL') {
+      return (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleAction(transaction.id, 'APPROVE')}>
+            <Check className="mr-2 h-4 w-4" /> Approve & Post
+          </Button>
+          <Button size="sm" variant="destructive" onClick={() => handleAction(transaction.id, 'REJECT')}>
+            <X className="mr-2 h-4 w-4" /> Reject
+          </Button>
+        </div>
+      );
+    }
+    
+    return null;
   };
   
 
@@ -255,24 +271,7 @@ export default function WorkflowPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs
-            value={currentUserRole}
-            onValueChange={(value) => setCurrentUserRole(value as Role)}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="USER">
-                <User className="mr-2 h-4 w-4" /> User View
-              </TabsTrigger>
-              <TabsTrigger value="ADMIN">
-                <Shield className="mr-2 h-4 w-4" /> Admin View
-              </TabsTrigger>
-              <TabsTrigger value="SUPER_ADMIN">
-                <UserCheck className="mr-2 h-4 w-4" /> Super Admin View
-              </TabsTrigger>
-            </TabsList>
-            
-            <div className="mt-4">
+            <div className="mb-4">
                <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">
                 Viewing as a{' '}
                 <span className="font-bold text-primary">{currentUserRole}</span>. This
@@ -348,7 +347,6 @@ export default function WorkflowPage() {
                 )}
               </TableBody>
             </Table>
-          </Tabs>
         </CardContent>
       </Card>
     </div>

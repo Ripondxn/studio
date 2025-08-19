@@ -159,6 +159,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return null; 
   }
 
+  const hasRole = (roles: Array<UserRole['role']>) => {
+    return userProfile && roles.includes(userProfile.role);
+  };
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -332,58 +336,60 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Home className="h-4 w-4 mr-2" />
                 HOME
             </Link>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <Briefcase className="h-4 w-4 mr-2" />
-                Finance
-              </MenubarTrigger>
-              <MenubarContent className="w-screen max-w-4xl">
-                <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Accounts</h3>
-                    <MenubarItem asChild>
-                      <Link href="/finance/chart-of-accounts">Chart Of Accounts</Link>
-                    </MenubarItem>
+            {hasRole(['Accountant', 'Admin', 'Super Admin']) && (
+              <MenubarMenu>
+                <MenubarTrigger className="cursor-pointer">
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  Finance
+                </MenubarTrigger>
+                <MenubarContent className="w-screen max-w-4xl">
+                  <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
+                    <div>
+                      <h3 className="font-bold text-sm mb-2">Accounts</h3>
+                      <MenubarItem asChild>
+                        <Link href="/finance/chart-of-accounts">Chart Of Accounts</Link>
+                      </MenubarItem>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm mb-2">Receipts &amp; Payments</h3>
+                      <MenubarItem>Contract Income</MenubarItem>
+                      <MenubarItem>Cash Receipt Voucher - Rent</MenubarItem>
+                      <MenubarItem>Postdated Receipt Voucher Others</MenubarItem>
+                      <MenubarItem>Contract Income Reversal</MenubarItem>
+                      <MenubarItem>Cash Payment Voucher</MenubarItem>
+                      <MenubarItem>Postdated Payment Voucher Multiple</MenubarItem>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm mb-2">Journal Entries</h3>
+                      <MenubarItem>Journal Voucher Others</MenubarItem>
+                      <MenubarItem>Debit Note (JV)</MenubarItem>
+                      <MenubarItem>Credit Note (JV)</MenubarItem>
+                      <MenubarItem>Opening Balance</MenubarItem>
+                      <MenubarItem>Debit Note</MenubarItem>
+                      <MenubarItem>Credit Note</MenubarItem>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm mb-2">Manage</h3>
+                      <MenubarItem>Manage</MenubarItem>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm mb-2">Fixed Assets</h3>
+                      <MenubarItem>Assets</MenubarItem>
+                      <MenubarItem>Asset Classes</MenubarItem>
+                      <MenubarItem>Depreciation Books</MenubarItem>
+                      <MenubarItem>FA Accounts</MenubarItem>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm mb-2">Reports</h3>
+                      <MenubarItem>General Ledger</MenubarItem>
+                      <MenubarItem>Registers</MenubarItem>
+                      <MenubarItem>Receivables &amp; Payables</MenubarItem>
+                      <MenubarItem>Final Reports</MenubarItem>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Receipts &amp; Payments</h3>
-                    <MenubarItem>Contract Income</MenubarItem>
-                    <MenubarItem>Cash Receipt Voucher - Rent</MenubarItem>
-                    <MenubarItem>Postdated Receipt Voucher Others</MenubarItem>
-                    <MenubarItem>Contract Income Reversal</MenubarItem>
-                    <MenubarItem>Cash Payment Voucher</MenubarItem>
-                    <MenubarItem>Postdated Payment Voucher Multiple</MenubarItem>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Journal Entries</h3>
-                    <MenubarItem>Journal Voucher Others</MenubarItem>
-                    <MenubarItem>Debit Note (JV)</MenubarItem>
-                    <MenubarItem>Credit Note (JV)</MenubarItem>
-                    <MenubarItem>Opening Balance</MenubarItem>
-                    <MenubarItem>Debit Note</MenubarItem>
-                    <MenubarItem>Credit Note</MenubarItem>
-                  </div>
-                   <div>
-                    <h3 className="font-bold text-sm mb-2">Manage</h3>
-                    <MenubarItem>Manage</MenubarItem>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Fixed Assets</h3>
-                    <MenubarItem>Assets</MenubarItem>
-                    <MenubarItem>Asset Classes</MenubarItem>
-                    <MenubarItem>Depreciation Books</MenubarItem>
-                    <MenubarItem>FA Accounts</MenubarItem>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Reports</h3>
-                    <MenubarItem>General Ledger</MenubarItem>
-                    <MenubarItem>Registers</MenubarItem>
-                    <MenubarItem>Receivables &amp; Payables</MenubarItem>
-                    <MenubarItem>Final Reports</MenubarItem>
-                  </div>
-                </div>
-              </MenubarContent>
-            </MenubarMenu>
+                </MenubarContent>
+              </MenubarMenu>
+            )}
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
                 <Warehouse className="h-4 w-4 mr-2" />
@@ -402,40 +408,44 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <MenubarItem>Availability</MenubarItem>
               </MenubarContent>
             </MenubarMenu>
-             <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <UserCog className="h-4 w-4 mr-2" />
-                ADMIN
-              </MenubarTrigger>
-              <MenubarContent>
-                <MenubarItem asChild><Link href="/admin/profile">User Profile</Link></MenubarItem>
-                <MenubarItem asChild><Link href="/admin/user-roles">User Role Management</Link></MenubarItem>
-              </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <Building2 className="h-4 w-4 mr-2" />
-                PROPERTY
-              </MenubarTrigger>
-              <MenubarContent className="w-screen max-w-6xl bg-transparent backdrop-blur-lg">
-                <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
-                  {propertyMenuContent.map((section) => (
-                    <div key={section.title}>
-                      <h3 className="font-bold text-sm mb-2">{section.title}</h3>
-                      {section.items.map((item) => (
-                        <MenubarItem key={item.name} asChild>
-                          {item.href ? (
-                            <Link href={item.href}>{item.name}</Link>
-                          ) : (
-                            <span>{item.name}</span>
-                          )}
-                        </MenubarItem>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </MenubarContent>
-            </MenubarMenu>
+             {hasRole(['Admin', 'Super Admin']) && (
+              <MenubarMenu>
+                <MenubarTrigger className="cursor-pointer">
+                  <UserCog className="h-4 w-4 mr-2" />
+                  ADMIN
+                </MenubarTrigger>
+                <MenubarContent>
+                  <MenubarItem asChild><Link href="/admin/profile">User Profile</Link></MenubarItem>
+                  <MenubarItem asChild><Link href="/admin/user-roles">User Role Management</Link></MenubarItem>
+                </MenubarContent>
+              </MenubarMenu>
+             )}
+            {hasRole(['Property Manager', 'Admin', 'Super Admin']) && (
+              <MenubarMenu>
+                <MenubarTrigger className="cursor-pointer">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  PROPERTY
+                </MenubarTrigger>
+                <MenubarContent className="w-screen max-w-6xl bg-transparent backdrop-blur-lg">
+                  <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
+                    {propertyMenuContent.map((section) => (
+                      <div key={section.title}>
+                        <h3 className="font-bold text-sm mb-2">{section.title}</h3>
+                        {section.items.map((item) => (
+                          <MenubarItem key={item.name} asChild>
+                            {item.href ? (
+                              <Link href={item.href}>{item.name}</Link>
+                            ) : (
+                              <span>{item.name}</span>
+                            )}
+                          </MenubarItem>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </MenubarContent>
+              </MenubarMenu>
+            )}
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
                 <UserRound className="h-4 w-4 mr-2" />
@@ -448,14 +458,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 PROJECTS
               </MenubarTrigger>
             </MenubarMenu>
-            <MenubarMenu>
-                <MenubarTrigger asChild className="cursor-pointer">
-                    <Link href="/workflow">
-                        <GitBranchPlus className="h-4 w-4 mr-2" />
-                        Document Flow
-                    </Link>
-                </MenubarTrigger>
-            </MenubarMenu>
+            {hasRole(['Admin', 'Super Admin', 'User']) && (
+              <MenubarMenu>
+                  <MenubarTrigger asChild className="cursor-pointer">
+                      <Link href="/workflow">
+                          <GitBranchPlus className="h-4 w-4 mr-2" />
+                          Document Flow
+                      </Link>
+                  </MenubarTrigger>
+              </MenubarMenu>
+            )}
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
                 <FileSignature className="h-4 w-4 mr-2" />
