@@ -32,14 +32,6 @@
     "lastLogin": "2024-06-15T14:00:00Z"
   },
   {
-    "id": "USR-005",
-    "name": "Mary Jane",
-    "email": "mary.jane@example.com",
-    "role": "Accountant",
-    "status": "Active",
-    "lastLogin": "2024-07-28T16:45:00Z"
-  },
-  {
     "name": "Ripon Ahmed",
     "email": "ripondxn@gmail.com",
     "role": "Admin",
