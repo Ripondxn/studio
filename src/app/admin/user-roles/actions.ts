@@ -47,7 +47,7 @@ export async function addUser(userData: z.infer<typeof addUserFormSchema>) {
         }
 
         const newUser: UserRole = {
-            ...userData,
+            ...validation.data,
             id: `USR-${Date.now()}`,
             lastLogin: new Date().toISOString(),
         };
