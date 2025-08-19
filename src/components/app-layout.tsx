@@ -419,12 +419,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
-                <Banknote className="h-4 w-4 mr-2" />
-                Financial
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
                 <Heart className="h-4 w-4 mr-2" />
                 Favorites
               </MenubarTrigger>
