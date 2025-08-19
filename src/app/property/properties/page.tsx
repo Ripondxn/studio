@@ -138,6 +138,13 @@ type Assignment = {
   remarks: string;
 };
 
+type ShareHolder = {
+  id: number;
+  name: string;
+  percentage: number;
+  remarks: string;
+};
+
 const initialPropertyData = {
     code: 'MT',
     name: 'Meras Tower',
@@ -195,6 +202,9 @@ export default function PropertyPage() {
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [initialAssignments, setInitialAssignments] = useState<Assignment[]>([]);
+
+  const [shareHolders, setShareHolders] = useState<ShareHolder[]>([]);
+  const [initialShareHolders, setInitialShareHolders] = useState<ShareHolder[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -386,6 +396,26 @@ export default function PropertyPage() {
   const removeAssignmentRow = (id: number) => {
     setAssignments(prev => prev.filter(item => item.id !== id));
   };
+
+  const handleShareHolderChange = (id: number, field: keyof ShareHolder, value: string | number) => {
+    setShareHolders(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+  };
+
+  const addShareHolderRow = () => {
+    setShareHolders(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        name: '',
+        percentage: 0,
+        remarks: '',
+      }
+    ]);
+  };
+
+  const removeShareHolderRow = (id: number) => {
+    setShareHolders(prev => prev.filter(item => item.id !== id));
+  };
   
   const totalParticularsAmount = useMemo(() => {
     return particulars.reduce((sum, p) => sum + p.amount, 0);
@@ -400,6 +430,7 @@ export default function PropertyPage() {
     setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
     setInitialParkings(JSON.parse(JSON.stringify(parkings)));
     setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
+    setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
     setIsEditing(true);
   }
 
@@ -415,6 +446,7 @@ export default function PropertyPage() {
         attachments: attachments.map(a => ({...a, file: a.file?.name})), // Just saving file name for now
         parkings,
         assignments,
+        shareHolders,
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -434,6 +466,7 @@ export default function PropertyPage() {
         setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
         setInitialParkings(JSON.parse(JSON.stringify(parkings)));
         setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
+        setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -458,6 +491,7 @@ export default function PropertyPage() {
       setAttachments(initialAttachments);
       setParkings(initialParkings);
       setAssignments(initialAssignments);
+      setShareHolders(initialShareHolders);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -1176,9 +1210,58 @@ export default function PropertyPage() {
                     </div>
                  </TabsContent>
                  <TabsContent value="share-holder">
-                   <div className="p-4 border rounded-md mt-2">
-                    <p>Share Holder functionality to be implemented.</p>
-                  </div>
+                    <div className="p-4 border rounded-md mt-2">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Share Holder Name</TableHead>
+                                    <TableHead className="text-right">Percentage (%)</TableHead>
+                                    <TableHead>Remarks</TableHead>
+                                    <TableHead>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {shareHolders.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>
+                                            <Input 
+                                                value={item.name}
+                                                onChange={e => handleShareHolderChange(item.id, 'name', e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="e.g. Jane Smith"
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input
+                                                type="number"
+                                                value={item.percentage}
+                                                onChange={e => handleShareHolderChange(item.id, 'percentage', parseFloat(e.target.value))}
+                                                disabled={!isEditing}
+                                                placeholder="0"
+                                                className="text-right"
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input
+                                                value={item.remarks}
+                                                onChange={e => handleShareHolderChange(item.id, 'remarks', e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="Add remarks..."
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeShareHolderRow(item.id)} disabled={!isEditing}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addShareHolderRow} disabled={!isEditing}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Share Holder
+                        </Button>
+                    </div>
                  </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
