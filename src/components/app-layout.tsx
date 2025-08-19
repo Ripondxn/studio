@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -64,14 +65,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar collapsible="icon">
+        <SidebarRail />
         <SidebarHeader className="p-4">
           <Link
             href="/"
             className="flex items-center gap-2 text-sidebar-foreground"
           >
             <Building2 className="h-8 w-8 text-accent" />
-            <h1 className="text-xl font-bold font-headline text-sidebar-foreground">
+            <h1 className="text-xl font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
               PropVue
             </h1>
           </Link>
@@ -180,7 +182,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <SidebarInset>
         <header className="flex h-auto flex-col border-b bg-background/95 backdrop-blur-sm sticky top-0 z-30">
           <div className="flex h-14 items-center gap-4 px-4 lg:h-[60px] lg:px-6">
-            <SidebarTrigger className="md:hidden" />
+            <SidebarTrigger />
             <div className="flex-1"></div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
