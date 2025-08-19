@@ -485,20 +485,25 @@ export default function WorkflowPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DialogTrigger asChild>
-                                        <DropdownMenuItem>
-                                        <File className="mr-2 h-4 w-4" />
-                                        View Details
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                          <File className="mr-2 h-4 w-4" />
+                                          View Details
                                         </DropdownMenuItem>
                                     </DialogTrigger>
                                     <DialogTrigger asChild>
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                             <History className="mr-2 h-4 w-4" />
                                             View History
                                         </DropdownMenuItem>
                                     </DialogTrigger>
                                 </DropdownMenuContent>
                                 </DropdownMenu>
-                                <TransactionDetailsDialog transaction={t} />
+                                 <DialogContent>
+                                    <TransactionDetailsDialog transaction={t} />
+                                 </DialogContent>
+                                 <DialogContent>
+                                     <ApprovalHistoryDialog history={t.approvalHistory} transactionId={t.id}/>
+                                 </DialogContent>
                             </Dialog>
                           </div>
                       </TableCell>
