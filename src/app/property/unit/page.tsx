@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -36,6 +36,7 @@ import {
   Plus,
   Pencil,
   Check,
+  Loader2,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -60,6 +61,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { saveUnitData } from './actions';
 
 
 type Particular = {
@@ -71,8 +74,43 @@ type Particular = {
   totalAmount: number;
 };
 
+const initialUnitData = {
+  unitCode: "D03-101",
+  property: "d3-china-cluster",
+  floor: "1",
+  unitType: "1-bhk",
+  electricityCode: "122111",
+  annualRent: "30000",
+  salesMan: "salesman",
+  unitNo: "D03-101",
+  unitArea: "721",
+  view: "Good",
+  bathrooms: "1",
+  electricityKw: "0",
+  monthlyRent: "2500",
+  accountant: "accountant",
+  unitStatus: "Active",
+  landlord: "landlord",
+  unitStatusNormal: "normal",
+  parkings: "1",
+  amount: "30000",
+  amountType: "annual",
+  rentSqft: "41.61",
+  postMonthlyIncome: "yes",
+  discount: "0",
+  discountType: "value",
+  rentBasedOn: "monthly",
+  supervisor: "supervisor",
+};
+
 export default function UnitPage() {
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  
+  const [unitData, setUnitData] = useState(initialUnitData);
+  const [initialData, setInitialData] = useState(initialUnitData);
+  
   const [particulars, setParticulars] = useState<Particular[]>([
     {
       id: 1,
@@ -83,6 +121,11 @@ export default function UnitPage() {
       totalAmount: 0,
     },
   ]);
+  const [initialParticulars, setInitialParticulars] = useState<Particular[]>([]);
+
+  const handleInputChange = (field: keyof typeof unitData, value: string) => {
+    setUnitData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleParticularChange = (
     id: number,
@@ -145,23 +188,50 @@ export default function UnitPage() {
   }, [particulars]);
 
   const handleEditClick = () => {
+    setInitialData(unitData);
+    setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
     setIsEditing(true);
   }
 
-  const handleSaveClick = () => {
-    setIsEditing(false);
-    // Here you would typically save the data
-    console.log('Data saved!');
+  const handleSaveClick = async () => {
+    setIsSaving(true);
+    try {
+      const result = await saveUnitData({ unitData, particulars });
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Unit data saved successfully.",
+        });
+        setIsEditing(false);
+        setInitialData(unitData);
+        setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
+      } else {
+        throw new Error(result.error || 'An unknown error occurred');
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (error as Error).message || "Failed to save unit data.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   const handleCancelClick = () => {
+    setUnitData(initialData);
+    setParticulars(initialParticulars);
     setIsEditing(false);
-    // Here you might want to reset the form to its original state
   }
 
   const handleDelete = () => {
     // Here you would typically call an API to delete the record
     console.log('Record deleted!');
+    toast({
+        title: "Deleted",
+        description: "The unit record has been deleted.",
+    });
     // After deletion, you might want to redirect the user or reset the form
     setIsEditing(false);
   }
@@ -181,8 +251,9 @@ export default function UnitPage() {
             <Pencil className="mr-2 h-4 w-4" /> Edit
           </Button>
           {isEditing && (
-             <Button variant="outline" className="hover:bg-accent" onClick={handleSaveClick}>
-                <Save className="mr-2 h-4 w-4" /> Save
+             <Button variant="outline" className="hover:bg-accent" onClick={handleSaveClick} disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                {isSaving ? 'Saving...' : 'Save'}
             </Button>
           )}
            <AlertDialog>
@@ -226,11 +297,11 @@ export default function UnitPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="unit-code">Unit Code</Label>
-                    <Input id="unit-code" defaultValue="D03-101" disabled={!isEditing} />
+                    <Input id="unit-code" value={unitData.unitCode} onChange={(e) => handleInputChange('unitCode', e.target.value)} disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="property">Property</Label>
-                    <Select defaultValue="d3-china-cluster" disabled={!isEditing}>
+                    <Select value={unitData.property} onValueChange={(value) => handleInputChange('property', value)} disabled={!isEditing}>
                       <SelectTrigger id="property">
                         <SelectValue placeholder="Select Property" />
                       </SelectTrigger>
@@ -243,7 +314,7 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="floor">Floor</Label>
-                    <Select defaultValue="1" disabled={!isEditing}>
+                    <Select value={unitData.floor} onValueChange={(value) => handleInputChange('floor', value)} disabled={!isEditing}>
                       <SelectTrigger id="floor">
                         <SelectValue placeholder="Select Floor" />
                       </SelectTrigger>
@@ -255,7 +326,7 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="unit-type">Unit Type.</Label>
-                    <Select defaultValue="1-bhk" disabled={!isEditing}>
+                    <Select value={unitData.unitType} onValueChange={(value) => handleInputChange('unitType', value)} disabled={!isEditing}>
                       <SelectTrigger id="unit-type">
                         <SelectValue placeholder="Select Unit Type" />
                       </SelectTrigger>
@@ -267,15 +338,15 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="electricity-code">Electricity Code</Label>
-                    <Input id="electricity-code" defaultValue="122111" disabled={!isEditing} />
+                    <Input id="electricity-code" value={unitData.electricityCode} onChange={(e) => handleInputChange('electricityCode', e.target.value)} disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="annual-rent">Annual Rent</Label>
-                    <Input id="annual-rent" defaultValue="30000" disabled={!isEditing} />
+                    <Input id="annual-rent" value={unitData.annualRent} onChange={(e) => handleInputChange('annualRent', e.target.value)} disabled={!isEditing} />
                   </div>
                    <div>
                     <Label htmlFor="sales-man">Sales Man</Label>
-                    <Select defaultValue="salesman" disabled={!isEditing}>
+                    <Select value={unitData.salesMan} onValueChange={(value) => handleInputChange('salesMan', value)} disabled={!isEditing}>
                       <SelectTrigger id="sales-man">
                         <SelectValue placeholder="Select Sales Man" />
                       </SelectTrigger>
@@ -290,36 +361,37 @@ export default function UnitPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="unit-no">Unit No</Label>
-                    <Input id="unit-no" defaultValue="D03-101" disabled={!isEditing} />
+                    <Input id="unit-no" value={unitData.unitNo} onChange={(e) => handleInputChange('unitNo', e.target.value)} disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="unit-area">Unit Area SQFT</Label>
-                    <Input id="unit-area" type="number" defaultValue="721" disabled={!isEditing} />
+                    <Input id="unit-area" type="number" value={unitData.unitArea} onChange={(e) => handleInputChange('unitArea', e.target.value)} disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="view">View</Label>
-                    <Input id="view" defaultValue="Good" disabled={!isEditing} />
+                    <Input id="view" value={unitData.view} onChange={(e) => handleInputChange('view', e.target.value)} disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="bathrooms">No. Of Bathrooms</Label>
-                    <Input id="bathrooms" type="number" defaultValue="1" disabled={!isEditing} />
+                    <Input id="bathrooms" type="number" value={unitData.bathrooms} onChange={(e) => handleInputChange('bathrooms', e.target.value)} disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="electricity-kw">Electricity KW</Label>
                     <Input
                       id="electricity-kw"
                       type="number"
-                      defaultValue="0"
+                      value={unitData.electricityKw}
+                      onChange={(e) => handleInputChange('electricityKw', e.target.value)}
                       disabled={!isEditing}
                     />
                   </div>
                    <div>
                     <Label htmlFor="monthly-rent">Monthly Rent</Label>
-                    <Input id="monthly-rent" defaultValue="2500" disabled={!isEditing} />
+                    <Input id="monthly-rent" value={unitData.monthlyRent} onChange={(e) => handleInputChange('monthlyRent', e.target.value)} disabled={!isEditing} />
                   </div>
                    <div>
                     <Label htmlFor="accountant">Accountant</Label>
-                     <Select defaultValue="accountant" disabled={!isEditing}>
+                     <Select value={unitData.accountant} onValueChange={(value) => handleInputChange('accountant', value)} disabled={!isEditing}>
                       <SelectTrigger id="accountant">
                         <SelectValue placeholder="Select Accountant" />
                       </SelectTrigger>
@@ -334,11 +406,11 @@ export default function UnitPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="unit-status-active">Unit Status</Label>
-                    <Input id="unit-status-active" defaultValue="Active" readOnly />
+                    <Input id="unit-status-active" value={unitData.unitStatus} readOnly />
                   </div>
                   <div>
                     <Label htmlFor="landlord">LandLord</Label>
-                    <Select defaultValue="landlord" disabled={!isEditing}>
+                    <Select value={unitData.landlord} onValueChange={(value) => handleInputChange('landlord', value)} disabled={!isEditing}>
                       <SelectTrigger id="landlord">
                         <SelectValue placeholder="Select Landlord" />
                       </SelectTrigger>
@@ -349,7 +421,7 @@ export default function UnitPage() {
                   </div>
                   <div className='relative'>
                     <Label htmlFor="unit-status-normal">Unit Status.</Label>
-                     <Select defaultValue="normal" disabled={!isEditing}>
+                     <Select value={unitData.unitStatusNormal} onValueChange={(value) => handleInputChange('unitStatusNormal', value)} disabled={!isEditing}>
                       <SelectTrigger id="unit-status-normal">
                         <SelectValue placeholder="Select Status" />
                       </SelectTrigger>
@@ -364,14 +436,14 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="parkings">No. Of Parkings</Label>
-                    <Input id="parkings" type="number" defaultValue="1" disabled={!isEditing} />
+                    <Input id="parkings" type="number" value={unitData.parkings} onChange={(e) => handleInputChange('parkings', e.target.value)} disabled={!isEditing} />
                   </div>
                    <div className='flex items-end gap-2'>
                     <div className='flex-grow'>
                         <Label htmlFor="amount">Amount.</Label>
-                        <Input id="amount" type="number" defaultValue="30000" disabled={!isEditing} />
+                        <Input id="amount" type="number" value={unitData.amount} onChange={(e) => handleInputChange('amount', e.target.value)} disabled={!isEditing} />
                     </div>
-                     <Select defaultValue="annual" disabled={!isEditing}>
+                     <Select value={unitData.amountType} onValueChange={(value) => handleInputChange('amountType', value)} disabled={!isEditing}>
                       <SelectTrigger className="w-[100px]">
                         <SelectValue />
                       </SelectTrigger>
@@ -383,11 +455,11 @@ export default function UnitPage() {
                   </div>
                    <div>
                     <Label htmlFor="rent-sqft">Rent/Sq Ft</Label>
-                    <Input id="rent-sqft" defaultValue="41.61" readOnly />
+                    <Input id="rent-sqft" value={unitData.rentSqft} readOnly />
                   </div>
                   <div>
                     <Label htmlFor="post-monthly-income">Post Monthly income for rent</Label>
-                     <Select defaultValue="yes" disabled={!isEditing}>
+                     <Select value={unitData.postMonthlyIncome} onValueChange={(value) => handleInputChange('postMonthlyIncome', value)} disabled={!isEditing}>
                       <SelectTrigger id="post-monthly-income">
                         <SelectValue />
                       </SelectTrigger>
@@ -426,8 +498,8 @@ export default function UnitPage() {
                   <div>
                     <Label htmlFor="discount">Discount</Label>
                     <div className="flex items-center gap-2">
-                      <Input id="discount" type="number" defaultValue="0" disabled={!isEditing} />
-                      <Select defaultValue="value" disabled={!isEditing}>
+                      <Input id="discount" type="number" value={unitData.discount} onChange={(e) => handleInputChange('discount', e.target.value)} disabled={!isEditing} />
+                      <Select value={unitData.discountType} onValueChange={(value) => handleInputChange('discountType', value)} disabled={!isEditing}>
                         <SelectTrigger className="w-[100px]">
                           <SelectValue/>
                         </SelectTrigger>
@@ -440,7 +512,7 @@ export default function UnitPage() {
                   </div>
                    <div>
                     <Label htmlFor="rent-based-on">Rent Based On *</Label>
-                     <Select defaultValue="monthly" disabled={!isEditing}>
+                     <Select value={unitData.rentBasedOn} onValueChange={(value) => handleInputChange('rentBasedOn', value)} disabled={!isEditing}>
                       <SelectTrigger id="rent-based-on">
                         <SelectValue />
                       </SelectTrigger>
@@ -452,7 +524,7 @@ export default function UnitPage() {
                   </div>
                    <div>
                     <Label htmlFor="supervisor">Supervisor</Label>
-                     <Select defaultValue="supervisor" disabled={!isEditing}>
+                     <Select value={unitData.supervisor} onValueChange={(value) => handleInputChange('supervisor', value)} disabled={!isEditing}>
                       <SelectTrigger id="supervisor">
                         <SelectValue />
                       </SelectTrigger>
@@ -981,5 +1053,3 @@ export default function UnitPage() {
     </div>
   );
 }
-
-    
