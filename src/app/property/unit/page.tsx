@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -71,6 +71,7 @@ import { useToast } from '@/hooks/use-toast';
 import { saveUnitData, findUnitData } from './actions';
 import { CustomizeDialog, type CustomField } from './customize-dialog';
 import { FormItem } from '@/components/ui/form';
+import { ReportCustomizerDialog, type ReportConfig } from './report-customizer-dialog';
 
 
 type Particular = {
@@ -142,6 +143,7 @@ export default function UnitPage() {
 
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+  const [isReportDialog, setIsReportDialog] = useState(false);
 
 
   const handleInputChange = (field: keyof typeof unitData, value: string) => {
@@ -296,15 +298,17 @@ export default function UnitPage() {
     }
   };
 
-  const handleReportClick = () => {
+  const handleGenerateReport = (reportConfig: ReportConfig) => {
     const reportData = {
       unitData,
       particulars,
       customFields,
       customFieldsData,
+      reportConfig,
     };
     const dataString = encodeURIComponent(JSON.stringify(reportData));
     router.push(`/property/unit/report?data=${dataString}`);
+    setIsReportDialog(false);
   };
 
 
@@ -354,9 +358,19 @@ export default function UnitPage() {
           <Button variant="outline" className="hover:bg-accent" onClick={handleCloseClick}>
             <X className="mr-2 h-4 w-4" /> Close
           </Button>
-          <Button variant="outline" className="hover:bg-accent" onClick={handleReportClick} disabled={isEditing}>
-            <FileText className="mr-2 h-4 w-4" /> Report
-          </Button>
+          <Dialog open={isReportDialog} onOpenChange={setIsReportDialog}>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
+                    <FileText className="mr-2 h-4 w-4" /> Report
+                </Button>
+            </DialogTrigger>
+            <ReportCustomizerDialog
+              unitDataFields={Object.keys(unitData)}
+              particularsFields={Object.keys(particulars[0] || {})}
+              customFields={customFields}
+              onGenerateReport={handleGenerateReport}
+            />
+          </Dialog>
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="hover:bg-accent">
@@ -1174,3 +1188,4 @@ export default function UnitPage() {
     </div>
   );
 }
+

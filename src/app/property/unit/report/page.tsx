@@ -25,6 +25,12 @@ declare module 'jspdf' {
     }
 }
 
+// Helper to format camelCase to Title Case
+const toTitleCase = (str: string) => {
+  const result = str.replace(/([A-Z])/g, ' $1');
+  return result.charAt(0).toUpperCase() + result.slice(1);
+};
+
 
 function Report() {
   const searchParams = useSearchParams();
@@ -40,7 +46,17 @@ function Report() {
     );
   }
 
-  const { unitData, particulars, customFields, customFieldsData } = data;
+  const { unitData, particulars, customFields, customFieldsData, reportConfig } = data;
+
+  const filteredUnitData = Object.entries(unitData).filter(([key]) => reportConfig.unitDetails.includes(key));
+  const filteredParticulars = particulars.map((p: any) => {
+    const filtered: any = {};
+    reportConfig.particulars.forEach((field: string) => {
+      filtered[field] = p[field];
+    })
+    return filtered;
+  })
+  const filteredCustomFields = customFields.filter((field: any) => reportConfig.customDetails.includes(field.id));
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -49,42 +65,43 @@ function Report() {
     doc.text(`Unit Report - ${unitData.unitCode}`, 14, 16);
     
     // Unit Details Table
-    const unitDetails = Object.entries(unitData).map(([key, value]) => [key, String(value)]);
-    doc.autoTable({
-      head: [['Field', 'Value']],
-      body: unitDetails,
-      startY: yPos,
-      didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
-    });
-
-    // Particulars Table
-    if (particulars && particulars.length > 0) {
-        if (yPos > 250) { doc.addPage(); yPos = 20; }
+    if (reportConfig.unitDetails.length > 0) {
         doc.autoTable({
-            head: [['Particulars', 'Amount', 'VAT %', 'VAT Amount', 'Total Amount']],
-            body: particulars.map((p: any) => [
-            p.particulars,
-            p.amount,
-            p.vatPercentage,
-            p.vatAmount.toFixed(2),
-            p.totalAmount.toFixed(2),
-            ]),
-            startY: yPos + 10,
+            head: [['Field', 'Value']],
+            body: filteredUnitData.map(([key, value]) => [toTitleCase(key), String(value)]),
+            startY: yPos,
             didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
         });
+        yPos += 10;
+    }
+
+
+    // Particulars Table
+    if (reportConfig.particulars.length > 0 && particulars.length > 0) {
+        if (yPos > 250) { doc.addPage(); yPos = 20; }
+        doc.autoTable({
+            head: [reportConfig.particulars.map(toTitleCase)],
+            body: particulars.map((p: any) => reportConfig.particulars.map((field: string) => {
+                const val = p[field];
+                return typeof val === 'number' ? val.toFixed(2) : String(val);
+            })),
+            startY: yPos,
+            didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
+        });
+        yPos += 10;
     }
 
     // Custom Fields Table
-    if (customFields && customFields.length > 0) {
+    if (reportConfig.customDetails.length > 0 && filteredCustomFields.length > 0) {
         if (yPos > 250) { doc.addPage(); yPos = 20; }
-        const customFieldRows = customFields.map((field: any) => [
+        const customFieldRows = filteredCustomFields.map((field: any) => [
             field.label,
             customFieldsData[field.id] || ''
         ]);
         doc.autoTable({
             head: [['Custom Field', 'Value']],
             body: customFieldRows,
-            startY: yPos + 10,
+            startY: yPos,
             didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
         });
     }
@@ -94,19 +111,38 @@ function Report() {
   };
 
   const handleExportExcel = () => {
-    const unitWorksheet = XLSX.utils.json_to_sheet([unitData]);
-    const particularsWorksheet = XLSX.utils.json_to_sheet(particulars);
+     const workbook = XLSX.utils.book_new();
+
+    // Unit Details Sheet
+    if (reportConfig.unitDetails.length > 0) {
+        const unitDetailsForSheet: any = {};
+        filteredUnitData.forEach(([key, value]) => {
+            unitDetailsForSheet[toTitleCase(key)] = value;
+        });
+        const unitWorksheet = XLSX.utils.json_to_sheet([unitDetailsForSheet]);
+        XLSX.utils.book_append_sheet(workbook, unitWorksheet, 'Unit Details');
+    }
+
+    // Particulars Sheet
+    if (reportConfig.particulars.length > 0 && particulars.length > 0) {
+        const particularsForSheet = particulars.map((p: any) => {
+            const row: any = {};
+            reportConfig.particulars.forEach((field: string) => {
+                row[toTitleCase(field)] = p[field];
+            });
+            return row;
+        });
+        const particularsWorksheet = XLSX.utils.json_to_sheet(particularsForSheet);
+        XLSX.utils.book_append_sheet(workbook, particularsWorksheet, 'Particulars');
+    }
     
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, unitWorksheet, 'Unit Details');
-    XLSX.utils.book_append_sheet(workbook, particularsWorksheet, 'Particulars');
-    
-    if (customFields && customFields.length > 0) {
-        const customData = customFields.map((field: any) => ({
-            Label: field.label,
-            Value: customFieldsData[field.id] || ''
+    // Custom Fields Sheet
+    if (reportConfig.customDetails.length > 0 && filteredCustomFields.length > 0) {
+        const customDataForSheet = filteredCustomFields.map((field: any) => ({
+            'Field': field.label,
+            'Value': customFieldsData[field.id] || ''
         }));
-        const customWorksheet = XLSX.utils.json_to_sheet(customData);
+        const customWorksheet = XLSX.utils.json_to_sheet(customDataForSheet);
         XLSX.utils.book_append_sheet(workbook, customWorksheet, 'Custom Details');
     }
 
@@ -133,49 +169,58 @@ function Report() {
           </div>
         </CardHeader>
         <CardContent>
-          <h3 className="text-lg font-semibold mb-2">Unit Details</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Field</TableHead>
-                <TableHead>Value</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Object.entries(unitData).map(([key, value]) => (
-                <TableRow key={key}>
-                  <TableCell className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</TableCell>
-                  <TableCell>{String(value)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {reportConfig.unitDetails.length > 0 && (
+             <>
+                <h3 className="text-lg font-semibold mb-2">Unit Details</h3>
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Field</TableHead>
+                        <TableHead>Value</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {filteredUnitData.map(([key, value]) => (
+                        <TableRow key={key}>
+                        <TableCell className="font-medium">{toTitleCase(key)}</TableCell>
+                        <TableCell>{String(value)}</TableCell>
+                        </TableRow>
+                    ))}
+                    </TableBody>
+                </Table>
+            </>
+          )}
 
-          <h3 className="text-lg font-semibold mt-6 mb-2">Particulars</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Particulars</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">VAT %</TableHead>
-                <TableHead className="text-right">VAT Amount</TableHead>
-                <TableHead className="text-right">Total Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {particulars.map((p: any) => (
-                <TableRow key={p.id}>
-                  <TableCell>{p.particulars}</TableCell>
-                  <TableCell className="text-right">{p.amount.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">{p.vatPercentage}</TableCell>
-                  <TableCell className="text-right">{p.vatAmount.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">{p.totalAmount.toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {reportConfig.particulars.length > 0 && particulars.length > 0 && (
+            <>
+                <h3 className="text-lg font-semibold mt-6 mb-2">Particulars</h3>
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        {reportConfig.particulars.map((field: string) => (
+                           <TableHead key={field} className={['amount', 'vatAmount', 'totalAmount', 'vatPercentage'].includes(field) ? 'text-right' : ''}>
+                                {toTitleCase(field)}
+                           </TableHead>
+                        ))}
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {particulars.map((p: any, index: number) => (
+                        <TableRow key={index}>
+                            {reportConfig.particulars.map((field: string) => (
+                               <TableCell key={field} className={['amount', 'vatAmount', 'totalAmount', 'vatPercentage'].includes(field) ? 'text-right' : ''}>
+                                 {typeof p[field] === 'number' ? p[field].toFixed(2) : String(p[field])}
+                               </TableCell>
+                            ))}
+                        </TableRow>
+                    ))}
+                    </TableBody>
+                </Table>
+            </>
+          )}
 
-          {customFields && customFields.length > 0 && (
+
+          {reportConfig.customDetails.length > 0 && filteredCustomFields.length > 0 && (
             <>
                 <h3 className="text-lg font-semibold mt-6 mb-2">Custom Details</h3>
                 <Table>
@@ -186,7 +231,7 @@ function Report() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {customFields.map((field: any) => (
+                        {filteredCustomFields.map((field: any) => (
                             <TableRow key={field.id}>
                                 <TableCell className="font-medium">{field.label}</TableCell>
                                 <TableCell>
