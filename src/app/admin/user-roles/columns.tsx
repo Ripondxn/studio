@@ -109,7 +109,7 @@ const ActionsCell = ({ row }: { row: { original: UserRole } }) => {
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit User
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
                             <ShieldQuestion className="mr-2 h-4 w-4" />
                             Change Role
                         </DropdownMenuItem>
