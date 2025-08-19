@@ -651,6 +651,54 @@ export default function PropertyPage() {
                     </div>
                   </div>
                  </TabsContent>
+                 <TabsContent value="vat">
+                  <div className="p-4 border rounded-md mt-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Account Description</TableHead>
+                          <TableHead>Vat Group</TableHead>
+                          <TableHead>Vat Code</TableHead>
+                          <TableHead>Vat Description</TableHead>
+                          <TableHead className="text-right">Vat %</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>
+                            <Select disabled={!isEditing}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Account"/>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="rental-income">Rental Income</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                           <TableCell>
+                            <Select disabled={!isEditing}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select VAT Group"/>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="vat-group">VAT Group</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                             <Input placeholder="e.g. V5" disabled={!isEditing} />
+                          </TableCell>
+                          <TableCell>
+                            <Input placeholder="e.g. Vat 5%" disabled={!isEditing} />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="0" className="text-right" disabled={!isEditing} />
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                 </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
                     <Textarea placeholder="Enter any notes here..." disabled={!isEditing} />
@@ -746,4 +794,3 @@ export default function PropertyPage() {
     </div>
   );
 }
-
