@@ -295,7 +295,7 @@ export default function WorkflowPage() {
   const handleAction = (
     transactionId: string,
     action: 'SUBMIT' | 'APPROVE' | 'REJECT',
-    comment?: string
+    comment: string
   ) => {
     setTransactions((prev) =>
       prev.map((t) => {
