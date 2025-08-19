@@ -167,11 +167,27 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Select Company</DropdownMenuLabel>
-                <DropdownMenuItem>Prestige Properties</DropdownMenuItem>
-                <DropdownMenuItem>Summit Realty</DropdownMenuItem>
-                <DropdownMenuItem>Horizon Estates</DropdownMenuItem>
+              <DropdownMenuContent align="start" className="w-60">
+                <DropdownMenuItem>HOME</DropdownMenuItem>
+                <DropdownMenuItem>FINANCE</DropdownMenuItem>
+                <DropdownMenuItem>INVENTORY</DropdownMenuItem>
+                <DropdownMenuItem>REPORTS</DropdownMenuItem>
+                <DropdownMenuItem>DIMENSIONS</DropdownMenuItem>
+                <DropdownMenuItem>ADMIN</DropdownMenuItem>
+                <DropdownMenuItem>PROPERTY HRM</DropdownMenuItem>
+                <DropdownMenuItem>PROJECTS</DropdownMenuItem>
+                <DropdownMenuItem>Document Flow</DropdownMenuItem>
+                <DropdownMenuItem>Financial</DropdownMenuItem>
+                <DropdownMenuItem>Favorites</DropdownMenuItem>
+                <DropdownMenuItem>Sticky Notes</DropdownMenuItem>
+                <DropdownMenuItem>Reset Password Calendar</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>General Sales</DropdownMenuLabel>
+                <DropdownMenuItem>Rental Reports</DropdownMenuItem>
+                <DropdownMenuItem>Balance</DropdownMenuItem>
+                <DropdownMenuItem>Occupancy</DropdownMenuItem>
+                <DropdownMenuItem>Availability</DropdownMenuItem>
+                <DropdownMenuItem>Contracts</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
