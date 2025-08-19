@@ -59,6 +59,7 @@ import {
   FileSignature,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -217,14 +218,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </DropdownMenu>
           </div>
           <Menubar className="border-t-0 border-x-0 rounded-none h-auto">
-             <MenubarMenu>
-                <Link href="/" passHref>
-                  <MenubarTrigger className="cursor-pointer">
-                      <Home className="h-4 w-4 mr-2" />
-                      HOME
-                  </MenubarTrigger>
-                </Link>
-            </MenubarMenu>
+             <Link href="/" className={cn(buttonVariants({ variant: 'ghost' }), "flex items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground h-10 border-0")}>
+                <Home className="h-4 w-4 mr-2" />
+                HOME
+            </Link>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
                 <Briefcase className="h-4 w-4 mr-2" />
