@@ -32,6 +32,7 @@ import {
   Trash2,
   MinusCircle,
   Plus,
+  Pencil,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -43,10 +44,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function UnitPage() {
   return (
-    <div className="container mx-auto p-4 bg-gray-50">
+    <div className="container mx-auto p-4 bg-gray-50/50">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-primary font-headline">
           Edit Unit
@@ -56,7 +58,16 @@ export default function UnitPage() {
             <Copy className="mr-2 h-4 w-4" /> Copy
           </Button>
           <Button variant="outline" className="hover:bg-accent">
+            <Pencil className="mr-2 h-4 w-4" /> Edit
+          </Button>
+          <Button variant="outline" className="hover:bg-accent">
             <Save className="mr-2 h-4 w-4" /> Save
+          </Button>
+          <Button variant="outline" className="hover:bg-accent">
+            <Trash2 className="mr-2 h-4 w-4" /> Delete
+          </Button>
+          <Button variant="outline" className="hover:bg-accent">
+            <X className="mr-2 h-4 w-4" /> Close
           </Button>
           <Button variant="outline" className="hover:bg-accent">
             <FileText className="mr-2 h-4 w-4" /> Report
@@ -368,7 +379,7 @@ export default function UnitPage() {
                       <TableFooter>
                          <TableRow>
                             <TableCell colSpan={5} className="text-right font-bold">Total</TableCell>
-                            <TableCell className="text-right font-bold">0.00</TableCell>
+                            <TableCell className="font-bold text-right">0.00</TableCell>
                             <TableCell></TableCell>
                          </TableRow>
                       </TableFooter>
@@ -472,7 +483,52 @@ export default function UnitPage() {
                   </div>
                 </TabsContent>
                  <TabsContent value="vat">
-                  <div className="p-4 border rounded-md mt-2 text-muted-foreground">VAT details will be shown here.</div>
+                  <div className="p-4 border rounded-md mt-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Account Description</TableHead>
+                          <TableHead>Vat Group</TableHead>
+                          <TableHead>Vat Code</TableHead>
+                          <TableHead>Vat Description</TableHead>
+                          <TableHead className="text-right">Vat %</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>
+                            <Select defaultValue="rental-income-d3">
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="rental-income-d3">Rental Income D3</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                           <TableCell>
+                            <Select defaultValue="vat-group">
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="vat-group">VAT Group</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                             <Input defaultValue="V5" />
+                          </TableCell>
+                          <TableCell>
+                            <Input defaultValue="Vat 5%" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" defaultValue="5" className="text-right" />
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
                  </TabsContent>
                  <TabsContent value="unit-other-details">
                   <div className="p-4 border rounded-md mt-2 text-muted-foreground">Other unit details will be shown here.</div>
@@ -481,7 +537,45 @@ export default function UnitPage() {
                   <div className="p-4 border rounded-md mt-2 text-muted-foreground">Payables details will be shown here.</div>
                  </TabsContent>
                  <TabsContent value="attachments">
-                  <div className="p-4 border rounded-md mt-2 text-muted-foreground">Attachments will be shown here.</div>
+                    <div className="p-4 border rounded-md mt-2">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="flex items-center gap-2">
+                          <Checkbox id="check-attach" />
+                          <Label htmlFor="check-attach">Check Attach</Label>
+                        </div>
+                        <Button variant="outline" size="sm" className="hover:bg-accent">Add New</Button>
+                        <Button variant="outline" size="sm" className="hover:bg-accent">Add Existing</Button>
+                      </div>
+                       <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[50px]">Sr. No.</TableHead>
+                            <TableHead>Attachment Name</TableHead>
+                            <TableHead>File</TableHead>
+                            <TableHead>Remarks</TableHead>
+                            <TableHead>Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {/* This is a placeholder row */}
+                          <TableRow>
+                            <TableCell>1</TableCell>
+                            <TableCell><Input/></TableCell>
+                            <TableCell><Input type="file" className="text-sm"/></TableCell>
+                            <TableCell><Input/></TableCell>
+                            <TableCell>
+                               <Button variant="ghost" size="icon" className="text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button>Save</Button>
+                        <Button variant="outline">Cancel</Button>
+                      </div>
+                    </div>
                  </TabsContent>
                  <TabsContent value="unit-rate">
                   <div className="p-4 border rounded-md mt-2 text-muted-foreground">Unit rate details will be shown here.</div>
@@ -496,9 +590,9 @@ export default function UnitPage() {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline">Reports</CardTitle>
+              <CardTitle className="font-headline">Actions</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center h-48">
+            <CardContent className="flex items-center justify-center h-48">
               <Button variant="ghost" className="w-24 h-24 rounded-full border-2 border-dashed flex flex-col items-center justify-center gap-2 text-muted-foreground hover:bg-accent/10 hover:border-accent">
                 <X className="h-8 w-8" />
                 <span>Cancel</span>
@@ -510,3 +604,5 @@ export default function UnitPage() {
     </div>
   );
 }
+
+    
