@@ -590,6 +590,67 @@ export default function PropertyPage() {
                     </Button>
                   </div>
                  </TabsContent>
+                 <TabsContent value="receivables">
+                  <div className="p-4 border rounded-md mt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Receivable A/c</Label>
+                          <Select disabled={!isEditing} defaultValue="receivable-ac">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="receivable-ac">Receivable A/c</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Bank A/c</Label>
+                          <Select disabled={!isEditing} defaultValue="bank-ac">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="bank-ac">Bank A/c</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Penalty A/c</Label>
+                          <Select disabled={!isEditing} defaultValue="penalty-ac">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="penalty-ac">Penalty A/c</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                         <div>
+                          <Label>Income A/c</Label>
+                          <Select disabled={!isEditing} defaultValue="income-ac">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="income-ac">Income A/c</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Advance A/c</Label>
+                          <Select disabled={!isEditing} defaultValue="advance-ac">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="advance-ac">Advance A/c</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                       <div className="space-y-4">
+                         <div>
+                          <Label>Discount A/c</Label>
+                          <Select disabled={!isEditing} defaultValue="discount-ac">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="discount-ac">Discount A/c</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                         <div>
+                          <Label>Deposit A/c</Label>
+                          <Select disabled={!isEditing} defaultValue="deposit-ac">
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="deposit-ac">Deposit A/c</SelectItem></SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                 </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
                     <Textarea placeholder="Enter any notes here..." disabled={!isEditing} />
