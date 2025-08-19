@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -109,6 +110,7 @@ export default function UnitPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isFinding, setIsFinding] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
   
   const [unitData, setUnitData] = useState(initialUnitData);
   const [initialData, setInitialData] = useState(initialUnitData);
@@ -227,6 +229,10 @@ export default function UnitPage() {
     setIsEditing(false);
   }
 
+  const handleCloseClick = () => {
+    router.push('/');
+  };
+
   const handleDelete = () => {
     // Here you would typically call an API to delete the record
     console.log('Record deleted!');
@@ -312,7 +318,7 @@ export default function UnitPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <Button variant="outline" className="hover:bg-accent" onClick={handleCancelClick}>
+          <Button variant="outline" className="hover:bg-accent" onClick={handleCloseClick}>
             <X className="mr-2 h-4 w-4" /> Close
           </Button>
           <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
