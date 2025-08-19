@@ -27,9 +27,6 @@ import {
 } from '@/components/ui/tabs';
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
@@ -72,7 +69,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveUnitData, findUnitData } from './actions';
-import { CustomizeDialog } from './customize-dialog';
+import { CustomizeDialog, type CustomField } from './customize-dialog';
 
 
 type Particular = {
@@ -142,8 +139,16 @@ export default function UnitPage() {
     tabs: true,
   });
 
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+
+
   const handleInputChange = (field: keyof typeof unitData, value: string) => {
     setUnitData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCustomFieldChange = (fieldId: string, value: any) => {
+    setCustomFieldsData(prev => ({ ...prev, [fieldId]: value }));
   };
 
   const handleParticularChange = (
@@ -215,7 +220,8 @@ export default function UnitPage() {
   const handleSaveClick = async () => {
     setIsSaving(true);
     try {
-      const result = await saveUnitData({ unitData, particulars });
+      // Note: In a real app, file uploads for custom fields would need special handling (e.g., upload to a storage service)
+      const result = await saveUnitData({ unitData, particulars, customFieldsData });
       if (result.success) {
         toast({
           title: "Success",
@@ -346,20 +352,22 @@ export default function UnitPage() {
           </Button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
+              <Button variant="outline" className="hover:bg-accent">
                 <Settings className="mr-2 h-4 w-4" /> Customize
               </Button>
             </DialogTrigger>
             <CustomizeDialog
               visibleSections={visibleSections}
               onVisibilityChange={setVisibleSections}
+              customFields={customFields}
+              onCustomFieldsChange={setCustomFields}
             />
           </Dialog>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardContent className="p-6">
               {visibleSections.propertyDetails && (
@@ -1099,6 +1107,34 @@ export default function UnitPage() {
               )}
             </CardContent>
           </Card>
+          {customFields.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-headline">Custom Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {customFields.map((field) => (
+                    <div key={field.id}>
+                      <Label htmlFor={field.id}>{field.label}</Label>
+                      <Input
+                        id={field.id}
+                        type={field.type}
+                        disabled={!isEditing}
+                        value={customFieldsData[field.id] || ''}
+                        onChange={(e) =>
+                          handleCustomFieldChange(
+                            field.id,
+                            field.type === 'file' ? e.target.files : e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         <div className="lg:col-span-1">
           <Card>
