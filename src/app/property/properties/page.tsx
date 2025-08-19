@@ -159,14 +159,14 @@ type ShareHolder = {
 };
 
 const initialPropertyData = {
-    code: 'MT',
-    name: 'Meras Tower',
+    code: '',
+    name: '',
     propertyType: '',
     bondType: '',
     landlord: 'Landlord',
     status: 'Active',
     plotArea: '0',
-    builtUpArea: '500000',
+    builtUpArea: '0',
     noOfFloors: '0',
     noOfUnits: '0',
     noOfParkings: '0',
@@ -699,7 +699,7 @@ export default function PropertyPage() {
                         <Label htmlFor="code">Code</Label>
                         <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isEditing && !!searchParams.get('code')} />
                     </div>
-                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding}>
+                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || (!!searchParams.get('code') && !isEditing)}>
                         {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                     </Button>
                   </div>
