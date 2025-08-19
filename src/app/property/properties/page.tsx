@@ -100,6 +100,18 @@ type VatItem = {
   vatPercentage: number;
 }
 
+type OtherDetailItem = {
+  id: number;
+  unitNo: string;
+  areaSqft: string;
+  landlord: string;
+  building: string;
+  location: string;
+  subLocation: string;
+  status: string;
+  remarks: string;
+};
+
 const initialPropertyData = {
     code: 'MT',
     name: 'Meras Tower',
@@ -142,6 +154,9 @@ export default function PropertyPage() {
   
   const [vatItems, setVatItems] = useState<VatItem[]>([]);
   const [initialVatItems, setInitialVatItems] = useState<VatItem[]>([]);
+  
+  const [otherDetails, setOtherDetails] = useState<OtherDetailItem[]>([]);
+  const [initialOtherDetails, setInitialOtherDetails] = useState<OtherDetailItem[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -230,6 +245,31 @@ export default function PropertyPage() {
   const removeVatRow = (id: number) => {
     setVatItems(prev => prev.filter(item => item.id !== id));
   }
+
+  const handleOtherDetailChange = (id: number, field: keyof OtherDetailItem, value: string) => {
+    setOtherDetails(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+  };
+
+  const addOtherDetailRow = () => {
+    setOtherDetails(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        unitNo: '',
+        areaSqft: '',
+        landlord: '',
+        building: '',
+        location: '',
+        subLocation: '',
+        status: '',
+        remarks: '',
+      }
+    ]);
+  };
+
+  const removeOtherDetailRow = (id: number) => {
+    setOtherDetails(prev => prev.filter(item => item.id !== id));
+  };
   
   const totalParticularsAmount = useMemo(() => {
     return particulars.reduce((sum, p) => sum + p.amount, 0);
@@ -239,6 +279,7 @@ export default function PropertyPage() {
     setInitialData(JSON.parse(JSON.stringify(propertyData)));
     setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
     setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
+    setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
     setIsEditing(true);
   }
 
@@ -249,6 +290,7 @@ export default function PropertyPage() {
         propertyData,
         particulars,
         vatItems,
+        otherDetails,
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -263,6 +305,7 @@ export default function PropertyPage() {
         setInitialData(propertyData);
         setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
         setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
+        setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -282,6 +325,7 @@ export default function PropertyPage() {
       setPropertyData(initialData);
       setParticulars(initialParticulars);
       setVatItems(initialVatItems);
+      setOtherDetails(initialOtherDetails);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -748,6 +792,57 @@ export default function PropertyPage() {
                     </Button>
                   </div>
                  </TabsContent>
+                 <TabsContent value="property-other-details">
+                    <div className="p-4 border rounded-md mt-2">
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Unit No</TableHead>
+                                        <TableHead>Area(SQFT)</TableHead>
+                                        <TableHead>Landlord</TableHead>
+                                        <TableHead>Building</TableHead>
+                                        <TableHead>Location</TableHead>
+                                        <TableHead>Sub Location</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Remarks</TableHead>
+                                        <TableHead>Action</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {otherDetails.map(item => (
+                                        <TableRow key={item.id}>
+                                            <TableCell><Input value={item.unitNo} onChange={(e) => handleOtherDetailChange(item.id, 'unitNo', e.target.value)} disabled={!isEditing} /></TableCell>
+                                            <TableCell><Input value={item.areaSqft} onChange={(e) => handleOtherDetailChange(item.id, 'areaSqft', e.target.value)} disabled={!isEditing} /></TableCell>
+                                            <TableCell><Input value={item.landlord} onChange={(e) => handleOtherDetailChange(item.id, 'landlord', e.target.value)} disabled={!isEditing} /></TableCell>
+                                            <TableCell><Input value={item.building} onChange={(e) => handleOtherDetailChange(item.id, 'building', e.target.value)} disabled={!isEditing} /></TableCell>
+                                            <TableCell><Input value={item.location} onChange={(e) => handleOtherDetailChange(item.id, 'location', e.target.value)} disabled={!isEditing} /></TableCell>
+                                            <TableCell><Input value={item.subLocation} onChange={(e) => handleOtherDetailChange(item.id, 'subLocation', e.target.value)} disabled={!isEditing} /></TableCell>
+                                            <TableCell>
+                                                <Select value={item.status} onValueChange={(value) => handleOtherDetailChange(item.id, 'status', value)} disabled={!isEditing}>
+                                                    <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="available">Available</SelectItem>
+                                                        <SelectItem value="occupied">Occupied</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+                                            <TableCell><Input value={item.remarks} onChange={(e) => handleOtherDetailChange(item.id, 'remarks', e.target.value)} disabled={!isEditing} /></TableCell>
+                                            <TableCell>
+                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeOtherDetailRow(item.id)} disabled={!isEditing}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addOtherDetailRow} disabled={!isEditing}>
+                            <Plus className="mr-2 h-4 w-4" /> Add
+                        </Button>
+                    </div>
+                </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
                     <Textarea placeholder="Enter any notes here..." disabled={!isEditing} />
