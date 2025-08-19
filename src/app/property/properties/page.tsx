@@ -117,6 +117,13 @@ type SpecialCondition = {
     condition: string;
 };
 
+type Attachment = {
+  id: number;
+  name: string;
+  file: File | null;
+  remarks: string;
+};
+
 const initialPropertyData = {
     code: 'MT',
     name: 'Meras Tower',
@@ -165,6 +172,9 @@ export default function PropertyPage() {
 
   const [specialConditions, setSpecialConditions] = useState<SpecialCondition[]>([]);
   const [initialSpecialConditions, setInitialSpecialConditions] = useState<SpecialCondition[]>([]);
+
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -296,6 +306,26 @@ export default function PropertyPage() {
   const removeSpecialConditionRow = (id: number) => {
     setSpecialConditions(prev => prev.filter(item => item.id !== id));
   };
+
+  const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
+    setAttachments(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+  };
+
+  const addAttachmentRow = () => {
+    setAttachments(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        name: '',
+        file: null,
+        remarks: ''
+      }
+    ]);
+  };
+
+  const removeAttachmentRow = (id: number) => {
+    setAttachments(prev => prev.filter(item => item.id !== id));
+  };
   
   const totalParticularsAmount = useMemo(() => {
     return particulars.reduce((sum, p) => sum + p.amount, 0);
@@ -307,6 +337,7 @@ export default function PropertyPage() {
     setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
     setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
     setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
+    setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
     setIsEditing(true);
   }
 
@@ -319,6 +350,7 @@ export default function PropertyPage() {
         vatItems,
         otherDetails,
         specialConditions,
+        attachments: attachments.map(a => ({...a, file: a.file?.name})), // Just saving file name for now
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -335,6 +367,7 @@ export default function PropertyPage() {
         setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
         setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
         setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
+        setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -356,6 +389,7 @@ export default function PropertyPage() {
       setVatItems(initialVatItems);
       setOtherDetails(initialOtherDetails);
       setSpecialConditions(initialSpecialConditions);
+      setAttachments(initialAttachments);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -909,6 +943,62 @@ export default function PropertyPage() {
                         </Button>
                     </div>
                 </TabsContent>
+                <TabsContent value="attachments">
+                    <div className="p-4 border rounded-md mt-2">
+                      <div className="flex items-center gap-4 mb-4">
+                        <Button variant="outline" size="sm" className="hover:bg-accent" disabled={!isEditing} onClick={addAttachmentRow}>
+                            <Plus className="mr-2 h-4 w-4" /> Add New
+                        </Button>
+                      </div>
+                       <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[50px]">Sr. No.</TableHead>
+                            <TableHead>Attachment Name</TableHead>
+                            <TableHead>File</TableHead>
+                            <TableHead>Remarks</TableHead>
+                            <TableHead>Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {attachments.map((item, index) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>
+                                        <Input 
+                                            value={item.name} 
+                                            onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                            disabled={!isEditing} 
+                                            placeholder="e.g. Tenancy Contract"
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Input 
+                                            type="file" 
+                                            className="text-sm" 
+                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                            disabled={!isEditing}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Input 
+                                            value={item.remarks} 
+                                            onChange={(e) => handleAttachmentChange(item.id, 'remarks', e.target.value)} 
+                                            disabled={!isEditing} 
+                                            placeholder="Add remarks..."
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                    <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                 </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
                     <Textarea placeholder="Enter any notes here..." disabled={!isEditing} />
