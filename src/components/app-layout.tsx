@@ -1,0 +1,144 @@
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import {
+  LayoutDashboard,
+  Lightbulb,
+  Building2,
+  ChevronDown,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+export function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader className="p-4">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sidebar-foreground"
+          >
+            <Building2 className="h-8 w-8 text-accent" />
+            <h1 className="text-xl font-bold font-headline text-sidebar-foreground">
+              PropVue
+            </h1>
+          </Link>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/'}
+                tooltip="Dashboard"
+              >
+                <Link href="/">
+                  <LayoutDashboard />
+                  <span>Dashboard</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/intelligent-pricing'}
+                tooltip="Intelligent Pricing"
+              >
+                <Link href="/intelligent-pricing">
+                  <Lightbulb />
+                  <span>Intelligent Pricing</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
+          <SidebarTrigger className="md:hidden" />
+          <div className="flex-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <span>Prestige Properties</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel>Select Company</DropdownMenuLabel>
+                <DropdownMenuItem>Prestige Properties</DropdownMenuItem>
+                <DropdownMenuItem>Summit Realty</DropdownMenuItem>
+                <DropdownMenuItem>Horizon Estates</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src="https://placehold.co/40x40.png"
+                    alt="@propvue-user"
+                    data-ai-hint="profile picture"
+                  />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    User
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    user@propvue.com
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+        <main
+          className={cn(
+            'flex flex-1 flex-col',
+            // remove default padding for pages that want full width
+            pathname !== '/' && 'p-4 sm:px-6 sm:py-0 md:gap-8'
+          )}
+        >
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
