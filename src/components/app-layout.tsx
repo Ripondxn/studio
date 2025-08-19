@@ -168,11 +168,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton
                 asChild
                 isActive={pathname === '/workflow'}
-                tooltip="Workflow"
+                tooltip="Document Flow"
               >
                 <Link href="/workflow">
                   <GitBranchPlus />
-                  <span>Workflow</span>
+                  <span>Document Flow</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -411,10 +411,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <GitBranchPlus className="h-4 w-4 mr-2" />
-                Document Flow
-              </MenubarTrigger>
+                <MenubarTrigger className="cursor-pointer" asChild>
+                    <Link href="/workflow">
+                        <GitBranchPlus className="h-4 w-4 mr-2" />
+                        Document Flow
+                    </Link>
+                </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
