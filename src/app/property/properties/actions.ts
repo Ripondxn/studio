@@ -41,7 +41,11 @@ export async function savePropertyData(dataToSave: any, isNewRecord: boolean) {
         };
         allProperties.push(newProperty);
     } else {
-        const index = allProperties.findIndex((p: any) => p.propertyData.code === dataToSave.propertyData.code);
+        const index = allProperties.findIndex((p: any) => {
+            const code = p.propertyData ? p.propertyData.code : p.code;
+            return code === dataToSave.propertyData.code;
+        });
+
         if (index !== -1) {
             allProperties[index] = {
                 ...allProperties[index],
