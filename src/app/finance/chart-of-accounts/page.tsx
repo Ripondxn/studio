@@ -17,7 +17,7 @@ export default function ChartOfAccountsPage() {
         </div>
         <div className="flex gap-2">
             <Button variant="outline">
-                <FileDown className="mr-2 h-4 w-4" /> Import Accounts
+                <FileDown className="mr-2 h-4 w-4" /> Import
             </Button>
             <Button>
                 <Plus className="mr-2 h-4 w-4" /> Add New Account
