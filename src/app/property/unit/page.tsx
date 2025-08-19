@@ -70,6 +70,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { saveUnitData, findUnitData } from './actions';
 import { CustomizeDialog, type CustomField } from './customize-dialog';
+import { FormItem } from '@/components/ui/form';
 
 
 type Particular = {
@@ -1115,14 +1116,13 @@ export default function UnitPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {customFields.map((field) => (
-                    <div key={field.id}>
+                    <FormItem key={field.id}>
                       <Label htmlFor={field.id}>{field.label}</Label>
                       <Input
                         id={field.id}
                         type={field.type}
                         disabled={!isEditing}
                         value={field.type !== 'file' ? customFieldsData[field.id] || '' : undefined}
-                        defaultValue={field.type === 'file' ? '' : undefined}
                         onChange={(e) =>
                           handleCustomFieldChange(
                             field.id,
@@ -1130,7 +1130,7 @@ export default function UnitPage() {
                           )
                         }
                       />
-                    </div>
+                    </FormItem>
                   ))}
                 </div>
               </CardContent>
