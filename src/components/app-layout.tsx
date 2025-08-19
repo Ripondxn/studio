@@ -363,12 +363,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
-                <Scaling className="h-4 w-4 mr-2" />
-                DIMENSIONS
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
                 <UserCog className="h-4 w-4 mr-2" />
                 ADMIN
               </MenubarTrigger>
@@ -450,5 +444,3 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    
