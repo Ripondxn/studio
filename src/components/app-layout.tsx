@@ -226,7 +226,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Briefcase className="h-4 w-4 mr-2" />
                 FINANCE
               </MenubarTrigger>
-              <MenubarContent>
+              <MenubarContent className="w-screen max-w-4xl">
                 <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
                   <div>
                     <h3 className="font-bold text-sm mb-2">Accounts</h3>
@@ -370,5 +370,3 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    
