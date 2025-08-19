@@ -676,7 +676,65 @@ export default function UnitPage() {
                     </div>
                  </TabsContent>
                  <TabsContent value="unit-rate">
-                  <div className="p-4 border rounded-md mt-2 text-muted-foreground">Unit rate details will be shown here.</div>
+                   <div className="p-4 border rounded-md mt-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Rate Type</TableHead>
+                          <TableHead>Start Date</TableHead>
+                          <TableHead>End Date</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead>Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>
+                            <Select defaultValue="monthly">
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="daily">Daily</SelectItem>
+                                <SelectItem value="weekly">Weekly</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="annually">Annually</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Input type="date" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="date" />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              className="text-right"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 hover:bg-accent"
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Rate
+                    </Button>
+                  </div>
                  </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
