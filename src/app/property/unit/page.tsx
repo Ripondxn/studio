@@ -37,6 +37,7 @@ import {
   Pencil,
   Check,
   Loader2,
+  Search,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -62,7 +63,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveUnitData } from './actions';
+import { saveUnitData, findUnitData } from './actions';
 
 
 type Particular = {
@@ -106,6 +107,7 @@ const initialUnitData = {
 export default function UnitPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isFinding, setIsFinding] = useState(false);
   const { toast } = useToast();
   
   const [unitData, setUnitData] = useState(initialUnitData);
@@ -236,6 +238,36 @@ export default function UnitPage() {
     setIsEditing(false);
   }
 
+  const handleFindClick = async () => {
+    setIsFinding(true);
+    try {
+      const result = await findUnitData(unitData.unitCode);
+      if (result.success) {
+        toast({
+          title: 'Found',
+          description: `Found record for Unit Code: ${unitData.unitCode}`,
+        });
+        // In a real application, you would update the form with the found data.
+        // For example: setUnitData(result.data);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.error,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          (error as Error).message || 'Failed to find unit data.',
+      });
+    } finally {
+      setIsFinding(false);
+    }
+  };
+
 
   return (
     <div className="container mx-auto p-4 bg-gray-50/50">
@@ -244,6 +276,10 @@ export default function UnitPage() {
           Edit Unit
         </h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" className="hover:bg-accent" onClick={handleFindClick} disabled={isEditing || isFinding}>
+            {isFinding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+            {isFinding ? 'Finding...' : 'Find'}
+          </Button>
           <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
             <Copy className="mr-2 h-4 w-4" /> Copy
           </Button>
@@ -297,7 +333,7 @@ export default function UnitPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="unit-code">Unit Code</Label>
-                    <Input id="unit-code" value={unitData.unitCode} onChange={(e) => handleInputChange('unitCode', e.target.value)} disabled={!isEditing} />
+                    <Input id="unit-code" value={unitData.unitCode} onChange={(e) => handleInputChange('unitCode', e.target.value)} disabled={!isEditing && !isFinding} />
                   </div>
                   <div>
                     <Label htmlFor="property">Property</Label>

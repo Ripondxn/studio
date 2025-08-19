@@ -19,3 +19,23 @@ export async function saveUnitData(data: any) {
     return { success: false, error: (error as Error).message || 'An unknown error occurred' };
   }
 }
+
+export async function findUnitData(unitCode: string) {
+  try {
+    // Simulate a network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // In a real app, you would query your database for the unitCode
+    console.log('Finding unit data for unit code:', unitCode);
+
+    // Simulate finding a record
+    if (unitCode === "D03-101" || unitCode === "D03-102") {
+       return { success: true, data: { unitCode } }; // return mock data
+    } else {
+       return { success: false, error: `Unit with code "${unitCode}" not found.` };
+    }
+  } catch (error) {
+    console.error('Failed to find unit data:', error);
+    return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+  }
+}
