@@ -1,8 +1,9 @@
 
+
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -84,32 +85,32 @@ type Particular = {
 };
 
 const initialUnitData = {
-  unitCode: "D03-101",
-  property: "d3-china-cluster",
-  floor: "1",
-  unitType: "1-bhk",
-  electricityCode: "122111",
-  annualRent: "30000",
-  salesMan: "salesman",
-  unitNo: "D03-101",
-  unitArea: "721",
-  view: "Good",
-  bathrooms: "1",
-  electricityKw: "0",
-  monthlyRent: "2500",
-  accountant: "accountant",
+  unitCode: "",
+  property: "",
+  floor: "",
+  unitType: "",
+  electricityCode: "",
+  annualRent: "",
+  salesMan: "",
+  unitNo: "",
+  unitArea: "",
+  view: "",
+  bathrooms: "",
+  electricityKw: "",
+  monthlyRent: "",
+  accountant: "",
   unitStatus: "Active",
-  landlord: "landlord",
+  landlord: "",
   unitStatusNormal: "normal",
-  parkings: "1",
-  amount: "30000",
+  parkings: "",
+  amount: "",
   amountType: "annual",
-  rentSqft: "41.61",
+  rentSqft: "",
   postMonthlyIncome: "yes",
   discount: "0",
   discountType: "value",
   rentBasedOn: "monthly",
-  supervisor: "supervisor",
+  supervisor: "",
 };
 
 export default function UnitPage() {
@@ -118,6 +119,7 @@ export default function UnitPage() {
   const [isFinding, setIsFinding] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [unitData, setUnitData] = useState(initialUnitData);
   const [initialData, setInitialData] = useState(initialUnitData);
@@ -144,6 +146,18 @@ export default function UnitPage() {
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
   const [isReportDialog, setIsReportDialog] = useState(false);
+  
+  useEffect(() => {
+    const unitCode = searchParams.get('unitCode');
+    if (unitCode) {
+      setUnitData(prev => ({...prev, unitCode}));
+      // Automatically trigger find if unitCode is in URL
+      handleFindClick(unitCode);
+    } else {
+        setIsEditing(true); // Start in editing mode for new entries
+    }
+  }, [searchParams]);
+
 
 
   const handleInputChange = (field: keyof typeof unitData, value: string) => {
@@ -215,7 +229,7 @@ export default function UnitPage() {
   }, [particulars]);
 
   const handleEditClick = () => {
-    setInitialData(unitData);
+    setInitialData(JSON.parse(JSON.stringify(unitData)));
     setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
     setIsEditing(true);
   }
@@ -254,7 +268,7 @@ export default function UnitPage() {
   }
 
   const handleCloseClick = () => {
-    router.push('/');
+    router.push('/property/units');
   };
 
   const handleDelete = () => {
@@ -265,20 +279,42 @@ export default function UnitPage() {
         description: "The unit record has been deleted.",
     });
     // After deletion, you might want to redirect the user or reset the form
-    setIsEditing(false);
+    router.push('/property/units');
   }
 
-  const handleFindClick = async () => {
+  const handleFindClick = async (code?: string) => {
+    const codeToFind = code || unitData.unitCode;
+    if (!codeToFind) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter a Unit Code to find.',
+      });
+      return;
+    }
     setIsFinding(true);
     try {
-      const result = await findUnitData(unitData.unitCode);
-      if (result.success) {
+      const result = await findUnitData(codeToFind);
+      if (result.success && result.data) {
         toast({
           title: 'Found',
-          description: `Found record for Unit Code: ${unitData.unitCode}`,
+          description: `Found record for Unit Code: ${codeToFind}`,
         });
-        // In a real application, you would update the form with the found data.
-        // For example: setUnitData(result.data);
+         // In a real application, you would update the form with the found data.
+         // For this mock, we'll update a few fields to show it worked.
+         const mockData = {
+          ...initialUnitData, // Reset to default first
+          unitCode: result.data.unitCode,
+          property: "d3-china-cluster",
+          floor: "1",
+          unitType: "1-bhk",
+          annualRent: "30000",
+          unitNo: result.data.unitCode,
+          unitArea: "721",
+        }
+        setUnitData(mockData);
+        setInitialData(mockData);
+        setIsEditing(false);
       } else {
         toast({
           variant: 'destructive',
@@ -310,36 +346,22 @@ export default function UnitPage() {
     router.push(`/property/unit/report?data=${dataString}`);
     setIsReportDialog(false);
   };
+  
+  const pageTitle = searchParams.get('unitCode') ? 'Edit Unit' : 'Add New Unit';
 
 
   return (
     <div className="container mx-auto p-4 bg-gray-50/50">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-primary font-headline">
-          Edit Unit
+          {pageTitle}
         </h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="hover:bg-accent" onClick={handleFindClick} disabled={isEditing || isFinding}>
-            {isFinding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-            {isFinding ? 'Finding...' : 'Find'}
-          </Button>
-          <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
-            <Copy className="mr-2 h-4 w-4" /> Copy
-          </Button>
-          <Button variant="outline" className="hover:bg-accent" onClick={handleEditClick} disabled={isEditing}>
-            <Pencil className="mr-2 h-4 w-4" /> Edit
-          </Button>
-          {isEditing && (
-             <Button variant="outline" className="hover:bg-accent" onClick={handleSaveClick} disabled={isSaving}>
-                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                {isSaving ? 'Saving...' : 'Save'}
-            </Button>
-          )}
            <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="hover:bg-accent" disabled={!isEditing}>
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </Button>
+                <Button variant="outline" className="hover:bg-accent" disabled={!isEditing}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -395,9 +417,14 @@ export default function UnitPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Column 1 */}
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="unit-code">Unit Code</Label>
-                    <Input id="unit-code" value={unitData.unitCode} onChange={(e) => handleInputChange('unitCode', e.target.value)} disabled={!isEditing && !isFinding} />
+                  <div className="flex items-end gap-2">
+                    <div className="flex-grow">
+                        <Label htmlFor="unit-code">Unit Code</Label>
+                        <Input id="unit-code" value={unitData.unitCode} onChange={(e) => handleInputChange('unitCode', e.target.value)} disabled={!isEditing && !!searchParams.get('unitCode')} />
+                    </div>
+                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding}>
+                        {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                    </Button>
                   </div>
                   <div>
                     <Label htmlFor="property">Property</Label>
@@ -1162,25 +1189,23 @@ export default function UnitPage() {
             <CardHeader>
               <CardTitle className="font-headline">Actions</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center justify-center h-48">
-              <Button 
-                variant="ghost" 
-                className="w-24 h-24 rounded-full border-2 border-dashed flex flex-col items-center justify-center gap-2 text-muted-foreground hover:bg-accent/10 hover:border-accent"
-                onClick={handleCancelClick}
-                disabled={!isEditing}
-                >
-                  {isEditing ? (
-                    <>
-                      <X className="h-8 w-8" />
-                      <span>Cancel</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-8 w-8" />
-                      <span>Saved</span>
-                    </>
-                  )}
-              </Button>
+            <CardContent className="flex flex-col items-center justify-center h-48 gap-4">
+               {!isEditing && (
+                 <Button onClick={handleEditClick} className="w-full">
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                 </Button>
+                )}
+              {isEditing && (
+                <>
+                <Button onClick={handleSaveClick} disabled={isSaving} className="w-full">
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button variant="ghost" onClick={handleCancelClick} className="w-full">
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -1188,4 +1213,3 @@ export default function UnitPage() {
     </div>
   );
 }
-

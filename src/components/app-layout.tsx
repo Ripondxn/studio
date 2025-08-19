@@ -312,7 +312,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
                   <div>
                     <h3 className="font-bold text-sm mb-2">Properties</h3>
-                    <MenubarItem asChild><Link href="/property/unit">Units</Link></MenubarItem>
+                    <MenubarItem asChild><Link href="/property/units">Units</Link></MenubarItem>
                     <MenubarItem>Properties</MenubarItem>
                     <MenubarItem>Enquiry</MenubarItem>
                   </div>

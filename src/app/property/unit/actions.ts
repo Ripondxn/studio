@@ -32,7 +32,7 @@ export async function findUnitData(unitCode: string) {
     if (unitCode === "D03-101" || unitCode === "D03-102") {
        return { success: true, data: { unitCode } }; // return mock data
     } else {
-       return { success: false, error: `Unit with code "${unitCode}" not found.` };
+       return { success: true, data: { unitCode } }; // Simulate finding for any for now
     }
   } catch (error) {
     console.error('Failed to find unit data:', error);
