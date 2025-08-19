@@ -585,7 +585,54 @@ export default function UnitPage() {
                   </div>
                  </TabsContent>
                  <TabsContent value="payables">
-                  <div className="p-4 border rounded-md mt-2 text-muted-foreground">Payables details will be shown here.</div>
+                   <div className="p-4 border rounded-md mt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                      <div>
+                        <Label>Commission Payable A/c</Label>
+                         <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Account"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="commission-payable">Commission Payable</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                       <div>
+                        <Label>Security Deposit Payable A/c</Label>
+                         <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Account"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="security-deposit-payable">Security Deposit Payable</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                       <div>
+                        <Label>Landlord Payable A/c</Label>
+                         <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Account"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="landlord-payable">Landlord Payable</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                       <div>
+                        <Label>Other Payables A/c</Label>
+                         <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Account"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="other-payable">Other Payables</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
                  </TabsContent>
                  <TabsContent value="attachments">
                     <div className="p-4 border rounded-md mt-2">
@@ -632,7 +679,9 @@ export default function UnitPage() {
                   <div className="p-4 border rounded-md mt-2 text-muted-foreground">Unit rate details will be shown here.</div>
                  </TabsContent>
                  <TabsContent value="notes">
-                  <div className="p-4 border rounded-md mt-2 text-muted-foreground">Notes will be shown here.</div>
+                   <div className="p-4 border rounded-md mt-2">
+                    <Textarea placeholder="Enter any notes here..." />
+                  </div>
                  </TabsContent>
               </Tabs>
             </CardContent>
