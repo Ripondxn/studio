@@ -2,17 +2,38 @@
 'use server';
 
 import { z } from 'zod';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { UserRole } from '@/app/admin/user-roles/schema';
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
 });
 
+const usersFilePath = path.join(process.cwd(), 'src/app/admin/user-roles/users.json');
+
+async function readUsers(): Promise<UserRole[]> {
+    try {
+        const data = await fs.readFile(usersFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+
 // This is a mock login function. In a real application, you would:
-// 1. Validate the user's credentials against a database.
-// 2. Use a library like 'bcrypt' to compare hashed passwords.
-// 3. Create a session for the user (e.g., using JWTs or server-side sessions).
-// 4. Set a cookie or token to maintain the user's logged-in state.
+// 1. Use a library like 'bcrypt' to HASH passwords before storing and compare hashes during login.
+// 2. Create a secure session for the user (e.g., using JWTs or server-side sessions).
+// 3. Set a cookie or token to maintain the user's logged-in state.
+// 4. Implement route protection middleware.
+
+// WARNING: THIS IS NOT A SECURE LOGIN SYSTEM. IT IS FOR DEMONSTRATION PURPOSES ONLY.
+// PASSWORDS ARE STORED AND CHECKED IN PLAIN TEXT.
 
 export async function handleLogin(credentials: z.infer<typeof loginSchema>) {
   const validation = loginSchema.safeParse(credentials);
@@ -26,14 +47,26 @@ export async function handleLogin(credentials: z.infer<typeof loginSchema>) {
   
   const { email, password } = validation.data;
 
-  // Mock user data - in a real app, this would come from your database
-  const validEmail = 'admin@propvue.com';
-  const validPassword = 'password123';
+  try {
+    const allUsers = await readUsers();
+    const user = allUsers.find(u => u.email === email);
 
-  if (email === validEmail && password === validPassword) {
-    // In a real app, you would generate and return a session token here
-    return { success: true };
-  } else {
-    return { success: false, error: 'Invalid email or password.' };
+    if (user) {
+      if (user.password === password) {
+        if(user.status === 'Active') {
+          // In a real app, you would generate and return a session token here
+          return { success: true };
+        } else {
+          return { success: false, error: 'Your account is inactive. Please contact an administrator.' };
+        }
+      } else {
+         return { success: false, error: 'Invalid email or password.' };
+      }
+    } else {
+      return { success: false, error: 'Invalid email or password.' };
+    }
+  } catch (error) {
+     console.error('Login error:', error);
+     return { success: false, error: 'An unexpected error occurred during login.' };
   }
 }

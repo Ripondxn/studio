@@ -65,10 +65,10 @@ export async function addUser(userData: z.infer<typeof addUserFormSchema>) {
 }
 
 
-const updateUserFormSchema = userRoleSchema.omit({ lastLogin: true });
+const updateUserFormSchema = userRoleSchema.omit({ lastLogin: true }).partial();
 
 export async function updateUser(userData: z.infer<typeof updateUserFormSchema>) {
-    const validation = updateUserFormSchema.safeParse(userData);
+     const validation = userRoleSchema.partial().safeParse(userData);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
     }
@@ -84,11 +84,16 @@ export async function updateUser(userData: z.infer<typeof updateUserFormSchema>)
         }
         
         // Check if email is being changed to one that already exists
-        if (dataToUpdate.email !== allUsers[userIndex].email) {
+        if (dataToUpdate.email && dataToUpdate.email !== allUsers[userIndex].email) {
             const emailExists = allUsers.some((u, index) => index !== userIndex && u.email === dataToUpdate.email);
             if(emailExists){
                 return { success: false, error: `Another user with email "${dataToUpdate.email}" already exists.` };
             }
+        }
+
+        // If password is not provided, keep the old one
+        if (!dataToUpdate.password) {
+            dataToUpdate.password = allUsers[userIndex].password;
         }
         
         allUsers[userIndex] = { ...allUsers[userIndex], ...dataToUpdate };

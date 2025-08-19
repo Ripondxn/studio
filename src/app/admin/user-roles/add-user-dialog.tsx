@@ -55,6 +55,7 @@ export function AddUserDialog() {
     defaultValues: {
         name: '',
         email: '',
+        password: '',
         role: 'User',
         status: 'Active',
     }
@@ -114,6 +115,15 @@ export function AddUserDialog() {
                     <div className="col-span-3">
                         <Input id="email" {...register('email')} />
                          {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
+                    </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="password" className="text-right">
+                        Password
+                    </Label>
+                    <div className="col-span-3">
+                        <Input id="password" type="password" {...register('password')} />
+                         {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
                     </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">

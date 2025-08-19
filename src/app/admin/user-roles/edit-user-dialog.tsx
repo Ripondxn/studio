@@ -34,7 +34,10 @@ import { updateUser } from './actions';
 type UserFormData = Omit<UserRole, 'lastLogin'>;
 
 // We need a slightly different schema for the form (no lastLogin)
-const userFormSchema = userRoleSchema.omit({ lastLogin: true });
+// Also making password optional for editing, so users don't have to re-enter it every time.
+const userFormSchema = userRoleSchema.omit({ lastLogin: true }).extend({
+    password: z.string().min(6, 'Password must be at least 6 characters long.').or(z.literal(''))
+});
 
 
 export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, isOpen: boolean, setIsOpen: (open: boolean) => void }) {
@@ -50,23 +53,29 @@ export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, is
     formState: { errors, isDirty },
   } = useForm<UserFormData>({
     resolver: zodResolver(userFormSchema),
-    defaultValues: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-    }
   });
 
   // Reset form when user data changes or dialog opens/closes
   useEffect(() => {
-    reset(user);
-  }, [user, reset]);
+    if(isOpen) {
+        reset({
+            ...user,
+            password: '', // Don't pre-fill password for security
+        });
+    }
+  }, [user, reset, isOpen]);
 
   const onSubmit = async (data: UserFormData) => {
     setIsSaving(true);
-    const result = await updateUser(data);
+    
+    // Don't send an empty password to the update function.
+    const dataToSubmit = { ...data };
+    if (!dataToSubmit.password) {
+      // @ts-ignore
+      delete dataToSubmit.password;
+    }
+
+    const result = await updateUser(dataToSubmit);
 
     if (result.success) {
       toast({
@@ -87,7 +96,7 @@ export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, is
   
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-        reset(user); // Reset form if dialog is closed without saving
+        reset(); // Reset form if dialog is closed without saving
     }
     setIsOpen(open);
   }
@@ -120,6 +129,15 @@ export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, is
                     <div className="col-span-3">
                         <Input id="email" {...register('email')} />
                          {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
+                    </div>
+                </div>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="password" className="text-right">
+                        Password
+                    </Label>
+                    <div className="col-span-3">
+                        <Input id="password" type="password" {...register('password')} placeholder="Leave blank to keep unchanged" />
+                         {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
                     </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">

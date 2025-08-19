@@ -5,6 +5,7 @@ export const userRoleSchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string().email(),
+  password: z.string().min(6, 'Password must be at least 6 characters long.'),
   role: z.enum(['User', 'Admin', 'Super Admin', 'Property Manager', 'Accountant']),
   status: z.enum(['Active', 'Inactive']),
   lastLogin: z.string(),
