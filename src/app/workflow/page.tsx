@@ -17,6 +17,7 @@ import {
   Info,
   FileText,
   FileSpreadsheet,
+  MessageSquare,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -46,6 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +61,8 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { type Transaction, type Role, type Status, type ApprovalHistory } from './types';
 import { transactions as initialTransactions } from './data';
@@ -139,9 +143,10 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
                    {format(new Date(item.timestamp), "PPP p")}
                 </p>
                 {item.comments && (
-                  <p className="mt-2 rounded-md border bg-muted p-2 text-sm">
-                    "{item.comments}"
-                  </p>
+                  <div className="mt-2 rounded-md border bg-muted p-2 text-sm flex gap-2">
+                    <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                    <p className="flex-1 italic">"{item.comments}"</p>
+                  </div>
                 )}
               </div>
             </li>
@@ -203,6 +208,63 @@ const TransactionDetailsDialog = ({ transaction }: { transaction: Transaction })
     );
 };
 
+type ActionDialogProps = {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  onConfirm: (comment: string) => void;
+  actionType: 'SUBMIT' | 'APPROVE' | 'REJECT';
+}
+
+const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType }: ActionDialogProps) => {
+    const [comment, setComment] = useState('');
+
+    const titleMap = {
+        SUBMIT: 'Submit Transaction',
+        APPROVE: 'Approve Transaction',
+        REJECT: 'Reject Transaction'
+    }
+
+    const descriptionMap = {
+        SUBMIT: 'Please provide a comment for submitting this transaction.',
+        APPROVE: 'Please provide a comment for approving this transaction.',
+        REJECT: 'Please provide the reason for rejecting this transaction.'
+    }
+
+    const handleConfirm = () => {
+        onConfirm(comment);
+        setIsOpen(false);
+        setComment('');
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{titleMap[actionType]}</DialogTitle>
+                     <DialogDescription>{descriptionMap[actionType]}</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Label htmlFor="comment">Comment</Label>
+                    <Textarea 
+                        id="comment" 
+                        value={comment} 
+                        onChange={(e) => setComment(e.target.value)} 
+                        placeholder="Add your comment here..."
+                    />
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleConfirm}>
+                        {actionType === 'REJECT' ? 'Confirm Rejection' : 'Confirm'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 
 export default function WorkflowPage() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
@@ -210,6 +272,12 @@ export default function WorkflowPage() {
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<Status | 'ALL'>('ALL');
   const router = useRouter();
+
+  const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
+  const [currentActionInfo, setCurrentActionInfo] = useState<{
+    transactionId: string;
+    action: 'SUBMIT' | 'APPROVE' | 'REJECT';
+  } | null>(null);
 
 
   useEffect(() => {
@@ -226,7 +294,8 @@ export default function WorkflowPage() {
 
   const handleAction = (
     transactionId: string,
-    action: 'SUBMIT' | 'APPROVE' | 'REJECT'
+    action: 'SUBMIT' | 'APPROVE' | 'REJECT',
+    comment?: string
   ) => {
     setTransactions((prev) =>
       prev.map((t) => {
@@ -234,8 +303,7 @@ export default function WorkflowPage() {
 
         let newStatus: Status = t.currentStatus;
         let historyAction = '';
-        const comments = action === 'REJECT' ? 'Rejected for clarification.' : undefined;
-
+        
         switch (action) {
           case 'SUBMIT':
             if(t.currentStatus === 'DRAFT' || t.currentStatus === 'REJECTED'){
@@ -274,7 +342,7 @@ export default function WorkflowPage() {
                 actorId: currentUserEmail,
                 actorRole: currentUserRole,
                 timestamp: new Date().toISOString(),
-                comments,
+                comments: comment,
               },
             ],
           };
@@ -285,6 +353,18 @@ export default function WorkflowPage() {
     );
   };
   
+  const openActionDialog = (transactionId: string, action: 'SUBMIT' | 'APPROVE' | 'REJECT') => {
+    setCurrentActionInfo({ transactionId, action });
+    setIsActionDialogOpen(true);
+  }
+
+  const confirmAction = (comment: string) => {
+    if (currentActionInfo) {
+      handleAction(currentActionInfo.transactionId, currentActionInfo.action, comment);
+    }
+  }
+
+
   const filteredTransactions = useMemo(() => {
     let roleFiltered = transactions;
 
@@ -301,7 +381,7 @@ export default function WorkflowPage() {
 
     if (canSubmitRoles.includes(currentUserRole) && (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED')) {
       return (
-        <Button size="sm" onClick={() => handleAction(transaction.id, 'SUBMIT')}>
+        <Button size="sm" onClick={() => openActionDialog(transaction.id, 'SUBMIT')}>
           <Send className="mr-2 h-4 w-4" /> Submit
         </Button>
       );
@@ -310,10 +390,10 @@ export default function WorkflowPage() {
     if (currentUserRole === 'Admin' && transaction.currentStatus === 'PENDING_ADMIN_APPROVAL') {
       return (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => handleAction(transaction.id, 'APPROVE')}>
+          <Button size="sm" variant="outline" onClick={() => openActionDialog(transaction.id, 'APPROVE')}>
             <Check className="mr-2 h-4 w-4" /> Approve
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => handleAction(transaction.id, 'REJECT')}>
+          <Button size="sm" variant="destructive" onClick={() => openActionDialog(transaction.id, 'REJECT')}>
             <X className="mr-2 h-4 w-4" /> Reject
           </Button>
         </div>
@@ -323,10 +403,10 @@ export default function WorkflowPage() {
     if (currentUserRole === 'Super Admin' && transaction.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL') {
       return (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => handleAction(transaction.id, 'APPROVE')}>
+          <Button size="sm" variant="outline" onClick={() => openActionDialog(transaction.id, 'APPROVE')}>
             <Check className="mr-2 h-4 w-4" /> Approve & Post
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => handleAction(transaction.id, 'REJECT')}>
+          <Button size="sm" variant="destructive" onClick={() => openActionDialog(transaction.id, 'REJECT')}>
             <X className="mr-2 h-4 w-4" /> Reject
           </Button>
         </div>
@@ -378,6 +458,14 @@ export default function WorkflowPage() {
 
   return (
     <div className="container mx-auto py-10">
+     {currentActionInfo && (
+        <ActionDialog 
+            isOpen={isActionDialogOpen}
+            setIsOpen={setIsActionDialogOpen}
+            actionType={currentActionInfo.action}
+            onConfirm={confirmAction}
+        />
+     )}
       <Card>
         <CardHeader>
             <div className="flex justify-between items-start">
@@ -471,22 +559,22 @@ export default function WorkflowPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <Dialog>
-                                  <DialogTrigger asChild>
-                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <File className="mr-2 h-4 w-4" />
-                                        View Details
-                                      </DropdownMenuItem>
-                                  </DialogTrigger>
-                                  <TransactionDetailsDialog transaction={t} />
+                                    <DialogTrigger asChild>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                            <File className="mr-2 h-4 w-4" />
+                                            View Details
+                                        </DropdownMenuItem>
+                                    </DialogTrigger>
+                                    <TransactionDetailsDialog transaction={t} />
                                 </Dialog>
                                 <Dialog>
-                                  <DialogTrigger asChild>
-                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                          <History className="mr-2 h-4 w-4" />
-                                          View History
-                                      </DropdownMenuItem>
-                                  </DialogTrigger>
-                                  <ApprovalHistoryDialog history={t.approvalHistory} transactionId={t.id}/>
+                                    <DialogTrigger asChild>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                            <History className="mr-2 h-4 w-4" />
+                                            View History
+                                        </DropdownMenuItem>
+                                    </DialogTrigger>
+                                     <ApprovalHistoryDialog history={t.approvalHistory} transactionId={t.id}/>
                                 </Dialog>
                               </DropdownMenuContent>
                             </DropdownMenu>
