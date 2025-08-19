@@ -1,13 +1,70 @@
 
 'use server';
 
+import { promises as fs } from 'fs';
+import path from 'path';
+
+const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
+
+async function getProperties() {
+    try {
+        const data = await fs.readFile(propertiesFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        // If the file doesn't exist, return an empty array
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+async function writeProperties(data: any) {
+    await fs.writeFile(propertiesFilePath, JSON.stringify(data, null, 4), 'utf-8');
+}
+
+
 // This is a placeholder for your real database logic.
-export async function savePropertyData(data: any) {
+export async function savePropertyData(dataToSave: any, isNewRecord: boolean) {
   try {
-    // Simulate a network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { propertyData } = dataToSave;
+    const allProperties = await getProperties();
+
+    if (isNewRecord) {
+        const newProperty = {
+            id: `PROP-${Date.now()}`, // Generate a unique ID
+            code: propertyData.code,
+            name: propertyData.name,
+            propertyType: propertyData.propertyType,
+            status: propertyData.status,
+            noOfUnits: propertyData.noOfUnits,
+        };
+        allProperties.push(newProperty);
+    } else {
+        const index = allProperties.findIndex((p: any) => p.code === propertyData.code);
+        if (index !== -1) {
+            allProperties[index] = {
+                ...allProperties[index],
+                name: propertyData.name,
+                propertyType: propertyData.propertyType,
+                status: propertyData.status,
+                noOfUnits: propertyData.noOfUnits,
+            };
+        } else {
+             // If for some reason we are editing but can't find the record, add it as new
+            const newProperty = {
+                id: `PROP-${Date.now()}`,
+                code: propertyData.code,
+                name: propertyData.name,
+                propertyType: propertyData.propertyType,
+                status: propertyData.status,
+                noOfUnits: propertyData.noOfUnits,
+            };
+            allProperties.push(newProperty);
+        }
+    }
     
-    console.log('Saving property data:', JSON.stringify(data, null, 2));
+    await writeProperties(allProperties);
 
     return { success: true };
   } catch (error) {
@@ -18,17 +75,11 @@ export async function savePropertyData(data: any) {
 
 export async function findPropertyData(propertyCode: string) {
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const allProperties = await getProperties();
+    const property = allProperties.find((p: any) => p.code === propertyCode);
 
-    console.log('Finding property data for property code:', propertyCode);
-
-    // Simulate finding a record
-    if (propertyCode === "MT") {
-       return { success: true, data: { 
-            code: propertyCode,
-            name: "Meras Tower",
-            builtUpArea: "500000",
-        } };
+    if (property) {
+       return { success: true, data: property };
     } else {
        return { success: false, error: "Not Found" };
     }

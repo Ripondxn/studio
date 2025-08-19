@@ -518,7 +518,7 @@ export default function PropertyPage() {
         propertyPhoto: uploadedImage 
       };
 
-      const result = await savePropertyData(dataToSave);
+      const result = await savePropertyData(dataToSave, isNewRecord);
       if (result.success) {
         toast({
           title: "Success",
