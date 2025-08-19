@@ -169,7 +169,7 @@ const Sidebar = React.forwardRef<
     {
       side = "left",
       variant = "sidebar",
-      collapsible = "offcanvas",
+      collapsible = "icon",
       className,
       children,
       ...props
@@ -182,6 +182,7 @@ const Sidebar = React.forwardRef<
     React.useEffect(() => {
       setIsMounted(true);
     }, []);
+
 
     if (collapsible === "none") {
       return (
@@ -197,6 +198,11 @@ const Sidebar = React.forwardRef<
         </div>
       )
     }
+
+    if (!isMounted) {
+      return null;
+    }
+
 
     if (isMobile) {
       return (
@@ -218,10 +224,6 @@ const Sidebar = React.forwardRef<
       )
     }
     
-    if (!isMounted) {
-        return null;
-    }
-
     return (
       <div
         ref={ref}
@@ -300,8 +302,14 @@ const SidebarRail = React.forwardRef<
   React.ComponentProps<"button">
 >(({ className, ...props }, ref) => {
   const { toggleSidebar, isMobile } = useSidebar()
+  const [isMounted, setIsMounted] = React.useState(false);
 
-  if(isMobile) return null;
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || isMobile) return null;
+
 
   return (
     <button
@@ -370,7 +378,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-2 p-4", className)}
       {...props}
     />
   )

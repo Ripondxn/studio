@@ -65,8 +65,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar collapsible="icon">
-        <SidebarRail />
+      <Sidebar>
         <SidebarHeader className="p-4">
           <Link
             href="/"
@@ -178,6 +177,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
+        <SidebarRail />
       </Sidebar>
       <SidebarInset>
         <header className="flex h-auto flex-col border-b bg-background/95 backdrop-blur-sm sticky top-0 z-30">
