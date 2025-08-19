@@ -91,6 +91,15 @@ type Particular = {
   taxCategory: string;
 };
 
+type VatItem = {
+  id: number;
+  accountDescription: string;
+  vatGroup: string;
+  vatCode: string;
+  vatDescription: string;
+  vatPercentage: number;
+}
+
 const initialPropertyData = {
     code: 'MT',
     name: 'Meras Tower',
@@ -130,6 +139,9 @@ export default function PropertyPage() {
   
   const [particulars, setParticulars] = useState<Particular[]>([]);
   const [initialParticulars, setInitialParticulars] = useState<Particular[]>([]);
+  
+  const [vatItems, setVatItems] = useState<VatItem[]>([]);
+  const [initialVatItems, setInitialVatItems] = useState<VatItem[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -197,6 +209,28 @@ export default function PropertyPage() {
     setParticulars((prev) => prev.filter((p) => p.id !== id));
   };
   
+  const handleVatChange = (id: number, field: keyof VatItem, value: string | number) => {
+    setVatItems(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+  }
+
+  const addVatRow = () => {
+    setVatItems(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        accountDescription: 'rental-income',
+        vatGroup: 'vat-group',
+        vatCode: 'V5',
+        vatDescription: 'Vat 5%',
+        vatPercentage: 5,
+      }
+    ]);
+  }
+
+  const removeVatRow = (id: number) => {
+    setVatItems(prev => prev.filter(item => item.id !== id));
+  }
+  
   const totalParticularsAmount = useMemo(() => {
     return particulars.reduce((sum, p) => sum + p.amount, 0);
   }, [particulars]);
@@ -204,6 +238,7 @@ export default function PropertyPage() {
   const handleEditClick = () => {
     setInitialData(JSON.parse(JSON.stringify(propertyData)));
     setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
+    setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
     setIsEditing(true);
   }
 
@@ -213,6 +248,7 @@ export default function PropertyPage() {
       const dataToSave = {
         propertyData,
         particulars,
+        vatItems,
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -226,6 +262,7 @@ export default function PropertyPage() {
         setIsEditing(false);
         setInitialData(propertyData);
         setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
+        setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -244,6 +281,7 @@ export default function PropertyPage() {
      if (isEditing) {
       setPropertyData(initialData);
       setParticulars(initialParticulars);
+      setVatItems(initialVatItems);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -661,42 +699,53 @@ export default function PropertyPage() {
                           <TableHead>Vat Code</TableHead>
                           <TableHead>Vat Description</TableHead>
                           <TableHead className="text-right">Vat %</TableHead>
+                          <TableHead>Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <Select disabled={!isEditing}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Account"/>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="rental-income">Rental Income</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                           <TableCell>
-                            <Select disabled={!isEditing}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select VAT Group"/>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="vat-group">VAT Group</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                             <Input placeholder="e.g. V5" disabled={!isEditing} />
-                          </TableCell>
-                          <TableCell>
-                            <Input placeholder="e.g. Vat 5%" disabled={!isEditing} />
-                          </TableCell>
-                          <TableCell>
-                            <Input type="number" placeholder="0" className="text-right" disabled={!isEditing} />
-                          </TableCell>
-                        </TableRow>
+                        {vatItems.map(item => (
+                          <TableRow key={item.id}>
+                            <TableCell>
+                              <Select value={item.accountDescription} onValueChange={(value) => handleVatChange(item.id, 'accountDescription', value)} disabled={!isEditing}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Account"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="rental-income">Rental Income</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Select value={item.vatGroup} onValueChange={(value) => handleVatChange(item.id, 'vatGroup', value)} disabled={!isEditing}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select VAT Group"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="vat-group">VAT Group</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Input value={item.vatCode} onChange={(e) => handleVatChange(item.id, 'vatCode', e.target.value)} placeholder="e.g. V5" disabled={!isEditing} />
+                            </TableCell>
+                            <TableCell>
+                              <Input value={item.vatDescription} onChange={(e) => handleVatChange(item.id, 'vatDescription', e.target.value)} placeholder="e.g. Vat 5%" disabled={!isEditing} />
+                            </TableCell>
+                            <TableCell>
+                              <Input value={item.vatPercentage} onChange={(e) => handleVatChange(item.id, 'vatPercentage', e.target.value)} type="number" placeholder="0" className="text-right" disabled={!isEditing} />
+                            </TableCell>
+                             <TableCell>
+                              <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeVatRow(item.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
+                     <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addVatRow} disabled={!isEditing}>
+                      <Plus className="mr-2 h-4 w-4"/> Add
+                    </Button>
                   </div>
                  </TabsContent>
                  <TabsContent value="notes">
