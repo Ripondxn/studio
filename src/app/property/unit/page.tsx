@@ -297,8 +297,14 @@ export default function UnitPage() {
   };
 
   const handleReportClick = () => {
-    const unitDataString = encodeURIComponent(JSON.stringify({unitData, particulars}));
-    router.push(`/property/unit/report?data=${unitDataString}`);
+    const reportData = {
+      unitData,
+      particulars,
+      customFields,
+      customFieldsData,
+    };
+    const dataString = encodeURIComponent(JSON.stringify(reportData));
+    router.push(`/property/unit/report?data=${dataString}`);
   };
 
 
@@ -1116,7 +1122,7 @@ export default function UnitPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {customFields.map((field) => (
-                    <FormItem key={field.id}>
+                    <FormItem key={field.id} className="space-y-2">
                       <Label htmlFor={field.id}>{field.label}</Label>
                       <Input
                         id={field.id}

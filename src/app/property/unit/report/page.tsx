@@ -40,10 +40,12 @@ function Report() {
     );
   }
 
-  const { unitData, particulars } = data;
+  const { unitData, particulars, customFields, customFieldsData } = data;
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
+    let yPos = 20;
+
     doc.text(`Unit Report - ${unitData.unitCode}`, 14, 16);
     
     // Unit Details Table
@@ -51,25 +53,42 @@ function Report() {
     doc.autoTable({
       head: [['Field', 'Value']],
       body: unitDetails,
-      startY: 20,
+      startY: yPos,
+      didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
     });
 
     // Particulars Table
     if (particulars && particulars.length > 0) {
-      doc.addPage();
-      doc.text('Particulars', 14, 16);
-      doc.autoTable({
-        head: [['Particulars', 'Amount', 'VAT %', 'VAT Amount', 'Total Amount']],
-        body: particulars.map((p: any) => [
-          p.particulars,
-          p.amount,
-          p.vatPercentage,
-          p.vatAmount.toFixed(2),
-          p.totalAmount.toFixed(2),
-        ]),
-        startY: 20,
-      });
+        if (yPos > 250) { doc.addPage(); yPos = 20; }
+        doc.autoTable({
+            head: [['Particulars', 'Amount', 'VAT %', 'VAT Amount', 'Total Amount']],
+            body: particulars.map((p: any) => [
+            p.particulars,
+            p.amount,
+            p.vatPercentage,
+            p.vatAmount.toFixed(2),
+            p.totalAmount.toFixed(2),
+            ]),
+            startY: yPos + 10,
+            didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
+        });
     }
+
+    // Custom Fields Table
+    if (customFields && customFields.length > 0) {
+        if (yPos > 250) { doc.addPage(); yPos = 20; }
+        const customFieldRows = customFields.map((field: any) => [
+            field.label,
+            customFieldsData[field.id] || ''
+        ]);
+        doc.autoTable({
+            head: [['Custom Field', 'Value']],
+            body: customFieldRows,
+            startY: yPos + 10,
+            didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
+        });
+    }
+
 
     doc.save(`report-${unitData.unitCode}.pdf`);
   };
@@ -81,6 +100,16 @@ function Report() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, unitWorksheet, 'Unit Details');
     XLSX.utils.book_append_sheet(workbook, particularsWorksheet, 'Particulars');
+    
+    if (customFields && customFields.length > 0) {
+        const customData = customFields.map((field: any) => ({
+            Label: field.label,
+            Value: customFieldsData[field.id] || ''
+        }));
+        const customWorksheet = XLSX.utils.json_to_sheet(customData);
+        XLSX.utils.book_append_sheet(workbook, customWorksheet, 'Custom Details');
+    }
+
 
     XLSX.writeFile(workbook, `report-${unitData.unitCode}.xlsx`);
   };
@@ -145,6 +174,34 @@ function Report() {
               ))}
             </TableBody>
           </Table>
+
+          {customFields && customFields.length > 0 && (
+            <>
+                <h3 className="text-lg font-semibold mt-6 mb-2">Custom Details</h3>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Field</TableHead>
+                            <TableHead>Value</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {customFields.map((field: any) => (
+                            <TableRow key={field.id}>
+                                <TableCell className="font-medium">{field.label}</TableCell>
+                                <TableCell>
+                                    {customFieldsData[field.id] ? 
+                                        (typeof customFieldsData[field.id] === 'object' ? 'File Attachment' : String(customFieldsData[field.id]))
+                                        : 'N/A'
+                                    }
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </>
+          )}
+
         </CardContent>
       </Card>
     </div>
