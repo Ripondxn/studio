@@ -226,6 +226,50 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Briefcase className="h-4 w-4 mr-2" />
                 FINANCE
               </MenubarTrigger>
+              <MenubarContent>
+                <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Accounts</h3>
+                    <MenubarItem>Chart Of Accounts</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Receipts &amp; Payments</h3>
+                    <MenubarItem>Contract Income</MenubarItem>
+                    <MenubarItem>Cash Receipt Voucher - Rent</MenubarItem>
+                    <MenubarItem>Postdated Receipt Voucher Others</MenubarItem>
+                    <MenubarItem>Contract Income Reversal</MenubarItem>
+                    <MenubarItem>Cash Payment Voucher</MenubarItem>
+                    <MenubarItem>Postdated Payment Voucher Multiple</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Journal Entries</h3>
+                    <MenubarItem>Journal Voucher Others</MenubarItem>
+                    <MenubarItem>Debit Note (JV)</MenubarItem>
+                    <MenubarItem>Credit Note (JV)</MenubarItem>
+                    <MenubarItem>Opening Balance</MenubarItem>
+                    <MenubarItem>Debit Note</MenubarItem>
+                    <MenubarItem>Credit Note</MenubarItem>
+                  </div>
+                   <div>
+                    <h3 className="font-bold text-sm mb-2">Manage</h3>
+                    <MenubarItem>Manage</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Fixed Assets</h3>
+                    <MenubarItem>Assets</MenubarItem>
+                    <MenubarItem>Asset Classes</MenubarItem>
+                    <MenubarItem>Depreciation Books</MenubarItem>
+                    <MenubarItem>FA Accounts</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Reports</h3>
+                    <MenubarItem>General Ledger</MenubarItem>
+                    <MenubarItem>Registers</MenubarItem>
+                    <MenubarItem>Receivables &amp; Payables</MenubarItem>
+                    <MenubarItem>Final Reports</MenubarItem>
+                  </div>
+                </div>
+              </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
@@ -326,3 +370,5 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    
