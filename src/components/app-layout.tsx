@@ -313,7 +313,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <div>
                     <h3 className="font-bold text-sm mb-2">Properties</h3>
                     <MenubarItem asChild><Link href="/property/units">Units</Link></MenubarItem>
-                    <MenubarItem>Properties</MenubarItem>
+                    <MenubarItem asChild><Link href="/property/properties">Properties</Link></MenubarItem>
                     <MenubarItem>Enquiry</MenubarItem>
                   </div>
                   <div>
