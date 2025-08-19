@@ -287,26 +287,13 @@ export default function WorkflowPage() {
   
   const filteredTransactions = useMemo(() => {
     let roleFiltered = transactions;
-    // The role-based filter is now more about what actions you can take, not what you can see
-    // You might want to reinstate some of this if certain roles should not see certain statuses at all
-    // switch (currentUserRole) {
-    //   case 'User':
-    //   case 'Property Manager':
-    //   case 'Accountant':
-    //     roleFiltered = transactions.filter(t => t.createdByUser.id === currentUserEmail || t.currentStatus === 'POSTED');
-    //     break;
-    //   // Admin and Super Admin can see all for management purposes
-    //   default:
-    //     roleFiltered = transactions;
-    //     break;
-    // }
 
     if (statusFilter === 'ALL') {
       return roleFiltered;
     }
     return roleFiltered.filter(t => t.currentStatus === statusFilter);
 
-  }, [currentUserRole, transactions, statusFilter, currentUserEmail]);
+  }, [transactions, statusFilter]);
 
 
   const getActionButtons = (transaction: Transaction) => {
@@ -476,35 +463,33 @@ export default function WorkflowPage() {
                       <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
                              {getActionButtons(t)}
-                            <Dialog>
-                                <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                          <File className="mr-2 h-4 w-4" />
-                                          View Details
-                                        </DropdownMenuItem>
-                                    </DialogTrigger>
-                                    <DialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                            <History className="mr-2 h-4 w-4" />
-                                            View History
-                                        </DropdownMenuItem>
-                                    </DialogTrigger>
-                                </DropdownMenuContent>
-                                </DropdownMenu>
-                                 <DialogContent>
-                                    <TransactionDetailsDialog transaction={t} />
-                                 </DialogContent>
-                                 <DialogContent>
-                                     <ApprovalHistoryDialog history={t.approvalHistory} transactionId={t.id}/>
-                                 </DialogContent>
-                            </Dialog>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                        <File className="mr-2 h-4 w-4" />
+                                        View Details
+                                      </DropdownMenuItem>
+                                  </DialogTrigger>
+                                  <TransactionDetailsDialog transaction={t} />
+                                </Dialog>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                          <History className="mr-2 h-4 w-4" />
+                                          View History
+                                      </DropdownMenuItem>
+                                  </DialogTrigger>
+                                  <ApprovalHistoryDialog history={t.approvalHistory} transactionId={t.id}/>
+                                </Dialog>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                       </TableCell>
                     </TableRow>
