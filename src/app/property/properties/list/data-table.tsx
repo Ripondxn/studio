@@ -48,6 +48,29 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
 }
 
+// Helper function to extract a simple string from a complex header
+const getHeaderTitle = (header: any): string => {
+    if (typeof header === 'string') {
+        return header;
+    }
+    if (typeof header === 'function') {
+        // This is a simple heuristic. For more complex headers, this might need adjustment.
+        // It looks for a direct child that is a string.
+        const rendered = header({}); // render with empty context
+        if (rendered?.props?.children) {
+            const children = React.Children.toArray(rendered.props.children);
+            const textChild = children.find(child => typeof child === 'string');
+            if (textChild) {
+                return textChild as string;
+            }
+        }
+    }
+    // Fallback to accessorKey if available
+    // @ts-ignore
+    return (header?.column?.accessorKey as string) || '';
+}
+
+
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -81,15 +104,28 @@ export function DataTable<TData, TValue>({
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
+    const exportableColumns = columns.filter(col => col.id !== 'select' && col.id !== 'actions' && col.accessorKey);
+    
+    const head = [exportableColumns.map(col => {
+        // A helper to safely get a string header.
+        // `header` can be a string or a function.
+        if (typeof col.header === 'string') return col.header;
+        // The accessor key is a good fallback.
+        return col.accessorKey as string || col.id || '';
+    })];
+
+    const body = table.getRowModel().rows.map(row => 
+        exportableColumns.map(col => {
+            // @ts-ignore
+            const value = row.original[col.accessorKey as keyof TData];
+            return String(value); // Ensure value is a string for the PDF
+        })
+    );
+
     doc.text("Properties List", 14, 16);
     doc.autoTable({
-        head: [columns.filter(col => col.id !== 'select' && col.id !== 'actions').map(col => (col.header as string) || col.accessorKey)],
-        body: table.getRowModel().rows.map(row => 
-             columns
-                .filter(col => col.id !== 'select' && col.id !== 'actions')
-                // @ts-ignore
-                .map(col => row.original[col.accessorKey as keyof TData])
-        ),
+        head: head,
+        body: body,
         startY: 20,
     });
     doc.save('properties-list.pdf');
@@ -98,9 +134,10 @@ export function DataTable<TData, TValue>({
   const handleExportExcel = () => {
     const dataToExport = table.getRowModel().rows.map(row => {
         let obj: any = {};
-         columns.filter(col => col.id !== 'select' && col.id !== 'actions').forEach(col => {
+         columns.filter(col => col.id !== 'select' && col.id !== 'actions' && col.accessorKey).forEach(col => {
+            const headerText = (typeof col.header === 'string' ? col.header : col.accessorKey) as string;
             // @ts-ignore
-            obj[(col.header as string) || col.accessorKey] = row.original[col.accessorKey as keyof TData];
+            obj[headerText] = row.original[col.accessorKey as keyof TData];
          })
          return obj;
     });
