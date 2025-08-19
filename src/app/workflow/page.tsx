@@ -12,6 +12,9 @@ import {
   X,
   History,
   Send,
+  Calendar,
+  DollarSign,
+  Info,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +45,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { type Transaction, type Role, type Status, type ApprovalHistory } from './types';
 import { transactions as initialTransactions } from './data';
@@ -57,19 +61,22 @@ const statusConfig: {
       | 'secondary'
       | 'destructive'
       | 'outline';
+    icon: React.ReactNode;
   };
 } = {
-  DRAFT: { label: 'Draft', color: 'secondary' },
+  DRAFT: { label: 'Draft', color: 'secondary', icon: <File className="h-4 w-4" /> },
   PENDING_ADMIN_APPROVAL: {
     label: 'Pending Admin Approval',
     color: 'default',
+    icon: <History className="h-4 w-4" />,
   },
   PENDING_SUPER_ADMIN_APPROVAL: {
     label: 'Pending Super Admin Approval',
     color: 'default',
+    icon: <History className="h-4 w-4" />,
   },
-  POSTED: { label: 'Posted', color: 'outline' },
-  REJECTED: { label: 'Rejected', color: 'destructive' },
+  POSTED: { label: 'Posted', color: 'outline', icon: <Check className="h-4 w-4" /> },
+  REJECTED: { label: 'Rejected', color: 'destructive', icon: <X className="h-4 w-4" /> },
 };
 
 const roleIcons: { [key in Role]: React.ReactNode } = {
@@ -121,6 +128,57 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
       </div>
     </DialogContent>
   );
+};
+
+const TransactionDetailsDialog = ({ transaction }: { transaction: Transaction }) => {
+    const statusInfo = statusConfig[transaction.currentStatus];
+    return (
+        <DialogContent className="max-w-lg">
+            <DialogHeader>
+                <DialogTitle>Transaction Details</DialogTitle>
+                <DialogDescription>
+                    Complete details for transaction ID: {transaction.id}
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                       <DollarSign className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">Amount</p>
+                        <p className="text-2xl font-bold">${transaction.amount.toLocaleString()}</p>
+                    </div>
+                     <div className="ml-auto flex items-center gap-2 text-sm font-medium">
+                       {statusInfo.icon}
+                       {statusInfo.label}
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Type:</span>
+                        <span>{transaction.type}</span>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Created By:</span>
+                        <span>{transaction.createdByUser.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Date Created:</span>
+                        <span>{format(new Date(transaction.dateCreated), 'PP')}</span>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">Date Submitted:</span>
+                        <span>{format(new Date(transaction.submittedForApprovalDate), 'PP')}</span>
+                    </div>
+                </div>
+            </div>
+        </DialogContent>
+    );
 };
 
 
@@ -324,10 +382,12 @@ export default function WorkflowPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>
-                                    <File className="mr-2 h-4 w-4" />
-                                    View Details
-                                    </DropdownMenuItem>
+                                    <DialogTrigger asChild>
+                                        <DropdownMenuItem>
+                                        <File className="mr-2 h-4 w-4" />
+                                        View Details
+                                        </DropdownMenuItem>
+                                    </DialogTrigger>
                                     <DialogTrigger asChild>
                                         <DropdownMenuItem>
                                             <History className="mr-2 h-4 w-4" />
@@ -336,7 +396,7 @@ export default function WorkflowPage() {
                                     </DialogTrigger>
                                 </DropdownMenuContent>
                                 </DropdownMenu>
-                                <ApprovalHistoryDialog history={t.approvalHistory} transactionId={t.id}/>
+                                <TransactionDetailsDialog transaction={t} />
                             </Dialog>
                           </div>
                       </TableCell>
