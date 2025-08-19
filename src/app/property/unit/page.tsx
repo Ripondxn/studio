@@ -331,7 +331,7 @@ export default function UnitPage() {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: result.error,
+          description: result.error || `No record found for Unit Code: ${codeToFind}`,
         });
       }
     } catch (error) {
@@ -394,7 +394,7 @@ export default function UnitPage() {
         <div className="flex items-center gap-2">
            <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="outline" className="hover:bg-accent" disabled={!isEditing}>
+                <Button variant="outline" className="hover:bg-accent" disabled={isEditing || !searchParams.get('unitCode')}>
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                 </Button>
             </AlertDialogTrigger>
