@@ -65,7 +65,7 @@ export async function savePropertyData(dataToSave: any, isNewRecord: boolean) {
 export async function findPropertyData(propertyCode: string) {
   try {
     const allProperties = await getProperties();
-    const property = allProperties.find((p: any) => p.propertyData.code === propertyCode);
+    const property = allProperties.find((p: any) => (p.propertyData ? p.propertyData.code : p.code) === propertyCode);
 
     if (property) {
        return { success: true, data: property };
