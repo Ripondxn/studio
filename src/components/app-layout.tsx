@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -29,6 +30,11 @@ import {
   Lightbulb,
   Building2,
   ChevronDown,
+  Users,
+  Banknote,
+  Wrench,
+  LineChart,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -72,6 +78,78 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/intelligent-pricing">
                   <Lightbulb />
                   <span>Intelligent Pricing</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/property-management'}
+                tooltip="Property Management"
+              >
+                <Link href="/property-management">
+                  <Building2 />
+                  <span>Property Management</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/tenant-management'}
+                tooltip="Tenant Management"
+              >
+                <Link href="/tenant-management">
+                  <Users />
+                  <span>Tenant Management</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/financials'}
+                tooltip="Financials"
+              >
+                <Link href="/financials">
+                  <Banknote />
+                  <span>Financials</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/maintenance'}
+                tooltip="Maintenance"
+              >
+                <Link href="/maintenance">
+                  <Wrench />
+                  <span>Maintenance</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/reports'}
+                tooltip="Reports"
+              >
+                <Link href="/reports">
+                  <LineChart />
+                  <span>Reports</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/settings'}
+                tooltip="Settings"
+              >
+                <Link href="/settings">
+                  <Settings />
+                  <span>Settings</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
