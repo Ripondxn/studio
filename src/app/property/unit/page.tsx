@@ -70,7 +70,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveUnitData, findUnitData } from './actions';
+import { saveUnitData, findUnitData, deleteUnitData } from './actions';
 import { CustomizeDialog, type CustomField } from './customize-dialog';
 import { FormItem } from '@/components/ui/form';
 import { ReportCustomizerDialog, type ReportConfig } from './report-customizer-dialog';
@@ -301,19 +301,31 @@ export default function UnitPage() {
   }
 
   const handleCloseClick = () => {
-    router.push('/');
+    router.push('/property/units');
   };
 
-  const handleDelete = () => {
-    // Here you would typically call an API to delete the record
-    console.log('Record deleted!');
-    toast({
-        title: "Deleted",
-        description: "The unit record has been deleted.",
-    });
-    // After deletion, you might want to redirect the user or reset the form
-    router.push('/property/units');
-  }
+  const handleDelete = async () => {
+    if (!unitData.unitCode) return;
+    try {
+      const result = await deleteUnitData(unitData.unitCode);
+      if (result.success) {
+        toast({
+          title: 'Deleted',
+          description: `Unit "${unitData.unitCode}" has been deleted.`,
+        });
+        router.push('/property/units');
+        router.refresh();
+      } else {
+        throw new Error(result.error || 'An unknown error occurred');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: (error as Error).message || 'Failed to delete unit.',
+      });
+    }
+  };
 
   const handleFindClick = async (code?: string) => {
     const codeToFind = code || unitData.unitCode;
@@ -412,7 +424,7 @@ export default function UnitPage() {
         <div className="flex items-center gap-2">
            <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="outline" className="hover:bg-accent" disabled={isEditing || !searchParams.get('unitCode')}>
+                <Button variant="outline" className="hover:bg-destructive hover:text-destructive-foreground" disabled={isNewRecord || isEditing}>
                     <Trash2 className="mr-2 h-4 w-4" /> Delete
                 </Button>
             </AlertDialogTrigger>
@@ -426,7 +438,7 @@ export default function UnitPage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+                <AlertDialogAction onClick={handleDelete}  className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

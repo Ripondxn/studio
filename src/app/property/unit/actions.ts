@@ -74,3 +74,20 @@ export async function findUnitData(unitCode: string) {
     return { success: false, error: (error as Error).message || 'An unknown error occurred' };
   }
 }
+
+export async function deleteUnitData(unitCode: string) {
+    try {
+        let allUnits = await getUnits();
+        const updatedUnits = allUnits.filter((u: any) => u.unitCode !== unitCode);
+
+        if (allUnits.length === updatedUnits.length) {
+            return { success: false, error: 'Unit not found.' };
+        }
+
+        await writeUnits(updatedUnits);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete unit data:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
