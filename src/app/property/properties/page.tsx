@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -245,7 +246,7 @@ export default function PropertyPage() {
       setParticulars(initialParticulars);
       setIsEditing(false);
     } else {
-      router.push('/');
+      router.push('/property/properties/list');
     }
   }
 
@@ -657,15 +658,31 @@ export default function PropertyPage() {
                 </CardContent>
             </Card>
             <Card>
-                <CardHeader><CardTitle className="font-headline">Reports</CardTitle></CardHeader>
-                <CardContent className="flex flex-col items-center justify-center h-48">
-                    <Button variant="ghost" className="w-full" onClick={handleCancelClick}>
-                        <X className="mr-2 h-4 w-4" /> Cancel
-                    </Button>
-                </CardContent>
-            </Card>
+            <CardHeader>
+              <CardTitle className="font-headline">Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center h-48 gap-4">
+               {!isEditing && (
+                 <Button onClick={handleEditClick} className="w-full">
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                 </Button>
+                )}
+              {isEditing && (
+                <>
+                <Button onClick={handleSaveClick} disabled={isSaving} className="w-full">
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button variant="ghost" onClick={handleCancelClick} className="w-full">
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
 }
+
