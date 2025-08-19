@@ -116,6 +116,7 @@ const initialUnitData = {
 
 export default function UnitPage() {
   const [isEditing, setIsEditing] = useState(false);
+  const [isNewRecord, setIsNewRecord] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFinding, setIsFinding] = useState(false);
   const { toast } = useToast();
@@ -155,10 +156,12 @@ export default function UnitPage() {
   useEffect(() => {
     const unitCode = searchParams.get('unitCode');
     if (unitCode) {
+      setIsNewRecord(false);
       setUnitData(prev => ({...prev, unitCode}));
       // Automatically trigger find if unitCode is in URL
       handleFindClick(unitCode);
     } else {
+        setIsNewRecord(true);
         setIsEditing(true); // Start in editing mode for new entries
     }
   }, [searchParams]);
@@ -242,6 +245,16 @@ export default function UnitPage() {
   const handleSaveClick = async () => {
     setIsSaving(true);
     try {
+      if (!unitData.unitCode) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Unit Code is required.",
+        });
+        setIsSaving(false);
+        return;
+      }
+
       // Note: In a real app, file uploads for custom fields would need special handling (e.g., upload to a storage service)
       const dataToSave = {
         unitData,
@@ -250,7 +263,7 @@ export default function UnitPage() {
         unitPhoto: uploadedImage // In a real app, you'd upload the file and save the URL
       };
 
-      const result = await saveUnitData(dataToSave);
+      const result = await saveUnitData(dataToSave, isNewRecord);
       if (result.success) {
         toast({
           title: "Success",
@@ -259,6 +272,10 @@ export default function UnitPage() {
         setIsEditing(false);
         setInitialData(unitData);
         setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
+        if(isNewRecord){
+            router.push('/property/units');
+            router.refresh();
+        }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -274,9 +291,13 @@ export default function UnitPage() {
   }
 
   const handleCancelClick = () => {
-    setUnitData(initialData);
-    setParticulars(initialParticulars);
-    setIsEditing(false);
+    if (isNewRecord) {
+        router.push('/property/units');
+    } else {
+        setUnitData(initialData);
+        setParticulars(initialParticulars);
+        setIsEditing(false);
+    }
   }
 
   const handleCloseClick = () => {
@@ -312,20 +333,11 @@ export default function UnitPage() {
           title: 'Found',
           description: `Found record for Unit Code: ${codeToFind}`,
         });
-         // In a real application, you would update the form with the found data.
-         // For this mock, we'll update a few fields to show it worked.
-         const mockData = {
-          ...initialUnitData, // Reset to default first
-          unitCode: result.data.unitCode,
-          property: "d3-china-cluster",
-          floor: "1",
-          unitType: "1-bhk",
-          annualRent: "30000",
-          unitNo: result.data.unitCode,
-          unitArea: "721",
-        }
-        setUnitData(mockData);
-        setInitialData(mockData);
+        
+        const foundData = { ...initialUnitData, ...result.data };
+        setUnitData(foundData);
+        setInitialData(foundData);
+        setIsNewRecord(false);
         setIsEditing(false);
       } else {
         toast({
@@ -333,6 +345,12 @@ export default function UnitPage() {
           title: 'Error',
           description: result.error || `No record found for Unit Code: ${codeToFind}`,
         });
+         // If not found, maybe it's a new entry
+        const newData = { ...initialUnitData, unitCode: codeToFind };
+        setUnitData(newData);
+        setInitialData(newData);
+        setIsNewRecord(true);
+        setIsEditing(true);
       }
     } catch (error) {
       toast({
@@ -382,7 +400,7 @@ export default function UnitPage() {
     handleFileSelect(file || null);
   };
   
-  const pageTitle = searchParams.get('unitCode') ? 'Edit Unit' : 'Add New Unit';
+  const pageTitle = isNewRecord ? 'Add New Unit' : 'Edit Unit';
 
 
   return (
@@ -1266,5 +1284,3 @@ export default function UnitPage() {
     </div>
   );
 }
-
-    

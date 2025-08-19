@@ -31,6 +31,10 @@ export async function savePropertyData(dataToSave: any, isNewRecord: boolean) {
     const allProperties = await getProperties();
 
     if (isNewRecord) {
+        const propertyExists = allProperties.some((p: any) => (p.propertyData ? p.propertyData.code : p.code) === dataToSave.propertyData.code);
+        if (propertyExists) {
+            return { success: false, error: `Property with code "${dataToSave.propertyData.code}" already exists.` };
+        }
         const newProperty = {
             id: `PROP-${Date.now()}`, // Generate a unique ID
             ...dataToSave
