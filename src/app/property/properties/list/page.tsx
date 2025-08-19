@@ -21,10 +21,27 @@ async function getProperties() {
     path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json')
   );
   const properties = JSON.parse(data.toString());
+
+  // Normalize data to handle both flat and nested structures
+  const normalizedProperties = properties.map((p: any) => {
+    if (p.propertyData) {
+      // If it's already in the nested format, ensure the nested object has an ID.
+      // If the root has an ID, pass it down.
+      if (!p.propertyData.id && p.id) {
+        p.propertyData.id = p.id;
+      }
+      return p;
+    } else {
+      // If it's a flat structure, convert it to the nested structure.
+      return { propertyData: p };
+    }
+  });
+
   // We need to make sure every item in the array has the propertyData field before transforming
-  const safeProperties = properties.filter((p: any) => p && p.propertyData);
+  const safeProperties = normalizedProperties.filter((p: any) => p && p.propertyData);
   return propertiesListSchema.parse(safeProperties);
 }
+
 
 export default async function PropertiesPage() {
   const properties = await getProperties();
