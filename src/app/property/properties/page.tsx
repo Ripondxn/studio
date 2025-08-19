@@ -169,6 +169,7 @@ const initialPropertyData = {
     gps: '',
     propertyNo: '',
     assetManager: 'Supervisor',
+    notes: '',
 };
 
 export default function PropertyPage() {
@@ -1265,7 +1266,12 @@ export default function PropertyPage() {
                  </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
-                    <Textarea placeholder="Enter any notes here..." disabled={!isEditing} />
+                    <Textarea 
+                        placeholder="Enter any notes here..." 
+                        disabled={!isEditing} 
+                        value={propertyData.notes} 
+                        onChange={(e) => handleInputChange('notes', e.target.value)}
+                    />
                   </div>
                  </TabsContent>
               </Tabs>
