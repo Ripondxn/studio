@@ -35,6 +35,7 @@ import {
   MinusCircle,
   Plus,
   Pencil,
+  Check,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -59,6 +60,7 @@ type Particular = {
 };
 
 export default function UnitPage() {
+  const [isEditing, setIsEditing] = useState(false);
   const [particulars, setParticulars] = useState<Particular[]>([
     {
       id: 1,
@@ -130,6 +132,20 @@ export default function UnitPage() {
     return particulars.reduce((sum, p) => sum + p.totalAmount, 0);
   }, [particulars]);
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+  }
+
+  const handleSaveClick = () => {
+    setIsEditing(false);
+    // Here you would typically save the data
+  }
+
+  const handleCancelClick = () => {
+    setIsEditing(false);
+    // Here you might want to reset the form to its original state
+  }
+
 
   return (
     <div className="container mx-auto p-4 bg-gray-50/50">
@@ -138,25 +154,27 @@ export default function UnitPage() {
           Edit Unit
         </h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="hover:bg-accent">
+          <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
             <Copy className="mr-2 h-4 w-4" /> Copy
           </Button>
-          <Button variant="outline" className="hover:bg-accent">
+          <Button variant="outline" className="hover:bg-accent" onClick={handleEditClick} disabled={isEditing}>
             <Pencil className="mr-2 h-4 w-4" /> Edit
           </Button>
-          <Button variant="outline" className="hover:bg-accent">
-            <Save className="mr-2 h-4 w-4" /> Save
-          </Button>
-          <Button variant="outline" className="hover:bg-accent">
+          {isEditing && (
+             <Button variant="outline" className="hover:bg-accent" onClick={handleSaveClick}>
+                <Save className="mr-2 h-4 w-4" /> Save
+            </Button>
+          )}
+          <Button variant="outline" className="hover:bg-accent" disabled={!isEditing}>
             <Trash2 className="mr-2 h-4 w-4" /> Delete
           </Button>
-          <Button variant="outline" className="hover:bg-accent">
+          <Button variant="outline" className="hover:bg-accent" onClick={handleCancelClick}>
             <X className="mr-2 h-4 w-4" /> Close
           </Button>
-          <Button variant="outline" className="hover:bg-accent">
+          <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
             <FileText className="mr-2 h-4 w-4" /> Report
           </Button>
-          <Button variant="outline" className="hover:bg-accent">
+          <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
             <Settings className="mr-2 h-4 w-4" /> Customize
           </Button>
         </div>
@@ -171,11 +189,11 @@ export default function UnitPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="unit-code">Unit Code</Label>
-                    <Input id="unit-code" defaultValue="D03-101" />
+                    <Input id="unit-code" defaultValue="D03-101" disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="property">Property</Label>
-                    <Select defaultValue="d3-china-cluster">
+                    <Select defaultValue="d3-china-cluster" disabled={!isEditing}>
                       <SelectTrigger id="property">
                         <SelectValue placeholder="Select Property" />
                       </SelectTrigger>
@@ -188,7 +206,7 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="floor">Floor</Label>
-                    <Select defaultValue="1">
+                    <Select defaultValue="1" disabled={!isEditing}>
                       <SelectTrigger id="floor">
                         <SelectValue placeholder="Select Floor" />
                       </SelectTrigger>
@@ -200,7 +218,7 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="unit-type">Unit Type.</Label>
-                    <Select defaultValue="1-bhk">
+                    <Select defaultValue="1-bhk" disabled={!isEditing}>
                       <SelectTrigger id="unit-type">
                         <SelectValue placeholder="Select Unit Type" />
                       </SelectTrigger>
@@ -212,15 +230,15 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="electricity-code">Electricity Code</Label>
-                    <Input id="electricity-code" defaultValue="122111" />
+                    <Input id="electricity-code" defaultValue="122111" disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="annual-rent">Annual Rent</Label>
-                    <Input id="annual-rent" defaultValue="30000" />
+                    <Input id="annual-rent" defaultValue="30000" disabled={!isEditing} />
                   </div>
                    <div>
                     <Label htmlFor="sales-man">Sales Man</Label>
-                    <Select defaultValue="salesman">
+                    <Select defaultValue="salesman" disabled={!isEditing}>
                       <SelectTrigger id="sales-man">
                         <SelectValue placeholder="Select Sales Man" />
                       </SelectTrigger>
@@ -235,19 +253,19 @@ export default function UnitPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="unit-no">Unit No</Label>
-                    <Input id="unit-no" defaultValue="D03-101" />
+                    <Input id="unit-no" defaultValue="D03-101" disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="unit-area">Unit Area SQFT</Label>
-                    <Input id="unit-area" type="number" defaultValue="721" />
+                    <Input id="unit-area" type="number" defaultValue="721" disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="view">View</Label>
-                    <Input id="view" defaultValue="Good" />
+                    <Input id="view" defaultValue="Good" disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="bathrooms">No. Of Bathrooms</Label>
-                    <Input id="bathrooms" type="number" defaultValue="1" />
+                    <Input id="bathrooms" type="number" defaultValue="1" disabled={!isEditing} />
                   </div>
                   <div>
                     <Label htmlFor="electricity-kw">Electricity KW</Label>
@@ -255,15 +273,16 @@ export default function UnitPage() {
                       id="electricity-kw"
                       type="number"
                       defaultValue="0"
+                      disabled={!isEditing}
                     />
                   </div>
                    <div>
                     <Label htmlFor="monthly-rent">Monthly Rent</Label>
-                    <Input id="monthly-rent" defaultValue="2500" />
+                    <Input id="monthly-rent" defaultValue="2500" disabled={!isEditing} />
                   </div>
                    <div>
                     <Label htmlFor="accountant">Accountant</Label>
-                     <Select defaultValue="accountant">
+                     <Select defaultValue="accountant" disabled={!isEditing}>
                       <SelectTrigger id="accountant">
                         <SelectValue placeholder="Select Accountant" />
                       </SelectTrigger>
@@ -282,7 +301,7 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="landlord">LandLord</Label>
-                    <Select defaultValue="landlord">
+                    <Select defaultValue="landlord" disabled={!isEditing}>
                       <SelectTrigger id="landlord">
                         <SelectValue placeholder="Select Landlord" />
                       </SelectTrigger>
@@ -293,7 +312,7 @@ export default function UnitPage() {
                   </div>
                   <div className='relative'>
                     <Label htmlFor="unit-status-normal">Unit Status.</Label>
-                     <Select defaultValue="normal">
+                     <Select defaultValue="normal" disabled={!isEditing}>
                       <SelectTrigger id="unit-status-normal">
                         <SelectValue placeholder="Select Status" />
                       </SelectTrigger>
@@ -302,20 +321,20 @@ export default function UnitPage() {
                         <SelectItem value="urgent">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="ghost" size="icon" className="absolute right-0 top-6 text-muted-foreground hover:bg-transparent">
+                    <Button variant="ghost" size="icon" className="absolute right-0 top-6 text-muted-foreground hover:bg-transparent" disabled={!isEditing}>
                         <MinusCircle className="h-5 w-5"/>
                     </Button>
                   </div>
                   <div>
                     <Label htmlFor="parkings">No. Of Parkings</Label>
-                    <Input id="parkings" type="number" defaultValue="1" />
+                    <Input id="parkings" type="number" defaultValue="1" disabled={!isEditing} />
                   </div>
                    <div className='flex items-end gap-2'>
                     <div className='flex-grow'>
                         <Label htmlFor="amount">Amount.</Label>
-                        <Input id="amount" type="number" defaultValue="30000" />
+                        <Input id="amount" type="number" defaultValue="30000" disabled={!isEditing} />
                     </div>
-                     <Select defaultValue="annual">
+                     <Select defaultValue="annual" disabled={!isEditing}>
                       <SelectTrigger className="w-[100px]">
                         <SelectValue />
                       </SelectTrigger>
@@ -331,7 +350,7 @@ export default function UnitPage() {
                   </div>
                   <div>
                     <Label htmlFor="post-monthly-income">Post Monthly income for rent</Label>
-                     <Select defaultValue="yes">
+                     <Select defaultValue="yes" disabled={!isEditing}>
                       <SelectTrigger id="post-monthly-income">
                         <SelectValue />
                       </SelectTrigger>
@@ -354,13 +373,13 @@ export default function UnitPage() {
                         </div>
                     </div>
                     <div className="flex justify-center mt-2 gap-2">
-                         <Button variant="link" size="sm">
+                         <Button variant="link" size="sm" disabled={!isEditing}>
                             <Upload className="mr-2 h-4 w-4" /> Upload
                         </Button>
-                        <Button variant="link" size="sm" className="text-destructive">
+                        <Button variant="link" size="sm" className="text-destructive" disabled={!isEditing}>
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </Button>
-                         <Button variant="link" size="sm">
+                         <Button variant="link" size="sm" disabled={!isEditing}>
                             Pop-Up
                         </Button>
                     </div>
@@ -370,8 +389,8 @@ export default function UnitPage() {
                   <div>
                     <Label htmlFor="discount">Discount</Label>
                     <div className="flex items-center gap-2">
-                      <Input id="discount" type="number" defaultValue="0" />
-                      <Select defaultValue="value">
+                      <Input id="discount" type="number" defaultValue="0" disabled={!isEditing} />
+                      <Select defaultValue="value" disabled={!isEditing}>
                         <SelectTrigger className="w-[100px]">
                           <SelectValue/>
                         </SelectTrigger>
@@ -384,7 +403,7 @@ export default function UnitPage() {
                   </div>
                    <div>
                     <Label htmlFor="rent-based-on">Rent Based On *</Label>
-                     <Select defaultValue="monthly">
+                     <Select defaultValue="monthly" disabled={!isEditing}>
                       <SelectTrigger id="rent-based-on">
                         <SelectValue />
                       </SelectTrigger>
@@ -396,7 +415,7 @@ export default function UnitPage() {
                   </div>
                    <div>
                     <Label htmlFor="supervisor">Supervisor</Label>
-                     <Select defaultValue="supervisor">
+                     <Select defaultValue="supervisor" disabled={!isEditing}>
                       <SelectTrigger id="supervisor">
                         <SelectValue />
                       </SelectTrigger>
@@ -443,6 +462,7 @@ export default function UnitPage() {
                               <Input
                                 placeholder="Enter Particulars"
                                 value={p.particulars}
+                                disabled={!isEditing}
                                 onChange={(e) =>
                                   handleParticularChange(
                                     p.id,
@@ -458,6 +478,7 @@ export default function UnitPage() {
                                 placeholder="0.00"
                                 className="text-right"
                                 value={p.amount}
+                                disabled={!isEditing}
                                 onChange={(e) =>
                                   handleParticularChange(
                                     p.id,
@@ -473,6 +494,7 @@ export default function UnitPage() {
                                 placeholder="0"
                                 className="text-right"
                                 value={p.vatPercentage}
+                                disabled={!isEditing}
                                 onChange={(e) =>
                                   handleParticularChange(
                                     p.id,
@@ -505,6 +527,7 @@ export default function UnitPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="text-destructive"
+                                disabled={!isEditing}
                                 onClick={() => removeParticularRow(p.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -526,6 +549,7 @@ export default function UnitPage() {
                       size="sm"
                       className="mt-4 hover:bg-accent"
                       onClick={addParticularRow}
+                      disabled={!isEditing}
                     >
                       <Plus className="mr-2 h-4 w-4"/> Add
                     </Button>
@@ -537,7 +561,7 @@ export default function UnitPage() {
                       {/* Rental Income */}
                       <div>
                         <Label>Rental Income A/c</Label>
-                         <Select defaultValue="rental-income-d3">
+                         <Select defaultValue="rental-income-d3" disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -549,7 +573,7 @@ export default function UnitPage() {
                        {/* Penalty */}
                        <div>
                         <Label>Penalty A/c</Label>
-                         <Select defaultValue="penalty-income">
+                         <Select defaultValue="penalty-income" disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -562,7 +586,7 @@ export default function UnitPage() {
                       {/* Bank A/c */}
                        <div>
                         <Label>Bank A/c</Label>
-                         <Select defaultValue="adcb">
+                         <Select defaultValue="adcb" disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -574,7 +598,7 @@ export default function UnitPage() {
                       {/* Advance Rent */}
                        <div>
                         <Label>Advance Rent A/c</Label>
-                         <Select defaultValue="rental-advance-reservation">
+                         <Select defaultValue="rental-advance-reservation" disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -587,7 +611,7 @@ export default function UnitPage() {
                       {/* Rental Receivable A/c */}
                       <div>
                         <Label>Rental Receivable A/c</Label>
-                         <Select defaultValue="rent-receivables-d3">
+                         <Select defaultValue="rent-receivables-d3" disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -599,7 +623,7 @@ export default function UnitPage() {
                       {/* Rental Advance Receivable Close A/c */}
                        <div>
                         <Label>Rental Advance Receivable Close A/c</Label>
-                         <Select defaultValue="rental-advance-reservation-close">
+                         <Select defaultValue="rental-advance-reservation-close" disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -611,7 +635,7 @@ export default function UnitPage() {
                       {/* Provision A/c */}
                       <div>
                         <Label>Provision A/c</Label>
-                         <Select defaultValue="advance-rent-property">
+                         <Select defaultValue="advance-rent-property" disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -639,7 +663,7 @@ export default function UnitPage() {
                       <TableBody>
                         <TableRow>
                           <TableCell>
-                            <Select defaultValue="rental-income-d3">
+                            <Select defaultValue="rental-income-d3" disabled={!isEditing}>
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
@@ -649,7 +673,7 @@ export default function UnitPage() {
                             </Select>
                           </TableCell>
                            <TableCell>
-                            <Select defaultValue="vat-group">
+                            <Select defaultValue="vat-group" disabled={!isEditing}>
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
@@ -659,13 +683,13 @@ export default function UnitPage() {
                             </Select>
                           </TableCell>
                           <TableCell>
-                             <Input defaultValue="V5" />
+                             <Input defaultValue="V5" disabled={!isEditing} />
                           </TableCell>
                           <TableCell>
-                            <Input defaultValue="Vat 5%" />
+                            <Input defaultValue="Vat 5%" disabled={!isEditing} />
                           </TableCell>
                           <TableCell>
-                            <Input type="number" defaultValue="5" className="text-right" />
+                            <Input type="number" defaultValue="5" className="text-right" disabled={!isEditing} />
                           </TableCell>
                         </TableRow>
                       </TableBody>
@@ -678,35 +702,35 @@ export default function UnitPage() {
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="other-unit-no">Unit No.</Label>
-                          <Input id="other-unit-no" />
+                          <Input id="other-unit-no" disabled={!isEditing} />
                         </div>
                         <div>
                           <Label htmlFor="other-area-sqft">Area (SQFT)</Label>
-                          <Input id="other-area-sqft" type="number" />
+                          <Input id="other-area-sqft" type="number" disabled={!isEditing} />
                         </div>
                         <div>
                           <Label htmlFor="other-landlord">Landlord</Label>
-                          <Input id="other-landlord" />
+                          <Input id="other-landlord" disabled={!isEditing} />
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div>
                           <Label htmlFor="other-building">Building</Label>
-                          <Input id="other-building" />
+                          <Input id="other-building" disabled={!isEditing} />
                         </div>
                         <div>
                           <Label htmlFor="other-location">Location</Label>
-                          <Input id="other-location" />
+                          <Input id="other-location" disabled={!isEditing} />
                         </div>
                         <div>
                           <Label htmlFor="other-sub-location">Sub Location</Label>
-                          <Input id="other-sub-location" />
+                          <Input id="other-sub-location" disabled={!isEditing} />
                         </div>
                       </div>
                        <div className="space-y-4">
                         <div>
                           <Label htmlFor="other-status">Status</Label>
-                           <Select>
+                           <Select disabled={!isEditing}>
                             <SelectTrigger id="other-status">
                               <SelectValue placeholder="Select Status" />
                             </SelectTrigger>
@@ -719,7 +743,7 @@ export default function UnitPage() {
                         </div>
                         <div>
                           <Label htmlFor="other-remarks">Remarks</Label>
-                          <Textarea id="other-remarks" placeholder="Enter remarks" />
+                          <Textarea id="other-remarks" placeholder="Enter remarks" disabled={!isEditing} />
                         </div>
                       </div>
                     </div>
@@ -730,7 +754,7 @@ export default function UnitPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                       <div>
                         <Label>Commission Payable A/c</Label>
-                         <Select>
+                         <Select disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select Account"/>
                           </SelectTrigger>
@@ -741,7 +765,7 @@ export default function UnitPage() {
                       </div>
                        <div>
                         <Label>Security Deposit Payable A/c</Label>
-                         <Select>
+                         <Select disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select Account"/>
                           </SelectTrigger>
@@ -752,7 +776,7 @@ export default function UnitPage() {
                       </div>
                        <div>
                         <Label>Landlord Payable A/c</Label>
-                         <Select>
+                         <Select disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select Account"/>
                           </SelectTrigger>
@@ -763,7 +787,7 @@ export default function UnitPage() {
                       </div>
                        <div>
                         <Label>Other Payables A/c</Label>
-                         <Select>
+                         <Select disabled={!isEditing}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select Account"/>
                           </SelectTrigger>
@@ -779,11 +803,11 @@ export default function UnitPage() {
                     <div className="p-4 border rounded-md mt-2">
                       <div className="flex items-center gap-4 mb-4">
                         <div className="flex items-center gap-2">
-                          <Checkbox id="check-attach" />
+                          <Checkbox id="check-attach" disabled={!isEditing} />
                           <Label htmlFor="check-attach">Check Attach</Label>
                         </div>
-                        <Button variant="outline" size="sm" className="hover:bg-accent">Add New</Button>
-                        <Button variant="outline" size="sm" className="hover:bg-accent">Add Existing</Button>
+                        <Button variant="outline" size="sm" className="hover:bg-accent" disabled={!isEditing}>Add New</Button>
+                        <Button variant="outline" size="sm" className="hover:bg-accent" disabled={!isEditing}>Add Existing</Button>
                       </div>
                        <Table>
                         <TableHeader>
@@ -799,11 +823,11 @@ export default function UnitPage() {
                           {/* This is a placeholder row */}
                           <TableRow>
                             <TableCell>1</TableCell>
-                            <TableCell><Input/></TableCell>
-                            <TableCell><Input type="file" className="text-sm"/></TableCell>
-                            <TableCell><Input/></TableCell>
+                            <TableCell><Input disabled={!isEditing}/></TableCell>
+                            <TableCell><Input type="file" className="text-sm" disabled={!isEditing}/></TableCell>
+                            <TableCell><Input disabled={!isEditing}/></TableCell>
                             <TableCell>
-                               <Button variant="ghost" size="icon" className="text-destructive">
+                               <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing}>
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </TableCell>
@@ -811,8 +835,8 @@ export default function UnitPage() {
                         </TableBody>
                       </Table>
                       <div className="flex justify-end gap-2 mt-4">
-                        <Button>Save</Button>
-                        <Button variant="outline">Cancel</Button>
+                        <Button disabled={!isEditing}>Save</Button>
+                        <Button variant="outline" disabled={!isEditing}>Cancel</Button>
                       </div>
                     </div>
                  </TabsContent>
@@ -831,7 +855,7 @@ export default function UnitPage() {
                       <TableBody>
                         <TableRow>
                           <TableCell>
-                            <Select defaultValue="monthly">
+                            <Select defaultValue="monthly" disabled={!isEditing}>
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
@@ -844,16 +868,17 @@ export default function UnitPage() {
                             </Select>
                           </TableCell>
                           <TableCell>
-                            <Input type="date" />
+                            <Input type="date" disabled={!isEditing} />
                           </TableCell>
                           <TableCell>
-                            <Input type="date" />
+                            <Input type="date" disabled={!isEditing} />
                           </TableCell>
                           <TableCell>
                             <Input
                               type="number"
                               placeholder="0.00"
                               className="text-right"
+                              disabled={!isEditing}
                             />
                           </TableCell>
                           <TableCell>
@@ -861,6 +886,7 @@ export default function UnitPage() {
                               variant="ghost"
                               size="icon"
                               className="text-destructive"
+                              disabled={!isEditing}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -872,6 +898,7 @@ export default function UnitPage() {
                       variant="outline"
                       size="sm"
                       className="mt-4 hover:bg-accent"
+                      disabled={!isEditing}
                     >
                       <Plus className="mr-2 h-4 w-4" /> Add Rate
                     </Button>
@@ -879,7 +906,7 @@ export default function UnitPage() {
                  </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
-                    <Textarea placeholder="Enter any notes here..." />
+                    <Textarea placeholder="Enter any notes here..." disabled={!isEditing} />
                   </div>
                  </TabsContent>
               </Tabs>
@@ -892,9 +919,23 @@ export default function UnitPage() {
               <CardTitle className="font-headline">Actions</CardTitle>
             </CardHeader>
             <CardContent className="flex items-center justify-center h-48">
-              <Button variant="ghost" className="w-24 h-24 rounded-full border-2 border-dashed flex flex-col items-center justify-center gap-2 text-muted-foreground hover:bg-accent/10 hover:border-accent">
-                <X className="h-8 w-8" />
-                <span>Cancel</span>
+              <Button 
+                variant="ghost" 
+                className="w-24 h-24 rounded-full border-2 border-dashed flex flex-col items-center justify-center gap-2 text-muted-foreground hover:bg-accent/10 hover:border-accent"
+                onClick={handleCancelClick}
+                disabled={!isEditing}
+                >
+                  {isEditing ? (
+                    <>
+                      <X className="h-8 w-8" />
+                      <span>Cancel</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-8 w-8" />
+                      <span>Saved</span>
+                    </>
+                  )}
               </Button>
             </CardContent>
           </Card>
