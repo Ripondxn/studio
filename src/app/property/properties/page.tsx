@@ -122,6 +122,13 @@ type Note = {
     content: string;
 }
 
+type Agent = {
+  id: number;
+  name: string;
+  type: string;
+  remarks: string;
+};
+
 type Attachment = {
   id: number;
   name: string;
@@ -213,6 +220,9 @@ export default function PropertyPage() {
 
   const [notes, setNotes] = useState<Note[]>([]);
   const [initialNotes, setInitialNotes] = useState<Note[]>([]);
+
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [initialAgents, setInitialAgents] = useState<Agent[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -363,6 +373,26 @@ export default function PropertyPage() {
     setNotes(prev => prev.filter(item => item.id !== id));
   };
 
+  const handleAgentChange = (id: number, field: keyof Agent, value: string) => {
+    setAgents(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+  };
+
+  const addAgentRow = () => {
+    setAgents(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        name: '',
+        type: 'Sales',
+        remarks: ''
+      }
+    ]);
+  };
+
+  const removeAgentRow = (id: number) => {
+    setAgents(prev => prev.filter(item => item.id !== id));
+  };
+
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
   };
@@ -458,6 +488,7 @@ export default function PropertyPage() {
     setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
     setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
     setInitialNotes(JSON.parse(JSON.stringify(notes)));
+    setInitialAgents(JSON.parse(JSON.stringify(agents)));
     setIsEditing(true);
   }
 
@@ -475,6 +506,7 @@ export default function PropertyPage() {
         assignments,
         shareHolders,
         notes,
+        agents,
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -496,6 +528,7 @@ export default function PropertyPage() {
         setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
         setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
         setInitialNotes(JSON.parse(JSON.stringify(notes)));
+        setInitialAgents(JSON.parse(JSON.stringify(agents)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -522,6 +555,7 @@ export default function PropertyPage() {
       setAssignments(initialAssignments);
       setShareHolders(initialShareHolders);
       setNotes(initialNotes);
+      setAgents(initialAgents);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -815,6 +849,7 @@ export default function PropertyPage() {
                   <TabsTrigger value="assign">Assign</TabsTrigger>
                   <TabsTrigger value="share-holder">Share Holder</TabsTrigger>
                   <TabsTrigger value="notes">Notes</TabsTrigger>
+                  <TabsTrigger value="agent">Agent</TabsTrigger>
                 </TabsList>
                 <TabsContent value="particulars">
                   <div className="p-4 border rounded-md mt-2">
@@ -1326,6 +1361,60 @@ export default function PropertyPage() {
                         </Table>
                         <Button variant="outline" size="sm" className="hover:bg-accent" onClick={addNoteRow} disabled={!isEditing}>
                             <Plus className="mr-2 h-4 w-4" /> Add Note
+                        </Button>
+                    </div>
+                 </TabsContent>
+                 <TabsContent value="agent">
+                    <div className="p-4 border rounded-md mt-2">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Agent Name</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead>Remarks</TableHead>
+                                    <TableHead>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {agents.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>
+                                            <Input 
+                                                value={item.name}
+                                                onChange={e => handleAgentChange(item.id, 'name', e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="e.g. Prime Properties"
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Select value={item.type} onValueChange={value => handleAgentChange(item.id, 'type', value)} disabled={!isEditing}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Sales">Sales</SelectItem>
+                                                    <SelectItem value="Leasing">Leasing</SelectItem>
+                                                    <SelectItem value="Maintenance">Maintenance</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input
+                                                value={item.remarks}
+                                                onChange={e => handleAgentChange(item.id, 'remarks', e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="Add remarks..."
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeAgentRow(item.id)} disabled={!isEditing}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addAgentRow} disabled={!isEditing}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Agent
                         </Button>
                     </div>
                  </TabsContent>
