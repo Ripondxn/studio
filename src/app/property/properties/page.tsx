@@ -112,6 +112,11 @@ type OtherDetailItem = {
   remarks: string;
 };
 
+type SpecialCondition = {
+    id: number;
+    condition: string;
+};
+
 const initialPropertyData = {
     code: 'MT',
     name: 'Meras Tower',
@@ -157,6 +162,9 @@ export default function PropertyPage() {
   
   const [otherDetails, setOtherDetails] = useState<OtherDetailItem[]>([]);
   const [initialOtherDetails, setInitialOtherDetails] = useState<OtherDetailItem[]>([]);
+
+  const [specialConditions, setSpecialConditions] = useState<SpecialCondition[]>([]);
+  const [initialSpecialConditions, setInitialSpecialConditions] = useState<SpecialCondition[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -270,6 +278,24 @@ export default function PropertyPage() {
   const removeOtherDetailRow = (id: number) => {
     setOtherDetails(prev => prev.filter(item => item.id !== id));
   };
+
+  const handleSpecialConditionChange = (id: number, value: string) => {
+    setSpecialConditions(prev => prev.map(item => item.id === id ? {...item, condition: value} : item));
+  };
+
+  const addSpecialConditionRow = () => {
+    setSpecialConditions(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        condition: '',
+      }
+    ]);
+  };
+
+  const removeSpecialConditionRow = (id: number) => {
+    setSpecialConditions(prev => prev.filter(item => item.id !== id));
+  };
   
   const totalParticularsAmount = useMemo(() => {
     return particulars.reduce((sum, p) => sum + p.amount, 0);
@@ -280,6 +306,7 @@ export default function PropertyPage() {
     setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
     setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
     setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
+    setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
     setIsEditing(true);
   }
 
@@ -291,6 +318,7 @@ export default function PropertyPage() {
         particulars,
         vatItems,
         otherDetails,
+        specialConditions,
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -306,6 +334,7 @@ export default function PropertyPage() {
         setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
         setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
         setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
+        setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -326,6 +355,7 @@ export default function PropertyPage() {
       setParticulars(initialParticulars);
       setVatItems(initialVatItems);
       setOtherDetails(initialOtherDetails);
+      setSpecialConditions(initialSpecialConditions);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -840,6 +870,42 @@ export default function PropertyPage() {
                         </div>
                         <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addOtherDetailRow} disabled={!isEditing}>
                             <Plus className="mr-2 h-4 w-4" /> Add
+                        </Button>
+                    </div>
+                </TabsContent>
+                <TabsContent value="special-conditions">
+                    <div className="p-4 border rounded-md mt-2">
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[50px]">Sno.</TableHead>
+                                <TableHead>Condition</TableHead>
+                                <TableHead>Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {specialConditions.map((item, index) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>
+                                        <Textarea
+                                            value={item.condition}
+                                            onChange={(e) => handleSpecialConditionChange(item.id, e.target.value)}
+                                            disabled={!isEditing}
+                                            placeholder="Enter special condition..."
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeSpecialConditionRow(item.id)} disabled={!isEditing}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
+                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addSpecialConditionRow} disabled={!isEditing}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Condition
                         </Button>
                     </div>
                 </TabsContent>
