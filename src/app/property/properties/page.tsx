@@ -538,6 +538,7 @@ export default function PropertyPage() {
         setInitialAgents(JSON.parse(JSON.stringify(agents)));
         if (isNewRecord) {
             router.push(`/property/properties/list`);
+            router.refresh();
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
