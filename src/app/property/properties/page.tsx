@@ -126,6 +126,7 @@ type Agent = {
   id: number;
   name: string;
   type: string;
+  amount: number;
   remarks: string;
 };
 
@@ -373,7 +374,7 @@ export default function PropertyPage() {
     setNotes(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleAgentChange = (id: number, field: keyof Agent, value: string) => {
+  const handleAgentChange = (id: number, field: keyof Agent, value: string | number) => {
     setAgents(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
   };
 
@@ -384,6 +385,7 @@ export default function PropertyPage() {
         id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
         name: '',
         type: 'Sales',
+        amount: 0,
         remarks: ''
       }
     ]);
@@ -1371,6 +1373,7 @@ export default function PropertyPage() {
                                 <TableRow>
                                     <TableHead>Agent Name</TableHead>
                                     <TableHead>Type</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
                                     <TableHead>Remarks</TableHead>
                                     <TableHead>Action</TableHead>
                                 </TableRow>
@@ -1395,6 +1398,16 @@ export default function PropertyPage() {
                                                     <SelectItem value="Maintenance">Maintenance</SelectItem>
                                                 </SelectContent>
                                             </Select>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input
+                                                type="number"
+                                                value={item.amount}
+                                                onChange={e => handleAgentChange(item.id, 'amount', parseFloat(e.target.value) || 0)}
+                                                disabled={!isEditing}
+                                                placeholder="0.00"
+                                                className="text-right"
+                                            />
                                         </TableCell>
                                         <TableCell>
                                             <Input
