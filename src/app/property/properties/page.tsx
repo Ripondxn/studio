@@ -124,6 +124,13 @@ type Attachment = {
   remarks: string;
 };
 
+type Parking = {
+  id: number;
+  parkingNo: string;
+  parkingType: string;
+  remarks: string;
+};
+
 const initialPropertyData = {
     code: 'MT',
     name: 'Meras Tower',
@@ -175,6 +182,9 @@ export default function PropertyPage() {
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
+  
+  const [parkings, setParkings] = useState<Parking[]>([]);
+  const [initialParkings, setInitialParkings] = useState<Parking[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -327,6 +337,26 @@ export default function PropertyPage() {
     setAttachments(prev => prev.filter(item => item.id !== id));
   };
   
+  const handleParkingChange = (id: number, field: keyof Parking, value: string) => {
+    setParkings(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+  };
+
+  const addParkingRow = () => {
+    setParkings(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        parkingNo: '',
+        parkingType: 'Covered',
+        remarks: '',
+      }
+    ]);
+  };
+
+  const removeParkingRow = (id: number) => {
+    setParkings(prev => prev.filter(item => item.id !== id));
+  };
+  
   const totalParticularsAmount = useMemo(() => {
     return particulars.reduce((sum, p) => sum + p.amount, 0);
   }, [particulars]);
@@ -338,6 +368,7 @@ export default function PropertyPage() {
     setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
     setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
     setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
+    setInitialParkings(JSON.parse(JSON.stringify(parkings)));
     setIsEditing(true);
   }
 
@@ -351,6 +382,7 @@ export default function PropertyPage() {
         otherDetails,
         specialConditions,
         attachments: attachments.map(a => ({...a, file: a.file?.name})), // Just saving file name for now
+        parkings,
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -368,6 +400,7 @@ export default function PropertyPage() {
         setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
         setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
         setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
+        setInitialParkings(JSON.parse(JSON.stringify(parkings)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -390,6 +423,7 @@ export default function PropertyPage() {
       setOtherDetails(initialOtherDetails);
       setSpecialConditions(initialSpecialConditions);
       setAttachments(initialAttachments);
+      setParkings(initialParkings);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -999,6 +1033,60 @@ export default function PropertyPage() {
                       </Table>
                     </div>
                  </TabsContent>
+                 <TabsContent value="parkings">
+                    <div className="p-4 border rounded-md mt-2">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Parking No</TableHead>
+                                    <TableHead>Parking Type</TableHead>
+                                    <TableHead>Remarks</TableHead>
+                                    <TableHead>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {parkings.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>
+                                            <Input 
+                                                value={item.parkingNo}
+                                                onChange={e => handleParkingChange(item.id, 'parkingNo', e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="e.g. A-101"
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Select value={item.parkingType} onValueChange={value => handleParkingChange(item.id, 'parkingType', value)} disabled={!isEditing}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Covered">Covered</SelectItem>
+                                                    <SelectItem value="Uncovered">Uncovered</SelectItem>
+                                                    <SelectItem value="Basement">Basement</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input
+                                                value={item.remarks}
+                                                onChange={e => handleParkingChange(item.id, 'remarks', e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="Add remarks..."
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeParkingRow(item.id)} disabled={!isEditing}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addParkingRow} disabled={!isEditing}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Parking
+                        </Button>
+                    </div>
+                </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
                     <Textarea placeholder="Enter any notes here..." disabled={!isEditing} />
