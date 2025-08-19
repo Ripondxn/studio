@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -30,8 +31,18 @@ import {
   Upload,
   Trash2,
   MinusCircle,
+  Plus,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export default function UnitPage() {
   return (
@@ -315,6 +326,58 @@ export default function UnitPage() {
                   <TabsTrigger value="unit-rate">Unit Rate</TabsTrigger>
                   <TabsTrigger value="notes">Notes</TabsTrigger>
                 </TabsList>
+                <TabsContent value="particulars">
+                  <div className="p-4 border rounded-md mt-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[50px]">Sr. No.</TableHead>
+                          <TableHead>Particulars</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-right">Vat %</TableHead>
+                          <TableHead className="text-right">Vat Amount</TableHead>
+                          <TableHead className="text-right">Total Amount</TableHead>
+                          <TableHead>Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>1</TableCell>
+                          <TableCell>
+                            <Input placeholder="Enter Particulars" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="0.00" className="text-right" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="0" className="text-right" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="0.00" className="text-right" readOnly />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="0.00" className="text-right" readOnly />
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" className="text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                      <TableFooter>
+                         <TableRow>
+                            <TableCell colSpan={5} className="text-right font-bold">Total</TableCell>
+                            <TableCell className="text-right font-bold">0.00</TableCell>
+                            <TableCell></TableCell>
+                         </TableRow>
+                      </TableFooter>
+                    </Table>
+                    <Button variant="outline" size="sm" className="mt-4 hover:bg-accent">
+                        <Plus className="mr-2 h-4 w-4"/> Add
+                    </Button>
+                  </div>
+                 </TabsContent>
                 <TabsContent value="receivables">
                   <div className="p-4 border rounded-md mt-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -408,9 +471,6 @@ export default function UnitPage() {
                     </div>
                   </div>
                 </TabsContent>
-                 <TabsContent value="particulars">
-                  <div className="p-4 border rounded-md mt-2 text-muted-foreground">Particulars details will be shown here.</div>
-                 </TabsContent>
                  <TabsContent value="vat">
                   <div className="p-4 border rounded-md mt-2 text-muted-foreground">VAT details will be shown here.</div>
                  </TabsContent>
