@@ -49,6 +49,18 @@ import {
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
 
 type Particular = {
   id: number;
@@ -139,11 +151,19 @@ export default function UnitPage() {
   const handleSaveClick = () => {
     setIsEditing(false);
     // Here you would typically save the data
+    console.log('Data saved!');
   }
 
   const handleCancelClick = () => {
     setIsEditing(false);
     // Here you might want to reset the form to its original state
+  }
+
+  const handleDelete = () => {
+    // Here you would typically call an API to delete the record
+    console.log('Record deleted!');
+    // After deletion, you might want to redirect the user or reset the form
+    setIsEditing(false);
   }
 
 
@@ -165,9 +185,26 @@ export default function UnitPage() {
                 <Save className="mr-2 h-4 w-4" /> Save
             </Button>
           )}
-          <Button variant="outline" className="hover:bg-accent" disabled={!isEditing}>
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
-          </Button>
+           <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="hover:bg-accent" disabled={!isEditing}>
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete this unit
+                  and remove its data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button variant="outline" className="hover:bg-accent" onClick={handleCancelClick}>
             <X className="mr-2 h-4 w-4" /> Close
           </Button>
@@ -944,3 +981,5 @@ export default function UnitPage() {
     </div>
   );
 }
+
+    
