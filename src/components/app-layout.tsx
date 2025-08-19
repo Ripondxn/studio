@@ -23,13 +23,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarTrigger,
+} from '@/components/ui/menubar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard,
   Lightbulb,
   Building2,
-  ChevronDown,
   Users,
   Banknote,
   Wrench,
@@ -157,71 +164,95 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-          <SidebarTrigger className="md:hidden" />
-          <div className="flex-1">
+        <header className="flex h-auto flex-col border-b bg-background/95 backdrop-blur-sm sticky top-0 z-30">
+          <div className="flex h-14 items-center gap-4 px-4 lg:h-[60px] lg:px-6">
+            <SidebarTrigger className="md:hidden" />
+            <div className="flex-1 font-bold">Prestige Properties</div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <span>Prestige Properties</span>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src="https://placehold.co/40x40.png"
+                      alt="@propvue-user"
+                      data-ai-hint="profile picture"
+                    />
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-60">
-                <DropdownMenuItem>HOME</DropdownMenuItem>
-                <DropdownMenuItem>FINANCE</DropdownMenuItem>
-                <DropdownMenuItem>INVENTORY</DropdownMenuItem>
-                <DropdownMenuItem>REPORTS</DropdownMenuItem>
-                <DropdownMenuItem>DIMENSIONS</DropdownMenuItem>
-                <DropdownMenuItem>ADMIN</DropdownMenuItem>
-                <DropdownMenuItem>PROPERTY HRM</DropdownMenuItem>
-                <DropdownMenuItem>PROJECTS</DropdownMenuItem>
-                <DropdownMenuItem>Document Flow</DropdownMenuItem>
-                <DropdownMenuItem>Financial</DropdownMenuItem>
-                <DropdownMenuItem>Favorites</DropdownMenuItem>
-                <DropdownMenuItem>Sticky Notes</DropdownMenuItem>
-                <DropdownMenuItem>Reset Password Calendar</DropdownMenuItem>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      User
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      user@propvue.com
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>General Sales</DropdownMenuLabel>
-                <DropdownMenuItem>Rental Reports</DropdownMenuItem>
-                <DropdownMenuItem>Balance</DropdownMenuItem>
-                <DropdownMenuItem>Occupancy</DropdownMenuItem>
-                <DropdownMenuItem>Availability</DropdownMenuItem>
-                <DropdownMenuItem>Contracts</DropdownMenuItem>
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Log out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src="https://placehold.co/40x40.png"
-                    alt="@propvue-user"
-                    data-ai-hint="profile picture"
-                  />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    User
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    user@propvue.com
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Log out</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Menubar className="border-t-0 border-x-0 rounded-none h-auto">
+            <MenubarMenu>
+              <MenubarTrigger>HOME</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>FINANCE</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>INVENTORY</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>REPORTS</MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem>Rental Reports</MenubarItem>
+                <MenubarItem>Balance</MenubarItem>
+                <MenubarItem>Occupancy</MenubarItem>
+                <MenubarItem>Availability</MenubarItem>
+              </MenubarContent>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>DIMENSIONS</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>ADMIN</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>PROPERTY HRM</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>PROJECTS</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>Document Flow</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>Financial</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>Favorites</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>Sticky Notes</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>Reset Password Calendar</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>General Sales</MenubarTrigger>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>Contracts</MenubarTrigger>
+            </MenubarMenu>
+          </Menubar>
         </header>
         <main
           className={cn(
