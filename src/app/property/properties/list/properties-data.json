@@ -30,53 +30,5 @@
         "propertyType": "Residential Building",
         "status": "Under Maintenance",
         "noOfUnits": "40"
-    },
-    {
-        "id": "PROP-1755610152378",
-        "propertyData": {
-            "code": "MU",
-            "name": "Lewa Tower-715",
-            "propertyType": "Building",
-            "bondType": "",
-            "landlord": "Landlord",
-            "status": "Active",
-            "plotArea": "0",
-            "builtUpArea": "0",
-            "noOfFloors": "0",
-            "noOfUnits": "0",
-            "noOfParkings": "0",
-            "address1": "",
-            "address2": "",
-            "emirates": "",
-            "country1": "",
-            "propertyPosition": "",
-            "accountant": "Accountant",
-            "salesMan": "SalesMan",
-            "location": "Location",
-            "towerType": "Rent",
-            "gps": "",
-            "propertyNo": "",
-            "assetManager": "Supervisor"
-        },
-        "particulars": [],
-        "vatItems": [],
-        "otherDetails": [],
-        "specialConditions": [],
-        "attachments": [],
-        "parkings": [],
-        "assignments": [],
-        "shareHolders": [],
-        "notes": [],
-        "agents": [
-            {
-                "id": 1,
-                "name": "abc",
-                "type": "Sales",
-                "amount": 30000,
-                "remarks": "agent fees"
-            }
-        ],
-        "customFieldsData": {},
-        "propertyPhoto": null
     }
 ]
