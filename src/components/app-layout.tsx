@@ -42,6 +42,20 @@ import {
   Wrench,
   LineChart,
   Settings,
+  Home,
+  Briefcase,
+  Warehouse,
+  FileText,
+  Scaling,
+  UserCog,
+  UserRound,
+  FolderKanban,
+  GitBranchPlus,
+  Heart,
+  StickyNote,
+  CalendarClock,
+  ShoppingBag,
+  FileSignature,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -202,16 +216,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
           <Menubar className="border-t-0 border-x-0 rounded-none h-auto">
             <MenubarMenu>
-              <MenubarTrigger>HOME</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <Home className="h-4 w-4 mr-2" />
+                HOME
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>FINANCE</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <Briefcase className="h-4 w-4 mr-2" />
+                FINANCE
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>INVENTORY</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <Warehouse className="h-4 w-4 mr-2" />
+                INVENTORY
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>REPORTS</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <FileText className="h-4 w-4 mr-2" />
+                REPORTS
+              </MenubarTrigger>
               <MenubarContent>
                 <MenubarItem>Rental Reports</MenubarItem>
                 <MenubarItem>Balance</MenubarItem>
@@ -220,37 +246,70 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>DIMENSIONS</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <Scaling className="h-4 w-4 mr-2" />
+                DIMENSIONS
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>ADMIN</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <UserCog className="h-4 w-4 mr-2" />
+                ADMIN
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>PROPERTY HRM</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <UserRound className="h-4 w-4 mr-2" />
+                PROPERTY HRM
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>PROJECTS</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <FolderKanban className="h-4 w-4 mr-2" />
+                PROJECTS
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>Document Flow</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <GitBranchPlus className="h-4 w-4 mr-2" />
+                Document Flow
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>Financial</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <Banknote className="h-4 w-4 mr-2" />
+                Financial
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>Favorites</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <Heart className="h-4 w-4 mr-2" />
+                Favorites
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>Sticky Notes</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <StickyNote className="h-4 w-4 mr-2" />
+                Sticky Notes
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>Reset Password Calendar</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <CalendarClock className="h-4 w-4 mr-2" />
+                Reset Password Calendar
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>General Sales</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                General Sales
+              </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>Contracts</MenubarTrigger>
+              <MenubarTrigger className="cursor-pointer">
+                <FileSignature className="h-4 w-4 mr-2" />
+                Contracts
+              </MenubarTrigger>
             </MenubarMenu>
           </Menubar>
         </header>
