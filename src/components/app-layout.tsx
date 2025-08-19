@@ -33,7 +33,7 @@ import {
   MenubarTrigger,
 } from '@/components/ui/menubar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   LayoutDashboard,
   Lightbulb,
@@ -59,7 +59,6 @@ import {
   FileSignature,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { buttonVariants } from '@/components/ui/button';
 
 const propertyMenuContent = [
     {
