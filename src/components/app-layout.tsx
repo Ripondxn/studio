@@ -303,8 +303,65 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
+                <Building2 className="h-4 w-4 mr-2" />
+                PROPERTY
+              </MenubarTrigger>
+              <MenubarContent className="w-screen max-w-6xl">
+                <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Properties</h3>
+                    <MenubarItem>Units</MenubarItem>
+                    <MenubarItem>Properties</MenubarItem>
+                    <MenubarItem>Enquiry</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Leasing</h3>
+                    <MenubarItem>Tenant</MenubarItem>
+                    <MenubarItem>Tenancy Contract</MenubarItem>
+                    <MenubarItem>Quotation</MenubarItem>
+                    <MenubarItem>Purchase Contract</MenubarItem>
+                    <MenubarItem>Unit Reservation</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Manage</h3>
+                    <MenubarItem>Manage</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Operations</h3>
+                    <MenubarItem>Book Case Income</MenubarItem>
+                    <MenubarItem>Daily Vacant Flat Report</MenubarItem>
+                    <MenubarItem>Security Deposit</MenubarItem>
+                    <MenubarItem>Console</MenubarItem>
+                    <MenubarItem>Cheque / Cash Collection</MenubarItem>
+                    <MenubarItem>Floor Wise Expiry</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Reports</h3>
+                    <MenubarItem>Property Profit Report</MenubarItem>
+                    <MenubarItem>Tenant Ledger</MenubarItem>
+                    <MenubarItem>Bulk Posting</MenubarItem>
+                    <MenubarItem>Floor</MenubarItem>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm mb-2">Settings</h3>
+                    <MenubarItem>Property Location</MenubarItem>
+                    <MenubarItem>Property Block</MenubarItem>
+                    <MenubarItem>Floor</MenubarItem>
+                    <MenubarItem>Unit Section</MenubarItem>
+                    <MenubarItem>Asset</MenubarItem>
+                    <MenubarItem>Request Type</MenubarItem>
+                    <MenubarItem>Service Category</MenubarItem>
+                    <MenubarItem>Service Sub Category</MenubarItem>
+                    <MenubarItem>Supervisor</MenubarItem>
+                    <MenubarItem>Technician</MenubarItem>
+                  </div>
+                </div>
+              </MenubarContent>
+            </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger className="cursor-pointer">
                 <UserRound className="h-4 w-4 mr-2" />
-                PROPERTY HRM
+                HRM
               </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
