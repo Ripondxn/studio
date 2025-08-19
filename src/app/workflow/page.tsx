@@ -39,6 +39,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -200,11 +208,11 @@ export default function WorkflowPage() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole['role']>('User');
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<Status | 'ALL'>('ALL');
   const router = useRouter();
 
 
   useEffect(() => {
-    // This effect runs on the client and gets the user's role from session storage
     const storedProfile = sessionStorage.getItem('userProfile');
     if (storedProfile) {
       const profile = JSON.parse(storedProfile);
@@ -278,19 +286,27 @@ export default function WorkflowPage() {
   };
   
   const filteredTransactions = useMemo(() => {
-    switch (currentUserRole) {
-      case 'User':
-      case 'Property Manager':
-      case 'Accountant':
-        return transactions; // These roles see all transactions for simplicity here
-      case 'Admin':
-        return transactions.filter(t => t.currentStatus === 'PENDING_ADMIN_APPROVAL' || t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL' || t.currentStatus === 'DRAFT');
-      case 'Super Admin':
-        return transactions.filter(t => t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL');
-      default:
-        return transactions;
+    let roleFiltered = transactions;
+    // The role-based filter is now more about what actions you can take, not what you can see
+    // You might want to reinstate some of this if certain roles should not see certain statuses at all
+    // switch (currentUserRole) {
+    //   case 'User':
+    //   case 'Property Manager':
+    //   case 'Accountant':
+    //     roleFiltered = transactions.filter(t => t.createdByUser.id === currentUserEmail || t.currentStatus === 'POSTED');
+    //     break;
+    //   // Admin and Super Admin can see all for management purposes
+    //   default:
+    //     roleFiltered = transactions;
+    //     break;
+    // }
+
+    if (statusFilter === 'ALL') {
+      return roleFiltered;
     }
-  }, [currentUserRole, transactions]);
+    return roleFiltered.filter(t => t.currentStatus === statusFilter);
+
+  }, [currentUserRole, transactions, statusFilter, currentUserEmail]);
 
 
   const getActionButtons = (transaction: Transaction) => {
@@ -387,13 +403,34 @@ export default function WorkflowPage() {
                         workflow.
                     </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleExportPDF}>
-                        <FileText className="mr-2 h-4 w-4" /> Export PDF
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleExportExcel}>
-                        <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
-                    </Button>
+                 <div className="flex items-center gap-4">
+                    <div className="w-[180px]">
+                        <Label>Filter by Status</Label>
+                        <Select
+                            value={statusFilter}
+                            onValueChange={(value: Status | 'ALL') => setStatusFilter(value)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Statuses</SelectItem>
+                                {Object.keys(statusConfig).map(status => (
+                                    <SelectItem key={status} value={status}>
+                                        {statusConfig[status as Status].label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex gap-2 border-l pl-4">
+                        <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                            <FileText className="mr-2 h-4 w-4" /> Export PDF
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                            <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
+                        </Button>
+                    </div>
                 </div>
             </div>
         </CardHeader>
@@ -470,7 +507,7 @@ export default function WorkflowPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
-                      No transactions pending for your action.
+                      No transactions match the current filter.
                     </TableCell>
                   </TableRow>
                 )}
