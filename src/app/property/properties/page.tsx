@@ -131,6 +131,13 @@ type Parking = {
   remarks: string;
 };
 
+type Assignment = {
+  id: number;
+  user: string;
+  role: string;
+  remarks: string;
+};
+
 const initialPropertyData = {
     code: 'MT',
     name: 'Meras Tower',
@@ -185,6 +192,9 @@ export default function PropertyPage() {
   
   const [parkings, setParkings] = useState<Parking[]>([]);
   const [initialParkings, setInitialParkings] = useState<Parking[]>([]);
+
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [initialAssignments, setInitialAssignments] = useState<Assignment[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -357,6 +367,26 @@ export default function PropertyPage() {
     setParkings(prev => prev.filter(item => item.id !== id));
   };
   
+  const handleAssignmentChange = (id: number, field: keyof Assignment, value: string) => {
+    setAssignments(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+  };
+
+  const addAssignmentRow = () => {
+    setAssignments(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        user: '',
+        role: 'Viewer',
+        remarks: '',
+      }
+    ]);
+  };
+
+  const removeAssignmentRow = (id: number) => {
+    setAssignments(prev => prev.filter(item => item.id !== id));
+  };
+  
   const totalParticularsAmount = useMemo(() => {
     return particulars.reduce((sum, p) => sum + p.amount, 0);
   }, [particulars]);
@@ -369,6 +399,7 @@ export default function PropertyPage() {
     setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
     setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
     setInitialParkings(JSON.parse(JSON.stringify(parkings)));
+    setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
     setIsEditing(true);
   }
 
@@ -383,6 +414,7 @@ export default function PropertyPage() {
         specialConditions,
         attachments: attachments.map(a => ({...a, file: a.file?.name})), // Just saving file name for now
         parkings,
+        assignments,
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -401,6 +433,7 @@ export default function PropertyPage() {
         setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
         setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
         setInitialParkings(JSON.parse(JSON.stringify(parkings)));
+        setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -424,6 +457,7 @@ export default function PropertyPage() {
       setSpecialConditions(initialSpecialConditions);
       setAttachments(initialAttachments);
       setParkings(initialParkings);
+      setAssignments(initialAssignments);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -1088,8 +1122,62 @@ export default function PropertyPage() {
                     </div>
                 </TabsContent>
                  <TabsContent value="assign">
+                    <div className="p-4 border rounded-md mt-2">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>User</TableHead>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Remarks</TableHead>
+                                    <TableHead>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {assignments.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>
+                                            <Input 
+                                                value={item.user}
+                                                onChange={e => handleAssignmentChange(item.id, 'user', e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="e.g. John Doe"
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Select value={item.role} onValueChange={value => handleAssignmentChange(item.id, 'role', value)} disabled={!isEditing}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Administrator">Administrator</SelectItem>
+                                                    <SelectItem value="Manager">Manager</SelectItem>
+                                                    <SelectItem value="Viewer">Viewer</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Input
+                                                value={item.remarks}
+                                                onChange={e => handleAssignmentChange(item.id, 'remarks', e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="Add remarks..."
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeAssignmentRow(item.id)} disabled={!isEditing}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addAssignmentRow} disabled={!isEditing}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Assignment
+                        </Button>
+                    </div>
+                 </TabsContent>
+                 <TabsContent value="share-holder">
                    <div className="p-4 border rounded-md mt-2">
-                    <p>Assign functionality to be implemented.</p>
+                    <p>Share Holder functionality to be implemented.</p>
                   </div>
                  </TabsContent>
                  <TabsContent value="notes">
