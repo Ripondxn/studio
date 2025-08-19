@@ -26,6 +26,13 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
   Copy,
   Save,
   FileText,
@@ -65,6 +72,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveUnitData, findUnitData } from './actions';
+import { CustomizeDialog } from './customize-dialog';
 
 
 type Particular = {
@@ -126,6 +134,13 @@ export default function UnitPage() {
     },
   ]);
   const [initialParticulars, setInitialParticulars] = useState<Particular[]>([]);
+
+  const [visibleSections, setVisibleSections] = useState({
+    propertyDetails: true,
+    photoUpload: true,
+    discountAndRent: true,
+    tabs: true,
+  });
 
   const handleInputChange = (field: keyof typeof unitData, value: string) => {
     setUnitData(prev => ({ ...prev, [field]: value }));
@@ -324,9 +339,17 @@ export default function UnitPage() {
           <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
             <FileText className="mr-2 h-4 w-4" /> Report
           </Button>
-          <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
-            <Settings className="mr-2 h-4 w-4" /> Customize
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
+                <Settings className="mr-2 h-4 w-4" /> Customize
+              </Button>
+            </DialogTrigger>
+            <CustomizeDialog
+              visibleSections={visibleSections}
+              onVisibilityChange={setVisibleSections}
+            />
+          </Dialog>
         </div>
       </div>
 
@@ -334,6 +357,7 @@ export default function UnitPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardContent className="p-6">
+              {visibleSections.propertyDetails && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Column 1 */}
                 <div className="space-y-4">
@@ -513,8 +537,10 @@ export default function UnitPage() {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Photo Upload Section */}
+              {visibleSections.photoUpload && (
                 <div className="col-span-1 md:col-span-3 mt-6">
                     <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -535,7 +561,9 @@ export default function UnitPage() {
                         </Button>
                     </div>
                 </div>
-
+                )}
+                
+              {visibleSections.discountAndRent && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
                   <div>
                     <Label htmlFor="discount">Discount</Label>
@@ -576,10 +604,12 @@ export default function UnitPage() {
                     </Select>
                   </div>
                 </div>
+                )}
 
               <Separator className="my-6" />
 
               {/* Tabs Section */}
+              {visibleSections.tabs && (
               <Tabs defaultValue="particulars" className="w-full">
                 <TabsList>
                   <TabsTrigger value="particulars">Particulars</TabsTrigger>
@@ -1061,6 +1091,7 @@ export default function UnitPage() {
                   </div>
                  </TabsContent>
               </Tabs>
+              )}
             </CardContent>
           </Card>
         </div>
