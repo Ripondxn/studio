@@ -1,8 +1,10 @@
 
+'use client';
+
+import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -47,7 +49,88 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 
+type Particular = {
+  id: number;
+  particulars: string;
+  amount: number;
+  vatPercentage: number;
+  vatAmount: number;
+  totalAmount: number;
+};
+
 export default function UnitPage() {
+  const [particulars, setParticulars] = useState<Particular[]>([
+    {
+      id: 1,
+      particulars: '',
+      amount: 0,
+      vatPercentage: 0,
+      vatAmount: 0,
+      totalAmount: 0,
+    },
+  ]);
+
+  const handleParticularChange = (
+    id: number,
+    field: keyof Particular,
+    value: string | number
+  ) => {
+    setParticulars((prev) =>
+      prev.map((p) => {
+        if (p.id === id) {
+          const updatedParticular = { ...p, [field]: value };
+
+          if (field === 'amount' || field === 'vatPercentage') {
+            const amount =
+              field === 'amount'
+                ? Number(value)
+                : updatedParticular.amount;
+            const vatPercentage =
+              field === 'vatPercentage'
+                ? Number(value)
+                : updatedParticular.vatPercentage;
+            
+            const vatAmount = (amount * vatPercentage) / 100;
+            const totalAmount = amount + vatAmount;
+
+            return {
+              ...updatedParticular,
+              amount,
+              vatPercentage,
+              vatAmount,
+              totalAmount,
+            };
+          }
+          return updatedParticular;
+        }
+        return p;
+      })
+    );
+  };
+
+  const addParticularRow = () => {
+    setParticulars((prev) => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(p => p.id)) + 1 : 1,
+        particulars: '',
+        amount: 0,
+        vatPercentage: 0,
+        vatAmount: 0,
+        totalAmount: 0,
+      },
+    ]);
+  };
+
+  const removeParticularRow = (id: number) => {
+    setParticulars((prev) => prev.filter((p) => p.id !== id));
+  };
+  
+  const totalParticularsAmount = useMemo(() => {
+    return particulars.reduce((sum, p) => sum + p.totalAmount, 0);
+  }, [particulars]);
+
+
   return (
     <div className="container mx-auto p-4 bg-gray-50/50">
       <div className="flex justify-between items-center mb-4">
@@ -327,7 +410,7 @@ export default function UnitPage() {
               <Separator className="my-6" />
 
               {/* Tabs Section */}
-              <Tabs defaultValue="receivables" className="w-full">
+              <Tabs defaultValue="particulars" className="w-full">
                 <TabsList>
                   <TabsTrigger value="particulars">Particulars</TabsTrigger>
                   <TabsTrigger value="receivables">Receivables</TabsTrigger>
@@ -353,40 +436,98 @@ export default function UnitPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow>
-                          <TableCell>1</TableCell>
-                          <TableCell>
-                            <Input placeholder="Enter Particulars" />
-                          </TableCell>
-                          <TableCell>
-                            <Input type="number" placeholder="0.00" className="text-right" />
-                          </TableCell>
-                          <TableCell>
-                            <Input type="number" placeholder="0" className="text-right" />
-                          </TableCell>
-                          <TableCell>
-                            <Input type="number" placeholder="0.00" className="text-right" readOnly />
-                          </TableCell>
-                          <TableCell>
-                            <Input type="number" placeholder="0.00" className="text-right" readOnly />
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="icon" className="text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
+                        {particulars.map((p, index) => (
+                          <TableRow key={p.id}>
+                            <TableCell>{index + 1}</TableCell>
+                            <TableCell>
+                              <Input
+                                placeholder="Enter Particulars"
+                                value={p.particulars}
+                                onChange={(e) =>
+                                  handleParticularChange(
+                                    p.id,
+                                    'particulars',
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                className="text-right"
+                                value={p.amount}
+                                onChange={(e) =>
+                                  handleParticularChange(
+                                    p.id,
+                                    'amount',
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                className="text-right"
+                                value={p.vatPercentage}
+                                onChange={(e) =>
+                                  handleParticularChange(
+                                    p.id,
+                                    'vatPercentage',
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                className="text-right"
+                                readOnly
+                                value={p.vatAmount.toFixed(2)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                className="text-right"
+                                readOnly
+                                value={p.totalAmount.toFixed(2)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive"
+                                onClick={() => removeParticularRow(p.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                       <TableFooter>
                          <TableRow>
                             <TableCell colSpan={5} className="text-right font-bold">Total</TableCell>
-                            <TableCell className="font-bold text-right">0.00</TableCell>
+                            <TableCell className="font-bold text-right">{totalParticularsAmount.toFixed(2)}</TableCell>
                             <TableCell></TableCell>
                          </TableRow>
                       </TableFooter>
                     </Table>
-                    <Button variant="outline" size="sm" className="mt-4 hover:bg-accent">
-                        <Plus className="mr-2 h-4 w-4"/> Add
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 hover:bg-accent"
+                      onClick={addParticularRow}
+                    >
+                      <Plus className="mr-2 h-4 w-4"/> Add
                     </Button>
                   </div>
                  </TabsContent>
