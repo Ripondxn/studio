@@ -403,18 +403,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 PROJECTS
               </MenubarTrigger>
             </MenubarMenu>
-             <MenubarMenu>
-              <MenubarTrigger asChild className="cursor-pointer">
-                <Link href="/workflow">
+            <MenubarMenu>
+              <MenubarTrigger asChild>
+                <Link href="/workflow" className="flex items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground cursor-pointer">
                   <GitBranchPlus className="h-4 w-4 mr-2" />
                   Document Flow
                 </Link>
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <StickyNote className="h-4 w-4 mr-2" />
-                Sticky Notes
               </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
