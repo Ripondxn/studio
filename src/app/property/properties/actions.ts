@@ -27,38 +27,26 @@ async function writeProperties(data: any) {
 // This is a placeholder for your real database logic.
 export async function savePropertyData(dataToSave: any, isNewRecord: boolean) {
   try {
-    const { propertyData } = dataToSave;
     const allProperties = await getProperties();
 
     if (isNewRecord) {
         const newProperty = {
             id: `PROP-${Date.now()}`, // Generate a unique ID
-            code: propertyData.code,
-            name: propertyData.name,
-            propertyType: propertyData.propertyType,
-            status: propertyData.status,
-            noOfUnits: propertyData.noOfUnits,
+            ...dataToSave
         };
         allProperties.push(newProperty);
     } else {
-        const index = allProperties.findIndex((p: any) => p.code === propertyData.code);
+        const index = allProperties.findIndex((p: any) => p.propertyData.code === dataToSave.propertyData.code);
         if (index !== -1) {
             allProperties[index] = {
                 ...allProperties[index],
-                name: propertyData.name,
-                propertyType: propertyData.propertyType,
-                status: propertyData.status,
-                noOfUnits: propertyData.noOfUnits,
+                ...dataToSave
             };
         } else {
              // If for some reason we are editing but can't find the record, add it as new
             const newProperty = {
                 id: `PROP-${Date.now()}`,
-                code: propertyData.code,
-                name: propertyData.name,
-                propertyType: propertyData.propertyType,
-                status: propertyData.status,
-                noOfUnits: propertyData.noOfUnits,
+                ...dataToSave,
             };
             allProperties.push(newProperty);
         }
@@ -76,7 +64,7 @@ export async function savePropertyData(dataToSave: any, isNewRecord: boolean) {
 export async function findPropertyData(propertyCode: string) {
   try {
     const allProperties = await getProperties();
-    const property = allProperties.find((p: any) => p.code === propertyCode);
+    const property = allProperties.find((p: any) => p.propertyData.code === propertyCode);
 
     if (property) {
        return { success: true, data: property };

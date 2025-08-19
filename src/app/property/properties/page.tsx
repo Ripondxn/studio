@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -484,18 +483,41 @@ export default function PropertyPage() {
     return particulars.reduce((sum, p) => sum + p.amount, 0);
   }, [particulars]);
 
+  const setAllData = (data: any) => {
+    setPropertyData(data.propertyData || initialPropertyData);
+    setParticulars(data.particulars || []);
+    setVatItems(data.vatItems || []);
+    setOtherDetails(data.otherDetails || []);
+    setSpecialConditions(data.specialConditions || []);
+    setNotes(data.notes || []);
+    setAgents(data.agents || []);
+    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : []);
+    setParkings(data.parkings || []);
+    setAssignments(data.assignments || []);
+    setShareHolders(data.shareHolders || []);
+    setCustomFieldsData(data.customFieldsData || {});
+    setUploadedImage(data.propertyPhoto || null);
+  }
+
+  const setInitialAllData = (data: any) => {
+    setInitialData(JSON.parse(JSON.stringify(data.propertyData || initialPropertyData)));
+    setInitialParticulars(JSON.parse(JSON.stringify(data.particulars || [])));
+    setInitialVatItems(JSON.parse(JSON.stringify(data.vatItems || [])));
+    setInitialOtherDetails(JSON.parse(JSON.stringify(data.otherDetails || [])));
+    setInitialSpecialConditions(JSON.parse(JSON.stringify(data.specialConditions || [])));
+    setInitialNotes(JSON.parse(JSON.stringify(data.notes || [])));
+    setInitialAgents(JSON.parse(JSON.stringify(data.agents || [])));
+    setInitialAttachments(JSON.parse(JSON.stringify(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : [])));
+    setInitialParkings(JSON.parse(JSON.stringify(data.parkings || [])));
+    setInitialAssignments(JSON.parse(JSON.stringify(data.assignments || [])));
+    setInitialShareHolders(JSON.parse(JSON.stringify(data.shareHolders || [])));
+  }
+
   const handleEditClick = () => {
-    setInitialData(JSON.parse(JSON.stringify(propertyData)));
-    setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
-    setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
-    setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
-    setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
-    setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
-    setInitialParkings(JSON.parse(JSON.stringify(parkings)));
-    setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
-    setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
-    setInitialNotes(JSON.parse(JSON.stringify(notes)));
-    setInitialAgents(JSON.parse(JSON.stringify(agents)));
+    setInitialAllData({
+      propertyData, particulars, vatItems, otherDetails, specialConditions,
+      attachments, parkings, assignments, shareHolders, notes, agents
+    });
     setIsEditing(true);
   }
 
@@ -529,17 +551,7 @@ export default function PropertyPage() {
             router.push(`/property/properties/list`);
             router.refresh();
         } else {
-            setInitialData(propertyData);
-            setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
-            setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
-            setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
-            setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
-            setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
-            setInitialParkings(JSON.parse(JSON.stringify(parkings)));
-            setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
-            setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
-            setInitialNotes(JSON.parse(JSON.stringify(notes)));
-            setInitialAgents(JSON.parse(JSON.stringify(agents)));
+            setInitialAllData(dataToSave);
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -596,12 +608,8 @@ export default function PropertyPage() {
           title: 'Found',
           description: `Found record for Property Code: ${codeToFind}`,
         });
-         const mockData = {
-          ...initialPropertyData, 
-          ...result.data
-        }
-        setPropertyData(mockData);
-        setInitialData(mockData);
+        setAllData(result.data);
+        setInitialAllData(result.data);
         setIsEditing(false);
       } else {
         toast({
@@ -714,7 +722,7 @@ export default function PropertyPage() {
                   <div className="flex items-end gap-2">
                     <div className="flex-grow">
                         <Label htmlFor="code">Code</Label>
-                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
+                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord && !isEditing} />
                     </div>
                     <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || isEditing}>
                         {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
