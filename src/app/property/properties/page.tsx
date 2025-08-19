@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -69,7 +70,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { savePropertyData, findPropertyData } from './actions';
+import { savePropertyData, findPropertyData, deletePropertyData } from './actions';
 // Re-using the same dialogs and types from the unit page for consistency
 import { CustomizeDialog, type CustomField } from '@/app/property/unit/customize-dialog';
 import { FormItem } from '@/components/ui/form';
@@ -630,6 +631,30 @@ export default function PropertyPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!propertyData.code) return;
+    try {
+      const result = await deletePropertyData(propertyData.code);
+      if (result.success) {
+        toast({
+          title: 'Deleted',
+          description: `Property "${propertyData.name}" has been deleted.`,
+        });
+        router.push('/property/properties/list');
+        router.refresh();
+      } else {
+        throw new Error(result.error || 'An unknown error occurred');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: (error as Error).message || 'Failed to delete property.',
+      });
+    }
+  };
+
+
   const handleGenerateReport = (reportConfig: ReportConfig) => {
     const reportData = {
       unitData: propertyData,
@@ -676,6 +701,35 @@ export default function PropertyPage() {
           {pageTitle}
         </h1>
         <div className="flex items-center gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="hover:bg-destructive hover:text-destructive-foreground"
+                  disabled={isNewRecord || isEditing}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    property "{propertyData.name}" and all its associated data.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
            <Button variant="outline" className="hover:bg-accent" onClick={handleCloseClick}>
                 <X className="mr-2 h-4 w-4" /> Close
            </Button>

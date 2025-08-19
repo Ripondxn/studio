@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -75,4 +76,26 @@ export async function findPropertyData(propertyCode: string) {
     console.error('Failed to find property data:', error);
     return { success: false, error: (error as Error).message || 'An unknown error occurred' };
   }
+}
+
+export async function deletePropertyData(propertyCode: string) {
+    try {
+        const allProperties = await getProperties();
+        const updatedProperties = allProperties.filter((p: any) => {
+            // Handle both nested and flat structures
+            const code = p.propertyData ? p.propertyData.code : p.code;
+            return code !== propertyCode;
+        });
+
+        if (allProperties.length === updatedProperties.length) {
+            // No property was deleted, which means it wasn't found
+            return { success: false, error: 'Property not found.' };
+        }
+
+        await writeProperties(updatedProperties);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete property data:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
 }
