@@ -289,6 +289,11 @@ export default function UnitPage() {
     }
   };
 
+  const handleReportClick = () => {
+    const unitDataString = encodeURIComponent(JSON.stringify({unitData, particulars}));
+    router.push(`/property/unit/report?data=${unitDataString}`);
+  };
+
 
   return (
     <div className="container mx-auto p-4 bg-gray-50/50">
@@ -336,7 +341,7 @@ export default function UnitPage() {
           <Button variant="outline" className="hover:bg-accent" onClick={handleCloseClick}>
             <X className="mr-2 h-4 w-4" /> Close
           </Button>
-          <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
+          <Button variant="outline" className="hover:bg-accent" onClick={handleReportClick} disabled={isEditing}>
             <FileText className="mr-2 h-4 w-4" /> Report
           </Button>
           <Dialog>
