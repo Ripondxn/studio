@@ -1,11 +1,13 @@
 
-import { users } from './data';
+import { getUsers } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { Button } from '@/components/ui/button';
-import { FileDown, Plus } from 'lucide-react';
+import { AddUserDialog } from './add-user-dialog';
 
-export default function UserRoleManagementPage() {
+
+export default async function UserRoleManagementPage() {
+  const users = await getUsers();
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -16,14 +18,10 @@ export default function UserRoleManagementPage() {
             </p>
         </div>
         <div className="flex gap-2">
-            <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add New User
-            </Button>
+            <AddUserDialog />
         </div>
       </div>
       <DataTable columns={columns} data={users} />
     </div>
   );
 }
-
-    
