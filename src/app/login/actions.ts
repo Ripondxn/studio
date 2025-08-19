@@ -25,16 +25,6 @@ async function readUsers(): Promise<UserRole[]> {
     }
 }
 
-
-// This is a mock login function. In a real application, you would:
-// 1. Use a library like 'bcrypt' to HASH passwords before storing and compare hashes during login.
-// 2. Create a secure session for the user (e.g., using JWTs or server-side sessions).
-// 3. Set a cookie or token to maintain the user's logged-in state.
-// 4. Implement route protection middleware.
-
-// WARNING: THIS IS NOT A SECURE LOGIN SYSTEM. IT IS FOR DEMONSTRATION PURPOSES ONLY.
-// PASSWORDS ARE STORED AND CHECKED IN PLAIN TEXT.
-
 export async function handleLogin(credentials: z.infer<typeof loginSchema>) {
   const validation = loginSchema.safeParse(credentials);
 
@@ -42,7 +32,6 @@ export async function handleLogin(credentials: z.infer<typeof loginSchema>) {
     return { success: false, error: 'Invalid input.' };
   }
 
-  // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   const { email, password } = validation.data;
@@ -54,8 +43,10 @@ export async function handleLogin(credentials: z.infer<typeof loginSchema>) {
     if (user) {
       if (user.password === password) {
         if(user.status === 'Active') {
-          // In a real app, you would generate and return a session token here
-          return { success: true };
+          // WARNING: In a real app, do not send sensitive data like this.
+          // This is simplified for demonstration purposes.
+          const { password, ...userProfile } = user;
+          return { success: true, data: userProfile };
         } else {
           return { success: false, error: 'Your account is inactive. Please contact an administrator.' };
         }

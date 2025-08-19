@@ -56,6 +56,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { UserRole } from '@/app/admin/user-roles/schema';
 
 const propertyMenuContent = [
     {
@@ -117,14 +118,46 @@ const propertyMenuContent = [
     },
   ];
 
+// A type for the user profile stored in session storage
+type UserProfile = Omit<UserRole, 'password' | 'lastLogin' | 'status'>;
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
 
+  React.useEffect(() => {
+    // This code runs only on the client
+    if (pathname === '/login') return;
+
+    try {
+      const storedProfile = sessionStorage.getItem('userProfile');
+      if (storedProfile) {
+        setUserProfile(JSON.parse(storedProfile));
+      } else {
+        // If no profile, redirect to login. This is a simple form of route protection.
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Could not parse user profile from session storage:', error);
+      router.push('/login');
+    }
+  }, [pathname, router]);
+  
+  const handleLogout = () => {
+    sessionStorage.removeItem('userProfile');
+    router.push('/login');
+  };
+  
   if (pathname === '/login') {
     return <>{children}</>;
   }
 
+  // Avoid rendering the layout until we have confirmed the user is logged in
+  if (!userProfile) {
+    // You could return a full-page loader here
+    return null; 
+  }
 
   return (
     <SidebarProvider>
@@ -265,10 +298,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <Avatar className="h-8 w-8">
                     <AvatarImage
                       src="https://placehold.co/40x40.png"
-                      alt="@propvue-user"
+                      alt={userProfile.name}
                       data-ai-hint="profile picture"
                     />
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarFallback>{userProfile.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -276,10 +309,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      Admin User
+                      {userProfile.name}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      admin@propvue.com
+                      {userProfile.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -287,7 +320,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <DropdownMenuItem asChild><Link href="/admin/profile">Profile</Link></DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/login')}>
+                <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                 </DropdownMenuItem>

@@ -55,9 +55,13 @@ export default function LoginPage() {
     const result = await handleLogin(data);
 
     if (result.success) {
+      // For demonstration purposes, storing user info in sessionStorage.
+      // In a real app, you would use a secure session management approach.
+      sessionStorage.setItem('userProfile', JSON.stringify(result.data));
+
       toast({
         title: 'Login Successful',
-        description: "Welcome back! You're being redirected to the dashboard.",
+        description: `Welcome back, ${result.data?.name}! You're being redirected.`,
       });
       router.push('/');
     } else {
