@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -188,7 +189,9 @@ export function CustomizeDialog({
         </div>
       </div>
       <DialogFooter>
-         <Button onClick={handleApplyCustomFields}>Apply Changes</Button>
+        <DialogClose asChild>
+          <Button onClick={handleApplyCustomFields}>Apply Changes</Button>
+        </DialogClose>
       </DialogFooter>
     </DialogContent>
   );
