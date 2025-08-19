@@ -1087,6 +1087,11 @@ export default function PropertyPage() {
                         </Button>
                     </div>
                 </TabsContent>
+                 <TabsContent value="assign">
+                   <div className="p-4 border rounded-md mt-2">
+                    <p>Assign functionality to be implemented.</p>
+                  </div>
+                 </TabsContent>
                  <TabsContent value="notes">
                    <div className="p-4 border rounded-md mt-2">
                     <Textarea placeholder="Enter any notes here..." disabled={!isEditing} />
