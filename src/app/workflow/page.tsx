@@ -15,7 +15,12 @@ import {
   Calendar,
   DollarSign,
   Info,
+  FileText,
+  FileSpreadsheet,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,6 +57,15 @@ import { transactions as initialTransactions } from './data';
 import { format } from 'date-fns';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useRouter } from 'next/navigation';
+
+
+// Extend jsPDF type to include autoTable from the plugin
+declare module 'jspdf' {
+    interface jsPDF {
+      autoTable: (options: any) => jsPDF;
+    }
+}
+
 
 const statusConfig: {
   [key in Status]: {
@@ -318,19 +332,70 @@ export default function WorkflowPage() {
     
     return null;
   };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Document Approval Report", 14, 16);
+    
+    const head = [['Transaction ID', 'Type', 'Amount', 'Created By', 'Submission Date', 'Status']];
+    const body = filteredTransactions.map(t => [
+        t.id,
+        t.type,
+        `$${t.amount.toLocaleString()}`,
+        t.createdByUser.name,
+        format(new Date(t.submittedForApprovalDate), 'PP'),
+        statusConfig[t.currentStatus].label
+    ]);
+    
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: 20,
+    });
+    
+    doc.save('document-flow-report.pdf');
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = filteredTransactions.map(t => ({
+        'Transaction ID': t.id,
+        'Type': t.type,
+        'Amount': t.amount,
+        'Created By': t.createdByUser.name,
+        'Submission Date': format(new Date(t.submittedForApprovalDate), 'PP'),
+        'Status': statusConfig[t.currentStatus].label
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Document Flow");
+    XLSX.writeFile(wb, "document-flow-report.xlsx");
+  };
   
 
   return (
     <div className="container mx-auto py-10">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">
-            Document Approval Controller
-          </CardTitle>
-          <CardDescription>
-            Manage and track financial transactions through the approval
-            workflow.
-          </CardDescription>
+            <div className="flex justify-between items-start">
+                <div>
+                    <CardTitle className="font-headline text-2xl">
+                        Document Approval Controller
+                    </CardTitle>
+                    <CardDescription>
+                        Manage and track financial transactions through the approval
+                        workflow.
+                    </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                        <FileText className="mr-2 h-4 w-4" /> Export PDF
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                        <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
+                    </Button>
+                </div>
+            </div>
         </CardHeader>
         <CardContent>
             <div className="mb-4">
