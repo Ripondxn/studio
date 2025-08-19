@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { deleteUser } from './actions';
+import { EditUserDialog } from './edit-user-dialog';
 
 import { UserRole } from './schema';
 
@@ -41,12 +42,13 @@ const roleVariantMap: { [key in UserRole['role']]: "default" | "secondary" | "de
     'Accountant': 'outline'
 };
 
-const ActionsCell = ({ row }: { row: any }) => {
+const ActionsCell = ({ row }: { row: { original: UserRole } }) => {
     const user = row.original;
     const router = useRouter();
     const { toast } = useToast();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -86,6 +88,12 @@ const ActionsCell = ({ row }: { row: any }) => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            
+            <EditUserDialog 
+              user={user} 
+              isOpen={isEditDialogOpen} 
+              setIsOpen={setIsEditDialogOpen}
+            />
 
             <div className="text-right">
                 <DropdownMenu>
@@ -97,7 +105,7 @@ const ActionsCell = ({ row }: { row: any }) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit User
                         </DropdownMenuItem>

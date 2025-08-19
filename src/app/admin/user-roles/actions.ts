@@ -64,6 +64,47 @@ export async function addUser(userData: z.infer<typeof addUserFormSchema>) {
     }
 }
 
+
+const updateUserFormSchema = userRoleSchema.omit({ lastLogin: true });
+
+export async function updateUser(userData: z.infer<typeof updateUserFormSchema>) {
+    const validation = updateUserFormSchema.safeParse(userData);
+    if (!validation.success) {
+        return { success: false, error: 'Invalid data format.' };
+    }
+    
+    const { id, ...dataToUpdate } = validation.data;
+
+    try {
+        const allUsers = await readUsers();
+
+        const userIndex = allUsers.findIndex(u => u.id === id);
+        if (userIndex === -1) {
+            return { success: false, error: 'User not found.' };
+        }
+        
+        // Check if email is being changed to one that already exists
+        if (dataToUpdate.email !== allUsers[userIndex].email) {
+            const emailExists = allUsers.some((u, index) => index !== userIndex && u.email === dataToUpdate.email);
+            if(emailExists){
+                return { success: false, error: `Another user with email "${dataToUpdate.email}" already exists.` };
+            }
+        }
+        
+        allUsers[userIndex] = { ...allUsers[userIndex], ...dataToUpdate };
+        
+        await writeUsers(allUsers);
+        
+        revalidatePath('/admin/user-roles');
+        return { success: true, data: allUsers[userIndex] };
+
+    } catch (error) {
+        console.error('Failed to update user:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+
 export async function deleteUser(userId: string) {
     try {
         const allUsers = await readUsers();

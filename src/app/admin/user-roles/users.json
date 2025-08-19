@@ -1,43 +1,50 @@
-
 [
-    {
-        "id": "USR-001",
-        "name": "Jane Doe",
-        "email": "jane.doe@example.com",
-        "role": "Admin",
-        "status": "Active",
-        "lastLogin": "2024-07-29T10:00:00Z"
-    },
-    {
-        "id": "USR-002",
-        "name": "John Smith",
-        "email": "john.smith@example.com",
-        "role": "User",
-        "status": "Active",
-        "lastLogin": "2024-07-29T11:30:00Z"
-    },
-    {
-        "id": "USR-003",
-        "name": "Super Admin",
-        "email": "super.admin@propvue.com",
-        "role": "Super Admin",
-        "status": "Active",
-        "lastLogin": "2024-07-29T09:00:00Z"
-    },
-    {
-        "id": "USR-004",
-        "name": "Peter Jones",
-        "email": "peter.jones@example.com",
-        "role": "Property Manager",
-        "status": "Inactive",
-        "lastLogin": "2024-06-15T14:00:00Z"
-    },
-    {
-        "id": "USR-005",
-        "name": "Mary Jane",
-        "email": "mary.jane@example.com",
-        "role": "Accountant",
-        "status": "Active",
-        "lastLogin": "2024-07-28T16:45:00Z"
-    }
+  {
+    "id": "USR-001",
+    "name": "Jane Doe",
+    "email": "jane.doe@example.com",
+    "role": "Admin",
+    "status": "Active",
+    "lastLogin": "2024-07-29T10:00:00Z"
+  },
+  {
+    "id": "USR-002",
+    "name": "John Smith",
+    "email": "john.smith@example.com",
+    "role": "User",
+    "status": "Active",
+    "lastLogin": "2024-07-29T11:30:00Z"
+  },
+  {
+    "id": "USR-003",
+    "name": "Super Admin",
+    "email": "super.admin@propvue.com",
+    "role": "Super Admin",
+    "status": "Active",
+    "lastLogin": "2024-07-29T09:00:00Z"
+  },
+  {
+    "id": "USR-004",
+    "name": "Peter Jones",
+    "email": "peter.jones@example.com",
+    "role": "Property Manager",
+    "status": "Inactive",
+    "lastLogin": "2024-06-15T14:00:00Z"
+  },
+  {
+    "id": "USR-005",
+    "name": "Mary Jane",
+    "email": "mary.jane@example.com",
+    "role": "Accountant",
+    "status": "Active",
+    "lastLogin": "2024-07-28T16:45:00Z"
+  },
+  {
+    "name": "Ripon Ahmed",
+    "email": "ripondxn@gmail.com",
+    "role": "Admin",
+    "status": "Active",
+    "id": "USR-1755625374992",
+    "lastLogin": "2025-08-19T17:42:54.992Z"
+  }
 ]
