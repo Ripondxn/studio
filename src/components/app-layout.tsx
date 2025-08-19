@@ -164,6 +164,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === '/workflow'}
+                tooltip="Workflow"
+              >
+                <Link href="/workflow">
+                  <GitBranchPlus />
+                  <span>Workflow</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
