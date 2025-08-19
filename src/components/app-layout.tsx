@@ -61,6 +61,66 @@ import {
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 
+const propertyMenuContent = [
+    {
+      title: 'Properties',
+      items: [
+        { name: 'Units', href: '/property/units' },
+        { name: 'Properties', href: '/property/properties/list' },
+        { name: 'Enquiry', href: '#' },
+      ],
+    },
+    {
+      title: 'Leasing',
+      items: [
+        { name: 'Tenant', href: '#' },
+        { name: 'Tenancy Contract', href: '#' },
+        { name: 'Quotation', href: '#' },
+        { name: 'Purchase Contract', href: '#' },
+        { name: 'Unit Reservation', href: '#' },
+      ],
+    },
+    {
+      title: 'Manage',
+      items: [{ name: 'Manage', href: '#' }],
+    },
+    {
+      title: 'Operations',
+      items: [
+        { name: 'Book Case Income', href: '#' },
+        { name: 'Daily Vacant Flat Report', href: '#' },
+        { name: 'Security Deposit', href: '#' },
+        { name: 'Console', href: '#' },
+        { name: 'Cheque / Cash Collection', href: '#' },
+        { name: 'Floor Wise Expiry', href: '#' },
+      ],
+    },
+    {
+      title: 'Reports',
+      items: [
+        { name: 'Property Profit Report', href: '#' },
+        { name: 'Tenant Ledger', href: '#' },
+        { name: 'Bulk Posting', href: '#' },
+        { name: 'Floor', href: '#' },
+      ],
+    },
+    {
+      title: 'Settings',
+      items: [
+        { name: 'Property Location', href: '#' },
+        { name: 'Property Block', href: '#' },
+        { name: 'Floor', href: '#' },
+        { name: 'Unit Section', href: '#' },
+        { name: 'Asset', href: '#' },
+        { name: 'Request Type', href: '#' },
+        { name: 'Service Category', href: '#' },
+        { name: 'Service Sub Category', href: '#' },
+        { name: 'Supervisor', href: '#' },
+        { name: 'Technician', href: '#' },
+      ],
+    },
+  ];
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
@@ -309,53 +369,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </MenubarTrigger>
               <MenubarContent className="w-screen max-w-6xl bg-transparent backdrop-blur-lg">
                 <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Properties</h3>
-                    <MenubarItem asChild><Link href="/property/units">Units</Link></MenubarItem>
-                    <MenubarItem asChild><Link href="/property/properties/list">Properties</Link></MenubarItem>
-                    <MenubarItem>Enquiry</MenubarItem>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Leasing</h3>
-                    <MenubarItem>Tenant</MenubarItem>
-                    <MenubarItem>Tenancy Contract</MenubarItem>
-                    <MenubarItem>Quotation</MenubarItem>
-                    <MenubarItem>Purchase Contract</MenubarItem>
-                    <MenubarItem>Unit Reservation</MenubarItem>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Manage</h3>
-                    <MenubarItem>Manage</MenubarItem>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Operations</h3>
-                    <MenubarItem>Book Case Income</MenubarItem>
-                    <MenubarItem>Daily Vacant Flat Report</MenubarItem>
-                    <MenubarItem>Security Deposit</MenubarItem>
-                    <MenubarItem>Console</MenubarItem>
-                    <MenubarItem>Cheque / Cash Collection</MenubarItem>
-                    <MenubarItem>Floor Wise Expiry</MenubarItem>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Reports</h3>
-                    <MenubarItem>Property Profit Report</MenubarItem>
-                    <MenubarItem>Tenant Ledger</MenubarItem>
-                    <MenubarItem>Bulk Posting</MenubarItem>
-                    <MenubarItem>Floor</MenubarItem>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm mb-2">Settings</h3>
-                    <MenubarItem>Property Location</MenubarItem>
-                    <MenubarItem>Property Block</MenubarItem>
-                    <MenubarItem>Floor</MenubarItem>
-                    <MenubarItem>Unit Section</MenubarItem>
-                    <MenubarItem>Asset</MenubarItem>
-                    <MenubarItem>Request Type</MenubarItem>
-                    <MenubarItem>Service Category</MenubarItem>
-                    <MenubarItem>Service Sub Category</MenubarItem>
-                    <MenubarItem>Supervisor</MenubarItem>
-                    <MenubarItem>Technician</MenubarItem>
-                  </div>
+                  {propertyMenuContent.map((section) => (
+                    <div key={section.title}>
+                      <h3 className="font-bold text-sm mb-2">{section.title}</h3>
+                      {section.items.map((item) => (
+                        <MenubarItem key={item.name} asChild>
+                          {item.href ? (
+                            <Link href={item.href}>{item.name}</Link>
+                          ) : (
+                            <span>{item.name}</span>
+                          )}
+                        </MenubarItem>
+                      ))}
+                    </div>
+                  ))}
                 </div>
               </MenubarContent>
             </MenubarMenu>
@@ -428,5 +455,3 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    
