@@ -36,7 +36,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -77,9 +76,11 @@ const roleIcons: { [key in Role]: React.ReactNode } = {
   USER: <User className="h-5 w-5" />,
   ADMIN: <Shield className="h-5 w-5" />,
   SUPER_ADMIN: <UserCheck className="h-5 w-5" />,
-  // Add other roles as needed, or a default
+  User: <User className="h-5 w-5" />,
+  Admin: <Shield className="h-5 w-5" />,
+  'Super Admin': <UserCheck className="h-5 w-5" />,
   'Property Manager': <User className="h-5 w-5" />,
-  'Accountant': <User className="h-5 w-5" />,
+  Accountant: <User className="h-5 w-5" />,
 };
 
 const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHistory[], transactionId: string }) => {
@@ -126,6 +127,7 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
 export default function WorkflowPage() {
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole['role']>('User');
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const router = useRouter();
 
 
@@ -135,6 +137,7 @@ export default function WorkflowPage() {
     if (storedProfile) {
       const profile = JSON.parse(storedProfile);
       setCurrentUserRole(profile.role || 'User');
+      setCurrentUserEmail(profile.email || '');
     } else {
       router.push('/login');
     }
@@ -188,7 +191,7 @@ export default function WorkflowPage() {
               ...t.approvalHistory,
               {
                 action: historyAction,
-                actorId: currentUserRole.toLowerCase() + '@propvue.com',
+                actorId: currentUserEmail,
                 actorRole: currentUserRole,
                 timestamp: new Date().toISOString(),
                 comments,
@@ -209,7 +212,7 @@ export default function WorkflowPage() {
       case 'Accountant':
         return transactions; // These roles see all transactions for simplicity here
       case 'Admin':
-        return transactions.filter(t => t.currentStatus === 'PENDING_ADMIN_APPROVAL' || t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL');
+        return transactions.filter(t => t.currentStatus === 'PENDING_ADMIN_APPROVAL' || t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL' || t.currentStatus === 'DRAFT');
       case 'Super Admin':
         return transactions.filter(t => t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL');
       default:
@@ -219,8 +222,9 @@ export default function WorkflowPage() {
 
 
   const getActionButtons = (transaction: Transaction) => {
-    const canSubmit = ['User', 'Property Manager', 'Accountant'];
-    if (canSubmit.includes(currentUserRole) && (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED')) {
+    const canSubmitRoles: Role[] = ['User', 'Property Manager', 'Accountant', 'Admin', 'Super Admin'];
+
+    if (canSubmitRoles.includes(currentUserRole) && (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED')) {
       return (
         <Button size="sm" onClick={() => handleAction(transaction.id, 'SUBMIT')}>
           <Send className="mr-2 h-4 w-4" /> Submit
