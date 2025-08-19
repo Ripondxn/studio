@@ -60,25 +60,68 @@ function Report() {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    let yPos = 20;
+    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+    let yPos = 0; // We'll let autoTable manage this.
 
-    doc.text(`Unit Report - ${unitData.unitCode}`, 14, 16);
+    const addHeader = () => {
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Unit Report: ${unitData.unitCode}`, 14, 22);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 30);
+        yPos = 40;
+    };
     
-    // Unit Details Table
+    const addFooter = () => {
+        const pageCount = doc.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.text(`Page ${i} of ${pageCount}`, pageWidth - 20, pageHeight - 10);
+        }
+    };
+    
+    const tableStyles = {
+        theme: 'grid',
+        headStyles: {
+            fillColor: [36, 52, 71], // hsl(215 35% 24%) -> primary
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+            fillColor: [241, 245, 249], // slate-100
+        },
+        styles: {
+            cellPadding: 3,
+            fontSize: 10,
+        },
+    };
+
+    addHeader();
+    
     if (reportConfig.unitDetails.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Unit Details', 14, yPos);
+        yPos += 8;
         doc.autoTable({
             head: [['Field', 'Value']],
             body: filteredUnitData.map(([key, value]) => [toTitleCase(key), String(value)]),
             startY: yPos,
-            didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
+            ...tableStyles
         });
-        yPos += 10;
+        yPos = (doc as any).lastAutoTable.finalY + 15;
     }
 
 
-    // Particulars Table
     if (reportConfig.particulars.length > 0 && particulars.length > 0) {
-        if (yPos > 250) { doc.addPage(); yPos = 20; }
+        if (yPos > pageHeight - 40) { doc.addPage(); addHeader(); }
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Particulars', 14, yPos);
+        yPos += 8;
         doc.autoTable({
             head: [reportConfig.particulars.map(toTitleCase)],
             body: particulars.map((p: any) => reportConfig.particulars.map((field: string) => {
@@ -86,14 +129,17 @@ function Report() {
                 return typeof val === 'number' ? val.toFixed(2) : String(val);
             })),
             startY: yPos,
-            didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
+             ...tableStyles
         });
-        yPos += 10;
+        yPos = (doc as any).lastAutoTable.finalY + 15;
     }
 
-    // Custom Fields Table
     if (reportConfig.customDetails.length > 0 && filteredCustomFields.length > 0) {
-        if (yPos > 250) { doc.addPage(); yPos = 20; }
+        if (yPos > pageHeight - 40) { doc.addPage(); addHeader(); }
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Custom Details', 14, yPos);
+        yPos += 8;
         const customFieldRows = filteredCustomFields.map((field: any) => [
             field.label,
             customFieldsData[field.id] || ''
@@ -102,18 +148,17 @@ function Report() {
             head: [['Custom Field', 'Value']],
             body: customFieldRows,
             startY: yPos,
-            didDrawPage: (data) => { yPos = data.cursor?.y || 20; }
+            ...tableStyles
         });
     }
 
-
+    addFooter();
     doc.save(`report-${unitData.unitCode}.pdf`);
   };
 
   const handleExportExcel = () => {
      const workbook = XLSX.utils.book_new();
 
-    // Unit Details Sheet
     if (reportConfig.unitDetails.length > 0) {
         const unitDetailsForSheet: any = {};
         filteredUnitData.forEach(([key, value]) => {
@@ -123,7 +168,6 @@ function Report() {
         XLSX.utils.book_append_sheet(workbook, unitWorksheet, 'Unit Details');
     }
 
-    // Particulars Sheet
     if (reportConfig.particulars.length > 0 && particulars.length > 0) {
         const particularsForSheet = particulars.map((p: any) => {
             const row: any = {};
@@ -136,7 +180,6 @@ function Report() {
         XLSX.utils.book_append_sheet(workbook, particularsWorksheet, 'Particulars');
     }
     
-    // Custom Fields Sheet
     if (reportConfig.customDetails.length > 0 && filteredCustomFields.length > 0) {
         const customDataForSheet = filteredCustomFields.map((field: any) => ({
             'Field': field.label,
@@ -260,3 +303,5 @@ export default function ReportPage() {
         </Suspense>
     )
 }
+
+    
