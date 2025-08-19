@@ -611,6 +611,7 @@ export default function PropertyPage() {
         });
         setAllData(result.data);
         setInitialAllData(result.data);
+        setIsNewRecord(false);
         setIsEditing(false);
       } else {
         toast({
@@ -778,7 +779,7 @@ export default function PropertyPage() {
                         <Label htmlFor="code">Code</Label>
                         <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord && !isEditing} />
                     </div>
-                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || isEditing}>
+                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding}>
                         {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                     </Button>
                   </div>
