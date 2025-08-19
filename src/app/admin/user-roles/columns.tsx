@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, ShieldQuestion } from 'lucide-react';
 import { format } from 'date-fns';
@@ -117,6 +117,20 @@ const ActionsCell = ({ row }: { row: any }) => {
     );
 };
 
+const LastLoginCell = ({ dateString }: { dateString: string }) => {
+    const [formattedDate, setFormattedDate] = useState('');
+
+    useEffect(() => {
+        try {
+            setFormattedDate(format(new Date(dateString), 'PPp'));
+        } catch (e) {
+            setFormattedDate('Invalid Date');
+        }
+    }, [dateString]);
+
+    return <span>{formattedDate || '...'}</span>
+}
+
 
 export const columns: ColumnDef<UserRole>[] = [
   {
@@ -181,11 +195,7 @@ export const columns: ColumnDef<UserRole>[] = [
     header: 'Last Login',
     cell: ({ row }) => {
         const lastLogin = row.getValue('lastLogin') as string;
-        try {
-            return <span>{format(new Date(lastLogin), 'PPp')}</span>
-        } catch (e) {
-            return <span>Invalid Date</span>
-        }
+        return <LastLoginCell dateString={lastLogin} />;
     }
   },
   {
