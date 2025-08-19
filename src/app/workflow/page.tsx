@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -18,6 +19,7 @@ import {
   FileText,
   FileSpreadsheet,
   MessageSquare,
+  PlusCircle,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -212,7 +214,7 @@ type ActionDialogProps = {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   onConfirm: (comment: string) => void;
-  actionType: 'SUBMIT' | 'APPROVE' | 'REJECT';
+  actionType: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
 }
 
 const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType }: ActionDialogProps) => {
@@ -221,13 +223,15 @@ const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType }: ActionDialog
     const titleMap = {
         SUBMIT: 'Submit Transaction',
         APPROVE: 'Approve Transaction',
-        REJECT: 'Reject Transaction'
+        REJECT: 'Reject Transaction',
+        ADD_COMMENT: 'Add a Comment'
     }
 
     const descriptionMap = {
         SUBMIT: 'Please provide a comment for submitting this transaction.',
         APPROVE: 'Please provide a comment for approving this transaction.',
-        REJECT: 'Please provide the reason for rejecting this transaction.'
+        REJECT: 'Please provide the reason for rejecting this transaction.',
+        ADD_COMMENT: 'Please enter your comment below. It will be added to the transaction history.'
     }
 
     const handleConfirm = () => {
@@ -276,7 +280,7 @@ export default function WorkflowPage() {
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [currentActionInfo, setCurrentActionInfo] = useState<{
     transactionId: string;
-    action: 'SUBMIT' | 'APPROVE' | 'REJECT';
+    action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
   } | null>(null);
 
 
@@ -294,7 +298,7 @@ export default function WorkflowPage() {
 
   const handleAction = (
     transactionId: string,
-    action: 'SUBMIT' | 'APPROVE' | 'REJECT',
+    action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT',
     comment: string
   ) => {
     setTransactions((prev) =>
@@ -329,6 +333,9 @@ export default function WorkflowPage() {
                 historyAction = 'Rejected by Super Admin';
             }
             break;
+          case 'ADD_COMMENT':
+            historyAction = 'Comment Added';
+            break;
         }
 
         if(historyAction){
@@ -353,7 +360,7 @@ export default function WorkflowPage() {
     );
   };
   
-  const openActionDialog = (transactionId: string, action: 'SUBMIT' | 'APPROVE' | 'REJECT') => {
+  const openActionDialog = (transactionId: string, action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT') => {
     setCurrentActionInfo({ transactionId, action });
     setIsActionDialogOpen(true);
   }
@@ -430,7 +437,7 @@ export default function WorkflowPage() {
         statusConfig[t.currentStatus].label
     ]);
     
-    doc.autoTable({
+    (doc as any).autoTable({
         head: head,
         body: body,
         startY: 20,
@@ -576,6 +583,10 @@ export default function WorkflowPage() {
                                     </DialogTrigger>
                                      <ApprovalHistoryDialog history={t.approvalHistory} transactionId={t.id}/>
                                 </Dialog>
+                                <DropdownMenuItem onSelect={() => openActionDialog(t.id, 'ADD_COMMENT')}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    + Add Comment
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
