@@ -117,6 +117,11 @@ type SpecialCondition = {
     condition: string;
 };
 
+type Note = {
+    id: number;
+    content: string;
+}
+
 type Attachment = {
   id: number;
   name: string;
@@ -168,8 +173,7 @@ const initialPropertyData = {
     towerType: 'Rent',
     gps: '',
     propertyNo: '',
-    assetManager: 'Supervisor',
-    notes: '',
+    assetManager: 'Supervisor'
 };
 
 export default function PropertyPage() {
@@ -206,6 +210,9 @@ export default function PropertyPage() {
 
   const [shareHolders, setShareHolders] = useState<ShareHolder[]>([]);
   const [initialShareHolders, setInitialShareHolders] = useState<ShareHolder[]>([]);
+
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [initialNotes, setInitialNotes] = useState<Note[]>([]);
 
   const [visibleSections, setVisibleSections] = useState({
     propertyDetails: true,
@@ -338,6 +345,24 @@ export default function PropertyPage() {
     setSpecialConditions(prev => prev.filter(item => item.id !== id));
   };
 
+  const handleNoteChange = (id: number, value: string) => {
+    setNotes(prev => prev.map(item => item.id === id ? {...item, content: value} : item));
+  };
+
+  const addNoteRow = () => {
+    setNotes(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        content: '',
+      }
+    ]);
+  };
+
+  const removeNoteRow = (id: number) => {
+    setNotes(prev => prev.filter(item => item.id !== id));
+  };
+
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
   };
@@ -432,6 +457,7 @@ export default function PropertyPage() {
     setInitialParkings(JSON.parse(JSON.stringify(parkings)));
     setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
     setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
+    setInitialNotes(JSON.parse(JSON.stringify(notes)));
     setIsEditing(true);
   }
 
@@ -448,6 +474,7 @@ export default function PropertyPage() {
         parkings,
         assignments,
         shareHolders,
+        notes,
         customFieldsData,
         propertyPhoto: uploadedImage 
       };
@@ -468,6 +495,7 @@ export default function PropertyPage() {
         setInitialParkings(JSON.parse(JSON.stringify(parkings)));
         setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
         setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
+        setInitialNotes(JSON.parse(JSON.stringify(notes)));
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
@@ -493,6 +521,7 @@ export default function PropertyPage() {
       setParkings(initialParkings);
       setAssignments(initialAssignments);
       setShareHolders(initialShareHolders);
+      setNotes(initialNotes);
       setIsEditing(false);
     } else {
       router.push('/property/properties/list');
@@ -1265,14 +1294,40 @@ export default function PropertyPage() {
                     </div>
                  </TabsContent>
                  <TabsContent value="notes">
-                   <div className="p-4 border rounded-md mt-2">
-                    <Textarea 
-                        placeholder="Enter any notes here..." 
-                        disabled={!isEditing} 
-                        value={propertyData.notes} 
-                        onChange={(e) => handleInputChange('notes', e.target.value)}
-                    />
-                  </div>
+                   <div className="p-4 border rounded-md mt-2 space-y-4">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px]">Sno.</TableHead>
+                                    <TableHead>Note</TableHead>
+                                    <TableHead>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {notes.map((item, index) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>
+                                            <Textarea
+                                                value={item.content}
+                                                onChange={(e) => handleNoteChange(item.id, e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="Enter note..."
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeNoteRow(item.id)} disabled={!isEditing}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        <Button variant="outline" size="sm" className="hover:bg-accent" onClick={addNoteRow} disabled={!isEditing}>
+                            <Plus className="mr-2 h-4 w-4" /> Add Note
+                        </Button>
+                    </div>
                  </TabsContent>
               </Tabs>
             </CardContent>
