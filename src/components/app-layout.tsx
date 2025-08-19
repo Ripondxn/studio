@@ -431,12 +431,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                General Sales
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
                 <FileSignature className="h-4 w-4 mr-2" />
                 Contracts
               </MenubarTrigger>
@@ -456,3 +450,5 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    
