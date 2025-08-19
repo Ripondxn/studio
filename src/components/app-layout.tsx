@@ -302,7 +302,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
                   <div>
                     <h3 className="font-bold text-sm mb-2">Accounts</h3>
-                    <MenubarItem>Chart Of Accounts</MenubarItem>
+                    <MenubarItem asChild>
+                      <Link href="/finance/chart-of-accounts">Chart Of Accounts</Link>
+                    </MenubarItem>
                   </div>
                   <div>
                     <h3 className="font-bold text-sm mb-2">Receipts &amp; Payments</h3>
@@ -403,7 +405,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 PROJECTS
               </MenubarTrigger>
             </MenubarMenu>
-             <MenubarMenu>
+            <MenubarMenu>
               <MenubarTrigger asChild>
                 <Link href="/workflow" className="flex items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground cursor-pointer">
                   <GitBranchPlus className="h-4 w-4 mr-2" />
