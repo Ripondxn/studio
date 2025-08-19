@@ -52,10 +52,6 @@ import {
   UserRound,
   FolderKanban,
   GitBranchPlus,
-  Heart,
-  StickyNote,
-  CalendarClock,
-  ShoppingBag,
   FileSignature,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -202,7 +198,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === '/landlord-management'}
+                isActive={pathname.startsWith('/landlord')}
                 tooltip="Landlord Management"
               >
                 <Link href="/landlord-management">
@@ -296,7 +292,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
                 <Briefcase className="h-4 w-4 mr-2" />
-                FINANCE
+                Finance
               </MenubarTrigger>
               <MenubarContent className="w-screen max-w-4xl">
                 <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
@@ -363,11 +359,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <MenubarItem>Availability</MenubarItem>
               </MenubarContent>
             </MenubarMenu>
-            <MenubarMenu>
+             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
                 <UserCog className="h-4 w-4 mr-2" />
                 ADMIN
               </MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem asChild><Link href="/admin/profile">User Profile</Link></MenubarItem>
+                <MenubarItem asChild><Link href="/admin/user-roles">User Role Management</Link></MenubarItem>
+              </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
@@ -406,12 +406,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger asChild>
-                <Link href="/workflow" className={cn(buttonVariants({ variant: 'ghost' }), "flex items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground h-10 border-0 cursor-pointer")}>
-                  <GitBranchPlus className="h-4 w-4 mr-2" />
-                  Document Flow
-                </Link>
-              </MenubarTrigger>
+                <MenubarTrigger asChild className="cursor-pointer">
+                    <Link href="/workflow">
+                        <GitBranchPlus className="h-4 w-4 mr-2" />
+                        Document Flow
+                    </Link>
+                </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger className="cursor-pointer">
@@ -434,3 +434,5 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    
