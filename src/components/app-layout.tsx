@@ -167,7 +167,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-auto flex-col border-b bg-background/95 backdrop-blur-sm sticky top-0 z-30">
           <div className="flex h-14 items-center gap-4 px-4 lg:h-[60px] lg:px-6">
             <SidebarTrigger className="md:hidden" />
-            <div className="flex-1 font-bold">Prestige Properties</div>
+            <div className="flex-1"></div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
