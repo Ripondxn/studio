@@ -1,0 +1,37 @@
+
+[
+    {
+        "id": "PROP-001",
+        "code": "MT",
+        "name": "Meras Tower",
+        "propertyType": "Residential Tower",
+        "status": "Active",
+        "noOfUnits": "150"
+    },
+    {
+        "id": "PROP-002",
+        "code": "ST",
+        "name": "Sama Tower",
+        "propertyType": "Commercial Tower",
+        "status": "Active",
+        "noOfUnits": "80"
+    },
+    {
+        "id": "PROP-003",
+        "code": "GV",
+        "name": "Green Villas",
+        "propertyType": "Villa Compound",
+        "status": "Active",
+        "noOfUnits": "50"
+    },
+    {
+        "id": "PROP-004",
+        "code": "OB",
+        "name": "Oasis Building",
+        "propertyType": "Residential Building",
+        "status": "Under Maintenance",
+        "noOfUnits": "40"
+    }
+]
+
+    
