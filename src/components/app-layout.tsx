@@ -170,7 +170,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip="Document Flow"
               >
                 <Link href="/workflow">
-                  <GitBranchPlus />
+                  <FileSignature />
                   <span>Document Flow</span>
                 </Link>
               </SidebarMenuButton>
@@ -410,7 +410,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </MenubarTrigger>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer" asChild>
+              <MenubarTrigger asChild className="cursor-pointer">
                 <Link href="/workflow">
                   <GitBranchPlus className="h-4 w-4 mr-2" />
                   Document Flow

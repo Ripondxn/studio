@@ -1,0 +1,148 @@
+
+import type { Transaction } from './types';
+
+export const transactions: Transaction[] = [
+  {
+    id: 'TXN-001',
+    type: 'Office Supplies Expense',
+    amount: 500,
+    createdByUser: { id: 'jane.doe', name: 'Jane Doe' },
+    dateCreated: '2023-10-01T10:00:00Z',
+    submittedForApprovalDate: '2023-10-01T10:05:00Z',
+    currentStatus: 'PENDING_ADMIN_APPROVAL',
+    approvalHistory: [
+      {
+        action: 'Created Transaction',
+        actorId: 'jane.doe',
+        actorRole: 'USER',
+        timestamp: '2023-10-01T10:00:00Z',
+        comments: 'Initial creation',
+      },
+       {
+        action: 'Submitted for Approval',
+        actorId: 'jane.doe',
+        actorRole: 'USER',
+        timestamp: '2023-10-01T10:05:00Z',
+      },
+    ],
+  },
+  {
+    id: 'TXN-002',
+    type: 'Client Dinner',
+    amount: 250.75,
+    createdByUser: { id: 'john.smith', name: 'John Smith' },
+    dateCreated: '2023-10-02T14:20:00Z',
+    submittedForApprovalDate: '2023-10-02T14:22:00Z',
+    currentStatus: 'PENDING_SUPER_ADMIN_APPROVAL',
+    approvalHistory: [
+       {
+        action: 'Created Transaction',
+        actorId: 'john.smith',
+        actorRole: 'USER',
+        timestamp: '2023-10-02T14:20:00Z',
+      },
+       {
+        action: 'Submitted for Approval',
+        actorId: 'john.smith',
+        actorRole: 'USER',
+        timestamp: '2023-10-02T14:22:00Z',
+      },
+      {
+        action: 'Approved by Admin',
+        actorId: 'admin.user',
+        actorRole: 'ADMIN',
+        timestamp: '2023-10-03T09:00:00Z',
+        comments: 'Looks good.',
+      },
+    ],
+  },
+  {
+    id: 'TXN-003',
+    type: 'Software Subscription',
+    amount: 1200,
+    createdByUser: { id: 'susan.b', name: 'Susan B.' },
+    dateCreated: '2023-09-28T11:00:00Z',
+    submittedForApprovalDate: '2023-09-28T11:05:00Z',
+    currentStatus: 'POSTED',
+    approvalHistory: [
+       {
+        action: 'Created Transaction',
+        actorId: 'susan.b',
+        actorRole: 'USER',
+        timestamp: '2023-09-28T11:00:00Z',
+      },
+       {
+        action: 'Submitted for Approval',
+        actorId: 'susan.b',
+        actorRole: 'USER',
+        timestamp: '2023-09-28T11:05:00Z',
+      },
+      {
+        action: 'Approved by Admin',
+        actorId: 'admin.user',
+        actorRole: 'ADMIN',
+        timestamp: '2023-09-29T10:15:00Z',
+      },
+      {
+        action: 'Final Approval & Posted',
+        actorId: 'super.admin',
+        actorRole: 'SUPER_ADMIN',
+        timestamp: '2023-09-30T16:45:00Z',
+        comments: 'Approved.',
+      },
+    ],
+  },
+  {
+    id: 'TXN-004',
+    type: 'Travel Expense',
+    amount: 850,
+    createdByUser: { id: 'jane.doe', name: 'Jane Doe' },
+    dateCreated: '2023-10-04T08:30:00Z',
+    submittedForApprovalDate: '2023-10-04T08:35:00Z',
+    currentStatus: 'REJECTED',
+    approvalHistory: [
+      {
+        action: 'Created Transaction',
+        actorId: 'jane.doe',
+        actorRole: 'USER',
+        timestamp: '2023-10-04T08:30:00Z',
+      },
+      {
+        action: 'Submitted for Approval',
+        actorId: 'jane.doe',
+        actorRole: 'USER',
+        timestamp: '2023-10-04T08:35:00Z',
+      },
+      {
+        action: 'Rejected by Admin',
+        actorId: 'admin.user',
+        actorRole: 'ADMIN',
+        timestamp: '2023-10-05T11:00:00Z',
+        comments: 'Missing itemized receipt for the hotel booking.',
+      },
+    ],
+  },
+   {
+    id: 'TXN-005',
+    type: 'Manual Journal Entry',
+    amount: 5000,
+    createdByUser: { id: 'account.ant', name: 'Account Ant' },
+    dateCreated: '2023-10-05T15:00:00Z',
+    submittedForApprovalDate: '2023-10-05T15:00:00Z',
+    currentStatus: 'PENDING_ADMIN_APPROVAL',
+    approvalHistory: [
+      {
+        action: 'Created Transaction',
+        actorId: 'account.ant',
+        actorRole: 'USER',
+        timestamp: '2023-10-05T15:00:00Z',
+      },
+      {
+        action: 'Submitted for Approval',
+        actorId: 'account.ant',
+        actorRole: 'USER',
+        timestamp: '2023-10-05T15:00:00Z',
+      },
+    ],
+  },
+];
