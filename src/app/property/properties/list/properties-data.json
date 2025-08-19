@@ -1,4 +1,3 @@
-
 [
     {
         "id": "PROP-001",
@@ -31,7 +30,13 @@
         "propertyType": "Residential Building",
         "status": "Under Maintenance",
         "noOfUnits": "40"
+    },
+    {
+        "id": "PROP-1755607736450",
+        "code": "MU",
+        "name": "Lewa Tower-715",
+        "propertyType": "Building",
+        "status": "Active",
+        "noOfUnits": "56"
     }
 ]
-
-    

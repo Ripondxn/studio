@@ -525,20 +525,21 @@ export default function PropertyPage() {
           description: `Property data for "${propertyData.name}" saved successfully.`,
         });
         setIsEditing(false);
-        setInitialData(propertyData);
-        setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
-        setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
-        setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
-        setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
-        setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
-        setInitialParkings(JSON.parse(JSON.stringify(parkings)));
-        setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
-        setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
-        setInitialNotes(JSON.parse(JSON.stringify(notes)));
-        setInitialAgents(JSON.parse(JSON.stringify(agents)));
         if (isNewRecord) {
             router.push(`/property/properties/list`);
             router.refresh();
+        } else {
+            setInitialData(propertyData);
+            setInitialParticulars(JSON.parse(JSON.stringify(particulars)));
+            setInitialVatItems(JSON.parse(JSON.stringify(vatItems)));
+            setInitialOtherDetails(JSON.parse(JSON.stringify(otherDetails)));
+            setInitialSpecialConditions(JSON.parse(JSON.stringify(specialConditions)));
+            setInitialAttachments(JSON.parse(JSON.stringify(attachments)));
+            setInitialParkings(JSON.parse(JSON.stringify(parkings)));
+            setInitialAssignments(JSON.parse(JSON.stringify(assignments)));
+            setInitialShareHolders(JSON.parse(JSON.stringify(shareHolders)));
+            setInitialNotes(JSON.parse(JSON.stringify(notes)));
+            setInitialAgents(JSON.parse(JSON.stringify(agents)));
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -572,6 +573,10 @@ export default function PropertyPage() {
         setIsEditing(false);
      }
   }
+
+  const handleCloseClick = () => {
+    router.push('/property/properties/list');
+  };
 
   const handleFindClick = async (code?: string) => {
     const codeToFind = code || propertyData.code;
@@ -663,6 +668,9 @@ export default function PropertyPage() {
           {pageTitle}
         </h1>
         <div className="flex items-center gap-2">
+           <Button variant="outline" className="hover:bg-accent" onClick={handleCloseClick}>
+                <X className="mr-2 h-4 w-4" /> Close
+           </Button>
            <Button variant="outline" className="hover:bg-accent" disabled={!isEditing} onClick={handleSaveClick}>
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
              {isSaving ? 'Saving...' : 'Save'}
@@ -706,7 +714,7 @@ export default function PropertyPage() {
                   <div className="flex items-end gap-2">
                     <div className="flex-grow">
                         <Label htmlFor="code">Code</Label>
-                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord && !isEditing} />
+                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
                     </div>
                     <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || isEditing}>
                         {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
