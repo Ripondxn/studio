@@ -4,8 +4,8 @@ import { AppLayout } from '@/components/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'PropVue',
-  description: 'A comprehensive, multi-tenant property management web application.',
+  title: 'Atlas PM',
+  description: 'Integrated Property Management Dashboard & Workflow Design',
 };
 
 export default function RootLayout({

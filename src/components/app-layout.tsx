@@ -5,18 +5,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarTrigger,
-  SidebarRail,
-} from '@/components/ui/sidebar';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -25,98 +13,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarTrigger,
-} from '@/components/ui/menubar';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   LayoutDashboard,
-  Lightbulb,
   Building2,
   Users,
   Banknote,
-  Wrench,
   LineChart,
   Settings,
-  Home,
-  Briefcase,
-  Warehouse,
-  FileText,
-  Scaling,
-  UserCog,
-  UserRound,
-  FolderKanban,
-  GitBranchPlus,
-  FileSignature,
   LogOut,
+  FileSignature,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
-
-const propertyMenuContent = [
-    {
-      title: 'Properties',
-      items: [
-        { name: 'Units', href: '/property/units' },
-        { name: 'Properties', href: '/property/properties/list' },
-        { name: 'Enquiry', href: '#' },
-      ],
-    },
-    {
-      title: 'Leasing',
-      items: [
-        { name: 'Tenant', href: '#' },
-        { name: 'Tenancy Contract', href: '#' },
-        { name: 'Quotation', href: '#' },
-        { name: 'Purchase Contract', href: '#' },
-        { name: 'Unit Reservation', href: '#' },
-      ],
-    },
-    {
-      title: 'Manage',
-      items: [{ name: 'Manage', href: '#' }],
-    },
-    {
-      title: 'Operations',
-      items: [
-        { name: 'Book Case Income', href: '#' },
-        { name: 'Daily Vacant Flat Report', href: '#' },
-        { name: 'Security Deposit', href: '#' },
-        { name: 'Console', href: '#' },
-        { name: 'Cheque / Cash Collection', href: '#' },
-        { name: 'Floor Wise Expiry', href: '#' },
-      ],
-    },
-    {
-      title: 'Reports',
-      items: [
-        { name: 'Property Profit Report', href: '#' },
-        { name: 'Tenant Ledger', href: '#' },
-        { name: 'Bulk Posting', href: '#' },
-        { name: 'Floor', href: '#' },
-      ],
-    },
-    {
-      title: 'Settings',
-      items: [
-        { name: 'Property Location', href: '#' },
-        { name: 'Property Block', href: '#' },
-        { name: 'Floor', href: '#' },
-        { name: 'Unit Section', href: '#' },
-        { name: 'Asset', href: '#' },
-        { name: 'Request Type', href: '#' },
-        { name: 'Service Category', href: '#' },
-        { name: 'Service Sub Category', href: '#' },
-        { name: 'Supervisor', href: '#' },
-        { name: 'Technician', href: '#' },
-      ],
-    },
-  ];
 
 // A type for the user profile stored in session storage
 type UserProfile = Omit<UserRole, 'password' | 'lastLogin' | 'status'>;
@@ -135,7 +51,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       if (storedProfile) {
         setUserProfile(JSON.parse(storedProfile));
       } else {
-        // If no profile, redirect to login. This is a simple form of route protection.
+        // If no profile, redirect to login.
         router.push('/login');
       }
     } catch (error) {
@@ -149,343 +65,93 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  if (pathname === '/login') {
+  if (pathname === '/login' || !userProfile) {
+    // Return children directly for login page, or a loader while user profile is being fetched
     return <>{children}</>;
   }
-
-  // Avoid rendering the layout until we have confirmed the user is logged in
-  if (!userProfile) {
-    // You could return a full-page loader here
-    return null; 
-  }
-
-  const hasRole = (roles: Array<UserRole['role']>) => {
-    return userProfile && roles.includes(userProfile.role);
-  };
+  
+  const navLinks = [
+    { href: '/', label: 'Dashboard', icon: <LayoutDashboard /> },
+    { href: '/property/properties/list', label: 'Leases', icon: <FileSignature /> },
+    { href: '/finance/chart-of-accounts', label: 'Finance', icon: <Banknote /> },
+    { href: '/reports', label: 'Reports', icon: <LineChart /> },
+    { href: '/admin/user-roles', label: 'Settings', icon: <Settings /> },
+  ]
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="p-4">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-sidebar-foreground"
-          >
-            <Building2 className="h-8 w-8 text-accent" />
-            <h1 className="text-xl font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-              PropVue
-            </h1>
-          </Link>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/'}
-                tooltip="Dashboard"
-              >
-                <Link href="/">
-                  <LayoutDashboard />
-                  <span>Dashboard</span>
+    <div className="flex min-h-screen w-full flex-col">
+        <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-40">
+            <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+                <Link
+                href="#"
+                className="flex items-center gap-2 text-lg font-semibold md:text-base"
+                >
+                <Building2 className="h-6 w-6 text-primary" />
+                <span className="font-headline">Atlas PM</span>
                 </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/intelligent-pricing'}
-                tooltip="Intelligent Pricing"
-              >
-                <Link href="/intelligent-pricing">
-                  <Lightbulb />
-                  <span>Intelligent Pricing</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/workflow'}
-                tooltip="Document Flow"
-              >
-                <Link href="/workflow">
-                  <FileSignature />
-                  <span>Document Flow</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/property-management'}
-                tooltip="Property Management"
-              >
-                <Link href="/property-management">
-                  <Building2 />
-                  <span>Property Management</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/tenant-management'}
-                tooltip="Tenant Management"
-              >
-                <Link href="/tenant-management">
-                  <Users />
-                  <span>Tenant Management</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith('/landlord')}
-                tooltip="Landlord Management"
-              >
-                <Link href="/landlord-management">
-                  <UserCog />
-                  <span>Landlord Management</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/maintenance'}
-                tooltip="Maintenance"
-              >
-                <Link href="/maintenance">
-                  <Wrench />
-                  <span>Maintenance</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/reports'}
-                tooltip="Reports"
-              >
-                <Link href="/reports">
-                  <LineChart />
-                  <span>Reports</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/settings'}
-                tooltip="Settings"
-              >
-                <Link href="/settings">
-                  <Settings />
-                  <span>Settings</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarRail />
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex h-auto flex-col border-b bg-background/95 backdrop-blur-sm sticky top-0 z-30">
-          <div className="flex h-14 items-center gap-4 px-4 lg:h-[60px] lg:px-6">
-            <SidebarTrigger />
-            <div className="flex-1"></div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src="https://placehold.co/40x40.png"
-                      alt={userProfile.name}
-                      data-ai-hint="profile picture"
-                    />
-                    <AvatarFallback>{userProfile.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {userProfile.name}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {userProfile.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link href="/admin/profile">Profile</Link></DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <Menubar className="border-t-0 border-x-0 rounded-none h-auto">
-             <Link href="/" className={cn(buttonVariants({ variant: 'ghost' }), "flex items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground h-10 border-0")}>
-                <Home className="h-4 w-4 mr-2" />
-                HOME
-            </Link>
-            {hasRole(['Accountant', 'Admin', 'Super Admin']) && (
-              <MenubarMenu>
-                <MenubarTrigger className="cursor-pointer">
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Finance
-                </MenubarTrigger>
-                <MenubarContent className="w-screen max-w-4xl">
-                  <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
-                    <div>
-                      <h3 className="font-bold text-sm mb-2">Accounts</h3>
-                      <MenubarItem asChild>
-                        <Link href="/finance/chart-of-accounts">Chart Of Accounts</Link>
-                      </MenubarItem>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm mb-2">Receipts &amp; Payments</h3>
-                      <MenubarItem>Contract Income</MenubarItem>
-                      <MenubarItem>Cash Receipt Voucher - Rent</MenubarItem>
-                      <MenubarItem>Postdated Receipt Voucher Others</MenubarItem>
-                      <MenubarItem>Contract Income Reversal</MenubarItem>
-                      <MenubarItem>Cash Payment Voucher</MenubarItem>
-                      <MenubarItem>Postdated Payment Voucher Multiple</MenubarItem>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm mb-2">Journal Entries</h3>
-                      <MenubarItem>Journal Voucher Others</MenubarItem>
-                      <MenubarItem>Debit Note (JV)</MenubarItem>
-                      <MenubarItem>Credit Note (JV)</MenubarItem>
-                      <MenubarItem>Opening Balance</MenubarItem>
-                      <MenubarItem>Debit Note</MenubarItem>
-                      <MenubarItem>Credit Note</MenubarItem>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm mb-2">Manage</h3>
-                      <MenubarItem>Manage</MenubarItem>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm mb-2">Fixed Assets</h3>
-                      <MenubarItem>Assets</MenubarItem>
-                      <MenubarItem>Asset Classes</MenubarItem>
-                      <MenubarItem>Depreciation Books</MenubarItem>
-                      <MenubarItem>FA Accounts</MenubarItem>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm mb-2">Reports</h3>
-                      <MenubarItem>General Ledger</MenubarItem>
-                      <MenubarItem>Registers</MenubarItem>
-                      <MenubarItem>Receivables &amp; Payables</MenubarItem>
-                      <MenubarItem>Final Reports</MenubarItem>
-                    </div>
-                  </div>
-                </MenubarContent>
-              </MenubarMenu>
-            )}
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <Warehouse className="h-4 w-4 mr-2" />
-                INVENTORY
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <FileText className="h-4 w-4 mr-2" />
-                REPORTS
-              </MenubarTrigger>
-              <MenubarContent>
-                <MenubarItem>Rental Reports</MenubarItem>
-                <MenubarItem>Balance</MenubarItem>
-                <MenubarItem>Occupancy</MenubarItem>
-                <MenubarItem>Availability</MenubarItem>
-              </MenubarContent>
-            </MenubarMenu>
-             {hasRole(['Admin', 'Super Admin']) && (
-              <MenubarMenu>
-                <MenubarTrigger className="cursor-pointer">
-                  <UserCog className="h-4 w-4 mr-2" />
-                  ADMIN
-                </MenubarTrigger>
-                <MenubarContent>
-                  <MenubarItem asChild><Link href="/admin/profile">User Profile</Link></MenubarItem>
-                  <MenubarItem asChild><Link href="/admin/user-roles">User Role Management</Link></MenubarItem>
-                </MenubarContent>
-              </MenubarMenu>
-             )}
-            {hasRole(['Property Manager', 'Admin', 'Super Admin']) && (
-              <MenubarMenu>
-                <MenubarTrigger className="cursor-pointer">
-                  <Building2 className="h-4 w-4 mr-2" />
-                  PROPERTY
-                </MenubarTrigger>
-                <MenubarContent className="w-screen max-w-6xl bg-transparent backdrop-blur-lg">
-                  <div className="grid grid-cols-6 gap-x-4 gap-y-2 p-4">
-                    {propertyMenuContent.map((section) => (
-                      <div key={section.title}>
-                        <h3 className="font-bold text-sm mb-2">{section.title}</h3>
-                        {section.items.map((item) => (
-                          <MenubarItem key={item.name} asChild>
-                            {item.href ? (
-                              <Link href={item.href}>{item.name}</Link>
-                            ) : (
-                              <span>{item.name}</span>
-                            )}
-                          </MenubarItem>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </MenubarContent>
-              </MenubarMenu>
-            )}
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <UserRound className="h-4 w-4 mr-2" />
-                HRM
-              </MenubarTrigger>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <FolderKanban className="h-4 w-4 mr-2" />
-                PROJECTS
-              </MenubarTrigger>
-            </MenubarMenu>
-            {hasRole(['Admin', 'Super Admin', 'User']) && (
-              <MenubarMenu>
-                  <MenubarTrigger asChild className="cursor-pointer">
-                      <Link href="/workflow">
-                          <GitBranchPlus className="h-4 w-4 mr-2" />
-                          Document Flow
-                      </Link>
-                  </MenubarTrigger>
-              </MenubarMenu>
-            )}
-            <MenubarMenu>
-              <MenubarTrigger className="cursor-pointer">
-                <FileSignature className="h-4 w-4 mr-2" />
-                Contracts
-              </MenubarTrigger>
-            </MenubarMenu>
-          </Menubar>
+                {navLinks.map(link => (
+                     <Link
+                        key={link.href}
+                        href={link.href}
+                        className={cn("transition-colors hover:text-foreground", pathname === link.href ? "text-foreground" : "text-muted-foreground")}
+                    >
+                        {link.label}
+                    </Link>
+                ))}
+            </nav>
+            <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+                <div className="ml-auto flex-1 sm:flex-initial">
+                    <Select defaultValue="property_management">
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select Company" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="property_management">Property Management</SelectItem>
+                            <SelectItem value="trading">Trading</SelectItem>
+                            <SelectItem value="payroll">Payroll</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="secondary" size="icon" className="rounded-full">
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage
+                            src="https://placehold.co/40x40.png"
+                            alt={userProfile.name}
+                            data-ai-hint="profile picture"
+                            />
+                            <AvatarFallback>{userProfile.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                        </Avatar>
+                        <span className="sr-only">Toggle user menu</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                            {userProfile.name}
+                            </p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                            {userProfile.email}
+                            </p>
+                        </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild><Link href="/admin/profile">Profile</Link></DropdownMenuItem>
+                        <DropdownMenuItem>Settings</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Log out
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </header>
-        <main
-          className={cn(
-            'flex flex-1 flex-col',
-            // remove default padding for pages that want full width
-            pathname !== '/' && 'p-4 sm:px-6 sm:py-0 md:gap-8'
-          )}
-        >
+        <main className="flex flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
           {children}
         </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   );
 }

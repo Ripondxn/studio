@@ -6,241 +6,167 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Home,
-  CheckCircle2,
-  XCircle,
-  FileText,
-  Bookmark,
-  Bed,
-  Moon,
-} from 'lucide-react';
-import { TotalUnitsChart } from '@/components/total-units-chart';
-import { VacantUnitsChart } from '@/components/vacant-units-chart';
-import { ActiveUnitsChart } from '@/components/active-units-chart';
-import { ExpiredUnitsChart } from '@/components/expired-units-chart';
-import { CasesUnitsChart } from '@/components/cases-units-chart';
-import { ReservedUnitsChart } from '@/components/reserved-units-chart';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+  TrendingUp,
+  TrendingDown,
+  FileClock,
+  Home,
+  Plus,
+  Mail,
+  Receipt,
+} from 'lucide-react';
+import Link from 'next/link';
+
+const kpiData = [
+  {
+    title: 'Vacancy Rate',
+    value: '12.5%',
+    change: '+1.2%',
+    changeType: 'increase' as const,
+    icon: <Home className="h-6 w-6 text-muted-foreground" />,
+  },
+  {
+    title: 'Total Monthly Rent Roll',
+    value: '$2,150,000',
+    change: '-0.5%',
+    changeType: 'decrease' as const,
+    icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />,
+  },
+  {
+    title: 'Contracts Expiring (30d)',
+    value: '42',
+    change: '+5',
+    changeType: 'increase' as const,
+    icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
+  },
+  {
+    title: 'Total Vacant Loss',
+    value: '$268,750',
+    change: '+3.1%',
+    changeType: 'increase' as const,
+    icon: <TrendingDown className="h-6 w-6 text-muted-foreground" />,
+  },
+];
+
+const expiryReport = [
+    { unit: 'A-101', tenant: 'Global Innovations Inc.', endDate: '2024-08-15', rent: 5500, status: 'Renewal Due' },
+    { unit: 'C-305', tenant: 'Quantum Solutions', endDate: '2024-08-22', rent: 7200, status: 'Renewal Due' },
+    { unit: 'B-210', tenant: 'Nebula Corp', endDate: '2024-09-01', rent: 4800, status: 'Notified' },
+    { unit: 'A-102', tenant: 'Apex Enterprises', endDate: '2024-09-10', rent: 5500, status: 'Renewal Due' },
+];
+
+const vacantUnits = [
+    { unit: 'D-401', type: '2-Bed', daysVacant: 45, marketRent: 6800 },
+    { unit: 'B-115', type: 'Studio', daysVacant: 21, marketRent: 3200 },
+    { unit: 'C-208', type: '1-Bed', daysVacant: 14, marketRent: 4500 },
+    { unit: 'E-501', type: 'Penthouse', daysVacant: 68, marketRent: 12500 },
+];
 
 export default function Dashboard() {
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <Card className="bg-cyan-100 border-cyan-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unit</CardTitle>
-            <Home className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">452</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-lime-100 border-lime-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Vacant</CardTitle>
-            <Moon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">371</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-purple-100 border-purple-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">53</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-orange-100 border-orange-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expired</CardTitle>
-            <XCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">28</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-yellow-100 border-yellow-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cases</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-blue-100 border-blue-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reserved</CardTitle>
-            <Bookmark className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1</div>
-          </CardContent>
-        </Card>
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div className="flex items-center space-x-2">
+            <Button><Plus className="mr-2 h-4 w-4"/> Generate New Contract</Button>
+            <Button variant="outline"><Mail className="mr-2 h-4 w-4"/> Send Renewal Email</Button>
+            <Button variant="outline"><Receipt className="mr-2 h-4 w-4"/> Record Payment</Button>
+        </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
+      
+      {/* Key Metrics Overview */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {kpiData.map((kpi) => (
+          <Card key={kpi.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+              {kpi.icon}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpi.value}</div>
+              <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-destructive' : 'text-emerald-600'}`}>
+                {kpi.change} from last month
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Interactive Summary Widgets */}
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Total Unit
-            </CardTitle>
-            <div className="flex items-center space-x-2 pt-2">
-              <Select defaultValue="doughnut">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Chart Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="doughnut">Doughnut</SelectItem>
-                  <SelectItem value="pie">Pie</SelectItem>
-                  <SelectItem value="bar">Bar</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="d3-total" />
-                <Label htmlFor="d3-total">3D</Label>
-              </div>
-            </div>
+            <CardTitle>Contract Expiry Report (Next 90 Days)</CardTitle>
+            <CardDescription>
+              Contracts approaching their end date.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px] -mt-4">
-            <TotalUnitsChart />
+          <CardContent>
+             <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Unit</TableHead>
+                        <TableHead>Tenant</TableHead>
+                        <TableHead>End Date</TableHead>
+                        <TableHead className="text-right">Rent</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {expiryReport.map((item) => (
+                        <TableRow key={item.unit}>
+                            <TableCell className="font-medium">{item.unit}</TableCell>
+                            <TableCell>{item.tenant}</TableCell>
+                            <TableCell>{item.endDate}</TableCell>
+                            <TableCell className="text-right">${item.rent.toLocaleString()}</TableCell>
+                            <TableCell className="text-center">
+                                <Badge variant={item.status === 'Renewal Due' ? 'destructive' : 'secondary'}>{item.status}</Badge>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+             </Table>
+             <Button variant="link" className="w-full mt-2">View All Expiring Contracts</Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Vacant Units
-            </CardTitle>
-            <div className="flex items-center space-x-2 pt-2">
-              <Select defaultValue="pie">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Chart Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pie">Pie</SelectItem>
-                  <SelectItem value="doughnut">Doughnut</SelectItem>
-                  <SelectItem value="bar">Bar</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="d3-vacant" />
-                <Label htmlFor="d3-vacant">3D</Label>
-              </div>
-            </div>
+            <CardTitle>Unit Vacant List</CardTitle>
+            <CardDescription>
+              Currently available units across all properties.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px] -mt-4">
-            <VacantUnitsChart />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Active Units
-            </CardTitle>
-            <div className="flex items-center space-x-2 pt-2">
-              <Select defaultValue="funnel">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Chart Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="funnel">Funnel</SelectItem>
-                  <SelectItem value="pyramid">Pyramid</SelectItem>
-                  <SelectItem value="bar">Bar</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="d3-active" />
-                <Label htmlFor="d3-active">3D</Label>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="h-[300px] -mt-4">
-            <ActiveUnitsChart />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Expired Units
-            </CardTitle>
-            <div className="flex items-center space-x-2 pt-2">
-              <Select defaultValue="column">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Chart Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="column">Column</SelectItem>
-                  <SelectItem value="bar">Bar</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="d3-expired" />
-                <Label htmlFor="d3-expired">3D</Label>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ExpiredUnitsChart />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Cases Units
-            </CardTitle>
-            <div className="flex items-center space-x-2 pt-2">
-              <Select defaultValue="bar">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Chart Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bar">Bar</SelectItem>
-                  <SelectItem value="column">Column</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="d3-cases" />
-                <Label htmlFor="d3-cases">3D</Label>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <CasesUnitsChart />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Reserved Units
-            </CardTitle>
-            <div className="flex items-center space-x-2 pt-2">
-              <Select defaultValue="pyramid">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Chart Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pyramid">Pyramid</SelectItem>
-                  <SelectItem value="funnel">Funnel</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="d3-reserved" />
-                <Label htmlFor="d3-reserved">3D</Label>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ReservedUnitsChart />
+          <CardContent>
+             <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Unit</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Days Vacant</TableHead>
+                        <TableHead className="text-right">Market Rent</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {vacantUnits.map((item) => (
+                        <TableRow key={item.unit}>
+                            <TableCell className="font-medium">{item.unit}</TableCell>
+                            <TableCell>{item.type}</TableCell>
+                            <TableCell>{item.daysVacant}</TableCell>
+                            <TableCell className="text-right">${item.marketRent.toLocaleString()}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+             </Table>
+             <Button variant="link" className="w-full mt-2">View All Vacant Units</Button>
           </CardContent>
         </Card>
       </div>

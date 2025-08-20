@@ -81,7 +81,7 @@ export default function LoginPage() {
             <div className="mx-auto mb-4">
                 <Building2 className="h-12 w-12 text-primary" />
             </div>
-          <CardTitle className="font-headline text-3xl">PropVue</CardTitle>
+          <CardTitle className="font-headline text-3xl">Atlas PM</CardTitle>
           <CardDescription>
             Sign in to your account to continue
           </CardDescription>
@@ -98,7 +98,7 @@ export default function LoginPage() {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="admin@propvue.com"
+                        placeholder="admin@atlaspm.com"
                         {...field}
                         disabled={isLoading}
                       />
