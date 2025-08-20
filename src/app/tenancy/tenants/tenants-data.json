@@ -1,3 +1,4 @@
+
 [
   {
     "id": "T-1755690029676",
@@ -7,7 +8,12 @@
       "mobile": "0509231340",
       "email": "ripondxn@gmail.com",
       "address": "Village : Rahut Hati , Post office : Hasnabad",
-      "contractNo": "TC-2005-11"
+      "contractNo": "TC-2005-11",
+      "securityDepositAmount": 5000,
+      "securityDepositStatus": "paid",
+      "securityDepositReturnDate": "",
+      "securityDepositReturnedAmount": 0,
+      "securityDepositRemarks": ""
     },
     "attachments": [
       {

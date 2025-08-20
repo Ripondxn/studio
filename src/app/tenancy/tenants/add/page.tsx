@@ -69,6 +69,11 @@ const initialTenantData = {
     email: '',
     address: '',
     contractNo: '',
+    securityDepositAmount: 0,
+    securityDepositStatus: 'unpaid',
+    securityDepositReturnDate: '',
+    securityDepositReturnedAmount: 0,
+    securityDepositRemarks: '',
 };
 
 export default function TenantPage() {
@@ -113,7 +118,7 @@ export default function TenantPage() {
     }
   }, [searchParams]);
 
-  const handleInputChange = (field: keyof typeof tenantData, value: string) => {
+  const handleInputChange = (field: keyof typeof tenantData, value: string | number) => {
     setTenantData(prev => ({ ...prev, [field]: value }));
   };
   
@@ -461,11 +466,11 @@ export default function TenantPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label>Deposit Amount</Label>
-                                <Input type="number" placeholder="0.00" disabled={!isEditing}/>
+                                <Input type="number" placeholder="0.00" value={tenantData.securityDepositAmount} onChange={(e) => handleInputChange('securityDepositAmount', parseFloat(e.target.value))} disabled={!isEditing}/>
                             </div>
                              <div>
                                 <Label>Payment Status</Label>
-                                <Select disabled={!isEditing}>
+                                <Select value={tenantData.securityDepositStatus} onValueChange={(value) => handleInputChange('securityDepositStatus', value)} disabled={!isEditing}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select status"/>
                                     </SelectTrigger>
@@ -479,17 +484,21 @@ export default function TenantPage() {
                         <Card>
                             <CardHeader><CardTitle>Return Details</CardTitle></CardHeader>
                              <CardContent className="space-y-4">
+                                <div className='p-4 border rounded-md bg-muted/50'>
+                                    <p className='text-sm text-muted-foreground'>Original Deposit Amount</p>
+                                    <p className='text-2xl font-bold text-primary'>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tenantData.securityDepositAmount || 0)}</p>
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <Label>Return Date</Label>
-                                        <Input type="date" disabled={!isEditing}/>
+                                        <Input type="date" value={tenantData.securityDepositReturnDate} onChange={(e) => handleInputChange('securityDepositReturnDate', e.target.value)} disabled={!isEditing}/>
                                     </div>
                                     <div>
                                         <Label>Returned Amount</Label>
-                                        <Input type="number" placeholder="0.00" disabled={!isEditing}/>
+                                        <Input type="number" placeholder="0.00" value={tenantData.securityDepositReturnedAmount} onChange={(e) => handleInputChange('securityDepositReturnedAmount', parseFloat(e.target.value))} disabled={!isEditing}/>
                                     </div>
                                 </div>
-                                <Textarea placeholder="Remarks on return (e.g., deductions for damages)" disabled={!isEditing}/>
+                                <Textarea placeholder="Remarks on return (e.g., deductions for damages)" value={tenantData.securityDepositRemarks} onChange={(e) => handleInputChange('securityDepositRemarks', e.target.value)} disabled={!isEditing}/>
                                 <Button disabled={!isEditing}>Process Return</Button>
                             </CardContent>
                         </Card>
