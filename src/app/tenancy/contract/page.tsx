@@ -108,35 +108,35 @@ export default function TenancyContractPage() {
   
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
     const updatedSchedule = [...contract.paymentSchedule];
-    const newAmount = field === 'amount' ? Number(value) : updatedSchedule[index].amount;
     
-    if (field === 'amount' && contract.totalRent > 0) {
+    if (field === 'amount') {
+        const newAmount = Number(value);
         const oldAmount = updatedSchedule[index].amount;
         const difference = oldAmount - newAmount;
-        
-        updatedSchedule[index].amount = newAmount;
 
-        const otherInstallmentsCount = updatedSchedule.length - 1;
+        // Set the new amount for the edited field
+        updatedSchedule[index].amount = newAmount;
         
-        if (otherInstallmentsCount > 0) {
-            const adjustment = difference / otherInstallmentsCount;
-            
+        // Distribute the difference among the *other* installments
+        const otherInstallments = updatedSchedule.filter((_, i) => i !== index);
+        if (otherInstallments.length > 0) {
+            const adjustment = difference / otherInstallments.length;
+
             for (let i = 0; i < updatedSchedule.length; i++) {
                 if (i !== index) {
                     updatedSchedule[i].amount += adjustment;
                 }
             }
-
-            // To handle rounding issues, we calculate the sum of all but the last *other* installment,
-            // and assign the remainder to the last *other* one to ensure the total is exact.
+            
+            // To prevent floating point inaccuracies, calculate the sum and adjust the last *other* installment
             const currentTotal = updatedSchedule.reduce((sum, item) => sum + item.amount, 0);
             const finalDifference = contract.totalRent - currentTotal;
-
-            const lastOtherInstallmentIndex = updatedSchedule.findIndex((_, i) => i !== index && i === updatedSchedule.length -1);
-            const targetIndex = lastOtherInstallmentIndex !== -1 ? lastOtherInstallmentIndex : updatedSchedule.findIndex((_,i) => i !== index);
             
-            if(targetIndex !== -1) {
-              updatedSchedule[targetIndex].amount += finalDifference;
+            // Find the last installment that was NOT the one being edited
+            const lastOtherInstallmentIndex = updatedSchedule.length - 1 === index ? updatedSchedule.length - 2 : updatedSchedule.length - 1;
+
+            if (lastOtherInstallmentIndex >= 0) {
+                updatedSchedule[lastOtherInstallmentIndex].amount += finalDifference;
             }
         }
     } else {
