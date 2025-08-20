@@ -186,7 +186,7 @@ export const columns: ColumnDef<Tenant>[] = [
                 </Button>
             )
         }
-        return <span>{contractNo}</span>;
+        return <span>{contractNo || 'N/A'}</span>;
     }
   },
   {

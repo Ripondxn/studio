@@ -390,8 +390,8 @@ export default function TenantPage() {
                         <Input id="address" value={tenantData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
                         </div>
                          <div>
-                        <Label htmlFor="contractNo">Contract No</Label>
-                        <Input id="contractNo" value={tenantData.contractNo} onChange={(e) => handleInputChange('contractNo', e.target.value)} disabled={!isEditing} />
+                            <Label htmlFor="contractNo">Contract No</Label>
+                            <Input id="contractNo" value={tenantData.contractNo} onChange={(e) => handleInputChange('contractNo', e.target.value)} disabled={!isEditing} />
                         </div>
                     </div>
 
