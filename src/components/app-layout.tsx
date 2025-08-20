@@ -73,6 +73,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: '/', label: 'Dashboard', icon: <LayoutDashboard /> },
     { href: '/property/properties/list', label: 'Leases', icon: <FileSignature /> },
+    { href: '/property/tenants', label: 'Tenant', icon: <Users /> },
     { href: '/finance/chart-of-accounts', label: 'Finance', icon: <Banknote /> },
     { href: '/reports', label: 'Reports', icon: <LineChart /> },
     { href: '/admin/user-roles', label: 'Settings', icon: <Settings /> },
@@ -87,7 +88,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 className="flex items-center gap-2 text-lg font-semibold md:text-base"
                 >
                 <Building2 className="h-6 w-6 text-primary" />
-                <span className="font-headline">Atlas PM</span>
+                <span className="font-headline">PropVue</span>
                 </Link>
                 {navLinks.map(link => (
                      <Link
