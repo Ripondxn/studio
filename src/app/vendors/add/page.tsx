@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -21,7 +21,9 @@ import {
   Pencil,
   Loader2,
   Search,
-  X
+  X,
+  FileUp,
+  Link2
 } from 'lucide-react';
 import {
   Table,
@@ -48,9 +50,10 @@ import { saveVendorData, findVendorData, deleteVendorData } from '../actions';
 type Attachment = {
   id: number;
   name: string;
-  file: File | null;
+  file: File | null | string;
   url?: string;
   remarks: string;
+  isLink: boolean;
 };
 
 const initialVendorData = {
@@ -78,6 +81,7 @@ export default function VendorPage() {
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     return () => {
@@ -109,13 +113,13 @@ export default function VendorPage() {
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
         if (item.id === id) {
-            if (field === 'file' && value instanceof File) {
-                 // Clean up old object URL if it exists
-                if (item.url) {
-                    URL.revokeObjectURL(item.url);
-                }
-                const newUrl = URL.createObjectURL(value);
+             if (field === 'file') {
+                if (item.url) URL.revokeObjectURL(item.url); // Clean up old object URL
+                const newUrl = (value instanceof File) ? URL.createObjectURL(value) : undefined;
                 return {...item, file: value, url: newUrl};
+            }
+            if (field === 'isLink') {
+                 return {...item, isLink: value, file: '' }; // Reset file input when switching mode
             }
             return {...item, [field]: value};
         }
@@ -130,7 +134,8 @@ export default function VendorPage() {
         id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
         name: '',
         file: null,
-        remarks: ''
+        remarks: '',
+        isLink: false,
       }
     ]);
   };
@@ -145,7 +150,7 @@ export default function VendorPage() {
 
   const setAllData = (data: any) => {
     setVendorData(data.vendorData || initialVendorData);
-    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: null, url: undefined})) : []);
+    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
   }
 
   const setInitialAllData = (data: any) => {
@@ -171,7 +176,13 @@ export default function VendorPage() {
     try {
       const dataToSave = {
         vendorData,
-        attachments: attachments.map(a => ({ id: a.id, name: a.name, file: a.file?.name, remarks: a.remarks })),
+        attachments: attachments.map(a => ({ 
+            id: a.id, 
+            name: a.name, 
+            file: a.file instanceof File ? a.file.name : a.file, 
+            remarks: a.remarks,
+            isLink: a.isLink,
+        })),
       };
 
       const result = await saveVendorData(dataToSave, isNewRecord);
@@ -182,7 +193,7 @@ export default function VendorPage() {
         });
         setIsEditing(false);
         if (isNewRecord) {
-            router.push(`/vendors?code=${vendorData.code}`);
+            router.push(`/vendors/add?code=${vendorData.code}`);
         } else {
             setInitialAllData(dataToSave);
         }
@@ -371,31 +382,58 @@ export default function VendorPage() {
                  <Table>
                     <TableHeader>
                         <TableRow>
-                        <TableHead>File</TableHead>
                         <TableHead>Attachment Name</TableHead>
+                        <TableHead>File / Link</TableHead>
                         <TableHead>Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {attachments.map((item) => (
+                        {attachments.map((item, index) => (
                             <TableRow key={item.id}>
                                 <TableCell>
                                     <Input 
-                                        type="file" 
-                                        className="text-sm" 
-                                        onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                        disabled={!isEditing}
+                                        value={item.name} 
+                                        onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                        disabled={!isEditing} 
+                                        placeholder="e.g. Trade License"
                                     />
                                 </TableCell>
                                 <TableCell>
-                                    {item.url ? (
-                                        <Link href={item.url} target="_blank" className="text-primary hover:underline" rel="noopener noreferrer">
-                                            {item.file?.name || 'View File'}
+                                     <div className="flex items-center gap-2">
+                                        {item.isLink ? (
+                                            <Input
+                                                type="text"
+                                                placeholder="https://example.com"
+                                                value={typeof item.file === 'string' ? item.file : ''}
+                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                disabled={!isEditing}
+                                            />
+                                        ) : (
+                                            <Input
+                                                type="file"
+                                                className="text-sm w-full"
+                                                ref={(el) => (fileInputRefs.current[index] = el)}
+                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                disabled={!isEditing}
+                                            />
+                                        )}
+                                        <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                            {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                        </Button>
+                                    </div>
+                                    {item.url && !item.isLink && (
+                                        <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                            View Uploaded File
                                         </Link>
-                                    ) : item.file ? (
-                                        <span className="text-muted-foreground italic">{typeof item.file === 'string' ? item.file : item.file.name}</span>
-                                    ) : (
-                                        <span className="text-muted-foreground italic">No file</span>
+                                    )}
+                                     {item.file && typeof item.file === 'string' && (
+                                        item.isLink ? (
+                                             <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                Open Link
+                                            </Link>
+                                        ) : (
+                                             <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                        )
                                     )}
                                 </TableCell>
                                 <TableCell>

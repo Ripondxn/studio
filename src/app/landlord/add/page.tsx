@@ -21,7 +21,9 @@ import {
   Pencil,
   Loader2,
   Search,
-  X
+  X,
+  FileUp,
+  Link2
 } from 'lucide-react';
 import {
   Table,
@@ -51,6 +53,7 @@ type Attachment = {
   file: File | null | string;
   url?: string;
   remarks: string;
+  isLink: boolean;
 };
 
 const initialLandlordData = {
@@ -78,6 +81,8 @@ export default function LandlordPage() {
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
 
   useEffect(() => {
     return () => {
@@ -109,12 +114,13 @@ export default function LandlordPage() {
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
         if (item.id === id) {
-             if (field === 'file' && value instanceof File) {
-                if (item.url) {
-                    URL.revokeObjectURL(item.url);
-                }
-                const newUrl = URL.createObjectURL(value);
+             if (field === 'file') {
+                if (item.url) URL.revokeObjectURL(item.url);
+                const newUrl = (value instanceof File) ? URL.createObjectURL(value) : undefined;
                 return {...item, file: value, url: newUrl};
+            }
+             if (field === 'isLink') {
+                 return {...item, isLink: value, file: '' };
             }
             return {...item, [field]: value};
         }
@@ -129,7 +135,8 @@ export default function LandlordPage() {
         id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
         name: '',
         file: null,
-        remarks: ''
+        remarks: '',
+        isLink: false
       }
     ]);
   };
@@ -170,7 +177,13 @@ export default function LandlordPage() {
     try {
       const dataToSave = {
         landlordData,
-        attachments: attachments.map(a => ({ id: a.id, name: a.name, file: a.file instanceof File ? a.file.name : a.file, remarks: a.remarks })),
+        attachments: attachments.map(a => ({ 
+            id: a.id, 
+            name: a.name, 
+            file: a.file instanceof File ? a.file.name : a.file, 
+            remarks: a.remarks,
+            isLink: a.isLink 
+        })),
       };
 
       const result = await saveLandlordData(dataToSave, isNewRecord);
@@ -371,12 +384,12 @@ export default function LandlordPage() {
                     <TableHeader>
                         <TableRow>
                         <TableHead>Attachment Name</TableHead>
-                        <TableHead>File</TableHead>
+                        <TableHead>File / Link</TableHead>
                         <TableHead>Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {attachments.map((item) => (
+                        {attachments.map((item, index) => (
                             <TableRow key={item.id}>
                                 <TableCell>
                                     <Input 
@@ -388,20 +401,41 @@ export default function LandlordPage() {
                                 </TableCell>
                                 <TableCell>
                                      <div className="flex items-center gap-2">
-                                        <Input 
-                                            type="file" 
-                                            className="text-sm w-full" 
-                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                            disabled={!isEditing}
-                                        />
-                                        {item.url ? (
-                                            <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                View
-                                            </Link>
-                                        ) : item.file && typeof item.file === 'string' ? (
-                                            <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                        ) : null}
+                                        {item.isLink ? (
+                                            <Input
+                                                type="text"
+                                                placeholder="https://example.com"
+                                                value={typeof item.file === 'string' ? item.file : ''}
+                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                disabled={!isEditing}
+                                            />
+                                        ) : (
+                                            <Input
+                                                type="file"
+                                                className="text-sm w-full"
+                                                ref={(el) => (fileInputRefs.current[index] = el)}
+                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                disabled={!isEditing}
+                                            />
+                                        )}
+                                        <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                            {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                        </Button>
                                     </div>
+                                    {item.url && !item.isLink && (
+                                        <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                            View Uploaded File
+                                        </Link>
+                                    )}
+                                    {item.file && typeof item.file === 'string' && (
+                                        item.isLink ? (
+                                             <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                Open Link
+                                            </Link>
+                                        ) : (
+                                             <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                        )
+                                    )}
                                 </TableCell>
                                 <TableCell>
                                 <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
@@ -424,7 +458,7 @@ export default function LandlordPage() {
             <AlertDialogTrigger asChild>
             <Button
                 variant="destructive"
-                disabled={isNewRecord || !isEditing}
+                disabled={isNewRecord || isEditing}
             >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete Landlord
             </Button>
