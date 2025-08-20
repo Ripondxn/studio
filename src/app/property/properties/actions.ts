@@ -153,10 +153,10 @@ async function readUnits(): Promise<Unit[]> {
 }
 
 
-export async function getUnitsForProperty(propertyName: string): Promise<{ success: boolean, data?: Unit[], error?: string }> {
+export async function getUnitsForProperty(propertyCode: string): Promise<{ success: boolean, data?: Unit[], error?: string }> {
     try {
         const allUnits = await readUnits();
-        const propertyUnits = allUnits.filter(u => u.property === propertyName);
+        const propertyUnits = allUnits.filter(u => u.propertyCode === propertyCode);
         return { success: true, data: propertyUnits };
     } catch (error) {
         console.error('Failed to get units for property:', error);
