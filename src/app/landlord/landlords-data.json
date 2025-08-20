@@ -1,0 +1,24 @@
+
+[
+  {
+    "id": "L-1722364506558",
+    "landlordData": {
+      "code": "L-001",
+      "name": "John Doe Real Estate",
+      "mobile": "+1234567890",
+      "email": "john.doe@realestate.com",
+      "address": "123 Main Street, Anytown, USA",
+      "bankName": "First National Bank",
+      "accountNumber": "1234567890",
+      "iban": "US12345678901234567890"
+    },
+    "attachments": [
+      {
+        "id": 1,
+        "name": "Passport Copy",
+        "file": "passport.pdf",
+        "remarks": ""
+      }
+    ]
+  }
+]
