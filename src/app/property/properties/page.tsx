@@ -737,7 +737,7 @@ export default function PropertyPage() {
     handleFileSelect(file || null);
   };
   
-  const pageTitle = isNewRecord ? 'Add New Property' : 'Edit Property';
+  const pageTitle = isNewRecord ? 'Add New Property' : `Edit Property: ${initialData.name}`;
 
 
   return (
@@ -1270,7 +1270,7 @@ export default function PropertyPage() {
                                                 <Input
                                                     type="text"
                                                     placeholder="https://example.com"
-                                                    value={item.file as string || ''}
+                                                    value={typeof item.file === 'string' ? item.file : ''}
                                                     onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
                                                     disabled={!isEditing}
                                                 />
@@ -1651,7 +1651,7 @@ export default function PropertyPage() {
               <CardTitle className="font-headline">Actions</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center h-48 gap-4">
-               {!isEditing && (
+               {!isEditing && !isNewRecord && (
                  <Button onClick={handleEditClick} className="w-full">
                     <Pencil className="mr-2 h-4 w-4" /> Edit
                  </Button>
