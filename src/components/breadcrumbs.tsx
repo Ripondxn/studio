@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { Fragment, useEffect, useState } from 'react';
@@ -21,8 +22,8 @@ const breadcrumbNameMap: { [key: string]: string } = {
   property: 'Property',
   properties: 'Properties',
   list: 'List',
-  unit: 'Unit',
   units: 'Units',
+  unit: 'Unit',
   finance: 'Finance',
   'chart-of-accounts': 'Chart of Accounts',
   'intelligent-pricing': 'Intelligent Pricing',

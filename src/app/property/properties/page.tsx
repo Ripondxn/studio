@@ -80,9 +80,9 @@ import { savePropertyData, findPropertyData, deletePropertyData, getOccupancyInf
 import { CustomizeDialog, type CustomField } from '@/app/property/unit/customize-dialog';
 import { FormItem } from '@/components/ui/form';
 import { ReportCustomizerDialog, type ReportConfig } from '@/app/property/unit/report-customizer-dialog';
-import { type Unit } from '@/app/property/units/schema';
-import { DataTable } from '@/app/property/units/data-table';
-import { columns as unitColumns } from '@/app/property/units/columns';
+import { type Unit } from '../units/schema';
+import { DataTable } from '../units/data-table';
+import { columns as unitColumns } from '../units/columns';
 import { Combobox } from '@/components/ui/combobox';
 
 

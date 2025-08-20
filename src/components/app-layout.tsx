@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -34,6 +35,7 @@ import {
   ChevronDown,
   UserSquare,
   MessageCircle,
+  Home,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -83,6 +85,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         icon: <FileSignature />,
         subItems: [
             { href: '/property/properties/list', label: 'Properties' },
+            { href: '/property/units/list', label: 'Units' },
             { href: '/landlord', label: 'Landlord' },
             { href: '/vendors', label: 'Vendor' },
             { href: '/lease/contracts', label: 'Lease Contracts' },
@@ -146,16 +149,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             </DropdownMenu>
                         )
                     }
-                    return (
-                        <Link
-                            key={link.href}
-                            href={link.href!}
-                            className={cn("transition-colors hover:text-foreground flex items-center gap-1", pathname === link.href ? "text-foreground" : "text-muted-foreground")}
-                        >
-                            {link.icon && React.cloneElement(link.icon, { className: 'h-4 w-4' })}
-                            {link.label}
-                        </Link>
-                    )
+                    return null;
                 })}
             </nav>
             <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">

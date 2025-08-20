@@ -28,8 +28,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-import { Unit } from './schema';
-import { deleteUnitData } from '../unit/actions';
+import { Unit } from '../schema';
+import { deleteUnitData } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 
 const ActionsCell = ({ row }: { row: { original: Unit } }) => {

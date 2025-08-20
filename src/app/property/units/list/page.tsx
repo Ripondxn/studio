@@ -1,23 +1,23 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { z } from 'zod';
 import Link from 'next/link';
 
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { unitSchema } from './schema';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { type Unit } from '../schema';
 
-// Simulate a database call to get units data
-async function getUnits() {
+
+async function getUnits(): Promise<Unit[]> {
   const data = await fs.readFile(
     path.join(process.cwd(), 'src/app/property/units/units-data.json')
   );
   const units = JSON.parse(data.toString());
-  return z.array(unitSchema).parse(units);
+  return units;
 }
+
 
 export default async function UnitsPage() {
   const units = await getUnits();
@@ -27,9 +27,9 @@ export default async function UnitsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold font-headline">Units</h1>
         <Button asChild>
-            <Link href="/property/unit">
-                <Plus className="mr-2 h-4 w-4" /> Add New Unit
-            </Link>
+          <Link href="/property/unit">
+            <Plus className="mr-2 h-4 w-4" /> Add New Unit
+          </Link>
         </Button>
       </div>
       <DataTable columns={columns} data={units} />
