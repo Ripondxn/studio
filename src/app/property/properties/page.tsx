@@ -70,6 +70,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { savePropertyData, findPropertyData, deletePropertyData } from './actions';
@@ -1269,7 +1270,7 @@ export default function PropertyPage() {
                                                 <Input
                                                     type="text"
                                                     placeholder="https://example.com"
-                                                    value={typeof item.file === 'string' ? item.file : ''}
+                                                    value={item.file && typeof item.file === 'string' ? item.file : ''}
                                                     onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
                                                     disabled={!isEditing}
                                                 />
