@@ -1,4 +1,5 @@
 
+
 import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
@@ -41,7 +42,7 @@ async function getProperties() {
       ...baseProperty,
       id: p.id || baseProperty.id,
       attachments: p.attachments || [],
-      landlord: baseProperty.landlordCode ? landlordMap.get(baseProperty.landlordCode) : 'N/A',
+      landlord: baseProperty.landlordCode ? landlordMap.get(baseProperty.landlordCode) || 'N/A' : 'N/A',
     };
   });
 
