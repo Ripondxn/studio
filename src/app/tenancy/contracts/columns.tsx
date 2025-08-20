@@ -150,7 +150,7 @@ const RemainingDaysCell = ({ row }: { row: { original: Contract } }) => {
         }
     }, [endDate]);
 
-    return <span className={cn('font-medium', remaining.className)}>{remaining.text}</span>;
+    return <span className={cn('font-bold', remaining.className)}>{remaining.text}</span>;
 }
 
 export const columns: ColumnDef<Contract>[] = [
