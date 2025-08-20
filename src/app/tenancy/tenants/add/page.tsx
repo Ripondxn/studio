@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -340,7 +341,7 @@ export default function TenantPage() {
         <Tabs defaultValue="info">
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
-                <TabsTrigger value="unit">Unit Details</TabsTrigger>
+                <TabsTrigger value="unit">Rental Details</TabsTrigger>
                 <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
                 <TabsTrigger value="pdc">PDC Schedule</TabsTrigger>
                 <TabsTrigger value="termination">Termination</TabsTrigger>
@@ -466,8 +467,8 @@ export default function TenantPage() {
             <TabsContent value="unit">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Associated Unit Details</CardTitle>
-                        <CardDescription>Information about the unit occupied by the tenant.</CardDescription>
+                        <CardTitle>Rental Details</CardTitle>
+                        <CardDescription>Information about the rental occupied by the tenant.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {unitData.unitCode ? (
@@ -496,7 +497,7 @@ export default function TenantPage() {
                         ) : (
                             <div className="text-center py-10 text-muted-foreground">
                                 <Home className="mx-auto h-12 w-12" />
-                                <p className="mt-4">No unit information linked to this tenant's contract.</p>
+                                <p className="mt-4">No rental information linked to this tenant's contract.</p>
                              </div>
                         )}
                     </CardContent>
