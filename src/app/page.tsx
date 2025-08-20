@@ -77,7 +77,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
-            <Button><Plus className="mr-2 h-4 w-4"/> Generate New Contract</Button>
+            <Button asChild><Link href="/tenancy/contract"><Plus className="mr-2 h-4 w-4"/> Generate New Contract</Link></Button>
             <Button variant="outline"><Mail className="mr-2 h-4 w-4"/> Send Renewal Email</Button>
             <Button variant="outline"><Receipt className="mr-2 h-4 w-4"/> Record Payment</Button>
         </div>

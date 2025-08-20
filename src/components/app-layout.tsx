@@ -32,6 +32,7 @@ import {
   FileSignature,
   Wrench,
   ChevronDown,
+  UserSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -92,6 +93,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           { href: '/property/tenants', label: 'Tenant' },
           { href: '/customers', label: 'Customer' },
       ]
+    },
+    { 
+        label: 'Tenancy', 
+        icon: <UserSquare />,
+        subItems: [
+            { href: '/tenancy/contract', label: 'Tenancy Contract' },
+        ]
     },
     { 
         label: 'Finance', 
