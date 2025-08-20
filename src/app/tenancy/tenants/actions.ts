@@ -5,9 +5,11 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { type Contract } from '../contract/schema';
+import { type Unit } from '@/app/property/units/schema';
 
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 
 
 async function readData(filePath: string) {
@@ -29,6 +31,10 @@ async function getTenants() {
 
 async function getContracts(): Promise<Contract[]> {
     return await readData(contractsFilePath);
+}
+
+async function getUnits(): Promise<Unit[]> {
+    return await readData(unitsFilePath);
 }
 
 async function writeTenants(data: any) {
@@ -96,15 +102,23 @@ export async function findTenantData(tenantCode: string) {
     if (tenant) {
        const allContracts = await getContracts();
        let contractData: Partial<Contract> = {};
+       let unitData: Partial<Unit> = {};
 
        if(tenant.tenantData.contractNo) {
          const relatedContract = allContracts.find(c => c.contractNo === tenant.tenantData.contractNo);
          if(relatedContract) {
             contractData = relatedContract;
+            if (relatedContract.unitCode) {
+                const allUnits = await getUnits();
+                const relatedUnit = allUnits.find(u => u.unitCode === relatedContract.unitCode);
+                if (relatedUnit) {
+                    unitData = relatedUnit;
+                }
+            }
          }
        }
 
-       return { success: true, data: {...tenant, contractData } };
+       return { success: true, data: {...tenant, contractData, unitData } };
     } else {
        return { success: false, error: "Not Found" };
     }

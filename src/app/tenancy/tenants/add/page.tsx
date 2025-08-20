@@ -23,7 +23,8 @@ import {
   Search,
   X,
   FileUp,
-  Link2
+  Link2,
+  Home
 } from 'lucide-react';
 import {
   Table,
@@ -50,6 +51,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { type Contract, type PaymentInstallment } from '../../contract/schema';
+import { type Unit } from '@/app/property/units/schema';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
@@ -89,6 +91,7 @@ export default function TenantPage() {
   const [initialData, setInitialData] = useState(initialTenantData);
 
   const [contractData, setContractData] = useState<Partial<Contract>>({});
+  const [unitData, setUnitData] = useState<Partial<Unit>>({});
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
@@ -115,6 +118,7 @@ export default function TenantPage() {
         setTenantData(initialTenantData);
         setAttachments([]);
         setContractData({});
+        setUnitData({});
     }
   }, [searchParams]);
 
@@ -165,6 +169,7 @@ export default function TenantPage() {
     setTenantData(data.tenantData || initialTenantData);
     setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
     setContractData(data.contractData || {});
+    setUnitData(data.unitData || {});
   }
 
   const setInitialAllData = (data: any) => {
@@ -335,6 +340,7 @@ export default function TenantPage() {
         <Tabs defaultValue="info">
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
+                <TabsTrigger value="unit">Unit Details</TabsTrigger>
                 <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
                 <TabsTrigger value="pdc">PDC Schedule</TabsTrigger>
                 <TabsTrigger value="termination">Termination</TabsTrigger>
@@ -454,6 +460,45 @@ export default function TenantPage() {
                             </Button>
                         </CardContent>
                     </Card>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="unit">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Associated Unit Details</CardTitle>
+                        <CardDescription>Information about the unit occupied by the tenant.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {unitData.unitCode ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="space-y-4">
+                                    <div><Label>Unit Code</Label><Input value={unitData.unitCode} disabled /></div>
+                                    <div><Label>Property</Label><Input value={unitData.property} disabled /></div>
+                                    <div><Label>Floor</Label><Input value={unitData.floor} disabled /></div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div><Label>Unit Type</Label><Input value={unitData.unitType} disabled /></div>
+                                    <div><Label>Annual Rent</Label><Input value={unitData.annualRent} disabled /></div>
+                                    <div><Label>Status</Label><Input value={unitData.unitStatus} disabled /></div>
+                                </div>
+                                <div className="space-y-4">
+                                    <Card className="bg-muted/50 h-full">
+                                        <CardHeader><CardTitle>Unit Actions</CardTitle></CardHeader>
+                                        <CardContent>
+                                            <Button asChild className="w-full">
+                                                <Link href={`/property/unit?unitCode=${unitData.unitCode}`}>View Full Unit Details</Link>
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-10 text-muted-foreground">
+                                <Home className="mx-auto h-12 w-12" />
+                                <p className="mt-4">No unit information linked to this tenant's contract.</p>
+                             </div>
+                        )}
                     </CardContent>
                 </Card>
             </TabsContent>

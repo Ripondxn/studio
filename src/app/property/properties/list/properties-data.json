@@ -24,7 +24,8 @@
       "towerType": "Rent",
       "gps": "",
       "propertyNo": "",
-      "assetManager": "Supervisor"
+      "assetManager": "Supervisor",
+      "landlordCode": "L-001"
     },
     "particulars": [],
     "attachments": [],
