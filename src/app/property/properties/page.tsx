@@ -85,6 +85,11 @@ import { getFloorsForProperty } from '../floors/actions';
 import { DataTable as FloorsDataTable } from '../floors/data-table';
 import { columns as floorColumns } from '../floors/columns';
 import { AddFloorDialog } from '../floors/add-floor-dialog';
+import { type Room } from '../rooms/schema';
+import { getRoomsForProperty } from '../rooms/actions';
+import { DataTable as RoomsDataTable } from '../rooms/data-table';
+import { columns as roomColumns } from '../rooms/columns';
+import { AddRoomDialog } from '../rooms/add-room-dialog';
 
 
 type Particular = {
@@ -173,6 +178,9 @@ export default function PropertyPage() {
   const [floors, setFloors] = useState<Floor[]>([]);
   const [isLoadingFloors, setIsLoadingFloors] = useState(false);
   
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+  
   const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
 
 
@@ -221,6 +229,15 @@ export default function PropertyPage() {
                 }
             })
             .finally(() => setIsLoadingFloors(false));
+        
+        setIsLoadingRooms(true);
+        getRoomsForProperty(propertyData.code)
+            .then(result => {
+                if (result.success && result.data) {
+                    setRooms(result.data);
+                }
+            })
+            .finally(() => setIsLoadingRooms(false));
     }
   }, [propertyData.code, isNewRecord]);
 
@@ -697,13 +714,17 @@ export default function PropertyPage() {
                         <CardTitle>Rooms</CardTitle>
                         <CardDescription>Manage rooms within this property.</CardDescription>
                     </div>
-                    <Button><Plus className="mr-2 h-4 w-4"/>Add Room</Button>
+                    <AddRoomDialog propertyCode={propertyData.code} onRoomAdded={() => handleFindClick(propertyData.code)} />
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="border rounded-md p-10 text-center text-muted-foreground">
-                    <p>Room management functionality coming soon.</p>
-                </div>
+                {isLoadingRooms ? (
+                    <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : (
+                    <RoomsDataTable columns={roomColumns} data={rooms} />
+                )}
             </CardContent>
            </Card>
         </TabsContent>

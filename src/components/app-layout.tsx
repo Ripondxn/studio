@@ -86,6 +86,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         subItems: [
             { href: '/property/properties/list', label: 'Properties' },
             { href: '/property/floors/list', label: 'Floors' },
+            { href: '/property/rooms/list', label: 'Rooms' },
             { href: '/property/units/list', label: 'Units' },
             { href: '/landlord', label: 'Landlord' },
             { href: '/vendors', label: 'Vendor' },
