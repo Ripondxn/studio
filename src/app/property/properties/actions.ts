@@ -4,9 +4,12 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+import { type Unit } from '@/app/property/units/schema';
 
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+
 
 async function getProperties() {
     try {
@@ -133,6 +136,30 @@ export async function getOccupancyInfoForProperty(propertyCode: string) {
         return { success: true, data: occupancyInfo };
     } catch (error) {
         console.error('Failed to get occupancy info:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+async function readUnits(): Promise<Unit[]> {
+    try {
+        const data = await fs.readFile(unitsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+
+export async function getUnitsForProperty(propertyName: string): Promise<{ success: boolean, data?: Unit[], error?: string }> {
+    try {
+        const allUnits = await readUnits();
+        const propertyUnits = allUnits.filter(u => u.property === propertyName);
+        return { success: true, data: propertyUnits };
+    } catch (error) {
+        console.error('Failed to get units for property:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }

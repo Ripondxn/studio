@@ -75,11 +75,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { savePropertyData, findPropertyData, deletePropertyData, getOccupancyInfoForProperty } from './actions';
+import { savePropertyData, findPropertyData, deletePropertyData, getOccupancyInfoForProperty, getUnitsForProperty } from './actions';
 // Re-using the same dialogs and types from the unit page for consistency
 import { CustomizeDialog, type CustomField } from '@/app/property/unit/customize-dialog';
 import { FormItem } from '@/components/ui/form';
 import { ReportCustomizerDialog, type ReportConfig } from '@/app/property/unit/report-customizer-dialog';
+import { type Unit } from '@/app/property/units/schema';
+import { DataTable } from '@/app/property/units/data-table';
+import { columns as unitColumns } from '@/app/property/units/columns';
 
 
 type Particular = {
@@ -162,6 +165,9 @@ export default function PropertyPage() {
   const [occupancyInfo, setOccupancyInfo] = useState<OccupancyInfo[]>([]);
   const [isLoadingOccupancy, setIsLoadingOccupancy] = useState(false);
 
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false);
+
 
   useEffect(() => {
     const propertyCode = searchParams.get('code');
@@ -186,6 +192,19 @@ export default function PropertyPage() {
       });
     };
   }, [attachments]);
+
+  useEffect(() => {
+    if (propertyData.name && !isNewRecord) {
+        setIsLoadingUnits(true);
+        getUnitsForProperty(propertyData.name)
+            .then(result => {
+                if (result.success && result.data) {
+                    setUnits(result.data);
+                }
+            })
+            .finally(() => setIsLoadingUnits(false));
+    }
+  }, [propertyData.name, isNewRecord]);
 
   useEffect(() => {
     if (propertyData.code && !isNewRecord) {
@@ -624,10 +643,13 @@ export default function PropertyPage() {
                 </div>
             </CardHeader>
             <CardContent>
-                {/* Placeholder for unit data table */}
-                <div className="border rounded-md p-10 text-center text-muted-foreground">
-                    <p>Unit data table will be displayed here.</p>
-                </div>
+                {isLoadingUnits ? (
+                    <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : (
+                    <DataTable columns={unitColumns} data={units} />
+                )}
             </CardContent>
            </Card>
         </TabsContent>
