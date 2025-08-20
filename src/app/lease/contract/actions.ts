@@ -1,0 +1,142 @@
+
+'use server';
+
+import { promises as fs } from 'fs';
+import path from 'path';
+import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import { leaseContractSchema, type LeaseContract } from './schema';
+
+const contractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
+
+async function readContracts(): Promise<LeaseContract[]> {
+    try {
+        await fs.access(contractsFilePath);
+        const data = await fs.readFile(contractsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            // If the file doesn't exist, create it with an empty array
+            await writeContracts([]);
+            return [];
+        }
+        throw error;
+    }
+}
+
+async function writeContracts(data: LeaseContract[]) {
+    await fs.writeFile(contractsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+export async function getAllLeaseContracts() {
+    return await readContracts();
+}
+
+export async function saveLeaseContractData(data: LeaseContract, isNewRecord: boolean) {
+    const validation = leaseContractSchema.safeParse(data);
+
+    if (!validation.success) {
+        const errors = validation.error.errors.map(e => e.message).join(', ');
+        return { success: false, error: errors };
+    }
+
+    try {
+        const allContracts = await readContracts();
+        
+        if (isNewRecord) {
+             const contractExists = allContracts.some(c => c.contractNo === data.contractNo);
+             if (contractExists) {
+                return { success: false, error: `Lease Contract with number "${data.contractNo}" already exists.`};
+             }
+             const newContract: LeaseContract = {
+                ...validation.data,
+                id: `LCON-${Date.now()}`,
+            };
+            allContracts.push(newContract);
+        } else {
+            const index = allContracts.findIndex(c => c.id === data.id);
+            if (index !== -1) {
+                allContracts[index] = validation.data;
+            } else {
+                 return { success: false, error: `Lease Contract with ID "${data.id}" not found.` };
+            }
+        }
+        
+        await writeContracts(allContracts);
+        
+        revalidatePath('/lease/contracts');
+        revalidatePath(`/lease/contract?id=${data.id}`);
+        return { success: true, data: isNewRecord ? allContracts[allContracts.length - 1] : data };
+
+    } catch (error) {
+        console.error('Failed to save lease contract:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function findLeaseContract(query: { contractId?: string }): Promise<{ success: boolean; data?: LeaseContract; error?: string }> {
+    try {
+        const allContracts = await readContracts();
+        let foundContract: LeaseContract | undefined;
+        
+        if (query.contractId) {
+            foundContract = allContracts.find(c => c.id === query.contractId);
+        }
+
+        if (foundContract) {
+            return { success: true, data: foundContract };
+        } else {
+            return { success: false, error: 'Lease Contract not found.' };
+        }
+    } catch (error) {
+        console.error('Failed to find lease contract:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+
+export async function deleteLeaseContract(contractId: string) {
+    try {
+        const allContracts = await readContracts();
+        const updatedContracts = allContracts.filter(c => c.id !== contractId);
+
+        if (allContracts.length === updatedContracts.length) {
+            return { success: false, error: 'Lease Contract not found.' };
+        }
+        
+        await writeContracts(updatedContracts);
+        revalidatePath('/lease/contracts');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete lease contract:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+async function readLandlords() {
+    try {
+        const data = await fs.readFile(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'), 'utf-8');
+        return JSON.parse(data);
+    } catch(e) {
+        return [];
+    }
+}
+
+async function readProperties() {
+    try {
+        const data = await fs.readFile(path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json'), 'utf-8');
+        return JSON.parse(data);
+    } catch(e) {
+        return [];
+    }
+}
+
+export async function getLookups() {
+    const landlords = await readLandlords();
+    const properties = await readProperties();
+    return {
+        landlords: landlords.map((l:any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
+        properties: properties.map((p:any) => ({ code: (p.propertyData || p).code, name: (p.propertyData || p).name }))
+    }
+}
+

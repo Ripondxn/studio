@@ -7,12 +7,13 @@ import { revalidatePath } from 'next/cache';
 
 const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
+const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 
 
-async function getLandlords() {
+async function readData(filePath: string) {
     try {
-        await fs.access(landlordsFilePath);
-        const data = await fs.readFile(landlordsFilePath, 'utf-8');
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -20,6 +21,10 @@ async function getLandlords() {
         }
         throw error;
     }
+}
+
+async function getLandlords() {
+    return await readData(landlordsFilePath);
 }
 
 async function writeLandlords(data: any) {
@@ -110,15 +115,7 @@ export async function deleteLandlordData(landlordCode: string) {
 }
 
 async function getProperties() {
-    try {
-        const data = await fs.readFile(propertiesFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
-    }
+    return await readData(propertiesFilePath);
 }
 
 export async function getPropertiesForLandlord(landlordCode: string) {
@@ -132,6 +129,17 @@ export async function getPropertiesForLandlord(landlordCode: string) {
         return { success: true, data: landlordProperties };
     } catch (error) {
         console.error('Failed to get properties for landlord:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+export async function getLeaseContractsForLandlord(landlordCode: string) {
+    try {
+        const allContracts = await readData(leaseContractsFilePath);
+        const landlordContracts = allContracts.filter((c: any) => c.landlordCode === landlordCode);
+        return { success: true, data: landlordContracts };
+    } catch (error) {
+        console.error('Failed to get lease contracts for landlord:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }

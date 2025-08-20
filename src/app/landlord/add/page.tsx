@@ -28,7 +28,8 @@ import {
   Building,
   Home,
   Eye,
-  Building2 as BuildingIcon
+  Building2 as BuildingIcon,
+  FileText
 } from 'lucide-react';
 import {
   Table,
@@ -50,10 +51,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveLandlordData, findLandlordData, deleteLandlordData, getPropertiesForLandlord } from '../actions';
+import { saveLandlordData, findLandlordData, deleteLandlordData, getPropertiesForLandlord, getLeaseContractsForLandlord } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Property } from '@/app/property/properties/list/schema';
+import { type LeaseContract } from '@/app/lease/contract/schema';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 type Attachment = {
   id: number;
@@ -93,6 +96,8 @@ export default function LandlordPage() {
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [leaseContracts, setLeaseContracts] = useState<LeaseContract[]>([]);
+  const [isLoadingLeaseContracts, setIsLoadingLeaseContracts] = useState(false);
 
 
   useEffect(() => {
@@ -130,6 +135,17 @@ export default function LandlordPage() {
                 }
             })
             .finally(() => setIsLoadingProperties(false));
+
+        setIsLoadingLeaseContracts(true);
+        getLeaseContractsForLandlord(landlordData.code)
+            .then(result => {
+                if (result.success && result.data) {
+                    setLeaseContracts(result.data);
+                } else {
+                    toast({ variant: 'destructive', title: 'Error', description: result.error || "Could not load lease contracts." });
+                }
+            })
+            .finally(() => setIsLoadingLeaseContracts(false));
     }
   }, [landlordData.code, isNewRecord, toast]);
 
@@ -350,6 +366,7 @@ export default function LandlordPage() {
             <TabsList>
                 <TabsTrigger value="info">Landlord Information</TabsTrigger>
                 <TabsTrigger value="properties">Properties</TabsTrigger>
+                <TabsTrigger value="lease-contracts">Lease Contracts</TabsTrigger>
                 <TabsTrigger value="payment-history">Payment History</TabsTrigger>
             </TabsList>
             <TabsContent value="info">
@@ -542,6 +559,59 @@ export default function LandlordPage() {
                                 <Building className="mx-auto h-12 w-12" />
                                 <p className="mt-4">No properties found for this landlord.</p>
                             </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="lease-contracts">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Lease Contracts</CardTitle>
+                        <CardDescription>A list of lease contracts with {landlordData.name || 'this landlord'}.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoadingLeaseContracts ? (
+                             <div className="flex justify-center items-center h-40">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : leaseContracts.length > 0 ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Contract No</TableHead>
+                                        <TableHead>Property</TableHead>
+                                        <TableHead>Start Date</TableHead>
+                                        <TableHead>End Date</TableHead>
+                                        <TableHead className="text-right">Rent</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Action</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {leaseContracts.map(contract => (
+                                        <TableRow key={contract.id}>
+                                            <TableCell className="font-medium">{contract.contractNo}</TableCell>
+                                            <TableCell>{contract.property}</TableCell>
+                                            <TableCell>{format(new Date(contract.startDate), 'PP')}</TableCell>
+                                            <TableCell>{format(new Date(contract.endDate), 'PP')}</TableCell>
+                                            <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(contract.totalRent)}</TableCell>
+                                            <TableCell><Badge>{contract.status}</Badge></TableCell>
+                                            <TableCell>
+                                                <Button asChild variant="outline" size="sm">
+                                                    <Link href={`/lease/contract?id=${contract.id}`}>
+                                                        View Contract
+                                                    </Link>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        ) : (
+                             <div className="text-center py-10 text-muted-foreground">
+                                <FileText className="mx-auto h-12 w-12" />
+                                <p className="mt-4">No lease contracts found for this landlord.</p>
+                             </div>
                         )}
                     </CardContent>
                 </Card>
