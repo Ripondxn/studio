@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -484,10 +483,7 @@ export default function TenancyContractPage() {
         <CardContent className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="lg:col-span-1">
-                    <CardHeader>
-                        <CardTitle>Tenant Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 pt-6">
                         <div>
                             <Label htmlFor="tenant-name">Tenant Name</Label>
                             <Combobox
@@ -518,10 +514,7 @@ export default function TenancyContractPage() {
                 </Card>
                 <div className="lg:col-span-2 space-y-6">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Property Information</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 pt-6">
                              <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="property">Property</Label>
@@ -569,10 +562,7 @@ export default function TenancyContractPage() {
                         </CardContent>
                     </Card>
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Contract Information</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 pt-6">
                              <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="contract-no">Contract No</Label>
