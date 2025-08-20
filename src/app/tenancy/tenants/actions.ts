@@ -125,10 +125,13 @@ export async function findTenantData(tenantCode: string) {
        let roomData: Partial<Room> = {};
        let partitionData: Partial<Partition> = {};
 
-       if(tenant.tenantData.contractNo) {
-         const relatedContract = allContracts.find(c => c.contractNo === tenant.tenantData.contractNo);
-         if(relatedContract) {
+       const relatedContract = allContracts.find(c => c.tenantCode === tenantCode);
+       
+       if(relatedContract) {
             contractData = relatedContract;
+            // Also update the tenant's contractNo field for consistency
+            tenant.tenantData.contractNo = relatedContract.contractNo;
+
             if (relatedContract.unitCode) {
                 const allUnits = await getUnits();
                 const relatedUnit = allUnits.find(u => u.unitCode === relatedContract.unitCode);
@@ -151,7 +154,6 @@ export async function findTenantData(tenantCode: string) {
                     if(relatedPartition) partitionData = relatedPartition;
                 }
             }
-         }
        }
 
        return { success: true, data: {...tenant, contractData, unitData, roomData, partitionData } };
