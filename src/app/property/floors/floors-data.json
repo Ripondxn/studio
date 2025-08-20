@@ -1,2 +1,24 @@
 
-[]
+[
+  {
+    "id": "FLR-1",
+    "floorCode": "F-01",
+    "floorName": "First Floor",
+    "propertyCode": "LT-C38",
+    "noOfUnits": 10
+  },
+  {
+    "id": "FLR-2",
+    "floorCode": "F-02",
+    "floorName": "Second Floor",
+    "propertyCode": "LT-C38",
+    "noOfUnits": 10
+  },
+  {
+    "id": "FLR-3",
+    "floorCode": "F-03",
+    "floorName": "Third Floor",
+    "propertyCode": "LT-C38",
+    "noOfUnits": 8
+  }
+]
