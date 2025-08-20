@@ -24,7 +24,11 @@ import {
   Search,
   X,
   FileUp,
-  Link2
+  Link2,
+  Building,
+  Home,
+  Eye,
+  Building2 as BuildingIcon
 } from 'lucide-react';
 import {
   Table,
@@ -46,8 +50,10 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveLandlordData, findLandlordData, deleteLandlordData } from '../actions';
+import { saveLandlordData, findLandlordData, deleteLandlordData, getPropertiesForLandlord } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { type Property } from '@/app/property/properties/list/schema';
+import { Badge } from '@/components/ui/badge';
 
 type Attachment = {
   id: number;
@@ -85,6 +91,9 @@ export default function LandlordPage() {
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+
 
   useEffect(() => {
     return () => {
@@ -108,6 +117,21 @@ export default function LandlordPage() {
         setAttachments([]);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (landlordData.code && !isNewRecord) {
+        setIsLoadingProperties(true);
+        getPropertiesForLandlord(landlordData.code)
+            .then(result => {
+                if (result.success && result.data) {
+                    setProperties(result.data);
+                } else {
+                    toast({ variant: 'destructive', title: 'Error', description: result.error || "Could not load properties." });
+                }
+            })
+            .finally(() => setIsLoadingProperties(false));
+    }
+  }, [landlordData.code, isNewRecord, toast]);
 
   const handleInputChange = (field: keyof typeof landlordData, value: string) => {
     setLandlordData(prev => ({ ...prev, [field]: value }));
@@ -467,10 +491,58 @@ export default function LandlordPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Associated Properties</CardTitle>
+                        <CardDescription>A list of properties managed for {landlordData.name || 'this landlord'}.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground">This section will show a list of properties owned by {landlordData.name || 'this landlord'}.</p>
-                        {/* Placeholder for properties list */}
+                        {isLoadingProperties ? (
+                            <div className="flex justify-center items-center h-40">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : properties.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {properties.map(property => (
+                                    <Card key={property.code} className="flex flex-col">
+                                        <CardHeader className="flex-row items-start gap-4 space-y-0">
+                                            <div className="flex-shrink-0">
+                                                <div className="w-12 h-12 flex items-center justify-center bg-secondary rounded-lg">
+                                                    <BuildingIcon className="h-6 w-6 text-secondary-foreground" />
+                                                </div>
+                                            </div>
+                                            <div className="flex-1">
+                                                <CardTitle className="text-lg">{property.name}</CardTitle>
+                                                <CardDescription>{property.propertyType}</CardDescription>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="flex-1 space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-muted-foreground">Code</span>
+                                                <span className="font-medium">{property.code}</span>
+                                            </div>
+                                             <div className="flex justify-between text-sm">
+                                                <span className="text-muted-foreground">Units</span>
+                                                <span className="font-medium">{property.noOfUnits}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm items-center">
+                                                <span className="text-muted-foreground">Status</span>
+                                                <Badge variant={property.status === 'Active' ? 'default' : 'secondary'}>{property.status}</Badge>
+                                            </div>
+                                        </CardContent>
+                                        <div className="p-4 pt-0">
+                                            <Button asChild className="w-full">
+                                                <Link href={`/property/properties?code=${property.code}`}>
+                                                    <Eye className="mr-2 h-4 w-4" /> View Property
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-10 text-muted-foreground">
+                                <Building className="mx-auto h-12 w-12" />
+                                <p className="mt-4">No properties found for this landlord.</p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -480,8 +552,10 @@ export default function LandlordPage() {
                         <CardTitle>Payment History</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground">This section will show a history of payments received for properties owned by {landlordData.name || 'this landlord'}.</p>
-                        {/* Placeholder for payment history */}
+                         <div className="text-center py-10 text-muted-foreground">
+                             <Home className="mx-auto h-12 w-12" />
+                             <p className="mt-4">Payment history feature coming soon.</p>
+                         </div>
                     </CardContent>
                 </Card>
             </TabsContent>

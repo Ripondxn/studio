@@ -6,6 +6,8 @@ import path from 'path';
 import { revalidatePath } from 'next/cache';
 
 const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
+const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
+
 
 async function getLandlords() {
     try {
@@ -103,6 +105,33 @@ export async function deleteLandlordData(landlordCode: string) {
         return { success: true };
     } catch (error) {
         console.error('Failed to delete landlord data:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+async function getProperties() {
+    try {
+        const data = await fs.readFile(propertiesFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+export async function getPropertiesForLandlord(landlordCode: string) {
+    try {
+        const allProperties = await getProperties();
+        const landlordProperties = allProperties.filter((p: any) => {
+            const propData = p.propertyData || p;
+            return propData.landlordCode === landlordCode;
+        }).map((p:any) => p.propertyData || p);
+        
+        return { success: true, data: landlordProperties };
+    } catch (error) {
+        console.error('Failed to get properties for landlord:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }
