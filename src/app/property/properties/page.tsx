@@ -76,10 +76,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { savePropertyData, findPropertyData, deletePropertyData, getOccupancyInfoForProperty, getUnitsForProperty, getPropertyLookups } from './actions';
-// Re-using the same dialogs and types from the unit page for consistency
-import { CustomizeDialog, type CustomField } from '@/app/property/unit/customize-dialog';
-import { FormItem } from '@/components/ui/form';
-import { ReportCustomizerDialog, type ReportConfig } from '@/app/property/unit/report-customizer-dialog';
 import { type Unit } from '../units/schema';
 import { DataTable } from '../units/data-table';
 import { columns as unitColumns } from '../units/columns';
@@ -640,9 +636,6 @@ export default function PropertyPage() {
                         <CardTitle>Units</CardTitle>
                         <CardDescription>Manage all units within this property.</CardDescription>
                     </div>
-                    <Button asChild>
-                        <Link href={`/property/unit?propertyCode=${propertyData.code}`}><Plus className="mr-2 h-4 w-4"/>Add Unit</Link>
-                    </Button>
                 </div>
             </CardHeader>
             <CardContent>

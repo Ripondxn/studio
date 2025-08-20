@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -29,7 +30,6 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { Unit } from './schema';
-import { deleteUnitData } from '../unit/actions';
 import { useToast } from '@/hooks/use-toast';
 
 const ActionsCell = ({ row }: { row: { original: Unit } }) => {
@@ -41,27 +41,15 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
 
     const handleDelete = async () => {
         setIsDeleting(true);
-        try {
-            const result = await deleteUnitData(unit.unitCode);
-            if (result.success) {
-                toast({
-                    title: 'Success',
-                    description: `Unit "${unit.unitCode}" deleted successfully.`,
-                });
-                router.refresh();
-            } else {
-                throw new Error(result.error || 'An unknown error occurred');
-            }
-        } catch (error) {
+        // This is a placeholder as delete functionality is removed for now
+        setTimeout(() => {
             toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: (error as Error).message || 'Failed to delete unit.',
+                title: 'Info',
+                description: `In a real app, unit "${unit.unitCode}" would be deleted.`,
             });
-        } finally {
             setIsDeleting(false);
             setIsDeleteDialogOpen(false);
-        }
+        }, 1000);
     };
 
     return (
@@ -95,12 +83,6 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem asChild>
-                        <Link href={`/property/unit?unitCode=${unit.unitCode}`}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                        </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem
                         className="text-destructive"
                         onSelect={() => setIsDeleteDialogOpen(true)}
@@ -151,9 +133,7 @@ export const columns: ColumnDef<Unit>[] = [
     cell: ({ row }) => {
         const unit = row.original;
         return (
-            <Button asChild variant="link" className="p-0 h-auto font-normal">
-                <Link href={`/property/unit?unitCode=${unit.unitCode}`}>{unit.unitCode}</Link>
-            </Button>
+            <span>{unit.unitCode}</span>
         )
     }
   },
