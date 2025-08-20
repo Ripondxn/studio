@@ -28,7 +28,10 @@ async function writeLandlords(data: any) {
 export async function getAllLandlords() {
     const landlords = await getLandlords();
     // The list page expects a flat structure for each landlord.
-    return landlords.map((l: any) => l.landlordData);
+    return landlords.map((l: any) => ({
+        ...l.landlordData,
+        attachments: l.attachments || []
+    }));
 }
 
 export async function saveLandlordData(dataToSave: any, isNewRecord: boolean) {

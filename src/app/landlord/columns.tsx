@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, Paperclip, Link as LinkIcon, File } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -26,6 +26,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { deleteLandlordData } from './actions';
 import { Landlord } from './schema';
@@ -116,6 +124,64 @@ const ActionsCell = ({ row }: { row: { original: Landlord } }) => {
   );
 };
 
+type Attachment = {
+  id: number;
+  name: string;
+  file: string | null;
+  remarks: string;
+  isLink: boolean;
+};
+
+
+const AttachmentsCell = ({ row }: { row: { original: Landlord } }) => {
+    const landlord = row.original;
+    const attachments: Attachment[] = landlord.attachments || [];
+
+    if (attachments.length === 0) {
+        return <span className="text-muted-foreground text-xs">No attachments</span>;
+    }
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <Paperclip className="h-4 w-4" />
+                    <span>{attachments.length}</span>
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Attachments for {landlord.name}</DialogTitle>
+                    <DialogDescription>
+                        List of all attached files and links.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-80 overflow-y-auto">
+                    <ul className="space-y-2">
+                       {attachments.map(att => (
+                           <li key={att.id} className="flex items-center justify-between p-2 border rounded-md">
+                               <div className="flex items-center gap-3">
+                                   {att.isLink ? <LinkIcon className="h-5 w-5 text-primary"/> : <File className="h-5 w-5 text-primary"/>}
+                                   <div className="flex flex-col">
+                                     <span className="font-medium">{att.name}</span>
+                                     <span className="text-xs text-muted-foreground">{att.remarks}</span>
+                                   </div>
+                               </div>
+                                {att.isLink && typeof att.file === 'string' ? (
+                                    <Button variant="link" asChild size="sm">
+                                        <a href={att.file} target="_blank" rel="noopener noreferrer">View Link</a>
+                                    </Button>
+                                ) : (
+                                    <span className="text-sm text-muted-foreground italic">File</span>
+                                )}
+                           </li>
+                       ))}
+                    </ul>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export const columns: ColumnDef<Landlord>[] = [
   {
@@ -166,6 +232,11 @@ export const columns: ColumnDef<Landlord>[] = [
   {
     accessorKey: 'bankName',
     header: 'Bank',
+  },
+  {
+    id: 'attachments',
+    header: 'Attachments',
+    cell: ({ row }) => <AttachmentsCell row={row} />,
   },
   {
     id: 'actions',

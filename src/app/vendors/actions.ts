@@ -27,8 +27,11 @@ async function writeVendors(data: any) {
 
 export async function getAllVendors() {
     const vendors = await getVendors();
-    // The list page expects a flat structure for each vendor.
-    return vendors.map((v: any) => v.vendorData);
+    // The list page expects a flat structure for each vendor, plus attachments.
+    return vendors.map((v: any) => ({
+        ...v.vendorData,
+        attachments: v.attachments || []
+    }));
 }
 
 export async function saveVendorData(dataToSave: any, isNewRecord: boolean) {
