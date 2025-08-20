@@ -85,6 +85,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         icon: <FileSignature />,
         subItems: [
             { href: '/property/properties/list', label: 'Properties' },
+            { href: '/property/floors/list', label: 'Floors' },
             { href: '/property/units/list', label: 'Units' },
             { href: '/landlord', label: 'Landlord' },
             { href: '/vendors', label: 'Vendor' },

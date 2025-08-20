@@ -80,6 +80,11 @@ import { type Unit } from '../units/schema';
 import { DataTable } from '../units/data-table';
 import { columns as unitColumns } from '../units/columns';
 import { Combobox } from '@/components/ui/combobox';
+import { type Floor } from '../floors/schema';
+import { getFloorsForProperty } from '../floors/actions';
+import { DataTable as FloorsDataTable } from '../floors/data-table';
+import { columns as floorColumns } from '../floors/columns';
+import { AddFloorDialog } from '../floors/add-floor-dialog';
 
 
 type Particular = {
@@ -164,6 +169,10 @@ export default function PropertyPage() {
 
   const [units, setUnits] = useState<Unit[]>([]);
   const [isLoadingUnits, setIsLoadingUnits] = useState(false);
+  
+  const [floors, setFloors] = useState<Floor[]>([]);
+  const [isLoadingFloors, setIsLoadingFloors] = useState(false);
+  
   const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
 
 
@@ -194,17 +203,26 @@ export default function PropertyPage() {
   }, [attachments]);
 
   useEffect(() => {
-    if (propertyData.name && !isNewRecord) {
+    if (propertyData.code && !isNewRecord) {
         setIsLoadingUnits(true);
-        getUnitsForProperty(propertyData.name)
+        getUnitsForProperty(propertyData.code)
             .then(result => {
                 if (result.success && result.data) {
                     setUnits(result.data);
                 }
             })
             .finally(() => setIsLoadingUnits(false));
+        
+        setIsLoadingFloors(true);
+        getFloorsForProperty(propertyData.code)
+            .then(result => {
+                if (result.success && result.data) {
+                    setFloors(result.data);
+                }
+            })
+            .finally(() => setIsLoadingFloors(false));
     }
-  }, [propertyData.name, isNewRecord]);
+  }, [propertyData.code, isNewRecord]);
 
   useEffect(() => {
     if (propertyData.code && !isNewRecord) {
@@ -657,13 +675,17 @@ export default function PropertyPage() {
                         <CardTitle>Floors</CardTitle>
                         <CardDescription>Manage floors for this property.</CardDescription>
                     </div>
-                    <Button><Plus className="mr-2 h-4 w-4"/>Add Floor</Button>
+                    <AddFloorDialog propertyCode={propertyData.code} onFloorAdded={() => handleFindClick(propertyData.code)} />
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="border rounded-md p-10 text-center text-muted-foreground">
-                    <p>Floor management functionality coming soon.</p>
-                </div>
+                 {isLoadingFloors ? (
+                    <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : (
+                    <FloorsDataTable columns={floorColumns} data={floors} />
+                )}
             </CardContent>
            </Card>
         </TabsContent>
