@@ -1,12 +1,30 @@
 
 [
   {
-    "id": "UNIT-1755696672580",
-    "unitCode": "A-101",
+    "id": "UNIT-1755710073669",
+    "unitCode": "U-101",
     "propertyCode": "LT-C38",
-    "floor": "1",
-    "unitType": "1-bhk",
-    "annualRent": 36000,
+    "floor": "F-01",
+    "unitType": "1BHK",
+    "annualRent": 55000,
     "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755710073670",
+    "unitCode": "U-102",
+    "propertyCode": "LT-C38",
+    "floor": "F-01",
+    "unitType": "2BHK",
+    "annualRent": 75000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755710073671",
+    "unitCode": "U-201",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "3BHK",
+    "annualRent": 95000,
+    "unitStatus": "Inactive"
   }
 ]

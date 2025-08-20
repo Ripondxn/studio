@@ -1,10 +1,8 @@
 
-
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -180,7 +178,7 @@ export const columns: ColumnDef<Unit>[] = [
     cell: ({ row }) => {
       const status = row.getValue('unitStatus') as string;
       const variant = status === 'Active' ? 'default' : 'secondary';
-      return <Badge variant={variant}>{status}</Badge>;
+      return <Badge variant={variant} className={status === 'Active' ? 'bg-green-500/20 text-green-700 border-transparent' : ''}>{status}</Badge>;
     },
   },
    {
