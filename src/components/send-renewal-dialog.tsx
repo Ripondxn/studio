@@ -93,8 +93,8 @@ export function SendRenewalDialog({
     // Simulate sending action
     setTimeout(() => {
       toast({
-        title: 'Notifications Sent',
-        description: `Renewal notifications sent via ${notificationType} to ${selectedTenants.length} tenant(s).`,
+        title: 'Simulation Complete',
+        description: `This is a demo. In a real app, ${selectedTenants.length} ${notificationType} notifications would have been sent.`,
       });
       setIsSending(false);
       setIsOpen(false);
