@@ -147,8 +147,16 @@ export const columns: ColumnDef<Partition>[] = [
     header: 'Partition Name',
   },
   {
+    accessorKey: 'floorCode',
+    header: 'Floor Code',
+  },
+  {
     accessorKey: 'unitCode',
     header: 'Unit Code',
+  },
+  {
+    accessorKey: 'roomCode',
+    header: 'Room Code',
   },
   {
     accessorKey: 'monthlyRent',

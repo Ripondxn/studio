@@ -31,7 +31,7 @@ export function AddPartitionDialog({ propertyCode, onPartitionAdded }: { propert
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<{ units: { value: string, label: string }[] }>({ units: [] });
+  const [lookups, setLookups] = useState<{ units: { value: string, label: string }[], floors: { value: string, label: string }[], rooms: { value: string, label: string }[] }>({ units: [], floors: [], rooms: [] });
 
   useEffect(() => {
       if(isOpen) {
@@ -52,6 +52,8 @@ export function AddPartitionDialog({ propertyCode, onPartitionAdded }: { propert
         partitionName: '',
         propertyCode: propertyCode,
         unitCode: '',
+        floorCode: '',
+        roomCode: '',
         monthlyRent: 0,
         status: 'Active',
     }
@@ -86,7 +88,7 @@ export function AddPartitionDialog({ propertyCode, onPartitionAdded }: { propert
           <Plus className="mr-2 h-4 w-4" /> Add Partition
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
             <DialogTitle>Add New Partition</DialogTitle>
@@ -105,6 +107,22 @@ export function AddPartitionDialog({ propertyCode, onPartitionAdded }: { propert
                     <Input id="partitionName" {...register('partitionName')} />
                     {errors.partitionName && <p className="text-destructive text-xs mt-1">{errors.partitionName.message}</p>}
                 </div>
+                <div className="space-y-2">
+                    <Label htmlFor="floorCode">Floor</Label>
+                    <Controller
+                        name="floorCode"
+                        control={control}
+                        render={({ field }) => (
+                           <Combobox
+                                options={lookups.floors}
+                                value={field.value}
+                                onSelect={field.onChange}
+                                placeholder="Select a floor"
+                           />
+                        )}
+                    />
+                    {errors.floorCode && <p className="text-destructive text-xs mt-1">{errors.floorCode.message}</p>}
+                </div>
                  <div className="space-y-2">
                     <Label htmlFor="unitCode">Unit</Label>
                     <Controller
@@ -120,6 +138,22 @@ export function AddPartitionDialog({ propertyCode, onPartitionAdded }: { propert
                         )}
                     />
                     {errors.unitCode && <p className="text-destructive text-xs mt-1">{errors.unitCode.message}</p>}
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="roomCode">Room</Label>
+                    <Controller
+                        name="roomCode"
+                        control={control}
+                        render={({ field }) => (
+                           <Combobox
+                                options={lookups.rooms}
+                                value={field.value}
+                                onSelect={field.onChange}
+                                placeholder="Select a room"
+                           />
+                        )}
+                    />
+                    {errors.roomCode && <p className="text-destructive text-xs mt-1">{errors.roomCode.message}</p>}
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="monthlyRent">Monthly Rent</Label>

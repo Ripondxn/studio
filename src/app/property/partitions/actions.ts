@@ -7,8 +7,13 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { partitionSchema, type Partition } from './schema';
 import { type Unit } from '@/app/property/units/schema';
+import { type Floor } from '@/app/property/floors/schema';
+import { type Room } from '@/app/property/rooms/schema';
 
 const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
+const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
+const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 
 async function readPartitions(): Promise<Partition[]> {
     try {
@@ -123,16 +128,40 @@ export async function deletePartition(partitionId: string) {
 
 async function readUnits(): Promise<Unit[]> {
     try {
-        const data = await fs.readFile(path.join(process.cwd(), 'src/app/property/units/units-data.json'), 'utf-8');
+        const data = await fs.readFile(unitsFilePath, 'utf-8');
         return JSON.parse(data);
     } catch (e) {
         return [];
     }
 }
 
+async function readFloors(): Promise<Floor[]> {
+    try {
+        const data = await fs.readFile(floorsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+
+async function readRooms(): Promise<Room[]> {
+    try {
+        const data = await fs.readFile(roomsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+
+
 export async function getPartitionLookups(propertyCode: string) {
     const units = await readUnits();
+    const floors = await readFloors();
+    const rooms = await readRooms();
+
     return {
-        units: units.filter((u: any) => u.property === propertyCode).map((u:any) => ({ value: u.unitCode, label: u.unitCode })),
+        units: units.filter((u: any) => u.propertyCode === propertyCode).map((u:any) => ({ value: u.unitCode, label: u.unitCode })),
+        floors: floors.filter((f: any) => f.propertyCode === propertyCode).map((f:any) => ({ value: f.floorCode, label: f.floorName })),
+        rooms: rooms.filter((r: any) => r.propertyCode === propertyCode).map((r:any) => ({ value: r.roomCode, label: r.roomName })),
     }
 }
