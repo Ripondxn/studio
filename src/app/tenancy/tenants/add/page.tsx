@@ -49,6 +49,9 @@ import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { type Contract, type PaymentInstallment } from '../../contract/schema';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 type Attachment = {
   id: number;
@@ -79,6 +82,8 @@ export default function TenantPage() {
   
   const [tenantData, setTenantData] = useState(initialTenantData);
   const [initialData, setInitialData] = useState(initialTenantData);
+
+  const [contractData, setContractData] = useState<Partial<Contract>>({});
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
@@ -104,6 +109,7 @@ export default function TenantPage() {
         setIsEditing(true); 
         setTenantData(initialTenantData);
         setAttachments([]);
+        setContractData({});
     }
   }, [searchParams]);
 
@@ -153,6 +159,7 @@ export default function TenantPage() {
   const setAllData = (data: any) => {
     setTenantData(data.tenantData || initialTenantData);
     setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
+    setContractData(data.contractData || {});
   }
 
   const setInitialAllData = (data: any) => {
@@ -252,7 +259,7 @@ export default function TenantPage() {
           description: `No record found for Tenant Code: ${codeToFind}. You can create a new one.`,
         });
         const newTenant = { ...initialTenantData, code: codeToFind };
-        setAllData({ tenantData: newTenant });
+        setAllData({ tenantData: newTenant, contractData: {} });
         setIsNewRecord(true);
         setIsEditing(true);
       }
@@ -491,34 +498,48 @@ export default function TenantPage() {
             </TabsContent>
             <TabsContent value="pdc">
                  <Card>
-                    <CardHeader><CardTitle>PDC Payment Schedule</CardTitle></CardHeader>
+                    <CardHeader>
+                        <CardTitle>PDC Payment Schedule</CardTitle>
+                        <CardDescription>
+                            This schedule is linked to Contract No: 
+                            <Button variant="link" className="p-1" asChild>
+                                <Link href={`/tenancy/contract?id=${contractData.id}`}>{contractData.contractNo}</Link>
+                            </Button>
+                        </CardDescription>
+                    </CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Cheque No</TableHead>
+                                    <TableHead>Installment</TableHead>
                                     <TableHead>Due Date</TableHead>
-                                    <TableHead>Amount</TableHead>
-                                    <TableHead>Bank</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="text-center">Status</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {/* Placeholder Data */}
-                                <TableRow>
-                                    <TableCell>CHQ-001</TableCell>
-                                    <TableCell>2024-08-01</TableCell>
-                                    <TableCell>$5,000</TableCell>
-                                    <TableCell>Emirates NBD</TableCell>
-                                    <TableCell>Cleared</TableCell>
-                                </TableRow>
-                                 <TableRow>
-                                    <TableCell>CHQ-002</TableCell>
-                                    <TableCell>2024-09-01</TableCell>
-                                    <TableCell>$5,000</TableCell>
-                                    <TableCell>Emirates NBD</TableCell>
-                                    <TableCell>Pending</TableCell>
-                                </TableRow>
+                                {contractData.paymentSchedule && contractData.paymentSchedule.length > 0 ? (
+                                    contractData.paymentSchedule.map((item, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{item.installment}</TableCell>
+                                            <TableCell>{format(new Date(item.dueDate), 'PP')}</TableCell>
+                                            <TableCell className="text-right font-medium">
+                                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.amount)}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <Badge variant={item.status === 'paid' ? 'default' : 'secondary'} className={item.status === 'paid' ? 'bg-green-500/20 text-green-700 border-transparent' : ''}>
+                                                    {item.status}
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            No payment schedule found for the linked contract.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
