@@ -10,6 +10,7 @@ import { type Unit } from '@/app/property/units/schema';
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 
 
 async function readData(filePath: string) {
@@ -36,6 +37,11 @@ async function getContracts(): Promise<Contract[]> {
 async function getUnits(): Promise<Unit[]> {
     return await readData(unitsFilePath);
 }
+
+async function getProperties() {
+    return await readData(propertiesFilePath);
+}
+
 
 async function writeTenants(data: any) {
     await fs.writeFile(tenantsFilePath, JSON.stringify(data, null, 2), 'utf-8');
@@ -102,7 +108,7 @@ export async function findTenantData(tenantCode: string) {
     if (tenant) {
        const allContracts = await getContracts();
        let contractData: Partial<Contract> = {};
-       let unitData: Partial<Unit> = {};
+       let unitData: Partial<Unit & { property?: string }> = {};
 
        if(tenant.tenantData.contractNo) {
          const relatedContract = allContracts.find(c => c.contractNo === tenant.tenantData.contractNo);
@@ -112,7 +118,13 @@ export async function findTenantData(tenantCode: string) {
                 const allUnits = await getUnits();
                 const relatedUnit = allUnits.find(u => u.unitCode === relatedContract.unitCode);
                 if (relatedUnit) {
-                    unitData = relatedUnit;
+                    const allProperties = await getProperties();
+                    const relatedProperty = allProperties.find(p => (p.propertyData || p).code === relatedUnit.propertyCode);
+                    
+                    unitData = {
+                        ...relatedUnit,
+                        property: relatedProperty ? (relatedProperty.propertyData || relatedProperty).name : 'N/A'
+                    };
                 }
             }
          }

@@ -92,7 +92,7 @@ export default function TenantPage() {
   const [initialData, setInitialData] = useState(initialTenantData);
 
   const [contractData, setContractData] = useState<Partial<Contract>>({});
-  const [unitData, setUnitData] = useState<Partial<Unit>>({});
+  const [unitData, setUnitData] = useState<Partial<Unit & { property?: string }>>({});
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
@@ -480,7 +480,7 @@ export default function TenantPage() {
                                 </div>
                                 <div className="space-y-4">
                                     <div><Label>Unit Type</Label><Input value={unitData.unitType} disabled /></div>
-                                    <div><Label>Annual Rent</Label><Input value={unitData.annualRent} disabled /></div>
+                                    <div><Label>Annual Rent</Label><Input value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(unitData.annualRent || 0)} disabled /></div>
                                     <div><Label>Status</Label><Input value={unitData.unitStatus} disabled /></div>
                                 </div>
                                 <div className="space-y-4">
@@ -488,7 +488,7 @@ export default function TenantPage() {
                                         <CardHeader><CardTitle>Unit Actions</CardTitle></CardHeader>
                                         <CardContent>
                                             <Button asChild className="w-full">
-                                                <Link href={`/property/unit?unitCode=${unitData.unitCode}`}>View Full Unit Details</Link>
+                                                <Link href={`/property/properties?code=${unitData.propertyCode}`}>View Full Property Details</Link>
                                             </Button>
                                         </CardContent>
                                     </Card>
