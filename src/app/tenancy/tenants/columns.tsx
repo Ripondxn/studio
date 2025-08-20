@@ -166,6 +166,20 @@ export const columns: ColumnDef<Tenant>[] = [
   {
     accessorKey: 'contractNo',
     header: 'Contract No',
+    cell: ({ row }) => {
+        const tenant = row.original;
+        const contractNo = tenant.contractNo;
+        const contractId = tenant.contractId;
+
+        if (contractId && contractNo) {
+            return (
+                <Button variant="link" asChild className="p-0 h-auto font-normal">
+                    <Link href={`/tenancy/contract?id=${contractId}`}>{contractNo}</Link>
+                </Button>
+            )
+        }
+        return <span>{contractNo}</span>;
+    }
   },
   {
     id: 'actions',

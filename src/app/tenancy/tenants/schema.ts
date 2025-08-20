@@ -17,6 +17,7 @@ export const tenantSchema = z.object({
   email: z.string().email().optional(),
   address: z.string().optional(),
   contractNo: z.string().optional(),
+  contractId: z.string().nullable().optional(),
   attachments: z.array(attachmentSchema).optional(),
 });
 

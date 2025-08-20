@@ -38,9 +38,14 @@ async function writeTenants(data: any) {
 
 export async function getAllTenants() {
     const tenants = await getTenants();
+    const contracts = await getContracts();
+    
+    const contractsMap = new Map(contracts.map(c => [c.contractNo, c.id]));
+
     return tenants.map((l: any) => ({
         ...l.tenantData,
-        attachments: l.attachments || []
+        attachments: l.attachments || [],
+        contractId: contractsMap.get(l.tenantData.contractNo) || null
     }));
 }
 
