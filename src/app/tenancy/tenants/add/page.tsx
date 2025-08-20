@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -28,7 +27,9 @@ import {
   Home,
   FileText,
   DollarSign,
-  Calendar
+  Calendar,
+  BedDouble,
+  DoorOpen
 } from 'lucide-react';
 import {
   Table,
@@ -56,6 +57,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { type Contract, type PaymentInstallment } from '../../contract/schema';
 import { type Unit } from '@/app/property/units/schema';
+import { type Room } from '@/app/property/rooms/schema';
+import { type Partition } from '@/app/property/partitions/schema';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
@@ -96,6 +99,8 @@ export default function TenantPage() {
 
   const [contractData, setContractData] = useState<Partial<Contract>>({});
   const [unitData, setUnitData] = useState<Partial<Unit & { property?: any }>>({});
+  const [roomData, setRoomData] = useState<Partial<Room>>({});
+  const [partitionData, setPartitionData] = useState<Partial<Partition>>({});
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
@@ -174,6 +179,8 @@ export default function TenantPage() {
     setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
     setContractData(data.contractData || {});
     setUnitData(data.unitData || {});
+    setRoomData(data.roomData || {});
+    setPartitionData(data.partitionData || {});
   }
 
   const setInitialAllData = (data: any) => {
@@ -273,7 +280,7 @@ export default function TenantPage() {
           description: `No record found for Tenant Code: ${codeToFind}. You can create a new one.`,
         });
         const newTenant = { ...initialTenantData, code: codeToFind };
-        setAllData({ tenantData: newTenant, contractData: {} });
+        setAllData({ tenantData: newTenant, contractData: {}, unitData: {}, roomData: {}, partitionData: {} });
         setIsNewRecord(true);
         setIsEditing(true);
       }
@@ -506,6 +513,30 @@ export default function TenantPage() {
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            {roomData.id && (
+                                <Card>
+                                    <CardHeader><CardTitle>Room Details</CardTitle></CardHeader>
+                                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                        <div><Label>Room Code</Label><Input value={roomData.roomCode} disabled /></div>
+                                        <div><Label>Room Name</Label><Input value={roomData.roomName} disabled /></div>
+                                        <div><Label>Room Type</Label><Input value={roomData.roomType} disabled /></div>
+                                        <div><Label>Rent Amount</Label><Input value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(roomData.rentAmount || 0)} disabled /></div>
+                                        <div><Label>Rent Frequency</Label><Input value={roomData.rentFrequency} disabled /></div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                             {partitionData.id && (
+                                <Card>
+                                    <CardHeader><CardTitle>Partition Details</CardTitle></CardHeader>
+                                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                        <div><Label>Partition Code</Label><Input value={partitionData.partitionCode} disabled /></div>
+                                        <div><Label>Partition Name</Label><Input value={partitionData.partitionName} disabled /></div>
+                                        <div><Label>Monthly Rent</Label><Input value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(partitionData.monthlyRent || 0)} disabled /></div>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
                         ) : (
                              <div className="text-center py-10 text-muted-foreground">
