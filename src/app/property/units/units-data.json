@@ -88,14 +88,5 @@
     "unitType": "1BHK",
     "annualRent": 65000,
     "unitStatus": "Active"
-  },
-  {
-    "unitCode": "U-102",
-    "propertyCode": "LT-C38",
-    "floor": "F-01",
-    "unitType": "3BHK",
-    "annualRent": 50000,
-    "unitStatus": "Active",
-    "id": "UNIT-1755710507499"
   }
 ]
