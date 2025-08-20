@@ -425,6 +425,7 @@ export default function PropertyPage() {
                 return {...item, file: value, url: newUrl};
             }
              if (field === 'isLink') {
+                 if (item.url) URL.revokeObjectURL(item.url);
                  return {...item, isLink: value, file: null, url: undefined };
             }
             return {...item, [field]: value};

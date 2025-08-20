@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -119,6 +120,7 @@ export default function VendorPage() {
                 return {...item, file: value, url: newUrl};
             }
             if (field === 'isLink') {
+                 if (item.url) URL.revokeObjectURL(item.url);
                  return {...item, isLink: value, file: null, url: undefined }; // Reset file and url when switching mode
             }
             return {...item, [field]: value};
