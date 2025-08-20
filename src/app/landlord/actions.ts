@@ -36,20 +36,20 @@ export async function getAllLandlords() {
     const landlords = await getLandlords();
     const leaseContracts = await readData(leaseContractsFilePath);
 
-    const contractsByLandlord = new Map<string, string[]>();
+    const contractsByLandlord = new Map<string, { id: string; contractNo: string }[]>();
     for (const contract of leaseContracts) {
         if (contract.landlordCode) {
             if (!contractsByLandlord.has(contract.landlordCode)) {
                 contractsByLandlord.set(contract.landlordCode, []);
             }
-            contractsByLandlord.get(contract.landlordCode)!.push(contract.contractNo);
+            contractsByLandlord.get(contract.landlordCode)!.push({ id: contract.id, contractNo: contract.contractNo });
         }
     }
 
     return landlords.map((l: any) => ({
         ...l.landlordData,
         attachments: l.attachments || [],
-        leaseContracts: contractsByLandlord.get(l.landlordData.code)?.join(', ') || 'N/A',
+        leaseContracts: contractsByLandlord.get(l.landlordData.code) || [],
     }));
 }
 

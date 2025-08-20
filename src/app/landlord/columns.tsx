@@ -236,6 +236,23 @@ export const columns: ColumnDef<Landlord>[] = [
   {
     accessorKey: 'leaseContracts',
     header: 'Lease Contracts',
+    cell: ({ row }) => {
+      const leaseContracts = row.getValue('leaseContracts') as { id: string; contractNo: string }[] | undefined;
+      if (!leaseContracts || leaseContracts.length === 0) {
+        return <span className="text-muted-foreground text-xs">N/A</span>;
+      }
+      return (
+        <div className="flex flex-col space-y-1">
+          {leaseContracts.map(contract => (
+            <Button asChild variant="link" key={contract.id} className="p-0 h-auto font-normal justify-start">
+              <Link href={`/lease/contract?id=${contract.id}`}>
+                {contract.contractNo}
+              </Link>
+            </Button>
+          ))}
+        </div>
+      );
+    }
   },
   {
     id: 'attachments',

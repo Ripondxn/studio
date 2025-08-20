@@ -9,6 +9,11 @@ export const attachmentSchema = z.object({
   isLink: z.boolean()
 });
 
+const leaseContractLinkSchema = z.object({
+  id: z.string(),
+  contractNo: z.string(),
+});
+
 export const landlordSchema = z.object({
   id: z.string().optional(), // ID is optional as it's generated on the server
   code: z.string().min(1, "Code is required."),
@@ -20,7 +25,7 @@ export const landlordSchema = z.object({
   accountNumber: z.string().optional(),
   iban: z.string().optional(),
   attachments: z.array(attachmentSchema).optional(),
-  leaseContracts: z.string().optional(),
+  leaseContracts: z.array(leaseContractLinkSchema).optional(),
 });
 
 export type Landlord = z.infer<typeof landlordSchema>;
