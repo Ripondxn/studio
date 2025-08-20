@@ -30,9 +30,8 @@ export async function getAllContracts() {
     return await readContracts();
 }
 
-export async function saveContractData(data: Omit<Contract, 'id'>) {
-    const validationSchema = contractSchema.omit({ id: true });
-    const validation = validationSchema.safeParse(data);
+export async function saveContractData(data: Contract, isNewRecord: boolean) {
+    const validation = contractSchema.safeParse(data);
 
     if (!validation.success) {
         const errors = validation.error.errors.map(e => e.message).join(', ');
@@ -41,28 +40,62 @@ export async function saveContractData(data: Omit<Contract, 'id'>) {
 
     try {
         const allContracts = await readContracts();
-        const contractExists = allContracts.some(c => c.contractNo === data.contractNo);
         
-        if (contractExists) {
-            return { success: false, error: `Contract with number "${data.contractNo}" already exists.`};
+        if (isNewRecord) {
+             const contractExists = allContracts.some(c => c.contractNo === data.contractNo);
+             if (contractExists) {
+                return { success: false, error: `Contract with number "${data.contractNo}" already exists.`};
+             }
+             const newContract: Contract = {
+                ...validation.data,
+                id: `CON-${Date.now()}`,
+            };
+            allContracts.push(newContract);
+        } else {
+            const index = allContracts.findIndex(c => c.id === data.id);
+            if (index !== -1) {
+                allContracts[index] = validation.data;
+            } else {
+                 return { success: false, error: `Contract with ID "${data.id}" not found.` };
+            }
         }
         
-        const newContract: Contract = {
-            id: `CON-${Date.now()}`,
-            ...validation.data,
-        };
-
-        allContracts.push(newContract);
         await writeContracts(allContracts);
         
         revalidatePath('/tenancy/contracts');
-        return { success: true, data: newContract };
+        revalidatePath(`/tenancy/contract?id=${data.id}`);
+        return { success: true, data: isNewRecord ? allContracts[allContracts.length - 1] : data };
 
     } catch (error) {
         console.error('Failed to save contract:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+export async function findContract(query: { unitCode?: string, tenantName?: string, contractId?: string }): Promise<{ success: boolean; data?: Contract; error?: string }> {
+    try {
+        const allContracts = await readContracts();
+        let foundContract: Contract | undefined;
+        
+        if (query.contractId) {
+            foundContract = allContracts.find(c => c.id === query.contractId);
+        } else if (query.unitCode) {
+            foundContract = allContracts.find(c => c.unitCode === query.unitCode);
+        } else if (query.tenantName) {
+            foundContract = allContracts.find(c => c.tenantName.toLowerCase() === query.tenantName.toLowerCase());
+        }
+
+        if (foundContract) {
+            return { success: true, data: foundContract };
+        } else {
+            return { success: false, error: 'Contract not found.' };
+        }
+    } catch (error) {
+        console.error('Failed to find contract:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
 
 export async function deleteContract(contractId: string) {
     try {
