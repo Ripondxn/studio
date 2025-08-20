@@ -17,6 +17,7 @@ const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties
 const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
+const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 
 
 async function readContracts(): Promise<Contract[]> {
@@ -167,12 +168,22 @@ async function readPartitions(): Promise<Partition[]> {
         return [];
     }
 }
+async function readTenants() {
+    try {
+        const data = await fs.readFile(tenantsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
 
 
 export async function getContractLookups() {
     const properties = await readProperties();
+    const tenants = await readTenants();
     return {
         properties: properties.map((p: any) => ({ value: (p.propertyData || p).code, label: (p.propertyData || p).name })),
+        tenants: tenants.map((t: any) => ({ value: t.tenantData.code, label: t.tenantData.name })),
     }
 }
 
@@ -204,15 +215,16 @@ export async function getUnitDetails(unitCode: string) {
 
     const allPartitions = await readPartitions();
     const partition = allPartitions.find(p => p.unitCode === unit.unitCode);
-
-    // Placeholder for finding tenant name. In a real app, this might come from the unit's current lease.
-    const tenantName = "Fetched Tenant Name"; 
+    
+    const allTenants = await readTenants();
+    const tenant = allTenants.find((t: any) => t.tenantData.unitCode === unit.unitCode);
 
     return { 
         success: true, 
         data: {
             property: property ? (property.propertyData || property).name : '',
-            tenantName: tenantName,
+            tenantName: tenant ? tenant.tenantData.name : '',
+            tenantCode: tenant ? tenant.tenantData.code : '',
             totalRent: unit.annualRent,
             partitionName: partition ? partition.partitionName : '',
         }

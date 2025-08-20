@@ -47,6 +47,7 @@ const initialContractState: Contract = {
     roomCode: '',
     partitionName: '',
     property: '',
+    tenantCode: '',
     tenantName: '',
     startDate: '',
     endDate: '',
@@ -65,6 +66,7 @@ type LookupData = {
     properties: {value: string, label: string}[];
     units: {value: string, label: string}[];
     rooms: {value: string, label: string}[];
+    tenants: {value: string, label: string}[];
 }
 
 export default function TenancyContractPage() {
@@ -79,12 +81,12 @@ export default function TenancyContractPage() {
   const [contract, setContract] = useState<Contract>(initialContractState);
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
-  const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [] });
+  const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], tenants: [] });
 
 
   useEffect(() => {
     getContractLookups().then(data => {
-        setLookups(prev => ({...prev, properties: data.properties}));
+        setLookups(prev => ({...prev, properties: data.properties, tenants: data.tenants}));
     });
 
     const contractId = searchParams.get('id');
@@ -153,11 +155,23 @@ export default function TenancyContractPage() {
             setContract(prev => ({
                 ...prev,
                 tenantName: result.data.tenantName,
+                tenantCode: result.data.tenantCode,
                 totalRent: result.data.totalRent,
                 partitionName: result.data.partitionName,
             }));
         }
     }
+  }
+  
+  const handleTenantSelect = (tenantCode: string) => {
+      const tenant = lookups.tenants.find(t => t.value === tenantCode);
+      if (tenant) {
+          setContract(prev => ({
+              ...prev,
+              tenantCode: tenant.value,
+              tenantName: tenant.label,
+          }));
+      }
   }
 
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
@@ -479,9 +493,19 @@ export default function TenancyContractPage() {
               <Label htmlFor="partitionName">Partition Name</Label>
               <Input id="partitionName" value={contract.partitionName || ''} disabled />
             </div>
-             <div>
-              <Label htmlFor="tenant-name">Tenant Name</Label>
-              <Input id="tenant-name" placeholder="Enter Tenant Name" value={contract.tenantName} onChange={e => handleInputChange('tenantName', e.target.value)} disabled={!isEditing}/>
+            <div>
+                <Label htmlFor="tenant-name">Tenant Name</Label>
+                <Combobox
+                    options={lookups.tenants}
+                    value={contract.tenantCode || ''}
+                    onSelect={handleTenantSelect}
+                    placeholder="Select a Tenant"
+                    disabled={!isEditing}
+                />
+            </div>
+            <div>
+              <Label htmlFor="tenant-code">Tenant Code</Label>
+              <Input id="tenant-code" value={contract.tenantCode || ''} disabled />
             </div>
              <div>
               <Label htmlFor="start-date">Start Date</Label>
