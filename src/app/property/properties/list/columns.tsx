@@ -219,6 +219,14 @@ export const columns: ColumnDef<Property>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+        const property = row.original;
+        return (
+            <Button asChild variant="link" className="p-0 h-auto font-normal">
+                <Link href={`/property/properties?code=${property.code}`}>{property.code}</Link>
+            </Button>
+        )
+    }
   },
   {
     accessorKey: 'name',
