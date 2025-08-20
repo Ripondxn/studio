@@ -21,7 +21,7 @@ async function getProperties() {
 }
 
 async function writeProperties(data: any) {
-    await fs.writeFile(propertiesFilePath, JSON.stringify(data, null, 4), 'utf-8');
+    await fs.writeFile(propertiesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 
@@ -49,7 +49,8 @@ export async function savePropertyData(dataToSave: any, isNewRecord: boolean) {
         if (index !== -1) {
             allProperties[index] = {
                 ...allProperties[index],
-                ...dataToSave
+                ...dataToSave,
+                id: allProperties[index].id
             };
         } else {
              // If for some reason we are editing but can't find the record, add it as new

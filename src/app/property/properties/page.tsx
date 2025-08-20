@@ -11,6 +11,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,45 +95,6 @@ type Particular = {
   taxCategory: string;
 };
 
-type VatItem = {
-  id: number;
-  accountDescription: string;
-  vatGroup: string;
-  vatCode: string;
-  vatDescription: string;
-  vatPercentage: number;
-}
-
-type OtherDetailItem = {
-  id: number;
-  unitNo: string;
-  areaSqft: string;
-  landlord: string;
-  building: string;
-  location: string;
-  subLocation: string;
-  status: string;
-  remarks: string;
-};
-
-type SpecialCondition = {
-    id: number;
-    condition: string;
-};
-
-type Note = {
-    id: number;
-    content: string;
-}
-
-type Agent = {
-  id: number;
-  name: string;
-  type: string;
-  amount: number;
-  remarks: string;
-};
-
 type Attachment = {
   id: number;
   name: string;
@@ -140,27 +102,6 @@ type Attachment = {
   url?: string;
   remarks: string;
   isLink: boolean;
-};
-
-type Parking = {
-  id: number;
-  parkingNo: string;
-  parkingType: string;
-  remarks: string;
-};
-
-type Assignment = {
-  id: number;
-  user: string;
-  role: string;
-  remarks: string;
-};
-
-type ShareHolder = {
-  id: number;
-  name: string;
-  percentage: number;
-  remarks: string;
 };
 
 const initialPropertyData = {
@@ -204,44 +145,9 @@ export default function PropertyPage() {
   const [particulars, setParticulars] = useState<Particular[]>([]);
   const [initialParticulars, setInitialParticulars] = useState<Particular[]>([]);
   
-  const [vatItems, setVatItems] = useState<VatItem[]>([]);
-  const [initialVatItems, setInitialVatItems] = useState<VatItem[]>([]);
-  
-  const [otherDetails, setOtherDetails] = useState<OtherDetailItem[]>([]);
-  const [initialOtherDetails, setInitialOtherDetails] = useState<OtherDetailItem[]>([]);
-
-  const [specialConditions, setSpecialConditions] = useState<SpecialCondition[]>([]);
-  const [initialSpecialConditions, setInitialSpecialConditions] = useState<SpecialCondition[]>([]);
-
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
-  
-  const [parkings, setParkings] = useState<Parking[]>([]);
-  const [initialParkings, setInitialParkings] = useState<Parking[]>([]);
 
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [initialAssignments, setInitialAssignments] = useState<Assignment[]>([]);
-
-  const [shareHolders, setShareHolders] = useState<ShareHolder[]>([]);
-  const [initialShareHolders, setInitialShareHolders] = useState<ShareHolder[]>([]);
-
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [initialNotes, setInitialNotes] = useState<Note[]>([]);
-
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [initialAgents, setInitialAgents] = useState<Agent[]>([]);
-
-  const [visibleSections, setVisibleSections] = useState({
-    propertyDetails: true,
-    photoUpload: true,
-    discountAndRent: true,
-    tabs: true,
-  });
-
-  const [customFields, setCustomFields] = useState<CustomField[]>([]);
-  const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
-  const [isReportDialog, setIsReportDialog] = useState(false);
-  
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -277,10 +183,6 @@ export default function PropertyPage() {
     setPropertyData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCustomFieldChange = (fieldId: string, value: any) => {
-    setCustomFieldsData(prev => ({ ...prev, [fieldId]: value }));
-  };
-
   const handleParticularChange = (
     id: number,
     field: keyof Particular,
@@ -312,110 +214,6 @@ export default function PropertyPage() {
     setParticulars((prev) => prev.filter((p) => p.id !== id));
   };
   
-  const handleVatChange = (id: number, field: keyof VatItem, value: string | number) => {
-    setVatItems(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
-  }
-
-  const addVatRow = () => {
-    setVatItems(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        accountDescription: 'rental-income',
-        vatGroup: 'vat-group',
-        vatCode: 'V5',
-        vatDescription: 'Vat 5%',
-        vatPercentage: 5,
-      }
-    ]);
-  }
-
-  const removeVatRow = (id: number) => {
-    setVatItems(prev => prev.filter(item => item.id !== id));
-  }
-
-  const handleOtherDetailChange = (id: number, field: keyof OtherDetailItem, value: string) => {
-    setOtherDetails(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
-  };
-
-  const addOtherDetailRow = () => {
-    setOtherDetails(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        unitNo: '',
-        areaSqft: '',
-        landlord: '',
-        building: '',
-        location: '',
-        subLocation: '',
-        status: '',
-        remarks: '',
-      }
-    ]);
-  };
-
-  const removeOtherDetailRow = (id: number) => {
-    setOtherDetails(prev => prev.filter(item => item.id !== id));
-  };
-
-  const handleSpecialConditionChange = (id: number, value: string) => {
-    setSpecialConditions(prev => prev.map(item => item.id === id ? {...item, condition: value} : item));
-  };
-
-  const addSpecialConditionRow = () => {
-    setSpecialConditions(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        condition: '',
-      }
-    ]);
-  };
-
-  const removeSpecialConditionRow = (id: number) => {
-    setSpecialConditions(prev => prev.filter(item => item.id !== id));
-  };
-
-  const handleNoteChange = (id: number, value: string) => {
-    setNotes(prev => prev.map(item => item.id === id ? {...item, content: value} : item));
-  };
-
-  const addNoteRow = () => {
-    setNotes(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        content: '',
-      }
-    ]);
-  };
-
-  const removeNoteRow = (id: number) => {
-    setNotes(prev => prev.filter(item => item.id !== id));
-  };
-
-  const handleAgentChange = (id: number, field: keyof Agent, value: string | number) => {
-    setAgents(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
-  };
-
-  const addAgentRow = () => {
-    setAgents(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        name: '',
-        type: 'Sales',
-        amount: 0,
-        remarks: ''
-      }
-    ]);
-  };
-
-  const removeAgentRow = (id: number) => {
-    setAgents(prev => prev.filter(item => item.id !== id));
-  };
-
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
         if (item.id === id) {
@@ -455,104 +253,22 @@ export default function PropertyPage() {
     setAttachments(prev => prev.filter(item => item.id !== id));
   };
   
-  const handleParkingChange = (id: number, field: keyof Parking, value: string) => {
-    setParkings(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
-  };
-
-  const addParkingRow = () => {
-    setParkings(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        parkingNo: '',
-        parkingType: 'Covered',
-        remarks: '',
-      }
-    ]);
-  };
-
-  const removeParkingRow = (id: number) => {
-    setParkings(prev => prev.filter(item => item.id !== id));
-  };
-  
-  const handleAssignmentChange = (id: number, field: keyof Assignment, value: string) => {
-    setAssignments(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
-  };
-
-  const addAssignmentRow = () => {
-    setAssignments(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        user: '',
-        role: 'Viewer',
-        remarks: '',
-      }
-    ]);
-  };
-
-  const removeAssignmentRow = (id: number) => {
-    setAssignments(prev => prev.filter(item => item.id !== id));
-  };
-
-  const handleShareHolderChange = (id: number, field: keyof ShareHolder, value: string | number) => {
-    setShareHolders(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
-  };
-
-  const addShareHolderRow = () => {
-    setShareHolders(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        name: '',
-        percentage: 0,
-        remarks: '',
-      }
-    ]);
-  };
-
-  const removeShareHolderRow = (id: number) => {
-    setShareHolders(prev => prev.filter(item => item.id !== id));
-  };
-  
-  const totalParticularsAmount = useMemo(() => {
-    return particulars.reduce((sum, p) => sum + p.amount, 0);
-  }, [particulars]);
-
   const setAllData = (data: any) => {
     setPropertyData(data.propertyData || initialPropertyData);
     setParticulars(data.particulars || []);
-    setVatItems(data.vatItems || []);
-    setOtherDetails(data.otherDetails || []);
-    setSpecialConditions(data.specialConditions || []);
-    setNotes(data.notes || []);
-    setAgents(data.agents || []);
     setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
-    setParkings(data.parkings || []);
-    setAssignments(data.assignments || []);
-    setShareHolders(data.shareHolders || []);
-    setCustomFieldsData(data.customFieldsData || {});
     setUploadedImage(data.propertyPhoto || null);
   }
 
   const setInitialAllData = (data: any) => {
     setInitialData(JSON.parse(JSON.stringify(data.propertyData || initialPropertyData)));
     setInitialParticulars(JSON.parse(JSON.stringify(data.particulars || [])));
-    setInitialVatItems(JSON.parse(JSON.stringify(data.vatItems || [])));
-    setInitialOtherDetails(JSON.parse(JSON.stringify(data.otherDetails || [])));
-    setInitialSpecialConditions(JSON.parse(JSON.stringify(data.specialConditions || [])));
-    setInitialNotes(JSON.parse(JSON.stringify(data.notes || [])));
-    setInitialAgents(JSON.parse(JSON.stringify(data.agents || [])));
     setInitialAttachments(JSON.parse(JSON.stringify(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : [])));
-    setInitialParkings(JSON.parse(JSON.stringify(data.parkings || [])));
-    setInitialAssignments(JSON.parse(JSON.stringify(data.assignments || [])));
-    setInitialShareHolders(JSON.parse(JSON.stringify(data.shareHolders || [])));
   }
 
   const handleEditClick = () => {
     setInitialAllData({
-      propertyData, particulars, vatItems, otherDetails, specialConditions,
-      attachments, parkings, assignments, shareHolders, notes, agents
+      propertyData, particulars, attachments
     });
     setIsEditing(true);
   }
@@ -563,9 +279,6 @@ export default function PropertyPage() {
       const dataToSave = {
         propertyData,
         particulars,
-        vatItems,
-        otherDetails,
-        specialConditions,
         attachments: attachments.map(a => ({
             id: a.id, 
             name: a.name, 
@@ -573,12 +286,6 @@ export default function PropertyPage() {
             remarks: a.remarks,
             isLink: a.isLink 
         })),
-        parkings,
-        assignments,
-        shareHolders,
-        notes,
-        agents,
-        customFieldsData,
         propertyPhoto: uploadedImage 
       };
 
@@ -616,15 +323,7 @@ export default function PropertyPage() {
         setAllData({
             propertyData: initialData,
             particulars: initialParticulars,
-            vatItems: initialVatItems,
-            otherDetails: initialOtherDetails,
-            specialConditions: initialSpecialConditions,
             attachments: initialAttachments,
-            parkings: initialParkings,
-            assignments: initialAssignments,
-            shareHolders: initialShareHolders,
-            notes: initialNotes,
-            agents: initialAgents,
         });
         setIsEditing(false);
      }
@@ -702,20 +401,6 @@ export default function PropertyPage() {
     }
   };
 
-
-  const handleGenerateReport = (reportConfig: ReportConfig) => {
-    const reportData = {
-      unitData: propertyData,
-      particulars,
-      customFields,
-      customFieldsData,
-      reportConfig,
-    };
-    const dataString = encodeURIComponent(JSON.stringify(reportData));
-    router.push(`/property/unit/report?data=${dataString}`);
-    setIsReportDialog(false);
-  };
-
   const handleFileSelect = (file: File | null) => {
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -743,17 +428,32 @@ export default function PropertyPage() {
 
 
   return (
-    <div className="container mx-auto p-4 bg-gray-50/50">
+    <div className="container mx-auto p-4 bg-background">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-primary font-headline">
           {pageTitle}
         </h1>
         <div className="flex items-center gap-2">
+            {!isEditing && (
+              <Button onClick={handleEditClick}>
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+            )}
+            {isEditing && (
+              <>
+                <Button onClick={handleSaveClick} disabled={isSaving}>
+                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button variant="ghost" onClick={handleCancelClick}>
+                  <X className="mr-2 h-4 w-4" /> Cancel
+                </Button>
+              </>
+            )}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
-                  variant="outline"
-                  className="hover:bg-destructive hover:text-destructive-foreground"
+                  variant="destructive"
                   disabled={isNewRecord || isEditing}
                 >
                   <Trash2 className="mr-2 h-4 w-4" /> Delete
@@ -778,903 +478,264 @@ export default function PropertyPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-           <Button variant="outline" className="hover:bg-accent" onClick={handleCloseClick}>
+            <Button variant="outline" onClick={handleCloseClick}>
                 <X className="mr-2 h-4 w-4" /> Close
-           </Button>
-           <Button variant="outline" className="hover:bg-accent" disabled={!isEditing} onClick={handleSaveClick}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-             {isSaving ? 'Saving...' : 'Save'}
-           </Button>
-           <Dialog open={isReportDialog} onOpenChange={setIsReportDialog}>
-            <DialogTrigger asChild>
-                <Button variant="outline" className="hover:bg-accent" disabled={isEditing}>
-                    <FileText className="mr-2 h-4 w-4" /> Report
-                </Button>
-            </DialogTrigger>
-            <ReportCustomizerDialog
-              unitDataFields={Object.keys(propertyData)}
-              particularsFields={Object.keys(particulars[0] || {})}
-              customFields={customFields}
-              onGenerateReport={handleGenerateReport}
-            />
-          </Dialog>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="hover:bg-accent">
-                <Settings className="mr-2 h-4 w-4" /> Customize
-              </Button>
-            </DialogTrigger>
-            <CustomizeDialog
-              visibleSections={visibleSections}
-              onVisibilityChange={setVisibleSections}
-              customFields={customFields}
-              onCustomFieldsChange={setCustomFields}
-            />
-          </Dialog>
+            </Button>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Column 1 */}
-                <div className="space-y-4">
-                  <div className="flex items-end gap-2">
-                    <div className="flex-grow">
-                        <Label htmlFor="code">Code</Label>
-                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
+        <Card className='mb-6'>
+            <CardHeader>
+                <CardTitle>Property Information</CardTitle>
+                <CardDescription>Basic details of the property.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="flex items-end gap-2">
+                        <div className="flex-grow">
+                            <Label htmlFor="code">Code</Label>
+                            <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
+                        </div>
+                        <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
+                            {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                        </Button>
                     </div>
-                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
-                        {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <div>
-                    <Label htmlFor="bond-type">Bond Type</Label>
-                    <Input id="bond-type" value={propertyData.bondType} onChange={(e) => handleInputChange('bondType', e.target.value)} disabled={!isEditing} />
-                  </div>
-                   <div>
-                    <Label htmlFor="plot-area">Plot Area</Label>
-                    <Input id="plot-area" type="number" value={propertyData.plotArea} onChange={(e) => handleInputChange('plotArea', e.target.value)} disabled={!isEditing} />
-                  </div>
-                  <div>
-                    <Label htmlFor="no-of-units">No of Units</Label>
-                    <Input id="no-of-units" type="number" value={propertyData.noOfUnits} onChange={(e) => handleInputChange('noOfUnits', e.target.value)} disabled={!isEditing} />
-                  </div>
-                  <div>
-                    <Label htmlFor="address2">Address2</Label>
-                    <Input id="address2" value={propertyData.address2} onChange={(e) => handleInputChange('address2', e.target.value)} disabled={!isEditing} />
-                  </div>
-                  <div>
-                    <Label htmlFor="property-position">Property Position</Label>
-                    <Select value={propertyData.propertyPosition} onValueChange={(value) => handleInputChange('propertyPosition', value)} disabled={!isEditing}>
-                      <SelectTrigger id="property-position">
-                        <SelectValue placeholder="Select Position" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pos-1">Position 1</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="location">Location</Label>
-                     <Select value={propertyData.location} onValueChange={(value) => handleInputChange('location', value)} disabled={!isEditing}>
-                      <SelectTrigger id="location">
-                        <SelectValue placeholder="Select Location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Location">Location</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Column 2 */}
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" value={propertyData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
-                  </div>
-                  <div>
-                    <Label htmlFor="landlord">LandLord</Label>
-                    <Select value={propertyData.landlord} onValueChange={(value) => handleInputChange('landlord', value)} disabled={!isEditing}>
-                      <SelectTrigger id="landlord">
-                        <SelectValue placeholder="Select Landlord" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Landlord">Landlord</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="built-up-area">Built Up Area</Label>
-                    <Input id="built-up-area" type="number" value={propertyData.builtUpArea} onChange={(e) => handleInputChange('builtUpArea', e.target.value)} disabled={!isEditing} />
-                  </div>
-                  <div>
-                    <Label htmlFor="no-of-parkings">No of Parkings</Label>
-                    <Input id="no-of-parkings" type="number" value={propertyData.noOfParkings} onChange={(e) => handleInputChange('noOfParkings', e.target.value)} disabled={!isEditing} />
-                  </div>
-                   <div>
-                    <Label htmlFor="emirates">Emirates</Label>
-                    <Input id="emirates" value={propertyData.emirates} onChange={(e) => handleInputChange('emirates', e.target.value)} disabled={!isEditing} />
-                  </div>
-                   <div>
-                    <Label htmlFor="accountant">Accountant</Label>
-                     <Select value={propertyData.accountant} onValueChange={(value) => handleInputChange('accountant', value)} disabled={!isEditing}>
-                      <SelectTrigger id="accountant">
-                        <SelectValue placeholder="Select Accountant" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Accountant">Accountant</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                   <div>
-                    <Label htmlFor="tower-type">Tower Type</Label>
-                     <Select value={propertyData.towerType} onValueChange={(value) => handleInputChange('towerType', value)} disabled={!isEditing}>
-                      <SelectTrigger id="tower-type">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Rent">Rent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Column 3 */}
-                <div className="space-y-4">
+                    <div>
+                        <Label htmlFor="name">Name</Label>
+                        <Input id="name" value={propertyData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
+                    </div>
                     <div>
                         <Label htmlFor="property-type">Property Type</Label>
                         <Input id="property-type" value={propertyData.propertyType} onChange={(e) => handleInputChange('propertyType', e.target.value)} disabled={!isEditing} />
                     </div>
-                    <div>
-                        <Label htmlFor="status">Status</Label>
-                        <Select value={propertyData.status} onValueChange={(value) => handleInputChange('status', value)} disabled={!isEditing}>
-                            <SelectTrigger id="status"><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="Active">Active</SelectItem></SelectContent>
-                        </Select>
+                     <div>
+                        <Label htmlFor="noOfUnits">No of Units</Label>
+                        <Input id="noOfUnits" type="number" value={propertyData.noOfUnits} onChange={(e) => handleInputChange('noOfUnits', e.target.value)} disabled={!isEditing} />
                     </div>
-                    <div>
-                        <Label htmlFor="no-of-floors">No of Floors</Label>
-                        <Input id="no-of-floors" type="number" value={propertyData.noOfFloors} onChange={(e) => handleInputChange('noOfFloors', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                        <Label htmlFor="address1">Address1</Label>
-                        <Input id="address1" value={propertyData.address1} onChange={(e) => handleInputChange('address1', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                        <Label htmlFor="country1">Country1</Label>
-                        <Input id="country1" value={propertyData.country1} onChange={(e) => handleInputChange('country1', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                        <Label htmlFor="sales-man">Sales Man</Label>
-                        <Select value={propertyData.salesMan} onValueChange={(value) => handleInputChange('salesMan', value)} disabled={!isEditing}>
-                        <SelectTrigger id="sales-man">
-                            <SelectValue placeholder="Select Sales Man" />
+                     <div>
+                        <Label htmlFor="landlord">LandLord</Label>
+                        <Select value={propertyData.landlord} onValueChange={(value) => handleInputChange('landlord', value)} disabled={!isEditing}>
+                        <SelectTrigger id="landlord">
+                            <SelectValue placeholder="Select Landlord" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="SalesMan">SalesMan</SelectItem>
+                            <SelectItem value="Landlord">Landlord</SelectItem>
                         </SelectContent>
                         </Select>
                     </div>
-                    <div>
-                        <Label htmlFor="gps">GPS</Label>
-                        <Input id="gps" value={propertyData.gps} onChange={(e) => handleInputChange('gps', e.target.value)} disabled={!isEditing} />
+                    <div className="md:col-span-2">
+                        <Label htmlFor="address1">Address</Label>
+                        <Input id="address1" value={propertyData.address1} onChange={(e) => handleInputChange('address1', e.target.value)} disabled={!isEditing} />
                     </div>
-                </div>
-              </div>
-              <Separator className="my-6" />
-              <Tabs defaultValue="particulars" className="w-full">
-                <TabsList>
-                  <TabsTrigger value="particulars">Particulars</TabsTrigger>
-                  <TabsTrigger value="receivables">Receivables</TabsTrigger>
-                  <TabsTrigger value="vat">Vat</TabsTrigger>
-                  <TabsTrigger value="property-other-details">Property Other Details</TabsTrigger>
-                  <TabsTrigger value="special-conditions">Special Conditions</TabsTrigger>
-                  <TabsTrigger value="attachments">Attachments</TabsTrigger>
-                  <TabsTrigger value="parkings">Parkings</TabsTrigger>
-                  <TabsTrigger value="assign">Assign</TabsTrigger>
-                  <TabsTrigger value="share-holder">Share Holder</TabsTrigger>
-                  <TabsTrigger value="notes">Notes</TabsTrigger>
-                  <TabsTrigger value="agent">Agent</TabsTrigger>
-                </TabsList>
-                <TabsContent value="particulars">
-                  <div className="p-4 border rounded-md mt-2">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[50px]">Sno.</TableHead>
-                          <TableHead>Particulars</TableHead>
-                          <TableHead>Credit A/C</TableHead>
-                          <TableHead>Debit A/C</TableHead>
-                          <TableHead>Advance A/c</TableHead>
-                          <TableHead>Refund</TableHead>
-                          <TableHead className="text-right">%</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                          <TableHead className="text-right">Amount(Months)</TableHead>
-                          <TableHead className="text-right">VAT(%)</TableHead>
-                          <TableHead>TaxCategory</TableHead>
-                          <TableHead>Action</TableHead>
+                 </div>
+            </CardContent>
+        </Card>
+
+      <Tabs defaultValue="units">
+        <TabsList>
+            <TabsTrigger value="particulars">Particulars</TabsTrigger>
+            <TabsTrigger value="units">Units</TabsTrigger>
+            <TabsTrigger value="floors">Floors</TabsTrigger>
+            <TabsTrigger value="rooms">Rooms</TabsTrigger>
+            <TabsTrigger value="partitions">Partitions</TabsTrigger>
+            <TabsTrigger value="attachments">Attachments</TabsTrigger>
+        </TabsList>
+        <TabsContent value="particulars">
+          <Card>
+            <CardHeader>
+                <CardTitle>Financial Particulars</CardTitle>
+                <CardDescription>Manage financial details and accounts related to the property.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[50px]">Sno.</TableHead>
+                        <TableHead>Particulars</TableHead>
+                        <TableHead>Credit A/C</TableHead>
+                        <TableHead>Debit A/C</TableHead>
+                        <TableHead>Refund</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Action</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {particulars.map((p, index) => (
+                        <TableRow key={p.id}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell><Input value={p.particulars} onChange={e => handleParticularChange(p.id, 'particulars', e.target.value)} disabled={!isEditing}/></TableCell>
+                        <TableCell><Input value={p.creditAc} onChange={e => handleParticularChange(p.id, 'creditAc', e.target.value)} disabled={!isEditing}/></TableCell>
+                        <TableCell><Input value={p.debitAc} onChange={e => handleParticularChange(p.id, 'debitAc', e.target.value)} disabled={!isEditing}/></TableCell>
+                        <TableCell>
+                            <Select value={p.refund} onValueChange={(value: 'Yes' | 'No') => handleParticularChange(p.id, 'refund', value)} disabled={!isEditing}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
+                            </Select>
+                        </TableCell>
+                        <TableCell><Input type="number" className="text-right" value={p.amount} onChange={e => handleParticularChange(p.id, 'amount', e.target.value)} disabled={!isEditing}/></TableCell>
+                        <TableCell>
+                            <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeParticularRow(p.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {particulars.map((p, index) => (
-                          <TableRow key={p.id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell><Input value={p.particulars} onChange={e => handleParticularChange(p.id, 'particulars', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell><Input value={p.creditAc} onChange={e => handleParticularChange(p.id, 'creditAc', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell><Input value={p.debitAc} onChange={e => handleParticularChange(p.id, 'debitAc', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell><Input value={p.advanceAc} onChange={e => handleParticularChange(p.id, 'advanceAc', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell>
-                                <Select value={p.refund} onValueChange={(value: 'Yes' | 'No') => handleParticularChange(p.id, 'refund', value)} disabled={!isEditing}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent><SelectItem value="Yes">Yes</SelectItem><SelectItem value="No">No</SelectItem></SelectContent>
-                                </Select>
-                            </TableCell>
-                            <TableCell><Input type="number" className="text-right" value={p.percentage} onChange={e => handleParticularChange(p.id, 'percentage', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell><Input type="number" className="text-right" value={p.amount} onChange={e => handleParticularChange(p.id, 'amount', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell><Input type="number" className="text-right" value={p.amountMonths} onChange={e => handleParticularChange(p.id, 'amountMonths', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell><Input type="number" className="text-right" value={p.vatPercentage} onChange={e => handleParticularChange(p.id, 'vatPercentage', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell><Input value={p.taxCategory} onChange={e => handleParticularChange(p.id, 'taxCategory', e.target.value)} disabled={!isEditing}/></TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeParticularRow(p.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addParticularRow} disabled={!isEditing}>
-                      <Plus className="mr-2 h-4 w-4"/> Add
-                    </Button>
-                  </div>
-                 </TabsContent>
-                 <TabsContent value="receivables">
-                  <div className="p-4 border rounded-md mt-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Receivable A/c</Label>
-                          <Select disabled={!isEditing} defaultValue="receivable-ac">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="receivable-ac">Receivable A/c</SelectItem></SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Bank A/c</Label>
-                          <Select disabled={!isEditing} defaultValue="bank-ac">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="bank-ac">Bank A/c</SelectItem></SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Penalty A/c</Label>
-                          <Select disabled={!isEditing} defaultValue="penalty-ac">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="penalty-ac">Penalty A/c</SelectItem></SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                         <div>
-                          <Label>Income A/c</Label>
-                          <Select disabled={!isEditing} defaultValue="income-ac">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="income-ac">Income A/c</SelectItem></SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Advance A/c</Label>
-                          <Select disabled={!isEditing} defaultValue="advance-ac">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="advance-ac">Advance A/c</SelectItem></SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                       <div className="space-y-4">
-                         <div>
-                          <Label>Discount A/c</Label>
-                          <Select disabled={!isEditing} defaultValue="discount-ac">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="discount-ac">Discount A/c</SelectItem></SelectContent>
-                          </Select>
-                        </div>
-                         <div>
-                          <Label>Deposit A/c</Label>
-                          <Select disabled={!isEditing} defaultValue="deposit-ac">
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="deposit-ac">Deposit A/c</SelectItem></SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                 </TabsContent>
-                 <TabsContent value="vat">
-                  <div className="p-4 border rounded-md mt-2">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Account Description</TableHead>
-                          <TableHead>Vat Group</TableHead>
-                          <TableHead>Vat Code</TableHead>
-                          <TableHead>Vat Description</TableHead>
-                          <TableHead className="text-right">Vat %</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {vatItems.map(item => (
-                          <TableRow key={item.id}>
-                            <TableCell>
-                              <Select value={item.accountDescription} onValueChange={(value) => handleVatChange(item.id, 'accountDescription', value)} disabled={!isEditing}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select Account"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="rental-income">Rental Income</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Select value={item.vatGroup} onValueChange={(value) => handleVatChange(item.id, 'vatGroup', value)} disabled={!isEditing}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select VAT Group"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="vat-group">VAT Group</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Input value={item.vatCode} onChange={(e) => handleVatChange(item.id, 'vatCode', e.target.value)} placeholder="e.g. V5" disabled={!isEditing} />
-                            </TableCell>
-                            <TableCell>
-                              <Input value={item.vatDescription} onChange={(e) => handleVatChange(item.id, 'vatDescription', e.target.value)} placeholder="e.g. Vat 5%" disabled={!isEditing} />
-                            </TableCell>
-                            <TableCell>
-                              <Input value={item.vatPercentage} onChange={(e) => handleVatChange(item.id, 'vatPercentage', e.target.value)} type="number" placeholder="0" className="text-right" disabled={!isEditing} />
-                            </TableCell>
-                             <TableCell>
-                              <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeVatRow(item.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                     <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addVatRow} disabled={!isEditing}>
-                      <Plus className="mr-2 h-4 w-4"/> Add
-                    </Button>
-                  </div>
-                 </TabsContent>
-                 <TabsContent value="property-other-details">
-                    <div className="p-4 border rounded-md mt-2">
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Unit No</TableHead>
-                                        <TableHead>Area(SQFT)</TableHead>
-                                        <TableHead>Landlord</TableHead>
-                                        <TableHead>Building</TableHead>
-                                        <TableHead>Location</TableHead>
-                                        <TableHead>Sub Location</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Remarks</TableHead>
-                                        <TableHead>Action</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {otherDetails.map(item => (
-                                        <TableRow key={item.id}>
-                                            <TableCell><Input value={item.unitNo} onChange={(e) => handleOtherDetailChange(item.id, 'unitNo', e.target.value)} disabled={!isEditing} /></TableCell>
-                                            <TableCell><Input value={item.areaSqft} onChange={(e) => handleOtherDetailChange(item.id, 'areaSqft', e.target.value)} disabled={!isEditing} /></TableCell>
-                                            <TableCell><Input value={item.landlord} onChange={(e) => handleOtherDetailChange(item.id, 'landlord', e.target.value)} disabled={!isEditing} /></TableCell>
-                                            <TableCell><Input value={item.building} onChange={(e) => handleOtherDetailChange(item.id, 'building', e.target.value)} disabled={!isEditing} /></TableCell>
-                                            <TableCell><Input value={item.location} onChange={(e) => handleOtherDetailChange(item.id, 'location', e.target.value)} disabled={!isEditing} /></TableCell>
-                                            <TableCell><Input value={item.subLocation} onChange={(e) => handleOtherDetailChange(item.id, 'subLocation', e.target.value)} disabled={!isEditing} /></TableCell>
-                                            <TableCell>
-                                                <Select value={item.status} onValueChange={(value) => handleOtherDetailChange(item.id, 'status', value)} disabled={!isEditing}>
-                                                    <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="available">Available</SelectItem>
-                                                        <SelectItem value="occupied">Occupied</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </TableCell>
-                                            <TableCell><Input value={item.remarks} onChange={(e) => handleOtherDetailChange(item.id, 'remarks', e.target.value)} disabled={!isEditing} /></TableCell>
-                                            <TableCell>
-                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeOtherDetailRow(item.id)} disabled={!isEditing}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addOtherDetailRow} disabled={!isEditing}>
-                            <Plus className="mr-2 h-4 w-4" /> Add
-                        </Button>
-                    </div>
-                </TabsContent>
-                <TabsContent value="special-conditions">
-                    <div className="p-4 border rounded-md mt-2">
-                        <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[50px]">Sno.</TableHead>
-                                <TableHead>Condition</TableHead>
-                                <TableHead>Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {specialConditions.map((item, index) => (
-                                <TableRow key={item.id}>
-                                    <TableCell>{index + 1}</TableCell>
-                                    <TableCell>
-                                        <Textarea
-                                            value={item.condition}
-                                            onChange={(e) => handleSpecialConditionChange(item.id, e.target.value)}
-                                            disabled={!isEditing}
-                                            placeholder="Enter special condition..."
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeSpecialConditionRow(item.id)} disabled={!isEditing}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                        </Table>
-                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addSpecialConditionRow} disabled={!isEditing}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Condition
-                        </Button>
-                    </div>
-                </TabsContent>
-                <TabsContent value="attachments">
-                    <div className="p-4 border rounded-md mt-2">
-                      <div className="flex items-center gap-4 mb-4">
-                        <Button variant="outline" size="sm" className="hover:bg-accent" disabled={!isEditing} onClick={addAttachmentRow}>
-                            <Plus className="mr-2 h-4 w-4" /> Add New
-                        </Button>
-                      </div>
-                       <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Attachment Name</TableHead>
-                            <TableHead>File / Link</TableHead>
-                            <TableHead>Remarks</TableHead>
-                            <TableHead>Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {attachments.map((item, index) => (
-                                <TableRow key={item.id}>
-                                    <TableCell>
-                                        <Input 
-                                            value={item.name} 
-                                            onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
-                                            disabled={!isEditing} 
-                                            placeholder="e.g. Tenancy Contract"
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            {item.isLink ? (
-                                                <Input
-                                                    type="text"
-                                                    placeholder="https://example.com"
-                                                    value={typeof item.file === 'string' ? item.file : ''}
-                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
-                                                    disabled={!isEditing}
-                                                />
-                                            ) : (
-                                                <Input 
-                                                    type="file" 
-                                                    className="text-sm w-full" 
-                                                     ref={(el) => (fileInputRefs.current[index] = el)}
-                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                                    disabled={!isEditing}
-                                                />
-                                            )}
-                                             <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
-                                                {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                                            </Button>
-                                        </div>
-                                         {item.url && !item.isLink && (
-                                            <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                View Uploaded File
-                                            </Link>
-                                        )}
-                                        {item.file && typeof item.file === 'string' && (
-                                            item.isLink && item.file.startsWith('http') ? (
-                                                <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                    Open Link
-                                                </Link>
-                                            ) : (
-                                                !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                            )
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Input 
-                                            value={item.remarks} 
-                                            onChange={(e) => handleAttachmentChange(item.id, 'remarks', e.target.value)} 
-                                            disabled={!isEditing} 
-                                            placeholder="Add remarks..."
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                    <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                 </TabsContent>
-                 <TabsContent value="parkings">
-                    <div className="p-4 border rounded-md mt-2">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Parking No</TableHead>
-                                    <TableHead>Parking Type</TableHead>
-                                    <TableHead>Remarks</TableHead>
-                                    <TableHead>Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {parkings.map(item => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <Input 
-                                                value={item.parkingNo}
-                                                onChange={e => handleParkingChange(item.id, 'parkingNo', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="e.g. A-101"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Select value={item.parkingType} onValueChange={value => handleParkingChange(item.id, 'parkingType', value)} disabled={!isEditing}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Covered">Covered</SelectItem>
-                                                    <SelectItem value="Uncovered">Uncovered</SelectItem>
-                                                    <SelectItem value="Basement">Basement</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                value={item.remarks}
-                                                onChange={e => handleParkingChange(item.id, 'remarks', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Add remarks..."
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeParkingRow(item.id)} disabled={!isEditing}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addParkingRow} disabled={!isEditing}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Parking
-                        </Button>
-                    </div>
-                </TabsContent>
-                 <TabsContent value="assign">
-                    <div className="p-4 border rounded-md mt-2">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>User</TableHead>
-                                    <TableHead>Role</TableHead>
-                                    <TableHead>Remarks</TableHead>
-                                    <TableHead>Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {assignments.map(item => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <Input 
-                                                value={item.user}
-                                                onChange={e => handleAssignmentChange(item.id, 'user', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="e.g. John Doe"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Select value={item.role} onValueChange={value => handleAssignmentChange(item.id, 'role', value)} disabled={!isEditing}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Administrator">Administrator</SelectItem>
-                                                    <SelectItem value="Manager">Manager</SelectItem>
-                                                    <SelectItem value="Viewer">Viewer</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                value={item.remarks}
-                                                onChange={e => handleAssignmentChange(item.id, 'remarks', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Add remarks..."
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeAssignmentRow(item.id)} disabled={!isEditing}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addAssignmentRow} disabled={!isEditing}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Assignment
-                        </Button>
-                    </div>
-                 </TabsContent>
-                 <TabsContent value="share-holder">
-                    <div className="p-4 border rounded-md mt-2">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Share Holder Name</TableHead>
-                                    <TableHead className="text-right">Percentage (%)</TableHead>
-                                    <TableHead>Remarks</TableHead>
-                                    <TableHead>Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {shareHolders.map(item => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <Input 
-                                                value={item.name}
-                                                onChange={e => handleShareHolderChange(item.id, 'name', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="e.g. Jane Smith"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                type="number"
-                                                value={item.percentage}
-                                                onChange={e => handleShareHolderChange(item.id, 'percentage', parseFloat(e.target.value) || 0)}
-                                                disabled={!isEditing}
-                                                placeholder="0"
-                                                className="text-right"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                value={item.remarks}
-                                                onChange={e => handleShareHolderChange(item.id, 'remarks', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Add remarks..."
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeShareHolderRow(item.id)} disabled={!isEditing}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addShareHolderRow} disabled={!isEditing}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Share Holder
-                        </Button>
-                    </div>
-                 </TabsContent>
-                 <TabsContent value="notes">
-                   <div className="p-4 border rounded-md mt-2 space-y-4">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[50px]">Sno.</TableHead>
-                                    <TableHead>Note</TableHead>
-                                    <TableHead>Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {notes.map((item, index) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>{index + 1}</TableCell>
-                                        <TableCell>
-                                            <Textarea
-                                                value={item.content}
-                                                onChange={(e) => handleNoteChange(item.id, e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Enter note..."
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeNoteRow(item.id)} disabled={!isEditing}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        <Button variant="outline" size="sm" className="hover:bg-accent" onClick={addNoteRow} disabled={!isEditing}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Note
-                        </Button>
-                    </div>
-                 </TabsContent>
-                 <TabsContent value="agent">
-                    <div className="p-4 border rounded-md mt-2">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Agent Name</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead className="text-right">Amount</TableHead>
-                                    <TableHead>Remarks</TableHead>
-                                    <TableHead>Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {agents.map(item => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <Input 
-                                                value={item.name}
-                                                onChange={e => handleAgentChange(item.id, 'name', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="e.g. Prime Properties"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Select value={item.type} onValueChange={value => handleAgentChange(item.id, 'type', value)} disabled={!isEditing}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Sales">Sales</SelectItem>
-                                                    <SelectItem value="Leasing">Leasing</SelectItem>
-                                                    <SelectItem value="Maintenance">Maintenance</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                type="number"
-                                                value={item.amount}
-                                                onChange={e => handleAgentChange(item.id, 'amount', parseFloat(e.target.value) || 0)}
-                                                disabled={!isEditing}
-                                                placeholder="0.00"
-                                                className="text-right"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                value={item.remarks}
-                                                onChange={e => handleAgentChange(item.id, 'remarks', e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Add remarks..."
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeAgentRow(item.id)} disabled={!isEditing}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addAgentRow} disabled={!isEditing}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Agent
-                        </Button>
-                    </div>
-                 </TabsContent>
-              </Tabs>
+                    ))}
+                    </TableBody>
+                </Table>
+                <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addParticularRow} disabled={!isEditing}>
+                    <Plus className="mr-2 h-4 w-4"/> Add
+                </Button>
             </CardContent>
           </Card>
-        </div>
-        <div className="lg:col-span-1 space-y-6">
+        </TabsContent>
+        <TabsContent value="units">
+           <Card>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Units</CardTitle>
+                        <CardDescription>Manage all units within this property.</CardDescription>
+                    </div>
+                    <Button asChild>
+                        <Link href={`/property/unit?propertyCode=${propertyData.code}`}><Plus className="mr-2 h-4 w-4"/>Add Unit</Link>
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                {/* Placeholder for unit data table */}
+                <div className="border rounded-md p-10 text-center text-muted-foreground">
+                    <p>Unit data table will be displayed here.</p>
+                </div>
+            </CardContent>
+           </Card>
+        </TabsContent>
+         <TabsContent value="floors">
+           <Card>
+            <CardHeader>
+                 <CardTitle>Floors</CardTitle>
+                 <CardDescription>Manage floors for this property.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="border rounded-md p-10 text-center text-muted-foreground">
+                    <p>Floor management functionality coming soon.</p>
+                </div>
+            </CardContent>
+           </Card>
+        </TabsContent>
+         <TabsContent value="rooms">
+           <Card>
+            <CardHeader>
+                 <CardTitle>Rooms</CardTitle>
+                 <CardDescription>Manage rooms within this property.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="border rounded-md p-10 text-center text-muted-foreground">
+                    <p>Room management functionality coming soon.</p>
+                </div>
+            </CardContent>
+           </Card>
+        </TabsContent>
+         <TabsContent value="partitions">
+           <Card>
+            <CardHeader>
+                 <CardTitle>Partitions</CardTitle>
+                 <CardDescription>Manage partitions for units in this property.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="border rounded-md p-10 text-center text-muted-foreground">
+                    <p>Partition management functionality coming soon.</p>
+                </div>
+            </CardContent>
+           </Card>
+        </TabsContent>
+        <TabsContent value="attachments">
             <Card>
-                <CardHeader><CardTitle className="font-headline">Photo</CardTitle></CardHeader>
+                <CardHeader>
+                    <CardTitle>Attachments</CardTitle>
+                    <CardDescription>Manage documents and links related to the property.</CardDescription>
+                </CardHeader>
                 <CardContent>
-                    <div 
-                        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 relative"
-                        onDrop={handleImageDrop}
-                        onDragOver={(e) => e.preventDefault()}
-                    >
-                        {uploadedImage ? (
-                        <Image src={uploadedImage} alt="Property preview" layout="fill" objectFit="contain" className="rounded-lg" />
-                        ) : (
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <Upload className="w-8 h-8 mb-4 text-gray-500" />
-                            <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">Drag a photo here</span>
-                            </p>
-                        </div>
-                        )}
-                        <Input 
-                        ref={fileInputRef}
-                        type="file" 
-                        className="hidden" 
-                        accept="image/*"
-                        onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
-                        disabled={!isEditing}
-                        />
-                    </div>
-                    <div className="flex justify-center mt-2 gap-2 text-sm">
-                        <Button variant="link" size="sm" disabled={!isEditing} onClick={() => fileInputRef.current?.click()}>
-                            Upload
-                        </Button>
-                        <Button variant="link" size="sm" className="text-destructive" disabled={!isEditing || !uploadedImage} onClick={() => setUploadedImage(null)}>
-                            Delete
-                        </Button>
-                        <Button variant="link" size="sm" disabled={!isEditing}>
-                            Pop-Up
-                        </Button>
-                    </div>
-                    <div className="mt-4 space-y-4">
-                        <div>
-                            <Label htmlFor="property-no">Property No</Label>
-                            <Input id="property-no" value={propertyData.propertyNo} onChange={(e) => handleInputChange('propertyNo', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                            <Label htmlFor="asset-manager">AssetManager</Label>
-                            <Select value={propertyData.assetManager} onValueChange={(value) => handleInputChange('assetManager', value)} disabled={!isEditing}>
-                            <SelectTrigger id="asset-manager">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Supervisor">Supervisor</SelectItem>
-                            </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
+                    <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Attachment Name</TableHead>
+                        <TableHead>File / Link</TableHead>
+                        <TableHead>Remarks</TableHead>
+                        <TableHead>Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {attachments.map((item, index) => (
+                            <TableRow key={item.id}>
+                                <TableCell>
+                                    <Input 
+                                        value={item.name} 
+                                        onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                        disabled={!isEditing} 
+                                        placeholder="e.g. Title Deed"
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        {item.isLink ? (
+                                            <Input
+                                                type="text"
+                                                placeholder="https://example.com"
+                                                value={typeof item.file === 'string' ? item.file : ''}
+                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                disabled={!isEditing}
+                                            />
+                                        ) : (
+                                            <Input 
+                                                type="file" 
+                                                className="text-sm w-full" 
+                                                    ref={(el) => (fileInputRefs.current[index] = el)}
+                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                disabled={!isEditing}
+                                            />
+                                        )}
+                                            <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                            {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                        </Button>
+                                    </div>
+                                        {item.url && !item.isLink && (
+                                        <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                            View Uploaded File
+                                        </Link>
+                                    )}
+                                    {item.file && typeof item.file === 'string' && (
+                                        item.isLink && item.file.startsWith('http') ? (
+                                            <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                Open Link
+                                            </Link>
+                                        ) : (
+                                            !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                        )
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <Input 
+                                        value={item.remarks} 
+                                        onChange={(e) => handleAttachmentChange(item.id, 'remarks', e.target.value)} 
+                                        disabled={!isEditing} 
+                                        placeholder="Add remarks..."
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                    </Table>
+                     <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addAttachmentRow} disabled={!isEditing}>
+                        <Plus className="mr-2 h-4 w-4"/> Add Attachment
+                    </Button>
                 </CardContent>
             </Card>
-            <Card>
-            <CardHeader>
-              <CardTitle className="font-headline">Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center h-48 gap-4">
-               {!isEditing && !isNewRecord && (
-                 <Button onClick={handleEditClick} className="w-full">
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                 </Button>
-                )}
-              {isEditing && (
-                <>
-                <Button onClick={handleSaveClick} disabled={isSaving} className="w-full">
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    {isSaving ? 'Saving...' : 'Save'}
-                </Button>
-                <Button variant="ghost" onClick={handleCancelClick} className="w-full">
-                    <X className="mr-2 h-4 w-4" /> Cancel
-                </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
-
-    
