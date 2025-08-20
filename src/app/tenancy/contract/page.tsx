@@ -107,46 +107,60 @@ export default function TenancyContractPage() {
   }
   
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
-    const updatedSchedule = [...contract.paymentSchedule];
-    
+    let updatedSchedule = [...contract.paymentSchedule];
+
     if (field === 'amount') {
         const newAmount = Number(value);
-        const oldAmount = updatedSchedule[index].amount;
-        const difference = oldAmount - newAmount;
 
-        // Set the new amount for the edited field
-        updatedSchedule[index].amount = newAmount;
-        
-        // Distribute the difference among the *other* installments
+        // 1. Set the manually changed amount for the edited row
+        updatedSchedule[index] = { ...updatedSchedule[index], amount: newAmount };
+
+        // 2. Calculate the remaining rent to be distributed
+        const rentAllocated = newAmount;
+        const rentRemaining = contract.totalRent - rentAllocated;
+
+        // 3. Identify the other installments that need to be adjusted
         const otherInstallments = updatedSchedule.filter((_, i) => i !== index);
-        if (otherInstallments.length > 0) {
-            const adjustment = difference / otherInstallments.length;
 
-            for (let i = 0; i < updatedSchedule.length; i++) {
+        if (otherInstallments.length > 0) {
+            // 4. Calculate the equal share for the other installments
+            const share = rentRemaining / otherInstallments.length;
+
+            // 5. Update the other installments
+            let tempTotal = rentAllocated;
+            updatedSchedule = updatedSchedule.map((item, i) => {
                 if (i !== index) {
-                    updatedSchedule[i].amount += adjustment;
+                    const newInstallmentAmount = parseFloat(share.toFixed(2));
+                    tempTotal += newInstallmentAmount;
+                    return { ...item, amount: newInstallmentAmount };
+                }
+                return item; // Keep the manually edited item as is
+            });
+
+            // 6. Adjust the last *other* installment to account for any rounding differences
+            const finalDifference = contract.totalRent - updatedSchedule.reduce((sum, item) => sum + item.amount, 0);
+            
+            if (finalDifference !== 0) {
+                 // Find the last installment that was NOT the one being edited
+                const lastOtherInstallmentIndex = updatedSchedule.findIndex((item, i) => i !== index && i === updatedSchedule.length - 1);
+                const firstOtherInstallmentIndex = updatedSchedule.findIndex((item, i) => i !== index);
+                
+                const indexToAdjust = lastOtherInstallmentIndex !== -1 ? lastOtherInstallmentIndex : firstOtherInstallmentIndex;
+                
+                if(indexToAdjust !== -1) {
+                    updatedSchedule[indexToAdjust].amount += finalDifference;
                 }
             }
-            
-            // To prevent floating point inaccuracies, calculate the sum and adjust the last *other* installment
-            const currentTotal = updatedSchedule.reduce((sum, item) => sum + item.amount, 0);
-            const finalDifference = contract.totalRent - currentTotal;
-            
-            // Find the last installment that was NOT the one being edited
-            const lastOtherInstallmentIndex = updatedSchedule.length - 1 === index ? updatedSchedule.length - 2 : updatedSchedule.length - 1;
-
-            if (lastOtherInstallmentIndex >= 0) {
-                updatedSchedule[lastOtherInstallmentIndex].amount += finalDifference;
-            }
         }
+        
     } else {
-      // @ts-ignore
-      updatedSchedule[index][field] = value;
+        // @ts-ignore
+        updatedSchedule[index][field] = value;
     }
 
+    setContract(prev => ({ ...prev, paymentSchedule: updatedSchedule }));
+}
 
-    setContract(prev => ({...prev, paymentSchedule: updatedSchedule}));
-  }
 
   const addInstallment = () => {
     setContract(prev => ({
