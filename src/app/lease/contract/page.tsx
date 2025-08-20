@@ -37,10 +37,12 @@ import { saveLeaseContractData, findLeaseContract, deleteLeaseContract, getLooku
 import { type LeaseContract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
+import { Combobox } from '@/components/ui/combobox';
 
 type LookupData = {
     landlords: {code: string, name: string}[];
     properties: {code: string, name: string}[];
+    tenancyContracts: { contractNo: string, tenantName: string }[];
 }
 
 const initialContractState: LeaseContract = {
@@ -73,7 +75,7 @@ export default function LeaseContractPage() {
   const [contract, setContract] = useState<LeaseContract>(initialContractState);
   const [initialContract, setInitialContract] = useState<LeaseContract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
-  const [lookups, setLookups] = useState<LookupData>({ landlords: [], properties: [] });
+  const [lookups, setLookups] = useState<LookupData>({ landlords: [], properties: [], tenancyContracts: [] });
 
 
   useEffect(() => {
@@ -369,8 +371,14 @@ export default function LeaseContractPage() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <Label htmlFor="contract-no">Contract No</Label>
-              <Input id="contract-no" placeholder="LC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={!isEditing}/>
+                <Label htmlFor="tenancyContractNo">Tenancy Contract No</Label>
+                 <Combobox
+                    options={lookups.tenancyContracts.map(c => ({ value: c.contractNo, label: `${c.contractNo} (${c.tenantName})` }))}
+                    value={contract.contractNo}
+                    onSelect={(value) => handleInputChange('contractNo', value)}
+                    placeholder="Select Tenancy Contract"
+                    disabled={!isEditing}
+                 />
             </div>
             <div>
               <Label htmlFor="contract-date">Date</Label>

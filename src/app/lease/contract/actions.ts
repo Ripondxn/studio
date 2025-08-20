@@ -6,8 +6,12 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { leaseContractSchema, type LeaseContract } from './schema';
+import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema';
+
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
+const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+
 
 async function readContracts(): Promise<LeaseContract[]> {
     try {
@@ -131,12 +135,23 @@ async function readProperties() {
     }
 }
 
-export async function getLookups() {
-    const landlords = await readLandlords();
-    const properties = await readProperties();
-    return {
-        landlords: landlords.map((l:any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
-        properties: properties.map((p:any) => ({ code: (p.propertyData || p).code, name: (p.propertyData || p).name }))
+async function readTenancyContracts(): Promise<TenancyContract[]> {
+    try {
+        const data = await fs.readFile(tenancyContractsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch(e) {
+        return [];
     }
 }
 
+export async function getLookups() {
+    const landlords = await readLandlords();
+    const properties = await readProperties();
+    const tenancyContracts = await readTenancyContracts();
+
+    return {
+        landlords: landlords.map((l:any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
+        properties: properties.map((p:any) => ({ code: (p.propertyData || p).code, name: (p.propertyData || p).name })),
+        tenancyContracts: tenancyContracts.map((c: any) => ({ contractNo: c.contractNo, tenantName: c.tenantName })),
+    }
+}

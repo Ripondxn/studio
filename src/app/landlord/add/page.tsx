@@ -29,7 +29,8 @@ import {
   Home,
   Eye,
   Building2 as BuildingIcon,
-  FileText
+  FileText,
+  DollarSign
 } from 'lucide-react';
 import {
   Table,
@@ -51,10 +52,10 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveLandlordData, findLandlordData, deleteLandlordData, getPropertiesForLandlord, getLeaseContractsForLandlord } from '../actions';
+import { saveLandlordData, findLandlordData, deleteLandlordData, getPropertiesForLandlord, getLeaseContractsForLandlord, getPaymentHistoryForLandlord } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Property } from '@/app/property/properties/list/schema';
-import { type LeaseContract } from '@/app/lease/contract/schema';
+import { type LeaseContract, type PaymentInstallment } from '@/app/lease/contract/schema';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
@@ -66,6 +67,8 @@ type Attachment = {
   remarks: string;
   isLink: boolean;
 };
+
+type PaymentHistoryItem = PaymentInstallment & { property: string, contractNo: string, tenantName: string };
 
 const initialLandlordData = {
     code: '',
@@ -98,6 +101,8 @@ export default function LandlordPage() {
   const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   const [leaseContracts, setLeaseContracts] = useState<LeaseContract[]>([]);
   const [isLoadingLeaseContracts, setIsLoadingLeaseContracts] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
+  const [isLoadingPaymentHistory, setIsLoadingPaymentHistory] = useState(false);
 
 
   useEffect(() => {
@@ -146,6 +151,17 @@ export default function LandlordPage() {
                 }
             })
             .finally(() => setIsLoadingLeaseContracts(false));
+
+        setIsLoadingPaymentHistory(true);
+        getPaymentHistoryForLandlord(landlordData.code)
+            .then(result => {
+                if (result.success && result.data) {
+                    setPaymentHistory(result.data);
+                } else {
+                    toast({ variant: 'destructive', title: 'Error', description: result.error || "Could not load payment history." });
+                }
+            })
+            .finally(() => setIsLoadingPaymentHistory(false));
     }
   }, [landlordData.code, isNewRecord, toast]);
 
@@ -620,12 +636,42 @@ export default function LandlordPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Payment History</CardTitle>
+                         <CardDescription>A consolidated view of all tenant payments from this landlord's properties.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                         <div className="text-center py-10 text-muted-foreground">
-                             <Home className="mx-auto h-12 w-12" />
-                             <p className="mt-4">Payment history feature coming soon.</p>
-                         </div>
+                         {isLoadingPaymentHistory ? (
+                             <div className="flex justify-center items-center h-40">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                         ) : paymentHistory.length > 0 ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Property</TableHead>
+                                        <TableHead>Tenant</TableHead>
+                                        <TableHead>Due Date</TableHead>
+                                        <TableHead className="text-right">Amount</TableHead>
+                                        <TableHead>Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paymentHistory.map((payment, index) => (
+                                        <TableRow key={`${payment.contractNo}-${payment.installment}`}>
+                                            <TableCell>{payment.property}</TableCell>
+                                            <TableCell>{payment.tenantName}</TableCell>
+                                            <TableCell>{format(new Date(payment.dueDate), 'PP')}</TableCell>
+                                            <TableCell className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payment.amount)}</TableCell>
+                                            <TableCell><Badge variant={payment.status === 'paid' ? 'default' : 'secondary'} className={payment.status === 'paid' ? 'bg-green-500/20 text-green-700' : ''}>{payment.status}</Badge></TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                         ) : (
+                            <div className="text-center py-10 text-muted-foreground">
+                                <DollarSign className="mx-auto h-12 w-12" />
+                                <p className="mt-4">No payment history found for this landlord.</p>
+                            </div>
+                         )}
                     </CardContent>
                 </Card>
             </TabsContent>

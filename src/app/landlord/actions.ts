@@ -8,6 +8,7 @@ import { revalidatePath } from 'next/cache';
 const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
+const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 
 
 async function readData(filePath: string) {
@@ -152,6 +153,35 @@ export async function getLeaseContractsForLandlord(landlordCode: string) {
         return { success: true, data: landlordContracts };
     } catch (error) {
         console.error('Failed to get lease contracts for landlord:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+export async function getPaymentHistoryForLandlord(landlordCode: string) {
+    try {
+        const leaseContracts = await getLeaseContractsForLandlord(landlordCode);
+        if (!leaseContracts.success || !leaseContracts.data) {
+            return { success: false, error: 'Could not retrieve lease contracts for payment history.' };
+        }
+
+        const tenancyContracts = await readData(tenancyContractsFilePath);
+        const tenantMap = new Map(tenancyContracts.map(c => [c.contractNo, c.tenantName]));
+        
+        const paymentHistory = leaseContracts.data.flatMap(contract => 
+            (contract.paymentSchedule || []).map(installment => ({
+                ...installment,
+                property: contract.property,
+                contractNo: contract.contractNo,
+                tenantName: tenantMap.get(contract.contractNo) || 'Unknown Tenant',
+            }))
+        );
+
+        // Sort by due date, most recent first
+        paymentHistory.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+        
+        return { success: true, data: paymentHistory };
+    } catch(error) {
+        console.error('Failed to get payment history for landlord:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }
