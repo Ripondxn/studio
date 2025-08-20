@@ -34,6 +34,7 @@ const breadcrumbNameMap: { [key: string]: string } = {
   tenants: 'Tenants',
   add: 'Add',
   lease: 'Lease',
+  communication: 'Communication',
   '': 'Dashboard', // For the root path
 };
 

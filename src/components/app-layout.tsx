@@ -33,6 +33,7 @@ import {
   Wrench,
   ChevronDown,
   UserSquare,
+  MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -105,7 +106,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     },
     { href: '#', label: 'Maintenance', icon: <Wrench /> },
     { href: '/reports', label: 'Reports', icon: <LineChart /> },
-    { href: '/admin/user-roles', label: 'Settings', icon: <Settings /> },
+    { 
+        label: 'Settings', 
+        icon: <Settings />,
+        subItems: [
+            { href: '/admin/user-roles', label: 'User Roles' },
+            { href: '/admin/communication', label: 'Communication' },
+        ]
+    },
   ]
 
   return (
@@ -126,6 +134,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             <DropdownMenu key={index}>
                                 <DropdownMenuTrigger asChild>
                                      <Button variant="ghost" className={cn("flex items-center gap-1 transition-colors hover:text-foreground data-[state=open]:text-foreground", isActive ? "text-foreground" : "text-muted-foreground")}>
+                                        {link.icon && React.cloneElement(link.icon, { className: 'h-4 w-4 mr-1' })}
                                         {link.label}
                                         <ChevronDown className="h-4 w-4" />
                                     </Button>
@@ -144,8 +153,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         <Link
                             key={link.href}
                             href={link.href!}
-                            className={cn("transition-colors hover:text-foreground", pathname === link.href ? "text-foreground" : "text-muted-foreground")}
+                            className={cn("transition-colors hover:text-foreground flex items-center gap-1", pathname === link.href ? "text-foreground" : "text-muted-foreground")}
                         >
+                            {link.icon && React.cloneElement(link.icon, { className: 'h-4 w-4' })}
                             {link.label}
                         </Link>
                     )
