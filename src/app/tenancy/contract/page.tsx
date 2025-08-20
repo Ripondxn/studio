@@ -69,6 +69,8 @@ export default function TenancyContractPage() {
 
   const [contract, setContract] = useState<Contract>(initialContractState);
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
+  const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
+
 
   useEffect(() => {
     const contractId = searchParams.get('id');
@@ -81,6 +83,7 @@ export default function TenancyContractPage() {
                     setInitialContract(result.data);
                     setIsNewRecord(false);
                     setIsEditing(false);
+                    setEditedInstallmentIndexes(new Set());
                 } else {
                     toast({ variant: 'destructive', title: 'Error', description: result.error || "Contract not found" });
                     router.push('/tenancy/contracts');
@@ -95,6 +98,7 @@ export default function TenancyContractPage() {
         setIsNewRecord(true);
         setIsEditing(true);
         setContract(initialContractState);
+        setEditedInstallmentIndexes(new Set());
     }
   }, [searchParams, router, toast]);
 
@@ -107,58 +111,58 @@ export default function TenancyContractPage() {
   }
   
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
-    let updatedSchedule = [...contract.paymentSchedule];
+    const currentSchedule = [...contract.paymentSchedule];
 
     if (field === 'amount') {
         const newAmount = Number(value);
+        
+        // Mark this index as manually edited
+        const newEditedIndexes = new Set(editedInstallmentIndexes).add(index);
+        setEditedInstallmentIndexes(newEditedIndexes);
 
-        // 1. Set the manually changed amount for the edited row
-        updatedSchedule[index] = { ...updatedSchedule[index], amount: newAmount };
+        // Update the value of the edited installment
+        currentSchedule[index] = { ...currentSchedule[index], amount: newAmount };
 
-        // 2. Calculate the remaining rent to be distributed
-        const rentAllocated = newAmount;
-        const rentRemaining = contract.totalRent - rentAllocated;
+        // Calculate totals based on the new state
+        const totalManuallySetAmount = currentSchedule
+            .filter((_, i) => newEditedIndexes.has(i))
+            .reduce((sum, item) => sum + item.amount, 0);
+        
+        const remainingRent = contract.totalRent - totalManuallySetAmount;
+        const uneditedInstallments = currentSchedule.filter((_, i) => !newEditedIndexes.has(i));
 
-        // 3. Identify the other installments that need to be adjusted
-        const otherInstallments = updatedSchedule.filter((_, i) => i !== index);
+        if (uneditedInstallments.length > 0) {
+            const share = remainingRent / uneditedInstallments.length;
 
-        if (otherInstallments.length > 0) {
-            // 4. Calculate the equal share for the other installments
-            const share = rentRemaining / otherInstallments.length;
-
-            // 5. Update the other installments
-            let tempTotal = rentAllocated;
-            updatedSchedule = updatedSchedule.map((item, i) => {
-                if (i !== index) {
-                    const newInstallmentAmount = parseFloat(share.toFixed(2));
-                    tempTotal += newInstallmentAmount;
-                    return { ...item, amount: newInstallmentAmount };
+            currentSchedule.forEach((item, i) => {
+                if (!newEditedIndexes.has(i)) {
+                    item.amount = parseFloat(share.toFixed(2));
                 }
-                return item; // Keep the manually edited item as is
             });
 
-            // 6. Adjust the last *other* installment to account for any rounding differences
-            const finalDifference = contract.totalRent - updatedSchedule.reduce((sum, item) => sum + item.amount, 0);
-            
+            // Adjust the very last unedited installment for any rounding differences
+            const totalRecalculated = currentSchedule.reduce((sum, item) => sum + item.amount, 0);
+            const finalDifference = contract.totalRent - totalRecalculated;
+
             if (finalDifference !== 0) {
-                 // Find the last installment that was NOT the one being edited
-                const lastOtherInstallmentIndex = updatedSchedule.findIndex((item, i) => i !== index && i === updatedSchedule.length - 1);
-                const firstOtherInstallmentIndex = updatedSchedule.findIndex((item, i) => i !== index);
-                
-                const indexToAdjust = lastOtherInstallmentIndex !== -1 ? lastOtherInstallmentIndex : firstOtherInstallmentIndex;
-                
-                if(indexToAdjust !== -1) {
-                    updatedSchedule[indexToAdjust].amount += finalDifference;
+                const lastUneditedIndex = currentSchedule.map((item,i) => ({...item, originalIndex: i}))
+                                                         .filter(item => !newEditedIndexes.has(item.originalIndex))
+                                                         .pop()?.originalIndex;
+
+                if (lastUneditedIndex !== undefined) {
+                    currentSchedule[lastUneditedIndex].amount += finalDifference;
                 }
             }
         }
-        
-    } else {
-        // @ts-ignore
-        updatedSchedule[index][field] = value;
-    }
 
-    setContract(prev => ({ ...prev, paymentSchedule: updatedSchedule }));
+        setContract(prev => ({ ...prev, paymentSchedule: currentSchedule }));
+
+    } else {
+        // For other fields like 'dueDate' or 'status'
+        // @ts-ignore
+        currentSchedule[index][field] = value;
+        setContract(prev => ({ ...prev, paymentSchedule: currentSchedule }));
+    }
 }
 
 
@@ -189,6 +193,9 @@ export default function TenancyContractPage() {
         return;
     }
     
+    // Reset manually edited fields when generating a new schedule
+    setEditedInstallmentIndexes(new Set());
+
     const installmentAmount = parseFloat((totalRent / numberOfPayments).toFixed(2));
     const newSchedule: PaymentInstallment[] = [];
     const contractStartDate = new Date(startDate);
