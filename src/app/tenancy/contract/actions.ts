@@ -246,9 +246,6 @@ export async function getUnitDetails(unitCode: string) {
     if (!unit) {
         return { success: false, error: 'Unit not found' };
     }
-
-    const allProperties = await readProperties();
-    const property = allProperties.find(p => (p.propertyData || p).code === unit.propertyCode);
     
     const allTenants = await readTenants();
     const tenant = allTenants.find((t: any) => t.tenantData.unitCode === unit.unitCode);
@@ -256,7 +253,6 @@ export async function getUnitDetails(unitCode: string) {
     return { 
         success: true, 
         data: {
-            property: property ? (property.propertyData || property).name : '',
             tenant: tenant ? tenant.tenantData : null,
             totalRent: unit.annualRent,
         }

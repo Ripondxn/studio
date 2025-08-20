@@ -149,9 +149,14 @@ export default function TenancyContractPage() {
   }
 
   const handlePropertySelect = async (propertyCode: string) => {
-      handleInputChange('property', propertyCode);
+      setContract(prev => ({
+        ...prev, 
+        property: propertyCode, 
+        unitCode: '', 
+        roomCode: '', 
+        partitionCode: ''
+      }));
       setLookups(prev => ({...prev, units: [], rooms: [], partitions: []}));
-      setContract(prev => ({...prev, unitCode: '', roomCode: '', partitionCode: ''}));
       if(propertyCode) {
           const units = await getUnitsForProperty(propertyCode);
           setLookups(prev => ({...prev, units}));
@@ -159,9 +164,9 @@ export default function TenancyContractPage() {
   }
   
   const handleUnitSelect = async (unitCode: string) => {
-    handleInputChange('unitCode', unitCode);
+    setContract(prev => ({ ...prev, unitCode, roomCode: '', partitionCode: '' }));
     setLookups(prev => ({...prev, rooms: [], partitions: []}));
-    setContract(prev => ({...prev, roomCode: '', partitionCode: ''}));
+    
     if (unitCode) {
         const rooms = await getRoomsForUnit(contract.property || '', unitCode);
         setLookups(prev => ({...prev, rooms}));
@@ -172,7 +177,6 @@ export default function TenancyContractPage() {
         if (result.success && result.data) {
             setContract(prev => ({
                 ...prev,
-                property: result.data.property,
                 totalRent: result.data.totalRent,
             }));
             
@@ -185,7 +189,7 @@ export default function TenancyContractPage() {
   }
 
   const handlePartitionSelect = async (partitionCode: string) => {
-    handleInputChange('partitionCode', partitionCode);
+    setContract(prev => ({...prev, partitionCode: partitionCode}));
      if (partitionCode) {
         const result = await getPartitionDetails(partitionCode);
         if (result.success && result.data) {
@@ -693,4 +697,3 @@ export default function TenancyContractPage() {
     </div>
   );
 }
-
