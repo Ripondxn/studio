@@ -164,7 +164,7 @@ const AttachmentsCell = ({ row }: { row: { original: Landlord } }) => {
                                    {att.isLink ? <LinkIcon className="h-5 w-5 text-primary"/> : <File className="h-5 w-5 text-primary"/>}
                                    <div className="flex flex-col">
                                      <span className="font-medium">{att.name}</span>
-                                     <span className="text-xs text-muted-foreground">{att.remarks}</span>
+                                     <span className="text-xs text-muted-foreground">{att.remarks || (att.isLink ? 'Link' : 'File')}</span>
                                    </div>
                                </div>
                                 {att.isLink && typeof att.file === 'string' ? (
@@ -172,7 +172,7 @@ const AttachmentsCell = ({ row }: { row: { original: Landlord } }) => {
                                         <a href={att.file} target="_blank" rel="noopener noreferrer">View Link</a>
                                     </Button>
                                 ) : (
-                                    <span className="text-sm text-muted-foreground italic">File</span>
+                                    <span className="text-sm text-muted-foreground italic">{att.file}</span>
                                 )}
                            </li>
                        ))}

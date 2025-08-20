@@ -10,36 +10,30 @@ import { propertySchema } from './schema';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
-const propertiesListSchema = z.array(z.object({
-  propertyData: propertySchema,
-}).transform(item => item.propertyData));
+const propertiesListSchema = z.array(propertySchema);
 
-
-// Simulate a database call to get properties data
 async function getProperties() {
   const data = await fs.readFile(
     path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json')
   );
   const properties = JSON.parse(data.toString());
 
-  // Normalize data to handle both flat and nested structures
   const normalizedProperties = properties.map((p: any) => {
     if (p.propertyData) {
-      // If it's already in the nested format, ensure the nested object has an ID.
-      // If the root has an ID, pass it down.
-      if (!p.propertyData.id && p.id) {
-        p.propertyData.id = p.id;
-      }
-      return p;
+      return {
+        ...p.propertyData,
+        id: p.id || p.propertyData.id,
+        attachments: p.attachments || [],
+      };
     } else {
-      // If it's a flat structure, convert it to the nested structure.
-      return { propertyData: p };
+      return {
+        ...p,
+        attachments: p.attachments || [],
+      };
     }
   });
 
-  // We need to make sure every item in the array has the propertyData field before transforming
-  const safeProperties = normalizedProperties.filter((p: any) => p && p.propertyData);
-  return propertiesListSchema.parse(safeProperties);
+  return propertiesListSchema.parse(normalizedProperties);
 }
 
 

@@ -1,3 +1,4 @@
+
 [
     {
         "id": "PROP-001",
@@ -5,7 +6,8 @@
         "name": "Meras Tower",
         "propertyType": "Residential Tower",
         "status": "Active",
-        "noOfUnits": "150"
+        "noOfUnits": "150",
+        "attachments": []
     },
     {
         "id": "PROP-002",
@@ -13,7 +15,8 @@
         "name": "Sama Tower",
         "propertyType": "Commercial Tower",
         "status": "Active",
-        "noOfUnits": "80"
+        "noOfUnits": "80",
+        "attachments": []
     },
     {
         "id": "PROP-003",
@@ -21,7 +24,8 @@
         "name": "Green Villas",
         "propertyType": "Villa Compound",
         "status": "Active",
-        "noOfUnits": "50"
+        "noOfUnits": "50",
+        "attachments": []
     },
     {
         "id": "PROP-004",
@@ -29,6 +33,7 @@
         "name": "Oasis Building",
         "propertyType": "Residential Building",
         "status": "Under Maintenance",
-        "noOfUnits": "40"
+        "noOfUnits": "40",
+        "attachments": []
     }
 ]
