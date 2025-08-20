@@ -137,7 +137,7 @@ const RemainingDaysCell = ({ row }: { row: { original: Contract } }) => {
             } else if (days <= 30) {
                  setRemaining({ 
                     text: days === 0 ? 'Expires today' : `${days} days`,
-                    className: 'text-amber-600'
+                    className: 'text-emerald-600'
                 });
             } else {
                  setRemaining({ 
