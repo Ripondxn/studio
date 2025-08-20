@@ -657,9 +657,13 @@ export default function PropertyPage() {
       } else {
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: result.error || `No record found for Property Code: ${codeToFind}`,
+          title: 'Not Found',
+          description: `No record found for Property Code: ${codeToFind}. You can create a new one.`,
         });
+        const newProperty = { ...initialPropertyData, code: codeToFind };
+        setAllData({ propertyData: newProperty });
+        setIsNewRecord(true);
+        setIsEditing(true);
       }
     } catch (error) {
       toast({
@@ -818,9 +822,9 @@ export default function PropertyPage() {
                   <div className="flex items-end gap-2">
                     <div className="flex-grow">
                         <Label htmlFor="code">Code</Label>
-                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord && !isEditing} />
+                        <Input id="code" value={propertyData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
                     </div>
-                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding}>
+                    <Button variant="outline" size="icon" className="hover:bg-accent" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
                         {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                     </Button>
                   </div>
@@ -1266,7 +1270,7 @@ export default function PropertyPage() {
                                                 <Input
                                                     type="text"
                                                     placeholder="https://example.com"
-                                                    value={typeof item.file === 'string' ? item.file : ''}
+                                                    value={item.file as string || ''}
                                                     onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
                                                     disabled={!isEditing}
                                                 />
