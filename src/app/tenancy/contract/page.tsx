@@ -32,8 +32,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Save, X, Search, FileText, Loader2, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveContractData, findContract } from './actions';
+import { saveContractData, findContract, deleteContract } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const initialContractState: Contract = {
     id: '',
@@ -78,7 +79,7 @@ export default function TenancyContractPage() {
             setIsEditing(false);
           } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error });
-            router.push('/tenancy/contract'); // Redirect if not found
+            router.push('/tenancy/contracts');
           }
         })
         .finally(() => setIsFinding(false));
@@ -161,6 +162,29 @@ export default function TenancyContractPage() {
     setIsSaving(false);
   };
   
+  const handleDelete = async () => {
+    if (!contract.id) return;
+    try {
+      const result = await deleteContract(contract.id);
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: `Contract "${contract.contractNo}" deleted successfully.`,
+        });
+        router.push('/tenancy/contracts');
+      } else {
+        throw new Error(result.error || 'An unknown error occurred');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: (error as Error).message || 'Failed to delete contract.',
+      });
+    }
+  };
+
+
   const handlePrint = () => {
     window.print();
   }
@@ -175,6 +199,14 @@ export default function TenancyContractPage() {
   }
 
   const pageTitle = isNewRecord ? 'New Tenancy Contract' : `Edit Contract: ${initialContract.contractNo}`;
+
+  if (isFinding) {
+    return (
+        <div className="container mx-auto p-4 flex justify-center items-center h-full">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+    )
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -201,6 +233,34 @@ export default function TenancyContractPage() {
                 <Button variant="outline" onClick={handlePrint}>
                     <FileText className="mr-2 h-4 w-4" /> Print
                 </Button>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                    <Button
+                        variant="destructive"
+                        disabled={isNewRecord || isEditing}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the
+                        contract "{contract.contractNo}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive hover:bg-destructive/90"
+                        >
+                        Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
              </>
            )}
         </div>
