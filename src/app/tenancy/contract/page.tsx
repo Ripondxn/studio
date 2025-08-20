@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -403,7 +404,7 @@ export default function TenancyContractPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4 p-4 border rounded-md bg-muted/50">
                  <div>
                     <Label htmlFor="payment-frequency">Payment Frequency</Label>
-                    <Select value={contract.paymentFrequency} onValueChange={(value) => handleInputChange('paymentFrequency', value)} disabled={!isEditing}>
+                    <Select value={contract.paymentFrequency || 'Monthly'} onValueChange={(value) => handleInputChange('paymentFrequency', value)} disabled={!isEditing}>
                         <SelectTrigger id="payment-frequency"><SelectValue /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Monthly">Monthly</SelectItem>
@@ -416,7 +417,7 @@ export default function TenancyContractPage() {
                 </div>
                  <div>
                     <Label htmlFor="number-of-payments">Number of Payments</Label>
-                    <Input id="number-of-payments" type="number" value={contract.numberOfPayments} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!isEditing} />
+                    <Input id="number-of-payments" type="number" value={contract.numberOfPayments || 1} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!isEditing} />
                 </div>
                 <div className="flex items-end">
                     <Button onClick={handleGenerateSchedule} disabled={!isEditing} className="w-full">
@@ -480,3 +481,4 @@ export default function TenancyContractPage() {
     </div>
   );
 }
+
