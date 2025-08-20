@@ -23,6 +23,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { roomSchema, type Room } from './schema';
 import { updateRoom, getRoomLookups } from './actions';
 import { Combobox } from '@/components/ui/combobox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const roomFormSchema = roomSchema.omit({ propertyCode: true });
 
@@ -122,7 +123,21 @@ export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="roomType">Room Type</Label>
-                    <Input id="roomType" {...register('roomType')} placeholder="e.g. Master, Standard"/>
+                    <Controller
+                        name="roomType"
+                        control={control}
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a room type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Master Bed">Master Bed</SelectItem>
+                                    <SelectItem value="Standard">Standard</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                     {errors.roomType && <p className="text-destructive text-xs mt-1">{errors.roomType.message}</p>}
                 </div>
             </div>
