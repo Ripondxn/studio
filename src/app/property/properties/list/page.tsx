@@ -58,7 +58,7 @@ export default async function PropertiesPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold font-headline">Properties</h1>
         <Button asChild>
-          <Link href="/property/properties">
+          <Link href="/property/properties/add">
             <Plus className="mr-2 h-4 w-4" /> Add New Property
           </Link>
         </Button>
