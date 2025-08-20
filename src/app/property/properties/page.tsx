@@ -75,7 +75,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { savePropertyData, findPropertyData, deletePropertyData, getOccupancyInfoForProperty, getUnitsForProperty } from './actions';
+import { savePropertyData, findPropertyData, deletePropertyData, getOccupancyInfoForProperty, getUnitsForProperty, getPropertyLookups } from './actions';
 // Re-using the same dialogs and types from the unit page for consistency
 import { CustomizeDialog, type CustomField } from '@/app/property/unit/customize-dialog';
 import { FormItem } from '@/components/ui/form';
@@ -83,6 +83,7 @@ import { ReportCustomizerDialog, type ReportConfig } from '@/app/property/unit/r
 import { type Unit } from '@/app/property/units/schema';
 import { DataTable } from '@/app/property/units/data-table';
 import { columns as unitColumns } from '@/app/property/units/columns';
+import { Combobox } from '@/components/ui/combobox';
 
 
 type Particular = {
@@ -119,7 +120,7 @@ const initialPropertyData = {
     name: '',
     propertyType: '',
     bondType: '',
-    landlord: 'Landlord',
+    landlordCode: '',
     status: 'Active',
     plotArea: '0',
     builtUpArea: '0',
@@ -167,9 +168,12 @@ export default function PropertyPage() {
 
   const [units, setUnits] = useState<Unit[]>([]);
   const [isLoadingUnits, setIsLoadingUnits] = useState(false);
+  const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
 
 
   useEffect(() => {
+    getPropertyLookups().then(data => setLookups(data));
+
     const propertyCode = searchParams.get('code');
     if (propertyCode) {
       setIsNewRecord(false);
@@ -554,14 +558,13 @@ export default function PropertyPage() {
                     </div>
                      <div>
                         <Label htmlFor="landlord">LandLord</Label>
-                        <Select value={propertyData.landlord} onValueChange={(value) => handleInputChange('landlord', value)} disabled={!isEditing}>
-                        <SelectTrigger id="landlord">
-                            <SelectValue placeholder="Select Landlord" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Landlord">Landlord</SelectItem>
-                        </SelectContent>
-                        </Select>
+                         <Combobox
+                            options={lookups.landlords.map(l => ({ value: l.code, label: l.name }))}
+                            value={propertyData.landlordCode}
+                            onSelect={(value) => handleInputChange('landlordCode', value)}
+                            placeholder="Select Landlord"
+                            disabled={!isEditing}
+                         />
                     </div>
                     <div className="md:col-span-2">
                         <Label htmlFor="address1">Address</Label>
@@ -827,5 +830,3 @@ export default function PropertyPage() {
     </div>
   );
 }
-
-    

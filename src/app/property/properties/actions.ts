@@ -163,3 +163,19 @@ export async function getUnitsForProperty(propertyName: string): Promise<{ succe
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }
+
+async function readLandlords() {
+    try {
+        const data = await fs.readFile(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'), 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+
+export async function getPropertyLookups() {
+    const landlords = await readLandlords();
+    return {
+        landlords: landlords.map((l: any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
+    }
+}

@@ -386,25 +386,23 @@ export default function LeaseContractPage() {
             </div>
             <div>
                 <Label htmlFor="landlordCode">Landlord</Label>
-                 <Select value={contract.landlordCode} onValueChange={(value) => handleInputChange('landlordCode', value)} disabled={!isEditing}>
-                    <SelectTrigger id="landlordCode">
-                        <SelectValue placeholder="Select Landlord"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {lookups.landlords.map(l => <SelectItem key={l.code} value={l.code}>{l.name}</SelectItem>)}
-                    </SelectContent>
-                 </Select>
+                 <Combobox
+                    options={lookups.landlords.map(l => ({ value: l.code, label: l.name }))}
+                    value={contract.landlordCode}
+                    onSelect={(value) => handleInputChange('landlordCode', value)}
+                    placeholder="Select Landlord"
+                    disabled={!isEditing}
+                 />
             </div>
             <div>
                 <Label htmlFor="property">Property</Label>
-                 <Select value={contract.property} onValueChange={(value) => handleInputChange('property', value)} disabled={!isEditing}>
-                    <SelectTrigger id="property">
-                        <SelectValue placeholder="Select Property"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {lookups.properties.map(p => <SelectItem key={p.code} value={p.name}>{p.name}</SelectItem>)}
-                    </SelectContent>
-                 </Select>
+                 <Combobox
+                    options={lookups.properties.map(p => ({ value: p.name, label: p.name }))}
+                    value={contract.property}
+                    onSelect={(value) => handleInputChange('property', value)}
+                    placeholder="Select Property"
+                    disabled={!isEditing}
+                 />
             </div>
              <div>
               <Label htmlFor="start-date">Start Date</Label>
