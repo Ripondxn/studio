@@ -526,7 +526,7 @@ export default function PropertyPage() {
     setSpecialConditions(data.specialConditions || []);
     setNotes(data.notes || []);
     setAgents(data.agents || []);
-    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: null, url: undefined})) : []);
+    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
     setParkings(data.parkings || []);
     setAssignments(data.assignments || []);
     setShareHolders(data.shareHolders || []);
