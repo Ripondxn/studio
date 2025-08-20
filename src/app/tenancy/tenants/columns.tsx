@@ -150,6 +150,14 @@ export const columns: ColumnDef<Tenant>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+        const tenant = row.original;
+        return (
+            <Button variant="link" asChild className="p-0 h-auto font-normal">
+                <Link href={`/tenancy/tenants/add?code=${tenant.code}`}>{tenant.code}</Link>
+            </Button>
+        )
+    }
   },
   {
     accessorKey: 'name',
