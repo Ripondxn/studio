@@ -39,11 +39,15 @@ const initialContractState: Omit<Contract, 'id'> = {
     contractNo: '',
     contractDate: '',
     unitCode: '',
+    property: '',
     tenantName: '',
     startDate: '',
     endDate: '',
     totalRent: 0,
     paymentMode: 'cash',
+    status: 'New',
+    terminationDate: '',
+    rentBasedOn: 'Monthly',
     paymentSchedule: [],
     terms: '',
 };
@@ -92,7 +96,7 @@ export default function TenancyContractPage() {
         title: 'Contract Saved',
         description: 'The tenancy contract has been saved successfully.',
       });
-      router.push('/');
+      router.push('/tenancy/contracts');
     } else {
         toast({
             variant: 'destructive',

@@ -145,32 +145,41 @@ export const columns: ColumnDef<Contract>[] = [
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
       >
-        Contract No
+        Tracking Num...
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
   },
   {
-    accessorKey: 'tenantName',
-    header: 'Tenant Name',
+    accessorKey: 'contractDate',
+    header: 'Contract Date',
+    cell: ({ row }) => format(new Date(row.getValue('contractDate')), 'PP'),
+  },
+  {
+    accessorKey: 'property',
+    header: 'Property',
   },
   {
     accessorKey: 'unitCode',
     header: 'Unit',
   },
   {
+    accessorKey: 'tenantName',
+    header: 'Tenant',
+  },
+  {
     accessorKey: 'startDate',
-    header: 'Start Date',
+    header: 'Contract Start...',
     cell: ({ row }) => format(new Date(row.getValue('startDate')), 'PP'),
   },
   {
     accessorKey: 'endDate',
-    header: 'End Date',
+    header: 'Contract End...',
      cell: ({ row }) => format(new Date(row.getValue('endDate')), 'PP'),
   },
   {
     accessorKey: 'totalRent',
-    header: () => <div className="text-right">Total Rent</div>,
+    header: () => <div className="text-right">Rent Amount</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('totalRent'));
       const formatted = new Intl.NumberFormat('en-US', {
@@ -181,9 +190,22 @@ export const columns: ColumnDef<Contract>[] = [
     },
   },
   {
-    accessorKey: 'paymentMode',
-    header: 'Payment Mode',
-    cell: ({ row }) => <Badge variant="secondary" className="capitalize">{row.getValue('paymentMode')}</Badge>
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => <Badge variant={row.getValue('status') === 'New' ? 'default' : 'secondary'} className="capitalize">{row.getValue('status')}</Badge>
+  },
+   {
+    accessorKey: 'terminationDate',
+    header: 'Termination D...',
+    cell: ({row}) => {
+        const value = row.getValue('terminationDate') as string;
+        return value ? format(new Date(value), 'PP') : '';
+    }
+  },
+   {
+    accessorKey: 'rentBasedOn',
+    header: 'Rent Based On',
+    cell: ({ row }) => <span className="capitalize">{row.getValue('rentBasedOn')}</span>,
   },
   {
     id: 'actions',
