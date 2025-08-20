@@ -234,6 +234,10 @@ export const columns: ColumnDef<Landlord>[] = [
     header: 'Bank',
   },
   {
+    accessorKey: 'leaseContracts',
+    header: 'Lease Contracts',
+  },
+  {
     id: 'attachments',
     header: 'Attachments',
     cell: ({ row }) => <AttachmentsCell row={row} />,

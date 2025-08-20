@@ -20,6 +20,7 @@ export const landlordSchema = z.object({
   accountNumber: z.string().optional(),
   iban: z.string().optional(),
   attachments: z.array(attachmentSchema).optional(),
+  leaseContracts: z.string().optional(),
 });
 
 export type Landlord = z.infer<typeof landlordSchema>;

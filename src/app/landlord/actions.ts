@@ -34,10 +34,22 @@ async function writeLandlords(data: any) {
 
 export async function getAllLandlords() {
     const landlords = await getLandlords();
-    // The list page expects a flat structure for each landlord.
+    const leaseContracts = await readData(leaseContractsFilePath);
+
+    const contractsByLandlord = new Map<string, string[]>();
+    for (const contract of leaseContracts) {
+        if (contract.landlordCode) {
+            if (!contractsByLandlord.has(contract.landlordCode)) {
+                contractsByLandlord.set(contract.landlordCode, []);
+            }
+            contractsByLandlord.get(contract.landlordCode)!.push(contract.contractNo);
+        }
+    }
+
     return landlords.map((l: any) => ({
         ...l.landlordData,
-        attachments: l.attachments || []
+        attachments: l.attachments || [],
+        leaseContracts: contractsByLandlord.get(l.landlordData.code)?.join(', ') || 'N/A',
     }));
 }
 
