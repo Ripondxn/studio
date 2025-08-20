@@ -32,6 +32,8 @@ const breadcrumbNameMap: { [key: string]: string } = {
   contract: 'New Contract',
   contracts: 'Contracts',
   tenants: 'Tenants',
+  landlord: 'Landlord',
+  vendors: 'Vendors',
   add: 'Add',
   lease: 'Lease',
   communication: 'Communication',

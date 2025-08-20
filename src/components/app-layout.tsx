@@ -93,7 +93,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       icon: <Users />,
       subItems: [
           { href: '/tenancy/tenants', label: 'Tenant' },
-          { href: '/customers', label: 'Customer' },
           { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
       ]
     },
@@ -104,8 +103,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/finance/chart-of-accounts', label: 'Chart of Accounts' },
         ]
     },
-    { href: '#', label: 'Maintenance', icon: <Wrench /> },
-    { href: '/reports', label: 'Reports', icon: <LineChart /> },
     { 
         label: 'Settings', 
         icon: <Settings />,
