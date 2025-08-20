@@ -118,7 +118,22 @@ export function EditUnitDialog({ unit, isOpen, setIsOpen }: { unit: Unit, isOpen
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="unitType">Unit Type</Label>
-                    <Input id="unitType" {...register('unitType')} />
+                     <Controller
+                        name="unitType"
+                        control={control}
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a unit type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="1BHK">1BHK</SelectItem>
+                                    <SelectItem value="2BHK">2BHK</SelectItem>
+                                    <SelectItem value="3BHK">3BHK</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                     {errors.unitType && <p className="text-destructive text-xs mt-1">{errors.unitType.message}</p>}
                 </div>
                  <div className="space-y-2">
