@@ -393,7 +393,7 @@ const SidebarFooter = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-2 p-2 mt-auto", className)}
       {...props}
     />
   )
@@ -520,19 +520,32 @@ SidebarMenu.displayName = "SidebarMenu"
 
 const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
-  React.ComponentProps<"li">
->(({ className, ...props }, ref) => (
-  <li
-    ref={ref}
-    data-sidebar="menu-item"
-    className={cn("group/menu-item relative", className)}
-    {...props}
-  />
-))
+  React.ComponentProps<"li"> & { isSubmenu?: boolean }
+>(({ className, isSubmenu = false, children, ...props }, ref) => {
+  const [open, setOpen] = React.useState(false)
+
+  return (
+    <li
+      ref={ref}
+      data-sidebar="menu-item"
+      data-state={open ? "open" : "closed"}
+      onMouseOver={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      className={cn(
+        "group/menu-item relative",
+        isSubmenu && "flex flex-col",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </li>
+  )
+})
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -558,6 +571,7 @@ const SidebarMenuButton = React.forwardRef<
   React.ComponentProps<"button"> & {
     asChild?: boolean
     isActive?: boolean
+    isSubmenu?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
@@ -567,6 +581,7 @@ const SidebarMenuButton = React.forwardRef<
       isActive = false,
       variant = "default",
       size = "default",
+      isSubmenu,
       tooltip,
       className,
       ...props
@@ -575,6 +590,8 @@ const SidebarMenuButton = React.forwardRef<
   ) => {
     const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
+    const { ...itemProps } =
+      React.useContext(SidebarMenuItem.Context) ?? {}
 
     const button = (
       <Comp
@@ -582,6 +599,7 @@ const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
+        data-state={itemProps.open ? "open" : "closed"}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
         {...props}
       />
@@ -705,18 +723,25 @@ SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 const SidebarMenuSub = React.forwardRef<
   HTMLUListElement,
   React.ComponentProps<"ul">
->(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    data-sidebar="menu-sub"
-    className={cn(
-      "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5",
-      "group-data-[collapsible=icon]:hidden",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { ...itemProps } =
+    React.useContext(SidebarMenuItem.Context) ?? {}
+
+  if (!itemProps.open) return null
+
+  return (
+    <ul
+      ref={ref}
+      data-sidebar="menu-sub"
+      className={cn(
+        "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border py-1 pl-2.5",
+        "group-data-[collapsible=icon]:hidden",
+        className
+      )}
+      {...props}
+    />
+  )
+})
 SidebarMenuSub.displayName = "SidebarMenuSub"
 
 const SidebarMenuSubItem = React.forwardRef<
@@ -754,6 +779,17 @@ const SidebarMenuSubButton = React.forwardRef<
   )
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
+
+// Menu item context
+type MenuItemContext = {
+  open: boolean
+  setOpen: (open: boolean) => void
+}
+
+const MenuItemContext = React.createContext<MenuItemContext | null>(null)
+
+// Add context to SidebarMenuItem
+SidebarMenuItem.Context = MenuItemContext
 
 export {
   Sidebar,
