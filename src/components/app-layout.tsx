@@ -91,7 +91,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           { href: '/customers', label: 'Customer' },
       ]
     },
-    { href: '/finance/chart-of-accounts', label: 'Finance', icon: <Banknote /> },
+    { 
+        label: 'Finance', 
+        icon: <Banknote />,
+        subItems: [
+            { href: '/finance/chart-of-accounts', label: 'Chart of Accounts' },
+        ]
+    },
     { href: '#', label: 'Maintenance', icon: <Wrench /> },
     { href: '/reports', label: 'Reports', icon: <LineChart /> },
     { href: '/admin/user-roles', label: 'Settings', icon: <Settings /> },
