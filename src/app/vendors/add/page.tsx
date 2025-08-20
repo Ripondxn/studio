@@ -24,7 +24,7 @@ import {
   Search,
   X,
   FileUp,
-  Link2,
+  Link2
 } from 'lucide-react';
 import {
   Table,
