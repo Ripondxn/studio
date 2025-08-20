@@ -6,6 +6,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
+const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 
 async function getProperties() {
     try {
@@ -105,6 +106,33 @@ export async function deletePropertyData(propertyCode: string) {
         return { success: true };
     } catch (error) {
         console.error('Failed to delete property data:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+export async function getOccupancyInfoForProperty(propertyCode: string) {
+    try {
+        const contractsData = await fs.readFile(contractsFilePath, 'utf-8');
+        const allContracts = JSON.parse(contractsData);
+        
+        const property = (await findPropertyData(propertyCode)).data?.propertyData;
+        if (!property) {
+            return { success: false, error: "Property not found" };
+        }
+        
+        const propertyName = property.name;
+
+        const occupancyInfo = allContracts
+            .filter((c: any) => c.property === propertyName)
+            .map((c: any) => ({
+                unitCode: c.unitCode,
+                tenantName: c.tenantName,
+                contractId: c.id,
+            }));
+
+        return { success: true, data: occupancyInfo };
+    } catch (error) {
+        console.error('Failed to get occupancy info:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }

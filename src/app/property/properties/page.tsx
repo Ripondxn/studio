@@ -49,6 +49,7 @@ import {
   Search,
   FileUp,
   Link2,
+  Users,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -74,7 +75,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { savePropertyData, findPropertyData, deletePropertyData } from './actions';
+import { savePropertyData, findPropertyData, deletePropertyData, getOccupancyInfoForProperty } from './actions';
 // Re-using the same dialogs and types from the unit page for consistency
 import { CustomizeDialog, type CustomField } from '@/app/property/unit/customize-dialog';
 import { FormItem } from '@/components/ui/form';
@@ -103,6 +104,12 @@ type Attachment = {
   remarks: string;
   isLink: boolean;
 };
+
+type OccupancyInfo = {
+    unitCode: string;
+    tenantName: string;
+    contractId: string;
+}
 
 const initialPropertyData = {
     code: '',
@@ -152,6 +159,9 @@ export default function PropertyPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const [occupancyInfo, setOccupancyInfo] = useState<OccupancyInfo[]>([]);
+  const [isLoadingOccupancy, setIsLoadingOccupancy] = useState(false);
+
 
   useEffect(() => {
     const propertyCode = searchParams.get('code');
@@ -177,6 +187,18 @@ export default function PropertyPage() {
     };
   }, [attachments]);
 
+  useEffect(() => {
+    if (propertyData.code && !isNewRecord) {
+        setIsLoadingOccupancy(true);
+        getOccupancyInfoForProperty(propertyData.code)
+            .then(result => {
+                if(result.success && result.data){
+                    setOccupancyInfo(result.data);
+                }
+            })
+            .finally(() => setIsLoadingOccupancy(false));
+    }
+  }, [propertyData.code, isNewRecord]);
 
 
   const handleInputChange = (field: keyof typeof propertyData, value: string) => {
@@ -534,6 +556,7 @@ export default function PropertyPage() {
         <TabsList>
             <TabsTrigger value="particulars">Particulars</TabsTrigger>
             <TabsTrigger value="units">Units</TabsTrigger>
+            <TabsTrigger value="occupied-by">Occupied By</TabsTrigger>
             <TabsTrigger value="floors">Floors</TabsTrigger>
             <TabsTrigger value="rooms">Rooms</TabsTrigger>
             <TabsTrigger value="partitions">Partitions</TabsTrigger>
@@ -607,6 +630,49 @@ export default function PropertyPage() {
                 </div>
             </CardContent>
            </Card>
+        </TabsContent>
+        <TabsContent value="occupied-by">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Occupied By</CardTitle>
+                    <CardDescription>List of tenants currently occupying units in {propertyData.name || 'this property'}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isLoadingOccupancy ? (
+                         <div className="flex justify-center items-center h-40">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : occupancyInfo.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Unit Code</TableHead>
+                                    <TableHead>Tenant Name</TableHead>
+                                    <TableHead>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {occupancyInfo.map(info => (
+                                    <TableRow key={info.contractId}>
+                                        <TableCell>{info.unitCode}</TableCell>
+                                        <TableCell>{info.tenantName}</TableCell>
+                                        <TableCell>
+                                            <Button asChild variant="link">
+                                                <Link href={`/tenancy/contract?id=${info.contractId}`}>View Contract</Link>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <div className="text-center py-10 text-muted-foreground">
+                            <Users className="mx-auto h-12 w-12" />
+                            <p className="mt-4">No occupancy information found for this property.</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </TabsContent>
          <TabsContent value="floors">
            <Card>
