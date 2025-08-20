@@ -98,7 +98,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         label: 'Tenancy', 
         icon: <UserSquare />,
         subItems: [
-            { href: '/tenancy/contract', label: 'Tenancy Contract' },
+            { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
         ]
     },
     { 

@@ -26,6 +26,10 @@ async function writeContracts(data: Contract[]) {
     await fs.writeFile(contractsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+export async function getAllContracts() {
+    return await readContracts();
+}
+
 export async function saveContractData(data: Omit<Contract, 'id'>) {
     const validationSchema = contractSchema.omit({ id: true });
     const validation = validationSchema.safeParse(data);
@@ -51,11 +55,29 @@ export async function saveContractData(data: Omit<Contract, 'id'>) {
         allContracts.push(newContract);
         await writeContracts(allContracts);
         
-        revalidatePath('/dashboard');
+        revalidatePath('/tenancy/contracts');
         return { success: true, data: newContract };
 
     } catch (error) {
         console.error('Failed to save contract:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function deleteContract(contractId: string) {
+    try {
+        const allContracts = await readContracts();
+        const updatedContracts = allContracts.filter(c => c.id !== contractId);
+
+        if (allContracts.length === updatedContracts.length) {
+            return { success: false, error: 'Contract not found.' };
+        }
+        
+        await writeContracts(updatedContracts);
+        revalidatePath('/tenancy/contracts');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete contract:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }

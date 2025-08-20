@@ -28,6 +28,9 @@ const breadcrumbNameMap: { [key: string]: string } = {
   'intelligent-pricing': 'Intelligent Pricing',
   workflow: 'Workflow',
   dashboard: 'Dashboard',
+  tenancy: 'Tenancy',
+  contract: 'New Contract',
+  contracts: 'Contracts',
   '': 'Dashboard', // For the root path
 };
 
