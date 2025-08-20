@@ -83,7 +83,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/vendors', label: 'Vendor' },
         ]
     },
-    { href: '/property/tenants', label: 'Tenant', icon: <Users /> },
+    { 
+      label: 'Tenant', 
+      icon: <Users />,
+      subItems: [
+          { href: '/property/tenants', label: 'Tenant' },
+          { href: '/customers', label: 'Customer' },
+      ]
+    },
     { href: '/finance/chart-of-accounts', label: 'Finance', icon: <Banknote /> },
     { href: '#', label: 'Maintenance', icon: <Wrench /> },
     { href: '/reports', label: 'Reports', icon: <LineChart /> },
