@@ -6,6 +6,7 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { roomSchema, type Room } from './schema';
+import { type Unit } from '@/app/property/units/schema';
 
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 
@@ -129,10 +130,21 @@ async function readFloors() {
     }
 }
 
+async function readUnits(): Promise<Unit[]> {
+    try {
+        const data = await fs.readFile(path.join(process.cwd(), 'src/app/property/units/units-data.json'), 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+
 
 export async function getRoomLookups(propertyCode: string) {
     const floors = await readFloors();
+    const units = await readUnits();
     return {
         floors: floors.filter((f: any) => f.propertyCode === propertyCode).map((f:any) => ({ value: f.floorCode, label: f.floorName })),
+        units: units.filter((u: any) => u.propertyCode === propertyCode).map((u:any) => ({ value: u.unitCode, label: u.unitCode })),
     }
 }

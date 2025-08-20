@@ -7,6 +7,7 @@ export const roomSchema = z.object({
   roomName: z.string().min(1, "Room name is required."),
   propertyCode: z.string().min(1, "Property code is required."),
   floorCode: z.string().min(1, "Floor code is required."),
+  unitCode: z.string().optional(),
   roomType: z.string().min(1, "Room type is required."),
 });
 

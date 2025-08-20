@@ -31,7 +31,7 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<{ floors: { value: string, label: string }[] }>({ floors: [] });
+  const [lookups, setLookups] = useState<{ floors: { value: string, label: string }[], units: {value: string, label: string}[] }>({ floors: [], units: [] });
 
   useEffect(() => {
       if(isOpen) {
@@ -52,6 +52,7 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
         roomName: '',
         propertyCode: propertyCode,
         floorCode: '',
+        unitCode: '',
         roomType: '',
     }
   });
@@ -119,6 +120,22 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
                         )}
                     />
                     {errors.floorCode && <p className="text-destructive text-xs mt-1">{errors.floorCode.message}</p>}
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="unitCode">Unit</Label>
+                    <Controller
+                        name="unitCode"
+                        control={control}
+                        render={({ field }) => (
+                           <Combobox
+                                options={lookups.units}
+                                value={field.value}
+                                onSelect={field.onChange}
+                                placeholder="Select a unit"
+                           />
+                        )}
+                    />
+                    {errors.unitCode && <p className="text-destructive text-xs mt-1">{errors.unitCode.message}</p>}
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="roomType">Room Type</Label>
