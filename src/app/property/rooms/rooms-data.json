@@ -1,2 +1,66 @@
 
-[]
+[
+  {
+    "roomCode": "R1",
+    "roomName": "Room-1",
+    "propertyCode": "LT-C38",
+    "floorCode": "F-01",
+    "unitCode": "101",
+    "roomType": "Master Bed",
+    "id": "ROOM-1755711878885"
+  },
+  {
+    "roomCode": "R2",
+    "roomName": "Room-2",
+    "propertyCode": "LT-C38",
+    "floorCode": "F-01",
+    "unitCode": "101",
+    "roomType": "Master Bed",
+    "id": "ROOM-1755712037335"
+  },
+  {
+    "roomCode": "R3",
+    "roomName": "Room-3",
+    "propertyCode": "LT-C38",
+    "floorCode": "F-01",
+    "unitCode": "101",
+    "roomType": "Standard",
+    "id": "ROOM-1755712096532"
+  },
+  {
+    "roomCode": "R4",
+    "roomName": "Room-4",
+    "propertyCode": "LT-C38",
+    "floorCode": "F-01",
+    "unitCode": "101",
+    "roomType": "Standard",
+    "id": "ROOM-1755712096533"
+  },
+  {
+    "roomCode": "R5",
+    "roomName": "Room-5",
+    "propertyCode": "LT-C38",
+    "floorCode": "F-01",
+    "unitCode": "101",
+    "roomType": "Standard",
+    "id": "ROOM-1755712096534"
+  },
+  {
+    "roomCode": "R6",
+    "roomName": "Room-6",
+    "propertyCode": "LT-C38",
+    "floorCode": "F-01",
+    "unitCode": "101",
+    "roomType": "Standard",
+    "id": "ROOM-1755712096535"
+  },
+  {
+    "roomCode": "R7",
+    "roomName": "Room-7",
+    "propertyCode": "LT-C38",
+    "floorCode": "F-01",
+    "unitCode": "101",
+    "roomType": "Standard",
+    "id": "ROOM-1755712096536"
+  }
+]
