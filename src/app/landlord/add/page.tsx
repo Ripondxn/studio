@@ -58,6 +58,8 @@ import { type Property } from '@/app/property/properties/list/schema';
 import { type LeaseContract, type PaymentInstallment } from '@/app/lease/contract/schema';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Attachment = {
   id: number;
@@ -79,6 +81,11 @@ const initialLandlordData = {
     bankName: '',
     accountNumber: '',
     iban: '',
+    securityDepositAmount: 0,
+    securityDepositStatus: 'unpaid',
+    securityDepositReturnDate: '',
+    securityDepositReturnedAmount: 0,
+    securityDepositRemarks: '',
 };
 
 export default function LandlordPage() {
@@ -165,7 +172,7 @@ export default function LandlordPage() {
     }
   }, [landlordData.code, isNewRecord, toast]);
 
-  const handleInputChange = (field: keyof typeof landlordData, value: string) => {
+  const handleInputChange = (field: keyof typeof landlordData, value: string | number) => {
     setLandlordData(prev => ({ ...prev, [field]: value }));
   };
   
@@ -381,6 +388,7 @@ export default function LandlordPage() {
        <Tabs defaultValue="info">
             <TabsList>
                 <TabsTrigger value="info">Landlord Information</TabsTrigger>
+                <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
                 <TabsTrigger value="properties">Properties</TabsTrigger>
                 <TabsTrigger value="lease-contracts">Lease Contracts</TabsTrigger>
                 <TabsTrigger value="payment-history">Payment History</TabsTrigger>
@@ -519,6 +527,54 @@ export default function LandlordPage() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+            <TabsContent value="security-deposit">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Security Deposit</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Deposit Amount</Label>
+                                <Input type="number" placeholder="0.00" value={landlordData.securityDepositAmount} onChange={(e) => handleInputChange('securityDepositAmount', parseFloat(e.target.value))} disabled={!isEditing}/>
+                            </div>
+                             <div>
+                                <Label>Payment Status</Label>
+                                <Select value={landlordData.securityDepositStatus} onValueChange={(value) => handleInputChange('securityDepositStatus', value)} disabled={!isEditing}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select status"/>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="paid">Paid</SelectItem>
+                                        <SelectItem value="unpaid">Unpaid</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <Card>
+                            <CardHeader><CardTitle>Return Details</CardTitle></CardHeader>
+                             <CardContent className="space-y-4">
+                                <div className='p-4 border rounded-md bg-muted/50'>
+                                    <p className='text-sm text-muted-foreground'>Original Deposit Amount</p>
+                                    <p className='text-2xl font-bold text-primary'>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(landlordData.securityDepositAmount || 0)}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>Return Date</Label>
+                                        <Input type="date" value={landlordData.securityDepositReturnDate} onChange={(e) => handleInputChange('securityDepositReturnDate', e.target.value)} disabled={!isEditing}/>
+                                    </div>
+                                    <div>
+                                        <Label>Returned Amount</Label>
+                                        <Input type="number" placeholder="0.00" value={landlordData.securityDepositReturnedAmount} onChange={(e) => handleInputChange('securityDepositReturnedAmount', parseFloat(e.target.value))} disabled={!isEditing}/>
+                                    </div>
+                                </div>
+                                <Textarea placeholder="Remarks on return (e.g., deductions for damages)" value={landlordData.securityDepositRemarks} onChange={(e) => handleInputChange('securityDepositRemarks', e.target.value)} disabled={!isEditing}/>
+                                <Button disabled={!isEditing}>Process Return</Button>
+                            </CardContent>
+                        </Card>
+                    </CardContent>
+                </Card>
             </TabsContent>
             <TabsContent value="properties">
                 <Card>
