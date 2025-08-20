@@ -11,6 +11,8 @@ import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema'
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
+const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
 
 
 async function readContracts(): Promise<LeaseContract[]> {
@@ -119,7 +121,7 @@ export async function deleteLeaseContract(contractId: string) {
 
 async function readLandlords() {
     try {
-        const data = await fs.readFile(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'), 'utf-8');
+        const data = await fs.readFile(landlordsFilePath, 'utf-8');
         return JSON.parse(data);
     } catch(e) {
         return [];
@@ -128,7 +130,7 @@ async function readLandlords() {
 
 async function readProperties() {
     try {
-        const data = await fs.readFile(path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json'), 'utf-8');
+        const data = await fs.readFile(propertiesFilePath, 'utf-8');
         return JSON.parse(data);
     } catch(e) {
         return [];
@@ -149,9 +151,41 @@ export async function getLookups() {
     const properties = await readProperties();
     const tenancyContracts = await readTenancyContracts();
 
+    const propertiesMap = new Map(properties.map((p: any) => [(p.propertyData || p).name, (p.propertyData || p).landlordCode]));
+
     return {
-        landlords: landlords.map((l:any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
-        properties: properties.map((p:any) => ({ code: (p.propertyData || p).code, name: (p.propertyData || p).name })),
-        tenancyContracts: tenancyContracts.map((c: any) => ({ contractNo: c.contractNo, tenantName: c.tenantName })),
+        landlords: landlords.map((l:any) => ({ value: l.landlordData.code, label: l.landlordData.name })),
+        properties: properties.map((p:any) => ({ value: (p.propertyData || p).name, label: (p.propertyData || p).name })),
+        tenancyContracts: tenancyContracts.map((c: any) => ({ 
+            value: c.contractNo, 
+            label: `${c.contractNo} (${c.tenantName})`,
+            landlordCode: c.property ? propertiesMap.get(c.property) : undefined,
+            property: c.property
+        })),
     }
+}
+
+export async function getContractDetails(contractNo: string) {
+    const allTenancyContracts = await readTenancyContracts();
+    const contract = allTenancyContracts.find(c => c.contractNo === contractNo);
+
+    if (!contract) {
+        return { success: false, error: 'Tenancy contract not found' };
+    }
+    
+    const allProperties = await readProperties();
+    const property = allProperties.find(p => (p.propertyData || p).name === contract.property);
+
+    if (!property) {
+        return { success: true, data: { tenantName: contract.tenantName, property: contract.property, totalRent: contract.totalRent } };
+    }
+
+    const landlordCode = (property.propertyData || property).landlordCode;
+
+    return { success: true, data: {
+        tenantName: contract.tenantName,
+        property: contract.property,
+        landlordCode: landlordCode,
+        totalRent: contract.totalRent
+    }}
 }

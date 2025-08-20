@@ -33,16 +33,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveLeaseContractData, findLeaseContract, deleteLeaseContract, getLookups } from './actions';
+import { saveLeaseContractData, findLeaseContract, deleteLeaseContract, getLookups, getContractDetails } from './actions';
 import { type LeaseContract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 
 type LookupData = {
-    landlords: {code: string, name: string}[];
-    properties: {code: string, name: string}[];
-    tenancyContracts: { contractNo: string, tenantName: string }[];
+    landlords: {value: string, label: string}[];
+    properties: {value: string, label: string}[];
+    tenancyContracts: { value: string, label: string, landlordCode?: string, property?: string }[];
 }
 
 const initialContractState: LeaseContract = {
@@ -118,6 +118,21 @@ export default function LeaseContractPage() {
   
   const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments', value: string) => {
     setContract(prev => ({...prev, [field]: parseInt(value, 10) || 0 }));
+  }
+
+  const handleTenancyContractSelect = async (contractNo: string) => {
+    handleInputChange('contractNo', contractNo);
+    if (contractNo) {
+        const result = await getContractDetails(contractNo);
+        if (result.success && result.data) {
+            setContract(prev => ({
+                ...prev,
+                property: result.data.property || '',
+                landlordCode: result.data.landlordCode || '',
+                totalRent: result.data.totalRent || 0,
+            }));
+        }
+    }
   }
   
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
@@ -373,9 +388,9 @@ export default function LeaseContractPage() {
             <div>
                 <Label htmlFor="tenancyContractNo">Tenancy Contract No</Label>
                  <Combobox
-                    options={lookups.tenancyContracts.map(c => ({ value: c.contractNo, label: `${c.contractNo} (${c.tenantName})` }))}
+                    options={lookups.tenancyContracts}
                     value={contract.contractNo}
-                    onSelect={(value) => handleInputChange('contractNo', value)}
+                    onSelect={handleTenancyContractSelect}
                     placeholder="Select Tenancy Contract"
                     disabled={!isEditing}
                  />
@@ -387,7 +402,7 @@ export default function LeaseContractPage() {
             <div>
                 <Label htmlFor="landlordCode">Landlord</Label>
                  <Combobox
-                    options={lookups.landlords.map(l => ({ value: l.code, label: l.name }))}
+                    options={lookups.landlords}
                     value={contract.landlordCode}
                     onSelect={(value) => handleInputChange('landlordCode', value)}
                     placeholder="Select Landlord"
@@ -397,7 +412,7 @@ export default function LeaseContractPage() {
             <div>
                 <Label htmlFor="property">Property</Label>
                  <Combobox
-                    options={lookups.properties.map(p => ({ value: p.name, label: p.name }))}
+                    options={lookups.properties}
                     value={contract.property}
                     onSelect={(value) => handleInputChange('property', value)}
                     placeholder="Select Property"
