@@ -99,6 +99,7 @@ import { columns as partitionColumns } from '../partitions/columns';
 import { AddPartitionDialog } from '../partitions/add-partition-dialog';
 import { UnitGrid } from '../units/unit-grid';
 import { FloorGrid } from '../floors/floor-grid';
+import { RoomGrid } from '../rooms/room-grid';
 
 
 type Particular = {
@@ -198,6 +199,7 @@ export default function PropertyPage() {
   const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
   const [unitsViewMode, setUnitsViewMode] = useState<ViewMode>('grid');
   const [floorsViewMode, setFloorsViewMode] = useState<ViewMode>('list');
+  const [roomsViewMode, setRoomsViewMode] = useState<ViewMode>('list');
 
 
   useEffect(() => {
@@ -759,7 +761,17 @@ export default function PropertyPage() {
                         <CardTitle>Rooms</CardTitle>
                         <CardDescription>Manage rooms within this property.</CardDescription>
                     </div>
-                    <AddRoomDialog propertyCode={propertyData.code} onRoomAdded={() => fetchPropertySubData(propertyData.code)} />
+                     <div className="flex items-center gap-2">
+                        <div className="flex items-center rounded-md bg-muted p-1">
+                            <Button variant={roomsViewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setRoomsViewMode('grid')}>
+                                <LayoutGrid className="h-5 w-5" />
+                            </Button>
+                             <Button variant={roomsViewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setRoomsViewMode('list')}>
+                                <List className="h-5 w-5" />
+                            </Button>
+                        </div>
+                        <AddRoomDialog propertyCode={propertyData.code} onRoomAdded={() => fetchPropertySubData(propertyData.code)} />
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -767,8 +779,10 @@ export default function PropertyPage() {
                     <div className="flex justify-center items-center h-40">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
-                ) : (
+                ) : roomsViewMode === 'list' ? (
                     <RoomsDataTable columns={roomColumns} data={rooms} />
+                ) : (
+                    <RoomGrid rooms={rooms} />
                 )}
             </CardContent>
            </Card>
