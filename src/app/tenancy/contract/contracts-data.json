@@ -86,73 +86,73 @@
       {
         "installment": 1,
         "dueDate": "2025-08-20",
-        "amount": 1041.67,
+        "amount": 1200,
         "status": "unpaid"
       },
       {
         "installment": 2,
         "dueDate": "2025-09-20",
-        "amount": 1041.67,
+        "amount": 1100,
         "status": "unpaid"
       },
       {
         "installment": 3,
         "dueDate": "2025-10-20",
-        "amount": 1041.67,
+        "amount": 1200,
         "status": "unpaid"
       },
       {
         "installment": 4,
         "dueDate": "2025-11-20",
-        "amount": 1041.67,
+        "amount": 300,
         "status": "unpaid"
       },
       {
         "installment": 5,
         "dueDate": "2025-12-20",
-        "amount": 1041.67,
+        "amount": 900,
         "status": "unpaid"
       },
       {
         "installment": 6,
         "dueDate": "2026-01-20",
-        "amount": 1041.67,
+        "amount": 700,
         "status": "unpaid"
       },
       {
         "installment": 7,
         "dueDate": "2026-02-20",
-        "amount": 1041.67,
+        "amount": 500,
         "status": "unpaid"
       },
       {
         "installment": 8,
         "dueDate": "2026-03-20",
-        "amount": 1041.67,
+        "amount": 1320,
         "status": "unpaid"
       },
       {
         "installment": 9,
         "dueDate": "2026-04-20",
-        "amount": 1041.67,
+        "amount": 1320,
         "status": "unpaid"
       },
       {
         "installment": 10,
         "dueDate": "2026-05-20",
-        "amount": 1041.67,
+        "amount": 1320,
         "status": "unpaid"
       },
       {
         "installment": 11,
         "dueDate": "2026-06-20",
-        "amount": 1041.67,
+        "amount": 1320,
         "status": "unpaid"
       },
       {
         "installment": 12,
         "dueDate": "2026-07-20",
-        "amount": 1041.6299999999992,
+        "amount": 1320,
         "status": "unpaid"
       }
     ],
