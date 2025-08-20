@@ -556,10 +556,10 @@ export default function PropertyPage() {
         <TabsList>
             <TabsTrigger value="particulars">Particulars</TabsTrigger>
             <TabsTrigger value="units">Units</TabsTrigger>
-            <TabsTrigger value="occupied-by">Occupied By</TabsTrigger>
             <TabsTrigger value="floors">Floors</TabsTrigger>
             <TabsTrigger value="rooms">Rooms</TabsTrigger>
             <TabsTrigger value="partitions">Partitions</TabsTrigger>
+            <TabsTrigger value="occupied-by">Occupied By</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="particulars">
@@ -631,6 +631,45 @@ export default function PropertyPage() {
             </CardContent>
            </Card>
         </TabsContent>
+        <TabsContent value="floors">
+           <Card>
+            <CardHeader>
+                 <CardTitle>Floors</CardTitle>
+                 <CardDescription>Manage floors for this property.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="border rounded-md p-10 text-center text-muted-foreground">
+                    <p>Floor management functionality coming soon.</p>
+                </div>
+            </CardContent>
+           </Card>
+        </TabsContent>
+        <TabsContent value="rooms">
+           <Card>
+            <CardHeader>
+                 <CardTitle>Rooms</CardTitle>
+                 <CardDescription>Manage rooms within this property.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="border rounded-md p-10 text-center text-muted-foreground">
+                    <p>Room management functionality coming soon.</p>
+                </div>
+            </CardContent>
+           </Card>
+        </TabsContent>
+        <TabsContent value="partitions">
+           <Card>
+            <CardHeader>
+                 <CardTitle>Partitions</CardTitle>
+                 <CardDescription>Manage partitions for units in this property.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="border rounded-md p-10 text-center text-muted-foreground">
+                    <p>Partition management functionality coming soon.</p>
+                </div>
+            </CardContent>
+           </Card>
+        </TabsContent>
         <TabsContent value="occupied-by">
             <Card>
                 <CardHeader>
@@ -673,45 +712,6 @@ export default function PropertyPage() {
                     )}
                 </CardContent>
             </Card>
-        </TabsContent>
-         <TabsContent value="floors">
-           <Card>
-            <CardHeader>
-                 <CardTitle>Floors</CardTitle>
-                 <CardDescription>Manage floors for this property.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="border rounded-md p-10 text-center text-muted-foreground">
-                    <p>Floor management functionality coming soon.</p>
-                </div>
-            </CardContent>
-           </Card>
-        </TabsContent>
-         <TabsContent value="rooms">
-           <Card>
-            <CardHeader>
-                 <CardTitle>Rooms</CardTitle>
-                 <CardDescription>Manage rooms within this property.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="border rounded-md p-10 text-center text-muted-foreground">
-                    <p>Room management functionality coming soon.</p>
-                </div>
-            </CardContent>
-           </Card>
-        </TabsContent>
-         <TabsContent value="partitions">
-           <Card>
-            <CardHeader>
-                 <CardTitle>Partitions</CardTitle>
-                 <CardDescription>Manage partitions for units in this property.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="border rounded-md p-10 text-center text-muted-foreground">
-                    <p>Partition management functionality coming soon.</p>
-                </div>
-            </CardContent>
-           </Card>
         </TabsContent>
         <TabsContent value="attachments">
             <Card>
@@ -805,3 +805,5 @@ export default function PropertyPage() {
     </div>
   );
 }
+
+    
