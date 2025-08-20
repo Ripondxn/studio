@@ -31,17 +31,6 @@ export async function getUnits() {
     return await readUnits();
 }
 
-export async function getUnitsForProperty(propertyCode: string) {
-    try {
-        const allUnits = await readUnits();
-        const propertyUnits = allUnits.filter(u => u.propertyCode === propertyCode);
-        return { success: true, data: propertyUnits };
-    } catch (error) {
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-
 const addUnitFormSchema = unitSchema.omit({ id: true });
 
 export async function addUnit(data: z.infer<typeof addUnitFormSchema>) {
