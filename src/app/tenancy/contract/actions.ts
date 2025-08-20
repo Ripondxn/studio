@@ -20,6 +20,19 @@ const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 
 
+async function readData(filePath: string) {
+    try {
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
 async function readContracts(): Promise<Contract[]> {
     try {
         await fs.access(contractsFilePath);
@@ -191,7 +204,7 @@ export async function getUnitsForProperty(propertyCode: string) {
     const units = await readUnits();
     return units
         .filter(u => u.propertyCode === propertyCode)
-        .map((u: any) => ({ value: u.unitCode, label: `${u.unitCode} (${u.unitName || 'No Name'})` }));
+        .map((u: any) => ({ value: u.unitCode, label: u.unitName || u.unitCode }));
 }
 
 export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
