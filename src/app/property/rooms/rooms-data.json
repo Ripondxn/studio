@@ -7,7 +7,9 @@
     "floorCode": "F-01",
     "unitCode": "101",
     "roomType": "Master Bed",
-    "id": "ROOM-1755711878885"
+    "id": "ROOM-1755711878885",
+    "rentAmount": 1200,
+    "rentFrequency": "Monthly"
   },
   {
     "roomCode": "R2",
@@ -16,7 +18,9 @@
     "floorCode": "F-01",
     "unitCode": "101",
     "roomType": "Master Bed",
-    "id": "ROOM-1755712037335"
+    "id": "ROOM-1755712037335",
+    "rentAmount": 1200,
+    "rentFrequency": "Monthly"
   },
   {
     "roomCode": "R3",
@@ -25,7 +29,9 @@
     "floorCode": "F-01",
     "unitCode": "101",
     "roomType": "Standard",
-    "id": "ROOM-1755712096532"
+    "id": "ROOM-1755712096532",
+    "rentAmount": 1000,
+    "rentFrequency": "Monthly"
   },
   {
     "roomCode": "R4",
@@ -34,7 +40,9 @@
     "floorCode": "F-01",
     "unitCode": "101",
     "roomType": "Standard",
-    "id": "ROOM-1755712096533"
+    "id": "ROOM-1755712096533",
+    "rentAmount": 1000,
+    "rentFrequency": "Monthly"
   },
   {
     "roomCode": "R5",
@@ -43,7 +51,9 @@
     "floorCode": "F-01",
     "unitCode": "101",
     "roomType": "Standard",
-    "id": "ROOM-1755712096534"
+    "id": "ROOM-1755712096534",
+    "rentAmount": 1000,
+    "rentFrequency": "Monthly"
   },
   {
     "roomCode": "R6",
@@ -52,7 +62,9 @@
     "floorCode": "F-01",
     "unitCode": "101",
     "roomType": "Standard",
-    "id": "ROOM-1755712096535"
+    "id": "ROOM-1755712096535",
+    "rentAmount": 1000,
+    "rentFrequency": "Monthly"
   },
   {
     "roomCode": "R7",
@@ -61,6 +73,8 @@
     "floorCode": "F-01",
     "unitCode": "101",
     "roomType": "Standard",
-    "id": "ROOM-1755712096536"
+    "id": "ROOM-1755712096536",
+    "rentAmount": 1000,
+    "rentFrequency": "Monthly"
   }
 ]

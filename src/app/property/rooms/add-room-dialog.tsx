@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { roomSchema } from './schema';
+import { roomSchema, type Room } from './schema';
 import { addRoom, getRoomLookups } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -54,6 +54,8 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
         floorCode: '',
         unitCode: '',
         roomType: '',
+        rentAmount: 0,
+        rentFrequency: 'Monthly',
     }
   });
 
@@ -129,7 +131,7 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
                         render={({ field }) => (
                            <Combobox
                                 options={lookups.units}
-                                value={field.value}
+                                value={field.value || ''}
                                 onSelect={field.onChange}
                                 placeholder="Select a unit"
                            />
@@ -155,6 +157,32 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
                         )}
                     />
                     {errors.roomType && <p className="text-destructive text-xs mt-1">{errors.roomType.message}</p>}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="rentAmount">Rent Amount</Label>
+                        <Input id="rentAmount" type="number" {...register('rentAmount', { valueAsNumber: true })} />
+                        {errors.rentAmount && <p className="text-destructive text-xs mt-1">{errors.rentAmount.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="rentFrequency">Rent Frequency</Label>
+                        <Controller
+                            name="rentFrequency"
+                            control={control}
+                            render={({ field }) => (
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select frequency" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Monthly">Monthly</SelectItem>
+                                        <SelectItem value="Yearly">Yearly</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
+                         {errors.rentFrequency && <p className="text-destructive text-xs mt-1">{errors.rentFrequency.message}</p>}
+                    </div>
                 </div>
             </div>
             <DialogFooter>

@@ -9,6 +9,8 @@ export const roomSchema = z.object({
   floorCode: z.string().min(1, "Floor code is required."),
   unitCode: z.string().optional(),
   roomType: z.string().min(1, "Room type is required."),
+  rentAmount: z.number().optional(),
+  rentFrequency: z.enum(['Monthly', 'Yearly']).optional(),
 });
 
 export type Room = z.infer<typeof roomSchema>;

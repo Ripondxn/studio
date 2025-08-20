@@ -158,6 +158,20 @@ export const columns: ColumnDef<Room>[] = [
     header: 'Room Type',
   },
   {
+    accessorKey: 'rentAmount',
+    header: () => <div className="text-right">Rent</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue('rentAmount') || '0');
+      const frequency = row.original.rentFrequency;
+      const formatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      }).format(amount);
+
+      return <div className="text-right font-medium">{formatted} <span className="text-xs text-muted-foreground">{frequency ? `/${frequency.slice(0,2)}` : ''}</span></div>;
+    },
+  },
+  {
     id: 'actions',
     cell: ActionsCell,
   },

@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DoorClosed, Hash, Building } from 'lucide-react';
+import { DoorClosed, Hash, Building, Tag } from 'lucide-react';
 import type { Room } from './schema';
 import { EditRoomDialog } from './edit-room-dialog';
 import { useState } from 'react';
@@ -45,6 +45,20 @@ export function RoomCard({ room }: RoomCardProps) {
               {room.roomType}
             </span>
           </div>
+          {room.rentAmount && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-2"><Tag className="h-4 w-4" /> Rent</span>
+              <span className="font-semibold font-mono">
+                 {new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                }).format(room.rentAmount)}
+                <span className="text-xs text-muted-foreground font-sans normal-case">/{room.rentFrequency?.slice(0,2)}</span>
+              </span>
+            </div>
+          )}
         </CardContent>
         <CardFooter>
           <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
