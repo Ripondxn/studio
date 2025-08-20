@@ -559,8 +559,8 @@ export default function PropertyPage() {
             <TabsTrigger value="floors">Floors</TabsTrigger>
             <TabsTrigger value="rooms">Rooms</TabsTrigger>
             <TabsTrigger value="partitions">Partitions</TabsTrigger>
-            <TabsTrigger value="occupied-by">Occupied By</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
+            <TabsTrigger value="occupied-by">Occupied By</TabsTrigger>
         </TabsList>
         <TabsContent value="particulars">
           <Card>
@@ -670,49 +670,6 @@ export default function PropertyPage() {
             </CardContent>
            </Card>
         </TabsContent>
-        <TabsContent value="occupied-by">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Occupied By</CardTitle>
-                    <CardDescription>List of tenants currently occupying units in {propertyData.name || 'this property'}.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {isLoadingOccupancy ? (
-                         <div className="flex justify-center items-center h-40">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                    ) : occupancyInfo.length > 0 ? (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Unit Code</TableHead>
-                                    <TableHead>Tenant Name</TableHead>
-                                    <TableHead>Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {occupancyInfo.map(info => (
-                                    <TableRow key={info.contractId}>
-                                        <TableCell>{info.unitCode}</TableCell>
-                                        <TableCell>{info.tenantName}</TableCell>
-                                        <TableCell>
-                                            <Button asChild variant="link">
-                                                <Link href={`/tenancy/contract?id=${info.contractId}`}>View Contract</Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    ) : (
-                        <div className="text-center py-10 text-muted-foreground">
-                            <Users className="mx-auto h-12 w-12" />
-                            <p className="mt-4">No occupancy information found for this property.</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </TabsContent>
         <TabsContent value="attachments">
             <Card>
                 <CardHeader>
@@ -798,6 +755,49 @@ export default function PropertyPage() {
                      <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addAttachmentRow} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="occupied-by">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Occupied By</CardTitle>
+                    <CardDescription>List of tenants currently occupying units in {propertyData.name || 'this property'}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isLoadingOccupancy ? (
+                         <div className="flex justify-center items-center h-40">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : occupancyInfo.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Unit Code</TableHead>
+                                    <TableHead>Tenant Name</TableHead>
+                                    <TableHead>Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {occupancyInfo.map(info => (
+                                    <TableRow key={info.contractId}>
+                                        <TableCell>{info.unitCode}</TableCell>
+                                        <TableCell>{info.tenantName}</TableCell>
+                                        <TableCell>
+                                            <Button asChild variant="link">
+                                                <Link href={`/tenancy/contract?id=${info.contractId}`}>View Contract</Link>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <div className="text-center py-10 text-muted-foreground">
+                            <Users className="mx-auto h-12 w-12" />
+                            <p className="mt-4">No occupancy information found for this property.</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </TabsContent>

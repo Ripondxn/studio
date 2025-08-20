@@ -155,6 +155,7 @@ export default function UnitPage() {
 
   useEffect(() => {
     const unitCode = searchParams.get('unitCode');
+    const propertyCode = searchParams.get('propertyCode');
     if (unitCode) {
       setIsNewRecord(false);
       setUnitData(prev => ({...prev, unitCode}));
@@ -163,6 +164,9 @@ export default function UnitPage() {
     } else {
         setIsNewRecord(true);
         setIsEditing(true); // Start in editing mode for new entries
+        if (propertyCode) {
+          setUnitData(prev => ({ ...prev, property: propertyCode }));
+        }
     }
   }, [searchParams]);
 
@@ -500,6 +504,9 @@ export default function UnitPage() {
                       <SelectContent>
                         <SelectItem value="d3-china-cluster">
                           D3 China Cluster
+                        </SelectItem>
+                         <SelectItem value="MT">
+                          Lewa Tower-715
                         </SelectItem>
                       </SelectContent>
                     </Select>

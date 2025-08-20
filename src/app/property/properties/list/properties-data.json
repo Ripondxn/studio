@@ -1,41 +1,33 @@
-
 [
-    {
-        "id": "PROP-001",
-        "code": "MT",
-        "name": "Meras Tower",
-        "propertyType": "Residential Tower",
-        "status": "Active",
-        "noOfUnits": "150",
-        "attachments": [],
-        "landlordCode": "L-001"
+  {
+    "id": "PROP-1755696551366",
+    "propertyData": {
+      "code": "MT",
+      "name": "Lewa Tower-715",
+      "propertyType": "Building",
+      "bondType": "",
+      "landlord": "Landlord",
+      "status": "Active",
+      "plotArea": "0",
+      "builtUpArea": "0",
+      "noOfFloors": "0",
+      "noOfUnits": "82",
+      "noOfParkings": "0",
+      "address1": "Hazza Bin Zayed The First Street",
+      "address2": "",
+      "emirates": "",
+      "country1": "",
+      "propertyPosition": "",
+      "accountant": "Accountant",
+      "salesMan": "SalesMan",
+      "location": "Location",
+      "towerType": "Rent",
+      "gps": "",
+      "propertyNo": "",
+      "assetManager": "Supervisor"
     },
-    {
-        "id": "PROP-002",
-        "code": "ST",
-        "name": "Sama Tower",
-        "propertyType": "Commercial Tower",
-        "status": "Active",
-        "noOfUnits": "80",
-        "attachments": [],
-        "landlordCode": "L-001"
-    },
-    {
-        "id": "PROP-003",
-        "code": "GV",
-        "name": "Green Villas",
-        "propertyType": "Villa Compound",
-        "status": "Active",
-        "noOfUnits": "50",
-        "attachments": []
-    },
-    {
-        "id": "PROP-004",
-        "code": "OB",
-        "name": "Oasis Building",
-        "propertyType": "Residential Building",
-        "status": "Under Maintenance",
-        "noOfUnits": "40",
-        "attachments": []
-    }
+    "particulars": [],
+    "attachments": [],
+    "propertyPhoto": null
+  }
 ]

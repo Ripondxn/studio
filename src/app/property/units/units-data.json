@@ -1,39 +1,31 @@
-
 [
-    {
-        "id": "UNIT-001",
-        "unitCode": "D03-101",
-        "property": "D3 China Cluster",
-        "floor": "1",
-        "unitType": "1 BHK",
-        "annualRent": "30000",
-        "unitStatus": "Active"
-    },
-    {
-        "id": "UNIT-002",
-        "unitCode": "D03-102",
-        "property": "D3 China Cluster",
-        "floor": "1",
-        "unitType": "2 BHK",
-        "annualRent": "45000",
-        "unitStatus": "Active"
-    },
-    {
-        "id": "UNIT-003",
-        "unitCode": "C01-205",
-        "property": "C1 Spain Cluster",
-        "floor": "2",
-        "unitType": "Studio",
-        "annualRent": "22000",
-        "unitStatus": "Vacant"
-    },
-    {
-        "id": "UNIT-004",
-        "unitCode": "E05-301",
-        "property": "E5 England Cluster",
-        "floor": "3",
-        "unitType": "1 BHK",
-        "annualRent": "32000",
-        "unitStatus": "Active"
-    }
+  {
+    "id": "UNIT-1755696672580",
+    "unitCode": "A",
+    "property": "d3-china-cluster",
+    "floor": "1",
+    "unitType": "1-bhk",
+    "electricityCode": "",
+    "annualRent": "36000",
+    "salesMan": "salesman",
+    "unitNo": "101",
+    "unitArea": "",
+    "view": "",
+    "bathrooms": "3",
+    "electricityKw": "",
+    "monthlyRent": "3000",
+    "accountant": "accountant",
+    "unitStatus": "Active",
+    "landlord": "landlord",
+    "unitStatusNormal": "normal",
+    "parkings": "1",
+    "amount": "",
+    "amountType": "annual",
+    "rentSqft": "",
+    "postMonthlyIncome": "yes",
+    "discount": "0",
+    "discountType": "value",
+    "rentBasedOn": "annually",
+    "supervisor": "supervisor"
+  }
 ]
