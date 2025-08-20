@@ -4,7 +4,6 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Card,
@@ -50,6 +49,8 @@ import {
   FileUp,
   Link2,
   Users,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -96,6 +97,7 @@ import { getPartitionsForProperty } from '../partitions/actions';
 import { DataTable as PartitionsDataTable } from '../partitions/data-table';
 import { columns as partitionColumns } from '../partitions/columns';
 import { AddPartitionDialog } from '../partitions/add-partition-dialog';
+import { UnitGrid } from '../units/unit-grid';
 
 
 type Particular = {
@@ -126,6 +128,8 @@ type OccupancyInfo = {
     tenantName: string;
     contractId: string;
 }
+
+type ViewMode = 'grid' | 'list';
 
 const initialPropertyData = {
     code: '',
@@ -191,6 +195,7 @@ export default function PropertyPage() {
   const [isLoadingPartitions, setIsLoadingPartitions] = useState(false);
   
   const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
+  const [unitsViewMode, setUnitsViewMode] = useState<ViewMode>('grid');
 
 
   useEffect(() => {
@@ -219,58 +224,52 @@ export default function PropertyPage() {
     };
   }, [attachments]);
 
-  useEffect(() => {
-    if (propertyData.code && !isNewRecord) {
-        setIsLoadingUnits(true);
-        getUnitsForProperty(propertyData.code)
-            .then(result => {
-                if (result.success && result.data) {
-                    setUnits(result.data);
-                }
-            })
-            .finally(() => setIsLoadingUnits(false));
-        
-        setIsLoadingFloors(true);
-        getFloorsForProperty(propertyData.code)
-            .then(result => {
-                if (result.success && result.data) {
-                    setFloors(result.data);
-                }
-            })
-            .finally(() => setIsLoadingFloors(false));
-        
-        setIsLoadingRooms(true);
-        getRoomsForProperty(propertyData.code)
-            .then(result => {
-                if (result.success && result.data) {
-                    setRooms(result.data);
-                }
-            })
-            .finally(() => setIsLoadingRooms(false));
-        
-        setIsLoadingPartitions(true);
-        getPartitionsForProperty(propertyData.code)
-            .then(result => {
-                if (result.success && result.data) {
-                    setPartitions(result.data);
-                }
-            })
-            .finally(() => setIsLoadingPartitions(false));
-    }
-  }, [propertyData.code, isNewRecord]);
+  const fetchPropertySubData = (code: string) => {
+    setIsLoadingUnits(true);
+    getUnitsForProperty(code)
+        .then(result => {
+            if (result.success && result.data) {
+                setUnits(result.data);
+            }
+        })
+        .finally(() => setIsLoadingUnits(false));
+    
+    setIsLoadingFloors(true);
+    getFloorsForProperty(code)
+        .then(result => {
+            if (result.success && result.data) {
+                setFloors(result.data);
+            }
+        })
+        .finally(() => setIsLoadingFloors(false));
+    
+    setIsLoadingRooms(true);
+    getRoomsForProperty(code)
+        .then(result => {
+            if (result.success && result.data) {
+                setRooms(result.data);
+            }
+        })
+        .finally(() => setIsLoadingRooms(false));
+    
+    setIsLoadingPartitions(true);
+    getPartitionsForProperty(code)
+        .then(result => {
+            if (result.success && result.data) {
+                setPartitions(result.data);
+            }
+        })
+        .finally(() => setIsLoadingPartitions(false));
 
-  useEffect(() => {
-    if (propertyData.code && !isNewRecord) {
-        setIsLoadingOccupancy(true);
-        getOccupancyInfoForProperty(propertyData.code)
-            .then(result => {
-                if(result.success && result.data){
-                    setOccupancyInfo(result.data);
-                }
-            })
-            .finally(() => setIsLoadingOccupancy(false));
-    }
-  }, [propertyData.code, isNewRecord]);
+    setIsLoadingOccupancy(true);
+    getOccupancyInfoForProperty(code)
+        .then(result => {
+            if(result.success && result.data){
+                setOccupancyInfo(result.data);
+            }
+        })
+        .finally(() => setIsLoadingOccupancy(false));
+  };
 
 
   const handleInputChange = (field: keyof typeof propertyData, value: string) => {
@@ -445,6 +444,7 @@ export default function PropertyPage() {
         setInitialAllData(result.data);
         setIsNewRecord(false);
         setIsEditing(false);
+        fetchPropertySubData(codeToFind);
         toast({
           title: 'Found',
           description: `Found record for Property Code: ${codeToFind}`,
@@ -689,7 +689,17 @@ export default function PropertyPage() {
                         <CardTitle>Units</CardTitle>
                         <CardDescription>Manage all units within this property.</CardDescription>
                     </div>
-                    <AddUnitDialog propertyCode={propertyData.code} onUnitAdded={() => handleFindClick(propertyData.code)} />
+                    <div className="flex items-center gap-2">
+                         <div className="flex items-center rounded-md bg-muted p-1">
+                            <Button variant={unitsViewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setUnitsViewMode('grid')}>
+                                <LayoutGrid className="h-5 w-5" />
+                            </Button>
+                             <Button variant={unitsViewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setUnitsViewMode('list')}>
+                                <List className="h-5 w-5" />
+                            </Button>
+                        </div>
+                        <AddUnitDialog propertyCode={propertyData.code} onUnitAdded={() => handleFindClick(propertyData.code)} />
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -697,8 +707,10 @@ export default function PropertyPage() {
                     <div className="flex justify-center items-center h-40">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
-                ) : (
+                ) : unitsViewMode === 'list' ? (
                     <UnitsDataTable columns={unitColumns} data={units} />
+                ) : (
+                    <UnitGrid units={units} />
                 )}
             </CardContent>
            </Card>
@@ -711,7 +723,7 @@ export default function PropertyPage() {
                         <CardTitle>Floors</CardTitle>
                         <CardDescription>Manage floors for this property.</CardDescription>
                     </div>
-                    <AddFloorDialog propertyCode={propertyData.code} onFloorAdded={() => handleFindClick(propertyData.code)} />
+                    <AddFloorDialog propertyCode={propertyData.code} onFloorAdded={() => fetchPropertySubData(propertyData.code)} />
                 </div>
             </CardHeader>
             <CardContent>
@@ -733,7 +745,7 @@ export default function PropertyPage() {
                         <CardTitle>Rooms</CardTitle>
                         <CardDescription>Manage rooms within this property.</CardDescription>
                     </div>
-                    <AddRoomDialog propertyCode={propertyData.code} onRoomAdded={() => handleFindClick(propertyData.code)} />
+                    <AddRoomDialog propertyCode={propertyData.code} onRoomAdded={() => fetchPropertySubData(propertyData.code)} />
                 </div>
             </CardHeader>
             <CardContent>
@@ -755,7 +767,7 @@ export default function PropertyPage() {
                         <CardTitle>Partitions</CardTitle>
                         <CardDescription>Manage partitions for units in this property.</CardDescription>
                     </div>
-                    <AddPartitionDialog propertyCode={propertyData.code} onPartitionAdded={() => handleFindClick(propertyData.code)} />
+                    <AddPartitionDialog propertyCode={propertyData.code} onPartitionAdded={() => fetchPropertySubData(propertyData.code)} />
                 </div>
             </CardHeader>
             <CardContent>
