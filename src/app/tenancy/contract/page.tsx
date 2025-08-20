@@ -6,9 +6,6 @@ import { useRouter, useSearchParams }from 'next/navigation';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +58,7 @@ const initialContractState: Contract = {
     rentBasedOn: 'Monthly',
     paymentFrequency: 'Monthly',
     numberOfPayments: 1,
+    gracePeriod: 0,
     paymentSchedule: [],
     terms: '',
 };
@@ -130,11 +128,11 @@ export default function TenancyContractPage() {
     }
   }, [searchParams, router, toast]);
 
-  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments'>, value: string) => {
+  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
   }
   
-  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments', value: string) => {
+  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'gracePeriod', value: string) => {
     setContract(prev => ({...prev, [field]: parseInt(value, 10) || 0 }));
   }
 
@@ -595,28 +593,31 @@ export default function TenancyContractPage() {
                             </Select>
                         </div>
                     </div>
-                      <div>
-                        <Label htmlFor="status">Status</Label>
-                        <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
-                            <SelectTrigger id="status">
-                                <SelectValue/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="New">New</SelectItem>
-                                <SelectItem value="Renew">Renew</SelectItem>
-                                <SelectItem value="Cancel">Cancel</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="status">Status</Label>
+                            <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
+                                <SelectTrigger id="status">
+                                    <SelectValue/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="New">New</SelectItem>
+                                    <SelectItem value="Renew">Renew</SelectItem>
+                                    <SelectItem value="Cancel">Cancel</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div>
+                            <Label htmlFor="grace-period">Grace Period (days)</Label>
+                            <Input id="grace-period" type="number" placeholder="0" value={contract.gracePeriod || ''} onChange={e => handleNumberInputChange('gracePeriod', e.target.value)} disabled={!isEditing}/>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
         </div>
       </div>
       <Card className="mt-6">
-        <CardHeader>
-            <CardTitle>Payment Schedule</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4 p-4 border rounded-md bg-muted/50">
                   <div>
                     <Label htmlFor="payment-frequency">Payment Frequency</Label>

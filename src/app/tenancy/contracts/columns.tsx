@@ -243,6 +243,14 @@ export const columns: ColumnDef<Contract>[] = [
         return <Badge variant={statusVariantMap[status] || 'default'} className="capitalize">{status}</Badge>;
     }
   },
+  {
+    accessorKey: 'gracePeriod',
+    header: 'Grace Period',
+    cell: ({ row }) => {
+        const gracePeriod = row.getValue('gracePeriod') as number;
+        return <span>{gracePeriod || 0} days</span>;
+    }
+  },
    {
     accessorKey: 'terminationDate',
     header: 'Termination D...',

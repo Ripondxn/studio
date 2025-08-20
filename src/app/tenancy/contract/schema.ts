@@ -30,6 +30,7 @@ export const contractSchema = z.object({
   rentBasedOn: z.enum(['Monthly', 'Daily']).optional(),
   paymentFrequency: z.enum(['Monthly', 'Quarterly', 'Half-Yearly', 'Yearly', 'Custom']).optional(),
   numberOfPayments: z.number().optional(),
+  gracePeriod: z.number().optional(),
   paymentSchedule: z.array(paymentInstallmentSchema),
   terms: z.string().optional(),
 });
