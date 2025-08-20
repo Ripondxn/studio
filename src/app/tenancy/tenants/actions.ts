@@ -65,13 +65,25 @@ export async function getAllTenants() {
     const tenants = await getTenants();
     const contracts = await getContracts();
     
-    const contractsMap = new Map(contracts.map(c => [c.contractNo, c.id]));
+    // Create a map of tenantCode to their contract.
+    const contractsByTenantCode = new Map<string, Contract>();
+    for (const contract of contracts) {
+        if(contract.tenantCode) {
+            contractsByTenantCode.set(contract.tenantCode, contract);
+        }
+    }
 
-    return tenants.map((l: any) => ({
-        ...l.tenantData,
-        attachments: l.attachments || [],
-        contractId: contractsMap.get(l.tenantData.contractNo) || null
-    }));
+    return tenants.map((l: any) => {
+        const tenantCode = l.tenantData.code;
+        const contract = contractsByTenantCode.get(tenantCode);
+
+        return {
+            ...l.tenantData,
+            attachments: l.attachments || [],
+            contractId: contract?.id || null,
+            contractNo: contract?.contractNo || null,
+        }
+    });
 }
 
 export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
