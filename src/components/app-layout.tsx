@@ -66,6 +66,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   
   const handleLogout = () => {
     sessionStorage.removeItem('userProfile');
+    sessionStorage.removeItem('openTabs');
     router.push('/login');
   };
   
@@ -198,9 +199,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </DropdownMenu>
             </div>
         </header>
-        <div className="border-b bg-background/80 backdrop-blur-sm">
-            <Breadcrumbs />
-        </div>
+        <Breadcrumbs />
         <main className="flex flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
           {children}
         </main>
