@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -25,6 +26,8 @@ import {
   Receipt,
 } from 'lucide-react';
 import Link from 'next/link';
+import { getAllContracts } from '@/app/tenancy/contract/actions';
+import { differenceInDays, parseISO } from 'date-fns';
 
 const kpiData = [
   {
@@ -57,13 +60,6 @@ const kpiData = [
   },
 ];
 
-const expiryReport = [
-    { unit: 'A-101', tenant: 'Global Innovations Inc.', endDate: '2024-08-15', rent: 5500, status: 'Renewal Due' },
-    { unit: 'C-305', tenant: 'Quantum Solutions', endDate: '2024-08-22', rent: 7200, status: 'Renewal Due' },
-    { unit: 'B-210', tenant: 'Nebula Corp', endDate: '2024-09-01', rent: 4800, status: 'Notified' },
-    { unit: 'A-102', tenant: 'Apex Enterprises', endDate: '2024-09-10', rent: 5500, status: 'Renewal Due' },
-];
-
 const vacantUnits = [
     { unit: 'D-401', type: '2-Bed', daysVacant: 45, marketRent: 6800 },
     { unit: 'B-115', type: 'Studio', daysVacant: 21, marketRent: 3200 },
@@ -71,7 +67,25 @@ const vacantUnits = [
     { unit: 'E-501', type: 'Penthouse', daysVacant: 68, marketRent: 12500 },
 ];
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const contracts = await getAllContracts();
+  const today = new Date();
+
+  const expiryReport = contracts
+    .map(contract => ({
+      ...contract,
+      daysRemaining: differenceInDays(parseISO(contract.endDate), today),
+    }))
+    .filter(contract => contract.daysRemaining >= 0 && contract.daysRemaining <= 90)
+    .sort((a, b) => a.daysRemaining - b.daysRemaining)
+    .map(contract => ({
+      unit: contract.unitCode,
+      tenant: contract.tenantName,
+      endDate: contract.endDate,
+      rent: contract.totalRent,
+      status: contract.daysRemaining <= 30 ? 'Renewal Due' : 'Notified'
+    }));
+
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
