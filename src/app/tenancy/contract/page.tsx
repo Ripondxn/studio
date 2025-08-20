@@ -38,6 +38,7 @@ import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
+import { type Tenant } from '../tenants/schema';
 
 const initialContractState: Contract = {
     id: '',
@@ -67,7 +68,7 @@ type LookupData = {
     units: {value: string, label: string}[];
     rooms: {value: string, label: string}[];
     partitions: {value: string, label: string}[];
-    tenants: {value: string, label: string}[];
+    tenants: (Tenant & {value: string, label: string})[];
 }
 
 export default function TenancyContractPage() {
@@ -158,8 +159,9 @@ export default function TenancyContractPage() {
         if (result.success && result.data) {
             setContract(prev => ({
                 ...prev,
-                tenantName: result.data.tenantName,
-                tenantCode: result.data.tenantCode,
+                property: result.data.property,
+                tenantName: result.data.tenant?.name || '',
+                tenantCode: result.data.tenant?.code || '',
                 totalRent: result.data.totalRent,
             }));
         }
@@ -194,6 +196,9 @@ export default function TenancyContractPage() {
               ...prev,
               tenantCode: tenant.value,
               tenantName: tenant.label,
+              mobile: tenant.mobile,
+              email: tenant.email,
+              address: tenant.address
           }));
       }
   }
@@ -538,14 +543,14 @@ export default function TenancyContractPage() {
               <Input id="tenant-code" value={contract.tenantCode || ''} disabled />
             </div>
              <div>
-              <Label htmlFor="start-date">Start Date</Label>
-              <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
-            </div>
+                <Label htmlFor="start-date">Start Date</Label>
+                <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
+             </div>
              <div>
-              <Label htmlFor="end-date">End Date</Label>
-              <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
-            </div>
-            <div>
+                <Label htmlFor="end-date">End Date</Label>
+                <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
+             </div>
+             <div>
                 <Label htmlFor="rent-amount">Total Rent</Label>
                 <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
             </div>
@@ -573,6 +578,21 @@ export default function TenancyContractPage() {
                         <SelectItem value="Renew">Renew</SelectItem>
                     </SelectContent>
                  </Select>
+            </div>
+            <div className="md:col-span-4">
+                <Separator />
+            </div>
+            <div>
+                <Label htmlFor="tenant-mobile">Tenant Mobile</Label>
+                <Input id="tenant-mobile" value={contract.mobile || ''} disabled />
+            </div>
+            <div>
+                <Label htmlFor="tenant-email">Tenant Email</Label>
+                <Input id="tenant-email" value={contract.email || ''} disabled />
+            </div>
+            <div className="md:col-span-2">
+                <Label htmlFor="tenant-address">Tenant Address</Label>
+                <Input id="tenant-address" value={contract.address || ''} disabled />
             </div>
           </div>
           <Separator />

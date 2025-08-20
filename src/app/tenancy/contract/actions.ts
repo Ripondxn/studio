@@ -10,6 +10,7 @@ import { type Unit } from '@/app/property/units/schema';
 import { type Floor } from '@/app/property/floors/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { type Partition } from '@/app/property/partitions/schema';
+import { type Tenant } from '@/app/tenancy/tenants/schema';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
@@ -181,7 +182,7 @@ async function readPartitions(): Promise<Partition[]> {
         return [];
     }
 }
-async function readTenants() {
+async function readTenants(): Promise<{tenantData: Tenant}[]> {
     try {
         const data = await fs.readFile(tenantsFilePath, 'utf-8');
         return JSON.parse(data);
@@ -196,7 +197,7 @@ export async function getContractLookups() {
     const tenants = await readTenants();
     return {
         properties: properties.map((p: any) => ({ value: (p.propertyData || p).code, label: (p.propertyData || p).name })),
-        tenants: tenants.map((t: any) => ({ value: t.tenantData.code, label: t.tenantData.name })),
+        tenants: tenants.map((t: any) => ({ value: t.tenantData.code, label: t.tenantData.name, ...t.tenantData })),
     }
 }
 
@@ -256,8 +257,7 @@ export async function getUnitDetails(unitCode: string) {
         success: true, 
         data: {
             property: property ? (property.propertyData || property).name : '',
-            tenantName: tenant ? tenant.tenantData.name : '',
-            tenantCode: tenant ? tenant.tenantData.code : '',
+            tenant: tenant ? tenant.tenantData : null,
             totalRent: unit.annualRent,
         }
     };
