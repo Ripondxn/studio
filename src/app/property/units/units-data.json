@@ -2,7 +2,7 @@
 [
   {
     "id": "UNIT-1755710073669",
-    "unitCode": "U-101",
+    "unitCode": "101",
     "propertyCode": "LT-C38",
     "floor": "F-01",
     "unitType": "1BHK",
@@ -11,7 +11,7 @@
   },
   {
     "id": "UNIT-1755710073670",
-    "unitCode": "U-102",
+    "unitCode": "102",
     "propertyCode": "LT-C38",
     "floor": "F-01",
     "unitType": "2BHK",
@@ -20,11 +20,74 @@
   },
   {
     "id": "UNIT-1755710073671",
-    "unitCode": "U-201",
+    "unitCode": "103",
     "propertyCode": "LT-C38",
-    "floor": "F-02",
+    "floor": "F-01",
+    "unitType": "1BHK",
+    "annualRent": 56000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755710073672",
+    "unitCode": "104",
+    "propertyCode": "LT-C38",
+    "floor": "F-01",
     "unitType": "3BHK",
     "annualRent": 95000,
     "unitStatus": "Inactive"
+  },
+  {
+    "id": "UNIT-1755710073673",
+    "unitCode": "201",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "1BHK",
+    "annualRent": 57000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755710073674",
+    "unitCode": "202",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "2BHK",
+    "annualRent": 76000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755710073675",
+    "unitCode": "203",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "2BHK",
+    "annualRent": 77000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755710073676",
+    "unitCode": "204",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "3BHK",
+    "annualRent": 98000,
+    "unitStatus": "Active"
+  },
+    {
+    "id": "UNIT-1755710073677",
+    "unitCode": "G01",
+    "propertyCode": "LT-C38",
+    "floor": "G",
+    "unitType": "2BHK",
+    "annualRent": 80000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755710073678",
+    "unitCode": "M01",
+    "propertyCode": "LT-C38",
+    "floor": "M",
+    "unitType": "1BHK",
+    "annualRent": 65000,
+    "unitStatus": "Active"
   }
 ]
