@@ -1450,7 +1450,7 @@ export default function PropertyPage() {
                                             <Input
                                                 type="number"
                                                 value={item.percentage}
-                                                onChange={e => handleShareHolderChange(item.id, 'percentage', parseFloat(e.target.value))}
+                                                onChange={e => handleShareHolderChange(item.id, 'percentage', parseFloat(e.target.value) || 0)}
                                                 disabled={!isEditing}
                                                 placeholder="0"
                                                 className="text-right"

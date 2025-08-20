@@ -24,7 +24,8 @@ import {
   Search,
   X,
   FileUp,
-  Link2
+  Link2,
+  AlertDialogTrigger,
 } from 'lucide-react';
 import {
   Table,
@@ -43,7 +44,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveVendorData, findVendorData, deleteVendorData } from '../actions';
@@ -486,4 +486,3 @@ export default function VendorPage() {
     </div>
   );
 }
-
