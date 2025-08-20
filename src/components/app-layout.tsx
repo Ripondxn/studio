@@ -35,6 +35,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
+import { Breadcrumbs } from './breadcrumbs';
+
 
 // A type for the user profile stored in session storage
 type UserProfile = Omit<UserRole, 'password' | 'lastLogin' | 'status'>;
@@ -196,6 +198,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </DropdownMenu>
             </div>
         </header>
+        <div className="border-b bg-background/80 backdrop-blur-sm">
+            <Breadcrumbs />
+        </div>
         <main className="flex flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
           {children}
         </main>
