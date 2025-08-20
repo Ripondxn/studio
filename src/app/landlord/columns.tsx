@@ -216,6 +216,14 @@ export const columns: ColumnDef<Landlord>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const landlord = row.original;
+      return (
+        <Button asChild variant="link" className="p-0 h-auto font-normal">
+          <Link href={`/landlord/add?code=${landlord.code}`}>{landlord.code}</Link>
+        </Button>
+      )
+    }
   },
   {
     accessorKey: 'name',
