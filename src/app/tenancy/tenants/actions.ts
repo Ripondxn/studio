@@ -108,7 +108,7 @@ export async function findTenantData(tenantCode: string) {
     if (tenant) {
        const allContracts = await getContracts();
        let contractData: Partial<Contract> = {};
-       let unitData: Partial<Unit & { property?: string }> = {};
+       let unitData: Partial<Unit & { property?: any }> = {};
 
        if(tenant.tenantData.contractNo) {
          const relatedContract = allContracts.find(c => c.contractNo === tenant.tenantData.contractNo);
@@ -123,7 +123,7 @@ export async function findTenantData(tenantCode: string) {
                     
                     unitData = {
                         ...relatedUnit,
-                        property: relatedProperty ? (relatedProperty.propertyData || relatedProperty).name : 'N/A'
+                        property: relatedProperty ? (relatedProperty.propertyData || relatedProperty) : null
                     };
                 }
             }

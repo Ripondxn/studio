@@ -25,7 +25,10 @@ import {
   X,
   FileUp,
   Link2,
-  Home
+  Home,
+  FileText,
+  DollarSign,
+  Calendar
 } from 'lucide-react';
 import {
   Table,
@@ -92,7 +95,7 @@ export default function TenantPage() {
   const [initialData, setInitialData] = useState(initialTenantData);
 
   const [contractData, setContractData] = useState<Partial<Contract>>({});
-  const [unitData, setUnitData] = useState<Partial<Unit & { property?: string }>>({});
+  const [unitData, setUnitData] = useState<Partial<Unit & { property?: any }>>({});
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
@@ -341,7 +344,7 @@ export default function TenantPage() {
         <Tabs defaultValue="info">
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
-                <TabsTrigger value="unit">Rental Details</TabsTrigger>
+                <TabsTrigger value="rental-details">Rental Details</TabsTrigger>
                 <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
                 <TabsTrigger value="pdc">PDC Schedule</TabsTrigger>
                 <TabsTrigger value="termination">Termination</TabsTrigger>
@@ -464,38 +467,48 @@ export default function TenantPage() {
                     </CardContent>
                 </Card>
             </TabsContent>
-            <TabsContent value="unit">
+            <TabsContent value="rental-details">
                 <Card>
                     <CardHeader>
                         <CardTitle>Rental Details</CardTitle>
-                        <CardDescription>Information about the rental occupied by the tenant.</CardDescription>
+                        <CardDescription>Information about the contract and property occupied by the tenant.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {unitData.unitCode ? (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="space-y-4">
+                        {contractData.id && unitData.property ? (
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader><CardTitle>Contract Information</CardTitle></CardHeader>
+                                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div><Label>Contract No</Label><Input value={contractData.contractNo} disabled /></div>
+                                    <div><Label>Start Date</Label><Input value={format(new Date(contractData.startDate!), 'PP')} disabled /></div>
+                                    <div><Label>End Date</Label><Input value={format(new Date(contractData.endDate!), 'PP')} disabled /></div>
+                                    <div><Label>Total Rent</Label><Input value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(contractData.totalRent || 0)} disabled /></div>
+                                    <div><Label>Status</Label><Input value={contractData.status} disabled /></div>
+                                    <div className="flex items-end">
+                                         <Button asChild className="w-full">
+                                            <Link href={`/tenancy/contract?id=${contractData.id}`}>View Full Contract</Link>
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader><CardTitle>Property & Unit Information</CardTitle></CardHeader>
+                                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div><Label>Property Name</Label><Input value={unitData.property.name} disabled /></div>
                                     <div><Label>Unit Code</Label><Input value={unitData.unitCode} disabled /></div>
-                                    <div><Label>Property</Label><Input value={unitData.property} disabled /></div>
-                                    <div><Label>Floor</Label><Input value={unitData.floor} disabled /></div>
-                                </div>
-                                <div className="space-y-4">
                                     <div><Label>Unit Type</Label><Input value={unitData.unitType} disabled /></div>
-                                    <div><Label>Annual Rent</Label><Input value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(unitData.annualRent || 0)} disabled /></div>
-                                    <div><Label>Status</Label><Input value={unitData.unitStatus} disabled /></div>
-                                </div>
-                                <div className="space-y-4">
-                                    <Card className="bg-muted/50 h-full">
-                                        <CardHeader><CardTitle>Unit Actions</CardTitle></CardHeader>
-                                        <CardContent>
-                                            <Button asChild className="w-full">
-                                                <Link href={`/property/properties?code=${unitData.propertyCode}`}>View Full Property Details</Link>
-                                            </Button>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            </div>
+                                    <div><Label>Floor</Label><Input value={unitData.floor} disabled /></div>
+                                    <div><Label>Property Address</Label><Input value={unitData.property.address1} disabled /></div>
+                                     <div className="flex items-end">
+                                         <Button asChild className="w-full">
+                                            <Link href={`/property/properties?code=${unitData.propertyCode}`}>View Full Property</Link>
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                         ) : (
-                            <div className="text-center py-10 text-muted-foreground">
+                             <div className="text-center py-10 text-muted-foreground">
                                 <Home className="mx-auto h-12 w-12" />
                                 <p className="mt-4">No rental information linked to this tenant's contract.</p>
                              </div>
