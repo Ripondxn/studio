@@ -120,7 +120,7 @@ export default function VendorPage() {
                 return {...item, file: value, url: newUrl};
             }
             if (field === 'isLink') {
-                 return {...item, isLink: value, file: '' }; // Reset file input when switching mode
+                 return {...item, isLink: value, file: null, url: undefined }; // Reset file and url when switching mode
             }
             return {...item, [field]: value};
         }

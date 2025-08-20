@@ -425,7 +425,7 @@ export default function PropertyPage() {
                 return {...item, file: value, url: newUrl};
             }
              if (field === 'isLink') {
-                 return {...item, isLink: value, file: '' };
+                 return {...item, isLink: value, file: null, url: undefined };
             }
             return {...item, [field]: value};
         }
