@@ -17,6 +17,8 @@ export const propertySchema = z.object({
   status: z.string(),
   noOfUnits: z.string(),
   attachments: z.array(attachmentSchema).optional(),
+  landlordCode: z.string().optional(),
+  landlord: z.string().optional(),
 });
 
 export type Property = z.infer<typeof propertySchema>;

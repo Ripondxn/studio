@@ -225,6 +225,10 @@ export const columns: ColumnDef<Property>[] = [
     header: 'Name',
   },
   {
+    accessorKey: 'landlord',
+    header: 'Landlord',
+  },
+  {
     accessorKey: 'propertyType',
     header: 'Property Type',
   },
