@@ -1,0 +1,416 @@
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Save,
+  Trash2,
+  Plus,
+  Pencil,
+  Loader2,
+  Search,
+  X
+} from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { saveVendorData, findVendorData, deleteVendorData } from '../actions';
+
+type Attachment = {
+  id: number;
+  name: string;
+  file: File | null;
+  remarks: string;
+};
+
+const initialVendorData = {
+    code: '',
+    name: '',
+    mobile: '',
+    email: '',
+    address: '',
+    bankName: '',
+    accountNumber: '',
+    iban: '',
+};
+
+export default function VendorPage() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isNewRecord, setIsNewRecord] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isFinding, setIsFinding] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [vendorData, setVendorData] = useState(initialVendorData);
+  const [initialData, setInitialData] = useState(initialVendorData);
+  
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
+
+  useEffect(() => {
+    const vendorCode = searchParams.get('code');
+    if (vendorCode) {
+      setIsNewRecord(false);
+      handleFindClick(vendorCode);
+    } else {
+        setIsNewRecord(true);
+        setIsEditing(true); 
+        setVendorData(initialVendorData);
+        setAttachments([]);
+    }
+  }, [searchParams]);
+
+  const handleInputChange = (field: keyof typeof vendorData, value: string) => {
+    setVendorData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
+    setAttachments(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+  };
+
+  const addAttachmentRow = () => {
+    setAttachments(prev => [
+      ...prev,
+      {
+        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
+        name: '',
+        file: null,
+        remarks: ''
+      }
+    ]);
+  };
+
+  const removeAttachmentRow = (id: number) => {
+    setAttachments(prev => prev.filter(item => item.id !== id));
+  };
+
+  const setAllData = (data: any) => {
+    setVendorData(data.vendorData || initialVendorData);
+    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : []);
+  }
+
+  const setInitialAllData = (data: any) => {
+    setInitialData(JSON.parse(JSON.stringify(data.vendorData || initialVendorData)));
+    setInitialAttachments(JSON.parse(JSON.stringify(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : [])));
+  }
+
+  const handleEditClick = () => {
+    setInitialAllData({ vendorData, attachments });
+    setIsEditing(true);
+  }
+
+  const handleSaveClick = async () => {
+    if (!vendorData.code || !vendorData.name) {
+         toast({
+            variant: "destructive",
+            title: "Validation Error",
+            description: "Vendor Code and Name are required fields.",
+        });
+        return;
+    }
+    setIsSaving(true);
+    try {
+      const dataToSave = {
+        vendorData,
+        attachments: attachments.map(a => ({...a, file: a.file?.name})),
+      };
+
+      const result = await saveVendorData(dataToSave, isNewRecord);
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: `Vendor "${vendorData.name}" saved successfully.`,
+        });
+        setIsEditing(false);
+        if (isNewRecord) {
+            router.push(`/vendors?code=${vendorData.code}`);
+        } else {
+            setInitialAllData(dataToSave);
+        }
+      } else {
+        throw new Error(result.error || 'An unknown error occurred');
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (error as Error).message || "Failed to save vendor data.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const handleCancelClick = () => {
+     if (isNewRecord) {
+        router.push('/vendors');
+     } else {
+        setVendorData(initialData);
+        setAttachments(initialAttachments);
+        setIsEditing(false);
+     }
+  }
+
+  const handleFindClick = async (code?: string) => {
+    const codeToFind = code || vendorData.code;
+    if (!codeToFind) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter a Vendor Code to find.',
+      });
+      return;
+    }
+    setIsFinding(true);
+    try {
+      const result = await findVendorData(codeToFind);
+      if (result.success && result.data) {
+        toast({
+          title: 'Found',
+          description: `Found record for Vendor Code: ${codeToFind}`,
+        });
+        setAllData(result.data);
+        setInitialAllData(result.data);
+        setIsNewRecord(false);
+        setIsEditing(false);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Not Found',
+          description: `No record found for Vendor Code: ${codeToFind}. You can create a new one.`,
+        });
+        const newVendor = { ...initialVendorData, code: codeToFind };
+        setAllData({ vendorData: newVendor });
+        setIsNewRecord(true);
+        setIsEditing(true);
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: (error as Error).message || 'Failed to find vendor data.',
+      });
+    } finally {
+      setIsFinding(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!vendorData.code) return;
+    try {
+      const result = await deleteVendorData(vendorData.code);
+      if (result.success) {
+        toast({
+          title: 'Deleted',
+          description: `Vendor "${vendorData.name}" has been deleted.`,
+        });
+        router.push('/vendors');
+      } else {
+        throw new Error(result.error || 'An unknown error occurred');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: (error as Error).message || 'Failed to delete vendor data.',
+      });
+    }
+  };
+  
+  const pageTitle = isNewRecord ? 'Add New Vendor' : `Edit Vendor: ${initialData.name}`;
+
+  return (
+    <div className="container mx-auto p-4 bg-background">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-primary font-headline">
+          {pageTitle}
+        </h1>
+        <div className="flex items-center gap-2">
+            {!isEditing && (
+              <Button onClick={handleEditClick}>
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+            )}
+            {isEditing && (
+              <>
+                <Button onClick={handleSaveClick} disabled={isSaving}>
+                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button variant="ghost" onClick={handleCancelClick}>
+                  <X className="mr-2 h-4 w-4" /> Cancel
+                </Button>
+              </>
+            )}
+            <Button variant="outline" onClick={() => router.push('/vendors')}>
+                <X className="mr-2 h-4 w-4" /> Close
+            </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Vendor Information</CardTitle>
+          <CardDescription>Fill in the details of the vendor.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex items-end gap-2">
+                <div className="flex-grow">
+                    <Label htmlFor="code">Code</Label>
+                    <Input id="code" value={vendorData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
+                </div>
+                <Button variant="outline" size="icon" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
+                    {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                </Button>
+            </div>
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" value={vendorData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
+            </div>
+            <div>
+              <Label htmlFor="mobile">Mobile No</Label>
+              <Input id="mobile" value={vendorData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={vendorData.email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={!isEditing} />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" value={vendorData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <Card>
+            <CardHeader>
+                <CardTitle>Bank Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <div>
+                    <Label htmlFor="bankName">Bank Name</Label>
+                    <Input id="bankName" value={vendorData.bankName} onChange={(e) => handleInputChange('bankName', e.target.value)} disabled={!isEditing} />
+                </div>
+                <div>
+                    <Label htmlFor="accountNumber">Account No</Label>
+                    <Input id="accountNumber" value={vendorData.accountNumber} onChange={(e) => handleInputChange('accountNumber', e.target.value)} disabled={!isEditing} />
+                </div>
+                <div>
+                    <Label htmlFor="iban">IBAN No</Label>
+                    <Input id="iban" value={vendorData.iban} onChange={(e) => handleInputChange('iban', e.target.value)} disabled={!isEditing} />
+                </div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Attachments</CardTitle>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>File</TableHead>
+                        <TableHead>Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {attachments.map((item) => (
+                            <TableRow key={item.id}>
+                                <TableCell>
+                                    <Input 
+                                        value={item.name} 
+                                        onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                        disabled={!isEditing} 
+                                        placeholder="e.g. Trade License"
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <Input 
+                                        type="file" 
+                                        className="text-sm" 
+                                        onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                        disabled={!isEditing}
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                <Button variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                    <Plus className="mr-2 h-4 w-4"/> Add Attachment
+                </Button>
+            </CardContent>
+        </Card>
+      </div>
+
+       <div className="mt-6 flex justify-end">
+         <AlertDialog>
+            <AlertDialogTrigger asChild>
+            <Button
+                variant="destructive"
+                disabled={isNewRecord || !isEditing}
+            >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete Vendor
+            </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                vendor "{vendorData.name}".
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive hover:bg-destructive/90"
+                >
+                Delete
+                </AlertDialogAction>
+            </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+       </div>
+    </div>
+  );
+}
