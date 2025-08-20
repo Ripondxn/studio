@@ -1,31 +1,12 @@
+
 [
   {
     "id": "UNIT-1755696672580",
-    "unitCode": "A",
-    "property": "MT",
+    "unitCode": "A-101",
+    "propertyCode": "LT-C38",
     "floor": "1",
     "unitType": "1-bhk",
-    "electricityCode": "",
-    "annualRent": "36000",
-    "salesMan": "salesman",
-    "unitNo": "101",
-    "unitArea": "",
-    "view": "",
-    "bathrooms": "3",
-    "electricityKw": "",
-    "monthlyRent": "3000",
-    "accountant": "accountant",
-    "unitStatus": "Active",
-    "landlord": "landlord",
-    "unitStatusNormal": "normal",
-    "parkings": "1",
-    "amount": "",
-    "amountType": "annual",
-    "rentSqft": "",
-    "postMonthlyIncome": "yes",
-    "discount": "0",
-    "discountType": "value",
-    "rentBasedOn": "annually",
-    "supervisor": "supervisor"
+    "annualRent": 36000,
+    "unitStatus": "Active"
   }
 ]

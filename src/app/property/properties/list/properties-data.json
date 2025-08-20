@@ -1,12 +1,12 @@
 [
   {
-    "id": "PROP-1755696551366",
+    "id": "PROP-1755706880758",
     "propertyData": {
-      "code": "MT",
-      "name": "Lewa Tower-715",
+      "code": "LT-C38",
+      "name": "Lewa Tower",
       "propertyType": "Building",
       "bondType": "",
-      "landlord": "Landlord",
+      "landlordCode": "L-001",
       "status": "Active",
       "plotArea": "0",
       "builtUpArea": "0",
@@ -24,8 +24,7 @@
       "towerType": "Rent",
       "gps": "",
       "propertyNo": "",
-      "assetManager": "Supervisor",
-      "landlordCode": "L-001"
+      "assetManager": "Supervisor"
     },
     "particulars": [],
     "attachments": [],

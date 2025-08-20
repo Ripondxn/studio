@@ -31,6 +31,8 @@ import {
 
 import { Unit } from './schema';
 import { useToast } from '@/hooks/use-toast';
+import { deleteUnit } from './actions';
+import { EditUnitDialog } from './edit-unit-dialog';
 
 const ActionsCell = ({ row }: { row: { original: Unit } }) => {
     const unit = row.original;
@@ -38,18 +40,26 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
     const { toast } = useToast();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     const handleDelete = async () => {
         setIsDeleting(true);
-        // This is a placeholder as delete functionality is removed for now
-        setTimeout(() => {
+        const result = await deleteUnit(unit.id);
+        if (result.success) {
             toast({
-                title: 'Info',
-                description: `In a real app, unit "${unit.unitCode}" would be deleted.`,
+                title: 'Unit Deleted',
+                description: `Unit "${unit.unitCode}" has been deleted.`,
             });
-            setIsDeleting(false);
-            setIsDeleteDialogOpen(false);
-        }, 1000);
+            router.refresh();
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: result.error,
+            });
+        }
+        setIsDeleting(false);
+        setIsDeleteDialogOpen(false);
     };
 
     return (
@@ -74,6 +84,11 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            <EditUnitDialog
+                unit={unit}
+                isOpen={isEditDialogOpen}
+                setIsOpen={setIsEditDialogOpen}
+            />
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -83,6 +98,10 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                         className="text-destructive"
                         onSelect={() => setIsDeleteDialogOpen(true)}
@@ -130,16 +149,10 @@ export const columns: ColumnDef<Unit>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => {
-        const unit = row.original;
-        return (
-            <span>{unit.unitCode}</span>
-        )
-    }
   },
   {
-    accessorKey: 'property',
-    header: 'Property',
+    accessorKey: 'propertyCode',
+    header: 'Property Code',
   },
   {
     accessorKey: 'floor',
@@ -151,7 +164,7 @@ export const columns: ColumnDef<Unit>[] = [
   },
   {
     accessorKey: 'annualRent',
-    header: 'Annual Rent',
+    header: () => <div className="text-right">Annual Rent</div>,
      cell: ({ row }) => {
       const amount = parseFloat(row.getValue('annualRent'));
       const formatted = new Intl.NumberFormat('en-US', {

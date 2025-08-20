@@ -77,8 +77,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { savePropertyData, findPropertyData, deletePropertyData, getOccupancyInfoForProperty, getUnitsForProperty, getPropertyLookups } from './actions';
 import { type Unit } from '../units/schema';
-import { DataTable } from '../units/data-table';
+import { DataTable as UnitsDataTable } from '../units/data-table';
 import { columns as unitColumns } from '../units/columns';
+import { AddUnitDialog } from '../units/add-unit-dialog';
 import { Combobox } from '@/components/ui/combobox';
 import { type Floor } from '../floors/schema';
 import { getFloorsForProperty } from '../floors/actions';
@@ -688,6 +689,7 @@ export default function PropertyPage() {
                         <CardTitle>Units</CardTitle>
                         <CardDescription>Manage all units within this property.</CardDescription>
                     </div>
+                    <AddUnitDialog propertyCode={propertyData.code} onUnitAdded={() => handleFindClick(propertyData.code)} />
                 </div>
             </CardHeader>
             <CardContent>
@@ -696,7 +698,7 @@ export default function PropertyPage() {
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : (
-                    <DataTable columns={unitColumns} data={units} />
+                    <UnitsDataTable columns={unitColumns} data={units} />
                 )}
             </CardContent>
            </Card>
