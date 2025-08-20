@@ -659,8 +659,13 @@ export default function PropertyPage() {
         <TabsContent value="floors">
            <Card>
             <CardHeader>
-                 <CardTitle>Floors</CardTitle>
-                 <CardDescription>Manage floors for this property.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Floors</CardTitle>
+                        <CardDescription>Manage floors for this property.</CardDescription>
+                    </div>
+                    <Button><Plus className="mr-2 h-4 w-4"/>Add Floor</Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="border rounded-md p-10 text-center text-muted-foreground">
@@ -672,8 +677,13 @@ export default function PropertyPage() {
         <TabsContent value="rooms">
            <Card>
             <CardHeader>
-                 <CardTitle>Rooms</CardTitle>
-                 <CardDescription>Manage rooms within this property.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Rooms</CardTitle>
+                        <CardDescription>Manage rooms within this property.</CardDescription>
+                    </div>
+                    <Button><Plus className="mr-2 h-4 w-4"/>Add Room</Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="border rounded-md p-10 text-center text-muted-foreground">
@@ -685,8 +695,13 @@ export default function PropertyPage() {
         <TabsContent value="partitions">
            <Card>
             <CardHeader>
-                 <CardTitle>Partitions</CardTitle>
-                 <CardDescription>Manage partitions for units in this property.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Partitions</CardTitle>
+                        <CardDescription>Manage partitions for units in this property.</CardDescription>
+                    </div>
+                    <Button><Plus className="mr-2 h-4 w-4"/>Add Partition</Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="border rounded-md p-10 text-center text-muted-foreground">
