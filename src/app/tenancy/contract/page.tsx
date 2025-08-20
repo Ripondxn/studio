@@ -44,10 +44,7 @@ const initialContractState: Contract = {
     contractNo: '',
     contractDate: '',
     unitCode: '',
-    unitName: '',
-    floorName: '',
     roomCode: '',
-    roomName: '',
     partitionName: '',
     property: '',
     tenantName: '',
@@ -157,9 +154,6 @@ export default function TenancyContractPage() {
                 ...prev,
                 tenantName: result.data.tenantName,
                 totalRent: result.data.totalRent,
-                unitName: result.data.unitName,
-                floorName: result.data.floorName,
-                roomName: result.data.roomName,
                 partitionName: result.data.partitionName,
             }));
         }
@@ -480,18 +474,6 @@ export default function TenancyContractPage() {
                     placeholder="Select a Room"
                     disabled={!isEditing || !contract.unitCode}
                  />
-            </div>
-            <div>
-              <Label htmlFor="floorName">Floor Name</Label>
-              <Input id="floorName" value={contract.floorName || ''} disabled />
-            </div>
-            <div>
-              <Label htmlFor="unitName">Unit Name</Label>
-              <Input id="unitName" value={contract.unitName || ''} disabled />
-            </div>
-            <div>
-              <Label htmlFor="roomName">Room Name</Label>
-              <Input id="roomName" value={contract.roomName || ''} disabled />
             </div>
             <div>
               <Label htmlFor="partitionName">Partition Name</Label>

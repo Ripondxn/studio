@@ -202,12 +202,6 @@ export async function getUnitDetails(unitCode: string) {
     const allProperties = await readProperties();
     const property = allProperties.find(p => (p.propertyData || p).code === unit.propertyCode);
 
-    const allFloors = await readFloors();
-    const floor = allFloors.find(f => f.floorCode === unit.floor && f.propertyCode === unit.propertyCode);
-    
-    const allRooms = await readRooms();
-    const room = allRooms.find(r => r.unitCode === unit.unitCode);
-    
     const allPartitions = await readPartitions();
     const partition = allPartitions.find(p => p.unitCode === unit.unitCode);
 
@@ -220,9 +214,6 @@ export async function getUnitDetails(unitCode: string) {
             property: property ? (property.propertyData || property).name : '',
             tenantName: tenantName,
             totalRent: unit.annualRent,
-            unitName: unit.unitName || '',
-            floorName: floor ? floor.floorName : '',
-            roomName: room ? room.roomName : '',
             partitionName: partition ? partition.partitionName : '',
         }
     };

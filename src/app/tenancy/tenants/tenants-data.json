@@ -1,28 +1,19 @@
-
 [
   {
-    "id": "T-1755690029676",
+    "id": "T-1755715844365",
     "tenantData": {
-      "code": "LT-001",
-      "name": "Md Ripon Ahmed",
-      "mobile": "0509231340",
+      "code": "T100001",
+      "name": "Ripon",
+      "mobile": "01731627179",
       "email": "ripondxn@gmail.com",
       "address": "Village : Rahut Hati , Post office : Hasnabad",
-      "contractNo": "TC-2005-11",
-      "securityDepositAmount": 5000,
-      "securityDepositStatus": "paid",
+      "contractNo": "",
+      "securityDepositAmount": 0,
+      "securityDepositStatus": "unpaid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
       "securityDepositRemarks": ""
     },
-    "attachments": [
-      {
-        "id": 1,
-        "name": "passport copy",
-        "file": "Active Contract Register.jpg",
-        "remarks": "",
-        "isLink": false
-      }
-    ]
+    "attachments": []
   }
 ]
