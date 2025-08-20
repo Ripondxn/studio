@@ -73,20 +73,24 @@ export default function TenancyContractPage() {
   useEffect(() => {
     const contractId = searchParams.get('id');
     if (contractId) {
-      setIsFinding(true);
-      findContract({ contractId })
-        .then(result => {
-          if (result.success && result.data) {
-            setContract(result.data);
-            setInitialContract(result.data);
-            setIsNewRecord(false);
-            setIsEditing(false);
-          } else {
-            toast({ variant: 'destructive', title: 'Error', description: result.error });
-            router.push('/tenancy/contracts');
-          }
-        })
-        .finally(() => setIsFinding(false));
+        setIsFinding(true);
+        findContract({ contractId })
+            .then(result => {
+                if (result.success && result.data) {
+                    setContract(result.data);
+                    setInitialContract(result.data);
+                    setIsNewRecord(false);
+                    setIsEditing(false);
+                } else {
+                    toast({ variant: 'destructive', title: 'Error', description: result.error || "Contract not found" });
+                    router.push('/tenancy/contracts');
+                }
+            })
+            .catch(err => {
+                 toast({ variant: 'destructive', title: 'Error', description: "Failed to fetch contract." });
+                 router.push('/tenancy/contracts');
+            })
+            .finally(() => setIsFinding(false));
     } else {
         setIsNewRecord(true);
         setIsEditing(true);
@@ -104,8 +108,43 @@ export default function TenancyContractPage() {
   
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
     const updatedSchedule = [...contract.paymentSchedule];
-    // @ts-ignore
-    updatedSchedule[index][field] = value;
+    const newAmount = field === 'amount' ? Number(value) : updatedSchedule[index].amount;
+    
+    if (field === 'amount' && contract.totalRent > 0) {
+        const oldAmount = updatedSchedule[index].amount;
+        const difference = oldAmount - newAmount;
+        
+        updatedSchedule[index].amount = newAmount;
+
+        const otherInstallmentsCount = updatedSchedule.length - 1;
+        
+        if (otherInstallmentsCount > 0) {
+            const adjustment = difference / otherInstallmentsCount;
+            
+            for (let i = 0; i < updatedSchedule.length; i++) {
+                if (i !== index) {
+                    updatedSchedule[i].amount += adjustment;
+                }
+            }
+
+            // To handle rounding issues, we calculate the sum of all but the last *other* installment,
+            // and assign the remainder to the last *other* one to ensure the total is exact.
+            const currentTotal = updatedSchedule.reduce((sum, item) => sum + item.amount, 0);
+            const finalDifference = contract.totalRent - currentTotal;
+
+            const lastOtherInstallmentIndex = updatedSchedule.findIndex((_, i) => i !== index && i === updatedSchedule.length -1);
+            const targetIndex = lastOtherInstallmentIndex !== -1 ? lastOtherInstallmentIndex : updatedSchedule.findIndex((_,i) => i !== index);
+            
+            if(targetIndex !== -1) {
+              updatedSchedule[targetIndex].amount += finalDifference;
+            }
+        }
+    } else {
+      // @ts-ignore
+      updatedSchedule[index][field] = value;
+    }
+
+
     setContract(prev => ({...prev, paymentSchedule: updatedSchedule}));
   }
 
@@ -481,4 +520,3 @@ export default function TenancyContractPage() {
     </div>
   );
 }
-
