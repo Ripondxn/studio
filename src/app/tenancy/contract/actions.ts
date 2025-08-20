@@ -6,8 +6,12 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { contractSchema, type Contract } from './schema';
+import { type Unit } from '@/app/property/units/schema';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
+
 
 async function readContracts(): Promise<Contract[]> {
     try {
@@ -113,4 +117,53 @@ export async function deleteContract(contractId: string) {
         console.error('Failed to delete contract:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
+}
+
+async function readUnits(): Promise<Unit[]> {
+    try {
+        const data = await fs.readFile(unitsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+
+async function readProperties() {
+    try {
+        const data = await fs.readFile(propertiesFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+
+export async function getContractLookups() {
+    const units = await readUnits();
+    return {
+        units: units.map((u: any) => ({ value: u.unitCode, label: u.unitCode })),
+    }
+}
+
+export async function getUnitDetails(unitCode: string) {
+    const allUnits = await readUnits();
+    const unit = allUnits.find(u => u.unitCode === unitCode);
+
+    if (!unit) {
+        return { success: false, error: 'Unit not found' };
+    }
+
+    const allProperties = await readProperties();
+    const property = allProperties.find(p => (p.propertyData || p).code === unit.propertyCode);
+
+    // Placeholder for finding tenant name. In a real app, this might come from the unit's current lease.
+    const tenantName = "Fetched Tenant Name"; 
+
+    return { 
+        success: true, 
+        data: {
+            property: property ? (property.propertyData || property).name : '',
+            tenantName: tenantName,
+            totalRent: unit.annualRent
+        }
+    };
 }

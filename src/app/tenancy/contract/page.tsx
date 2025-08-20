@@ -33,10 +33,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Save, X, Search, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveContractData, findContract, deleteContract } from './actions';
+import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
+import { Combobox } from '@/components/ui/combobox';
 
 const initialContractState: Contract = {
     id: '',
@@ -58,6 +59,10 @@ const initialContractState: Contract = {
     terms: '',
 };
 
+type LookupData = {
+    units: {value: string, label: string}[];
+}
+
 export default function TenancyContractPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -70,9 +75,14 @@ export default function TenancyContractPage() {
   const [contract, setContract] = useState<Contract>(initialContractState);
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
+  const [lookups, setLookups] = useState<LookupData>({ units: [] });
 
 
   useEffect(() => {
+    getContractLookups().then(data => {
+        setLookups(data);
+    });
+
     const contractId = searchParams.get('id');
     if (contractId) {
         setIsFinding(true);
@@ -110,20 +120,32 @@ export default function TenancyContractPage() {
     setContract(prev => ({...prev, [field]: parseInt(value, 10) || 0 }));
   }
   
+  const handleUnitSelect = async (unitCode: string) => {
+    handleInputChange('unitCode', unitCode);
+    if (unitCode) {
+        const result = await getUnitDetails(unitCode);
+        if (result.success && result.data) {
+            setContract(prev => ({
+                ...prev,
+                property: result.data.property,
+                tenantName: result.data.tenantName,
+                totalRent: result.data.totalRent,
+            }));
+        }
+    }
+  }
+
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
     const currentSchedule = [...contract.paymentSchedule];
 
     if (field === 'amount') {
         const newAmount = Number(value);
         
-        // Mark this index as manually edited
         const newEditedIndexes = new Set(editedInstallmentIndexes).add(index);
         setEditedInstallmentIndexes(newEditedIndexes);
 
-        // Update the value of the edited installment
         currentSchedule[index] = { ...currentSchedule[index], amount: newAmount };
 
-        // Calculate totals based on the new state
         const totalManuallySetAmount = currentSchedule
             .filter((_, i) => newEditedIndexes.has(i))
             .reduce((sum, item) => sum + item.amount, 0);
@@ -140,7 +162,6 @@ export default function TenancyContractPage() {
                 }
             });
 
-            // Adjust the very last unedited installment for any rounding differences
             const totalRecalculated = currentSchedule.reduce((sum, item) => sum + item.amount, 0);
             const finalDifference = contract.totalRent - totalRecalculated;
 
@@ -158,7 +179,6 @@ export default function TenancyContractPage() {
         setContract(prev => ({ ...prev, paymentSchedule: currentSchedule }));
 
     } else {
-        // For other fields like 'dueDate' or 'status'
         // @ts-ignore
         currentSchedule[index][field] = value;
         setContract(prev => ({ ...prev, paymentSchedule: currentSchedule }));
@@ -193,7 +213,6 @@ export default function TenancyContractPage() {
         return;
     }
     
-    // Reset manually edited fields when generating a new schedule
     setEditedInstallmentIndexes(new Set());
 
     const installmentAmount = parseFloat((totalRent / numberOfPayments).toFixed(2));
@@ -221,7 +240,6 @@ export default function TenancyContractPage() {
         });
     }
     
-    // Distribute any remainder to the last installment
     const totalCalculated = installmentAmount * numberOfPayments;
     const remainder = totalRent - totalCalculated;
     if(remainder !== 0 && newSchedule.length > 0) {
@@ -403,22 +421,22 @@ export default function TenancyContractPage() {
               <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
             </div>
              <div>
-              <Label htmlFor="unit-code">Unit Code</Label>
-              <div className="flex items-center gap-2">
-                <Input id="unit-code" placeholder="Enter Unit Code" value={contract.unitCode} onChange={e => handleInputChange('unitCode', e.target.value)} disabled={!isEditing}/>
-                <Button variant="outline" size="icon" onClick={() => handleFind('unitCode')} disabled={!isEditing || isFinding}>
-                    {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4"/>}
-                </Button>
-              </div>
+                <Label htmlFor="unit-code">Unit Code</Label>
+                <Combobox
+                    options={lookups.units}
+                    value={contract.unitCode}
+                    onSelect={handleUnitSelect}
+                    placeholder="Select a Unit"
+                    disabled={!isEditing}
+                 />
+            </div>
+             <div>
+                <Label htmlFor="property">Property</Label>
+                <Input id="property" placeholder="Property Name" value={contract.property} onChange={e => handleInputChange('property', e.target.value)} disabled/>
             </div>
              <div>
               <Label htmlFor="tenant-name">Tenant Name</Label>
-               <div className="flex items-center gap-2">
-                <Input id="tenant-name" placeholder="Enter Tenant Name" value={contract.tenantName} onChange={e => handleInputChange('tenantName', e.target.value)} disabled={!isEditing}/>
-                 <Button variant="outline" size="icon" onClick={() => handleFind('tenantName')} disabled={!isEditing || isFinding}>
-                     {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4"/>}
-                </Button>
-              </div>
+              <Input id="tenant-name" placeholder="Enter Tenant Name" value={contract.tenantName} onChange={e => handleInputChange('tenantName', e.target.value)} disabled/>
             </div>
              <div>
               <Label htmlFor="start-date">Start Date</Label>
