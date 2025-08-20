@@ -7,10 +7,16 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { contractSchema, type Contract } from './schema';
 import { type Unit } from '@/app/property/units/schema';
+import { type Floor } from '@/app/property/floors/schema';
+import { type Room } from '@/app/property/rooms/schema';
+import { type Partition } from '@/app/property/partitions/schema';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
+const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
+const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
+const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
 
 
 async function readContracts(): Promise<Contract[]> {
@@ -137,10 +143,36 @@ async function readProperties() {
     }
 }
 
+async function readFloors(): Promise<Floor[]> {
+    try {
+        const data = await fs.readFile(floorsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+async function readRooms(): Promise<Room[]> {
+    try {
+        const data = await fs.readFile(roomsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+async function readPartitions(): Promise<Partition[]> {
+    try {
+        const data = await fs.readFile(partitionsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+
+
 export async function getContractLookups() {
     const units = await readUnits();
     return {
-        units: units.map((u: any) => ({ value: u.unitCode, label: u.unitCode })),
+        units: units.map((u: any) => ({ value: u.unitCode, label: `${u.unitCode} (${u.unitName || 'No Name'})` })),
     }
 }
 
@@ -155,6 +187,15 @@ export async function getUnitDetails(unitCode: string) {
     const allProperties = await readProperties();
     const property = allProperties.find(p => (p.propertyData || p).code === unit.propertyCode);
 
+    const allFloors = await readFloors();
+    const floor = allFloors.find(f => f.floorCode === unit.floor && f.propertyCode === unit.propertyCode);
+    
+    const allRooms = await readRooms();
+    const room = allRooms.find(r => r.unitCode === unit.unitCode);
+    
+    const allPartitions = await readPartitions();
+    const partition = allPartitions.find(p => p.unitCode === unit.unitCode);
+
     // Placeholder for finding tenant name. In a real app, this might come from the unit's current lease.
     const tenantName = "Fetched Tenant Name"; 
 
@@ -163,7 +204,11 @@ export async function getUnitDetails(unitCode: string) {
         data: {
             property: property ? (property.propertyData || property).name : '',
             tenantName: tenantName,
-            totalRent: unit.annualRent
+            totalRent: unit.annualRent,
+            unitName: unit.unitName || '',
+            floorName: floor ? floor.floorName : '',
+            roomName: room ? room.roomName : '',
+            partitionName: partition ? partition.partitionName : '',
         }
     };
 }

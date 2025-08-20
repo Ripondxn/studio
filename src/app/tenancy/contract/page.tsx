@@ -44,6 +44,10 @@ const initialContractState: Contract = {
     contractNo: '',
     contractDate: '',
     unitCode: '',
+    unitName: '',
+    floorName: '',
+    roomName: '',
+    partitionName: '',
     property: '',
     tenantName: '',
     startDate: '',
@@ -130,6 +134,10 @@ export default function TenancyContractPage() {
                 property: result.data.property,
                 tenantName: result.data.tenantName,
                 totalRent: result.data.totalRent,
+                unitName: result.data.unitName,
+                floorName: result.data.floorName,
+                roomName: result.data.roomName,
+                partitionName: result.data.partitionName,
             }));
         }
     }
@@ -433,6 +441,22 @@ export default function TenancyContractPage() {
              <div>
                 <Label htmlFor="property">Property</Label>
                 <Input id="property" placeholder="Property Name" value={contract.property} onChange={e => handleInputChange('property', e.target.value)} disabled/>
+            </div>
+            <div>
+              <Label htmlFor="floorName">Floor Name</Label>
+              <Input id="floorName" value={contract.floorName || ''} disabled />
+            </div>
+            <div>
+              <Label htmlFor="unitName">Unit Name</Label>
+              <Input id="unitName" value={contract.unitName || ''} disabled />
+            </div>
+            <div>
+              <Label htmlFor="roomName">Room Name</Label>
+              <Input id="roomName" value={contract.roomName || ''} disabled />
+            </div>
+            <div>
+              <Label htmlFor="partitionName">Partition Name</Label>
+              <Input id="partitionName" value={contract.partitionName || ''} disabled />
             </div>
              <div>
               <Label htmlFor="tenant-name">Tenant Name</Label>

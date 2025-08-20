@@ -1,7 +1,9 @@
+
 [
   {
     "id": "UNIT-1755710073669",
     "unitCode": "101",
+    "unitName": "Unit 101",
     "propertyCode": "LT-C38",
     "floor": "F-01",
     "unitType": "1BHK",
@@ -11,6 +13,7 @@
   {
     "id": "UNIT-1755710073670",
     "unitCode": "102",
+    "unitName": "Unit 102",
     "propertyCode": "LT-C38",
     "floor": "F-01",
     "unitType": "2BHK",
@@ -20,6 +23,7 @@
   {
     "id": "UNIT-1755710073671",
     "unitCode": "103",
+    "unitName": "Unit 103",
     "propertyCode": "LT-C38",
     "floor": "F-01",
     "unitType": "1BHK",
@@ -29,6 +33,7 @@
   {
     "id": "UNIT-1755710073672",
     "unitCode": "104",
+    "unitName": "Unit 104",
     "propertyCode": "LT-C38",
     "floor": "F-01",
     "unitType": "3BHK",
@@ -38,6 +43,7 @@
   {
     "id": "UNIT-1755710073673",
     "unitCode": "201",
+    "unitName": "Unit 201",
     "propertyCode": "LT-C38",
     "floor": "F-02",
     "unitType": "1BHK",
@@ -47,6 +53,7 @@
   {
     "id": "UNIT-1755710073674",
     "unitCode": "202",
+    "unitName": "Unit 202",
     "propertyCode": "LT-C38",
     "floor": "F-02",
     "unitType": "2BHK",
@@ -56,6 +63,7 @@
   {
     "id": "UNIT-1755710073675",
     "unitCode": "203",
+    "unitName": "Unit 203",
     "propertyCode": "LT-C38",
     "floor": "F-02",
     "unitType": "2BHK",
@@ -65,6 +73,7 @@
   {
     "id": "UNIT-1755710073676",
     "unitCode": "204",
+    "unitName": "Unit 204",
     "propertyCode": "LT-C38",
     "floor": "F-02",
     "unitType": "3BHK",
@@ -74,6 +83,7 @@
   {
     "id": "UNIT-1755710073677",
     "unitCode": "G01",
+    "unitName": "Unit G01",
     "propertyCode": "LT-C38",
     "floor": "G",
     "unitType": "2BHK",
@@ -83,6 +93,7 @@
   {
     "id": "UNIT-1755710073678",
     "unitCode": "M01",
+    "unitName": "Unit M01",
     "propertyCode": "LT-C38",
     "floor": "M",
     "unitType": "1BHK",

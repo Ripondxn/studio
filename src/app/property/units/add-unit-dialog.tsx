@@ -50,6 +50,7 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
     resolver: zodResolver(unitFormSchema),
     defaultValues: {
         unitCode: '',
+        unitName: '',
         propertyCode: propertyCode,
         floor: '',
         unitType: '',
@@ -100,6 +101,11 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
                     <Label htmlFor="unitCode">Unit Code</Label>
                     <Input id="unitCode" {...register('unitCode')} />
                     {errors.unitCode && <p className="text-destructive text-xs mt-1">{errors.unitCode.message}</p>}
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="unitName">Unit Name</Label>
+                    <Input id="unitName" {...register('unitName')} />
+                    {errors.unitName && <p className="text-destructive text-xs mt-1">{errors.unitName.message}</p>}
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="floor">Floor</Label>
