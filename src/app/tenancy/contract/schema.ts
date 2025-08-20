@@ -22,6 +22,8 @@ export const contractSchema = z.object({
   status: z.enum(['New', 'Renew']).optional(),
   terminationDate: z.string().optional(),
   rentBasedOn: z.enum(['Monthly', 'Daily']).optional(),
+  paymentFrequency: z.enum(['Monthly', 'Quarterly', 'Half-Yearly', 'Yearly', 'Custom']).optional(),
+  numberOfPayments: z.number().optional(),
   paymentSchedule: z.array(paymentInstallmentSchema),
   terms: z.string().optional(),
 });

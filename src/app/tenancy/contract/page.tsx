@@ -30,11 +30,12 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Save, X, Search, FileText, Loader2, Pencil } from 'lucide-react';
+import { Plus, Trash2, Save, X, Search, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveContractData, findContract, deleteContract } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { addMonths, format as formatDate } from 'date-fns';
 
 const initialContractState: Contract = {
     id: '',
@@ -50,6 +51,8 @@ const initialContractState: Contract = {
     status: 'New',
     terminationDate: '',
     rentBasedOn: 'Monthly',
+    paymentFrequency: 'Monthly',
+    numberOfPayments: 1,
     paymentSchedule: [],
     terms: '',
 };
@@ -90,12 +93,12 @@ export default function TenancyContractPage() {
     }
   }, [searchParams, router, toast]);
 
-  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent'>, value: string) => {
+  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
   }
-
-  const handleRentChange = (value: string) => {
-    setContract(prev => ({...prev, totalRent: parseFloat(value) || 0 }));
+  
+  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments', value: string) => {
+    setContract(prev => ({...prev, [field]: parseInt(value, 10) || 0 }));
   }
   
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
@@ -118,6 +121,55 @@ export default function TenancyContractPage() {
   const removeInstallment = (index: number) => {
     const updatedSchedule = contract.paymentSchedule.filter((_, i) => i !== index);
     setContract(prev => ({...prev, paymentSchedule: updatedSchedule}));
+  }
+
+  const handleGenerateSchedule = () => {
+    const { totalRent, numberOfPayments, paymentFrequency, startDate } = contract;
+
+    if (!totalRent || !numberOfPayments || !startDate) {
+        toast({
+            variant: 'destructive',
+            title: 'Missing Information',
+            description: 'Please provide Total Rent, Number of Payments, and a Start Date.'
+        });
+        return;
+    }
+    
+    const installmentAmount = parseFloat((totalRent / numberOfPayments).toFixed(2));
+    const newSchedule: PaymentInstallment[] = [];
+    const contractStartDate = new Date(startDate);
+    
+    let monthIncrement = 1;
+    if(paymentFrequency === 'Quarterly') monthIncrement = 3;
+    if(paymentFrequency === 'Half-Yearly') monthIncrement = 6;
+    if(paymentFrequency === 'Yearly') monthIncrement = 12;
+
+    for (let i = 0; i < numberOfPayments; i++) {
+        let dueDate: Date;
+        if(paymentFrequency === 'Custom') {
+            dueDate = contractStartDate; // For custom, user sets dates manually
+        } else {
+            dueDate = addMonths(contractStartDate, i * monthIncrement);
+        }
+
+        newSchedule.push({
+            installment: i + 1,
+            dueDate: formatDate(dueDate, 'yyyy-MM-dd'),
+            amount: installmentAmount,
+            status: 'unpaid'
+        });
+    }
+    
+    // Distribute any remainder to the last installment
+    const totalCalculated = installmentAmount * numberOfPayments;
+    const remainder = totalRent - totalCalculated;
+    if(remainder !== 0 && newSchedule.length > 0) {
+        newSchedule[newSchedule.length - 1].amount += remainder;
+    }
+
+
+    setContract(prev => ({ ...prev, paymentSchedule: newSchedule }));
+    toast({ title: 'Schedule Generated', description: `${numberOfPayments} installments have been created.`});
   }
   
   const handleFind = async (findBy: 'unitCode' | 'tenantName') => {
@@ -204,7 +256,7 @@ export default function TenancyContractPage() {
 
   const pageTitle = isNewRecord ? 'New Tenancy Contract' : `Edit Contract: ${initialContract.contractNo}`;
 
-  if (isFinding) {
+  if (isFinding && !isNewRecord) {
     return (
         <div className="container mx-auto p-4 flex justify-center items-center h-full">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -317,7 +369,7 @@ export default function TenancyContractPage() {
             </div>
             <div>
                 <Label htmlFor="rent-amount">Total Rent</Label>
-                <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleRentChange(e.target.value)} disabled={!isEditing}/>
+                <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
             </div>
             <div>
                 <Label htmlFor="payment-mode">Payment Mode</Label>
@@ -346,7 +398,34 @@ export default function TenancyContractPage() {
             </div>
           </div>
           <Separator />
-          <h3 className="text-lg font-medium">Payment Schedule</h3>
+          <div>
+            <h3 className="text-lg font-medium">Payment Schedule</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4 p-4 border rounded-md bg-muted/50">
+                 <div>
+                    <Label htmlFor="payment-frequency">Payment Frequency</Label>
+                    <Select value={contract.paymentFrequency} onValueChange={(value) => handleInputChange('paymentFrequency', value)} disabled={!isEditing}>
+                        <SelectTrigger id="payment-frequency"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Monthly">Monthly</SelectItem>
+                            <SelectItem value="Quarterly">Quarterly</SelectItem>
+                            <SelectItem value="Half-Yearly">Half-Yearly</SelectItem>
+                            <SelectItem value="Yearly">Yearly</SelectItem>
+                            <SelectItem value="Custom">Custom</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div>
+                    <Label htmlFor="number-of-payments">Number of Payments</Label>
+                    <Input id="number-of-payments" type="number" value={contract.numberOfPayments} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!isEditing} />
+                </div>
+                <div className="flex items-end">
+                    <Button onClick={handleGenerateSchedule} disabled={!isEditing} className="w-full">
+                        <RefreshCw className="mr-2 h-4 w-4"/>
+                        Generate Schedule
+                    </Button>
+                </div>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
