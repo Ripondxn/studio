@@ -476,14 +476,14 @@ export default function TenancyContractPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Contract Details</CardTitle>
+          <CardTitle>Tenancy Contract</CardTitle>
           <CardDescription>
             {isNewRecord ? "Fill in the details to create a new tenancy contract." : "View or edit the details of the tenancy contract."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-1">
                     <CardHeader>
                         <CardTitle>Tenant Information</CardTitle>
                     </CardHeader>
@@ -516,109 +516,118 @@ export default function TenancyContractPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Property & Contract Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="contract-no">Contract No</Label>
-                                <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={!isEditing}/>
+                <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Property Information</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="property">Property</Label>
+                                    <Combobox
+                                        options={lookups.properties}
+                                        value={contract.property || ''}
+                                        onSelect={handlePropertySelect}
+                                        placeholder="Select Property"
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="unit-code">Unit Code</Label>
+                                    <Combobox
+                                        options={lookups.units}
+                                        value={contract.unitCode}
+                                        onSelect={handleUnitSelect}
+                                        placeholder="Select a Unit"
+                                        disabled={!isEditing || !contract.property}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <Label htmlFor="contract-date">Date</Label>
-                                <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="room-code">Room</Label>
+                                    <Combobox
+                                        options={lookups.rooms}
+                                        value={contract.roomCode || ''}
+                                        onSelect={(value) => handleInputChange('roomCode', value)}
+                                        placeholder="Select a Room"
+                                        disabled={!isEditing || !contract.unitCode}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="partition-code">Partition</Label>
+                                    <Combobox
+                                        options={lookups.partitions}
+                                        value={contract.partitionCode || ''}
+                                        onSelect={handlePartitionSelect}
+                                        placeholder="Select Partition"
+                                        disabled={!isEditing || !contract.unitCode || lookups.partitions.length === 0}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="property">Property</Label>
-                                <Combobox
-                                    options={lookups.properties}
-                                    value={contract.property || ''}
-                                    onSelect={handlePropertySelect}
-                                    placeholder="Select Property"
-                                    disabled={!isEditing}
-                                />
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Contract Information</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="contract-no">Contract No</Label>
+                                    <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                                <div>
+                                    <Label htmlFor="contract-date">Date</Label>
+                                    <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
+                                </div>
                             </div>
-                            <div>
-                                <Label htmlFor="unit-code">Unit Code</Label>
-                                <Combobox
-                                    options={lookups.units}
-                                    value={contract.unitCode}
-                                    onSelect={handleUnitSelect}
-                                    placeholder="Select a Unit"
-                                    disabled={!isEditing || !contract.property}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="start-date">Start Date</Label>
+                                    <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                                <div>
+                                    <Label htmlFor="end-date">End Date</Label>
+                                    <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
+                                </div>
                             </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="rent-amount">Total Rent</Label>
+                                    <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                                <div>
+                                    <Label htmlFor="payment-mode">Payment Mode</Label>
+                                    <Select value={contract.paymentMode} onValueChange={(value: 'cash' | 'cheque' | 'bank-transfer') => handleInputChange('paymentMode', value)} disabled={!isEditing}>
+                                        <SelectTrigger id="payment-mode">
+                                            <SelectValue placeholder="Select mode"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="cash">Cash</SelectItem>
+                                            <SelectItem value="cheque">Cheque</SelectItem>
+                                            <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                              <div>
-                                <Label htmlFor="room-code">Room</Label>
-                                <Combobox
-                                    options={lookups.rooms}
-                                    value={contract.roomCode || ''}
-                                    onSelect={(value) => handleInputChange('roomCode', value)}
-                                    placeholder="Select a Room"
-                                    disabled={!isEditing || !contract.unitCode}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="partition-code">Partition</Label>
-                                <Combobox
-                                    options={lookups.partitions}
-                                    value={contract.partitionCode || ''}
-                                    onSelect={handlePartitionSelect}
-                                    placeholder="Select Partition"
-                                    disabled={!isEditing || !contract.unitCode || lookups.partitions.length === 0}
-                                />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="start-date">Start Date</Label>
-                                <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
-                            </div>
-                            <div>
-                                <Label htmlFor="end-date">End Date</Label>
-                                <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
-                            </div>
-                        </div>
-                         <div className="grid grid-cols-2 gap-4">
-                             <div>
-                                <Label htmlFor="rent-amount">Total Rent</Label>
-                                <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
-                            </div>
-                            <div>
-                                <Label htmlFor="payment-mode">Payment Mode</Label>
-                                <Select value={contract.paymentMode} onValueChange={(value: 'cash' | 'cheque' | 'bank-transfer') => handleInputChange('paymentMode', value)} disabled={!isEditing}>
-                                    <SelectTrigger id="payment-mode">
-                                        <SelectValue placeholder="Select mode"/>
+                                <Label htmlFor="status">Status</Label>
+                                <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
+                                    <SelectTrigger id="status">
+                                        <SelectValue/>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="cash">Cash</SelectItem>
-                                        <SelectItem value="cheque">Cheque</SelectItem>
-                                        <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
+                                        <SelectItem value="New">New</SelectItem>
+                                        <SelectItem value="Renew">Renew</SelectItem>
+                                        <SelectItem value="Cancel">Cancel</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="status">Status</Label>
-                            <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
-                                <SelectTrigger id="status">
-                                    <SelectValue/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="New">New</SelectItem>
-                                    <SelectItem value="Renew">Renew</SelectItem>
-                                    <SelectItem value="Cancel">Cancel</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
           <Separator />
           <div>
