@@ -483,60 +483,57 @@ export default function TenantPage() {
                     <CardContent>
                         {contractData.id && unitData.property ? (
                         <div className="space-y-6">
-                            <Card>
-                                <CardHeader><CardTitle>Contract Information</CardTitle></CardHeader>
-                                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                    <div><Label>Contract No</Label><Input value={contractData.contractNo} disabled /></div>
-                                    <div><Label>Start Date</Label><Input value={format(new Date(contractData.startDate!), 'PP')} disabled /></div>
-                                    <div><Label>End Date</Label><Input value={format(new Date(contractData.endDate!), 'PP')} disabled /></div>
-                                    <div><Label>Total Rent</Label><Input value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(contractData.totalRent || 0)} disabled /></div>
-                                    <div><Label>Status</Label><Input value={contractData.status} disabled /></div>
-                                    <div className="flex items-end">
-                                         <Button asChild className="w-full">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <Card>
+                                    <CardHeader><CardTitle>Contract Information</CardTitle></CardHeader>
+                                    <CardContent className="space-y-2 text-sm">
+                                        <div className="flex justify-between"><span>Contract No:</span> <span className="font-medium">{contractData.contractNo}</span></div>
+                                        <div className="flex justify-between"><span>Start Date:</span> <span className="font-medium">{format(new Date(contractData.startDate!), 'PP')}</span></div>
+                                        <div className="flex justify-between"><span>End Date:</span> <span className="font-medium">{format(new Date(contractData.endDate!), 'PP')}</span></div>
+                                        <div className="flex justify-between"><span>Total Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(contractData.totalRent || 0)}</span></div>
+                                        <div className="flex justify-between items-center"><span>Status:</span> <Badge>{contractData.status}</Badge></div>
+                                        <Button asChild className="w-full mt-4">
                                             <Link href={`/tenancy/contract?id=${contractData.id}`}>View Full Contract</Link>
                                         </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                             <Card>
-                                <CardHeader><CardTitle>Property & Unit Information</CardTitle></CardHeader>
-                                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                    <div><Label>Property Name</Label><Input value={unitData.property.name} disabled /></div>
-                                    <div><Label>Unit Code</Label><Input value={unitData.unitCode} disabled /></div>
-                                    <div><Label>Unit Type</Label><Input value={unitData.unitType} disabled /></div>
-                                    <div><Label>Floor</Label><Input value={unitData.floor} disabled /></div>
-                                    <div><Label>Property Address</Label><Input value={unitData.property.address1} disabled /></div>
-                                     <div className="flex items-end">
-                                         <Button asChild className="w-full">
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader><CardTitle>Property & Unit</CardTitle></CardHeader>
+                                    <CardContent className="space-y-2 text-sm">
+                                        <div className="flex justify-between"><span>Property:</span> <span className="font-medium">{unitData.property.name}</span></div>
+                                        <div className="flex justify-between"><span>Unit Code:</span> <span className="font-medium">{unitData.unitCode}</span></div>
+                                        <div className="flex justify-between"><span>Unit Type:</span> <span className="font-medium">{unitData.unitType}</span></div>
+                                        <div className="flex justify-between"><span>Floor:</span> <span className="font-medium">{unitData.floor}</span></div>
+                                        <div className="flex justify-between"><span>Address:</span> <span className="font-medium text-right">{unitData.property.address1}</span></div>
+                                        <Button asChild className="w-full mt-4">
                                             <Link href={`/property/properties?code=${unitData.propertyCode}`}>View Full Property</Link>
                                         </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {roomData.id && (
-                                <Card>
-                                    <CardHeader><CardTitle>Room Details</CardTitle></CardHeader>
-                                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                        <div><Label>Room Code</Label><Input value={roomData.roomCode} disabled /></div>
-                                        <div><Label>Room Name</Label><Input value={roomData.roomName} disabled /></div>
-                                        <div><Label>Room Type</Label><Input value={roomData.roomType} disabled /></div>
-                                        <div><Label>Rent Amount</Label><Input value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(roomData.rentAmount || 0)} disabled /></div>
-                                        <div><Label>Rent Frequency</Label><Input value={roomData.rentFrequency} disabled /></div>
                                     </CardContent>
                                 </Card>
-                            )}
-
-                             {partitionData.id && (
-                                <Card>
-                                    <CardHeader><CardTitle>Partition Details</CardTitle></CardHeader>
-                                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                        <div><Label>Partition Code</Label><Input value={partitionData.partitionCode} disabled /></div>
-                                        <div><Label>Partition Name</Label><Input value={partitionData.partitionName} disabled /></div>
-                                        <div><Label>Monthly Rent</Label><Input value={new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(partitionData.monthlyRent || 0)} disabled /></div>
-                                    </CardContent>
-                                </Card>
-                            )}
+                                <div className="space-y-6">
+                                    {roomData.id && (
+                                        <Card>
+                                            <CardHeader className="p-4"><CardTitle className="text-base">Room Details</CardTitle></CardHeader>
+                                            <CardContent className="space-y-2 text-sm p-4">
+                                                <div className="flex justify-between"><span>Room Code:</span> <span className="font-medium">{roomData.roomCode}</span></div>
+                                                <div className="flex justify-between"><span>Room Name:</span> <span className="font-medium">{roomData.roomName}</span></div>
+                                                <div className="flex justify-between"><span>Room Type:</span> <span className="font-medium">{roomData.roomType}</span></div>
+                                                <div className="flex justify-between"><span>Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(roomData.rentAmount || 0)} / {roomData.rentFrequency}</span></div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                     {partitionData.id && (
+                                        <Card>
+                                            <CardHeader className="p-4"><CardTitle className="text-base">Partition Details</CardTitle></CardHeader>
+                                            <CardContent className="space-y-2 text-sm p-4">
+                                                 <div className="flex justify-between"><span>Partition Code:</span> <span className="font-medium">{partitionData.partitionCode}</span></div>
+                                                 <div className="flex justify-between"><span>Partition Name:</span> <span className="font-medium">{partitionData.partitionName}</span></div>
+                                                 <div className="flex justify-between"><span>Monthly Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(partitionData.monthlyRent || 0)}</span></div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                         ) : (
                              <div className="text-center py-10 text-muted-foreground">

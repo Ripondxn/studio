@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "id": "CON-1755718774480",
+    "contractNo": "TC-1755718766747",
+    "contractDate": "2025-08-20",
+    "property": "LT-C38",
+    "unitCode": "101",
+    "roomCode": "",
+    "partitionCode": "",
+    "tenantCode": "T200001",
+    "tenantName": "Olivia Martinez",
+    "mobile": "555-0101",
+    "email": "olivia.martinez@example.com",
+    "address": "123 Maple St, Springfield, USA",
+    "startDate": "2025-08-20",
+    "endDate": "2025-09-19",
+    "totalRent": 55000,
+    "paymentMode": "cash",
+    "status": "New",
+    "terminationDate": "",
+    "rentBasedOn": "Monthly",
+    "paymentFrequency": "Monthly",
+    "numberOfPayments": 1,
+    "gracePeriod": 0,
+    "paymentSchedule": [
+      {
+        "installment": 1,
+        "dueDate": "2025-08-20",
+        "amount": 55000,
+        "status": "unpaid"
+      }
+    ],
+    "terms": ""
+  }
+]
