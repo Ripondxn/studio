@@ -81,7 +81,20 @@
     "status": "New",
     "terminationDate": "",
     "rentBasedOn": "Monthly",
-    "paymentSchedule": [],
-    "terms": ""
+    "paymentSchedule": [
+      {
+        "installment": 1,
+        "dueDate": "2025-08-07",
+        "amount": 1200,
+        "status": "unpaid"
+      },
+      {
+        "installment": 2,
+        "dueDate": "2025-08-22",
+        "amount": 1300,
+        "status": "unpaid"
+      }
+    ],
+    "terms": "test"
   }
 ]

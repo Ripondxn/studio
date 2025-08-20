@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, differenceInDays, formatDistanceToNowStrict } from 'date-fns';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -118,6 +118,31 @@ const ActionsCell = ({ row }: { row: { original: Contract } }) => {
   );
 };
 
+const RemainingDaysCell = ({ row }: { row: { original: Contract } }) => {
+    const { endDate } = row.original;
+    const [remainingText, setRemainingText] = useState('');
+  
+    useEffect(() => {
+        try {
+            const end = new Date(endDate);
+            const now = new Date();
+            const days = differenceInDays(end, now);
+            
+            if (days < 0) {
+                setRemainingText(`Expired ${formatDistanceToNowStrict(end, { addSuffix: true })}`);
+            } else if (days === 0) {
+                setRemainingText('Expires today');
+            } else {
+                setRemainingText(`${days} days`);
+            }
+        } catch (e) {
+            setRemainingText('Invalid date');
+        }
+    }, [endDate]);
+
+    return <span>{remainingText}</span>;
+}
+
 export const columns: ColumnDef<Contract>[] = [
   {
     id: 'select',
@@ -176,6 +201,11 @@ export const columns: ColumnDef<Contract>[] = [
     accessorKey: 'endDate',
     header: 'Contract End...',
      cell: ({ row }) => format(new Date(row.getValue('endDate')), 'PP'),
+  },
+  {
+    id: 'remainingDays',
+    header: 'Remaining Days',
+    cell: RemainingDaysCell,
   },
   {
     accessorKey: 'totalRent',
