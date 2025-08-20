@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Save, X, Search, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails } from './actions';
+import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
@@ -46,6 +46,7 @@ const initialContractState: Contract = {
     unitCode: '',
     unitName: '',
     floorName: '',
+    roomCode: '',
     roomName: '',
     partitionName: '',
     property: '',
@@ -64,7 +65,9 @@ const initialContractState: Contract = {
 };
 
 type LookupData = {
+    properties: {value: string, label: string}[];
     units: {value: string, label: string}[];
+    rooms: {value: string, label: string}[];
 }
 
 export default function TenancyContractPage() {
@@ -79,12 +82,12 @@ export default function TenancyContractPage() {
   const [contract, setContract] = useState<Contract>(initialContractState);
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
-  const [lookups, setLookups] = useState<LookupData>({ units: [] });
+  const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [] });
 
 
   useEffect(() => {
     getContractLookups().then(data => {
-        setLookups(data);
+        setLookups(prev => ({...prev, properties: data.properties}));
     });
 
     const contractId = searchParams.get('id');
@@ -98,6 +101,12 @@ export default function TenancyContractPage() {
                     setIsNewRecord(false);
                     setIsEditing(false);
                     setEditedInstallmentIndexes(new Set());
+                    if (result.data.property) {
+                        getUnitsForProperty(result.data.property).then(units => setLookups(prev => ({...prev, units})));
+                    }
+                    if (result.data.property && result.data.unitCode) {
+                        getRoomsForUnit(result.data.property, result.data.unitCode).then(rooms => setLookups(prev => ({...prev, rooms})));
+                    }
                 } else {
                     toast({ variant: 'destructive', title: 'Error', description: result.error || "Contract not found" });
                     router.push('/tenancy/contracts');
@@ -123,15 +132,29 @@ export default function TenancyContractPage() {
   const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments', value: string) => {
     setContract(prev => ({...prev, [field]: parseInt(value, 10) || 0 }));
   }
+
+  const handlePropertySelect = async (propertyCode: string) => {
+      handleInputChange('property', propertyCode);
+      setLookups(prev => ({...prev, units: [], rooms: []}));
+      setContract(prev => ({...prev, unitCode: '', roomCode: ''}));
+      if(propertyCode) {
+          const units = await getUnitsForProperty(propertyCode);
+          setLookups(prev => ({...prev, units}));
+      }
+  }
   
   const handleUnitSelect = async (unitCode: string) => {
     handleInputChange('unitCode', unitCode);
+    setLookups(prev => ({...prev, rooms: []}));
+    setContract(prev => ({...prev, roomCode: ''}));
     if (unitCode) {
+        const rooms = await getRoomsForUnit(contract.property, unitCode);
+        setLookups(prev => ({...prev, rooms}));
+
         const result = await getUnitDetails(unitCode);
         if (result.success && result.data) {
             setContract(prev => ({
                 ...prev,
-                property: result.data.property,
                 tenantName: result.data.tenantName,
                 totalRent: result.data.totalRent,
                 unitName: result.data.unitName,
@@ -428,6 +451,16 @@ export default function TenancyContractPage() {
               <Label htmlFor="contract-date">Date</Label>
               <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
             </div>
+            <div>
+                <Label htmlFor="property">Property</Label>
+                 <Combobox
+                    options={lookups.properties}
+                    value={contract.property}
+                    onSelect={handlePropertySelect}
+                    placeholder="Select Property"
+                    disabled={!isEditing}
+                 />
+            </div>
              <div>
                 <Label htmlFor="unit-code">Unit Code</Label>
                 <Combobox
@@ -435,12 +468,18 @@ export default function TenancyContractPage() {
                     value={contract.unitCode}
                     onSelect={handleUnitSelect}
                     placeholder="Select a Unit"
-                    disabled={!isEditing}
+                    disabled={!isEditing || !contract.property}
                  />
             </div>
              <div>
-                <Label htmlFor="property">Property</Label>
-                <Input id="property" placeholder="Property Name" value={contract.property} onChange={e => handleInputChange('property', e.target.value)} disabled/>
+                <Label htmlFor="room-code">Room</Label>
+                <Combobox
+                    options={lookups.rooms}
+                    value={contract.roomCode || ''}
+                    onSelect={(value) => handleInputChange('roomCode', value)}
+                    placeholder="Select a Room"
+                    disabled={!isEditing || !contract.unitCode}
+                 />
             </div>
             <div>
               <Label htmlFor="floorName">Floor Name</Label>
@@ -460,7 +499,7 @@ export default function TenancyContractPage() {
             </div>
              <div>
               <Label htmlFor="tenant-name">Tenant Name</Label>
-              <Input id="tenant-name" placeholder="Enter Tenant Name" value={contract.tenantName} onChange={e => handleInputChange('tenantName', e.target.value)} disabled/>
+              <Input id="tenant-name" placeholder="Enter Tenant Name" value={contract.tenantName} onChange={e => handleInputChange('tenantName', e.target.value)} disabled={!isEditing}/>
             </div>
              <div>
               <Label htmlFor="start-date">Start Date</Label>

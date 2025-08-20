@@ -170,11 +170,26 @@ async function readPartitions(): Promise<Partition[]> {
 
 
 export async function getContractLookups() {
-    const units = await readUnits();
+    const properties = await readProperties();
     return {
-        units: units.map((u: any) => ({ value: u.unitCode, label: `${u.unitCode} (${u.unitName || 'No Name'})` })),
+        properties: properties.map((p: any) => ({ value: (p.propertyData || p).code, label: (p.propertyData || p).name })),
     }
 }
+
+export async function getUnitsForProperty(propertyCode: string) {
+    const units = await readUnits();
+    return units
+        .filter(u => u.propertyCode === propertyCode)
+        .map((u: any) => ({ value: u.unitCode, label: `${u.unitCode} (${u.unitName || 'No Name'})` }));
+}
+
+export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
+    const rooms = await readRooms();
+    return rooms
+        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode)
+        .map((r: any) => ({ value: r.roomCode, label: `${r.roomCode} (${r.roomName || 'No Name'})` }));
+}
+
 
 export async function getUnitDetails(unitCode: string) {
     const allUnits = await readUnits();
