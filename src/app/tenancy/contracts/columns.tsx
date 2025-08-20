@@ -153,6 +153,12 @@ const RemainingDaysCell = ({ row }: { row: { original: Contract } }) => {
     return <span className={cn('font-bold', remaining.className)}>{remaining.text}</span>;
 }
 
+const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" } = {
+  New: 'default',
+  Renew: 'secondary',
+  Cancel: 'destructive',
+};
+
 export const columns: ColumnDef<Contract>[] = [
   {
     id: 'select',
@@ -232,7 +238,10 @@ export const columns: ColumnDef<Contract>[] = [
   {
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => <Badge variant={row.getValue('status') === 'New' ? 'default' : 'secondary'} className="capitalize">{row.getValue('status')}</Badge>
+    cell: ({ row }) => {
+        const status = row.getValue('status') as string;
+        return <Badge variant={statusVariantMap[status] || 'default'} className="capitalize">{status}</Badge>;
+    }
   },
    {
     accessorKey: 'terminationDate',

@@ -25,7 +25,7 @@ export const contractSchema = z.object({
   endDate: z.string().min(1, "End date is required."),
   totalRent: z.number().min(0, "Total rent must be a positive number."),
   paymentMode: z.enum(['cash', 'cheque', 'bank-transfer']),
-  status: z.enum(['New', 'Renew']).optional(),
+  status: z.enum(['New', 'Renew', 'Cancel']).optional(),
   terminationDate: z.string().optional(),
   rentBasedOn: z.enum(['Monthly', 'Daily']).optional(),
   paymentFrequency: z.enum(['Monthly', 'Quarterly', 'Half-Yearly', 'Yearly', 'Custom']).optional(),

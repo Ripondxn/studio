@@ -119,6 +119,12 @@ const ActionsCell = ({ row }: { row: { original: LeaseContract } }) => {
   );
 };
 
+const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" } = {
+  New: 'default',
+  Renew: 'secondary',
+  Cancel: 'destructive',
+};
+
 export const columns: ColumnDef<LeaseContract>[] = [
   {
     id: 'select',
@@ -189,7 +195,10 @@ export const columns: ColumnDef<LeaseContract>[] = [
   {
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => <Badge variant={row.getValue('status') === 'New' ? 'default' : 'secondary'} className="capitalize">{row.getValue('status')}</Badge>
+    cell: ({ row }) => {
+        const status = row.getValue('status') as string;
+        return <Badge variant={statusVariantMap[status] || 'default'} className="capitalize">{status}</Badge>;
+    }
   },
   {
     id: 'actions',

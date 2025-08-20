@@ -446,13 +446,14 @@ export default function LeaseContractPage() {
             </div>
              <div>
                 <Label htmlFor="status">Status</Label>
-                 <Select value={contract.status} onValueChange={(value: 'New' | 'Renew') => handleInputChange('status', value)} disabled={!isEditing}>
+                 <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
                     <SelectTrigger id="status">
                         <SelectValue/>
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="New">New</SelectItem>
                         <SelectItem value="Renew">Renew</SelectItem>
+                        <SelectItem value="Cancel">Cancel</SelectItem>
                     </SelectContent>
                  </Select>
             </div>

@@ -50,6 +50,9 @@ const initialContractState: Contract = {
     property: '',
     tenantCode: '',
     tenantName: '',
+    mobile: '',
+    email: '',
+    address: '',
     startDate: '',
     endDate: '',
     totalRent: 0,
@@ -150,9 +153,9 @@ export default function TenancyContractPage() {
     setLookups(prev => ({...prev, rooms: [], partitions: []}));
     setContract(prev => ({...prev, roomCode: '', partitionCode: ''}));
     if (unitCode) {
-        const rooms = await getRoomsForUnit(contract.property, unitCode);
+        const rooms = await getRoomsForUnit(contract.property || '', unitCode);
         setLookups(prev => ({...prev, rooms}));
-        const partitions = await getPartitionsForUnit(contract.property, unitCode);
+        const partitions = await getPartitionsForUnit(contract.property || '', unitCode);
         setLookups(prev => ({...prev, partitions}));
 
         const result = await getUnitDetails(unitCode);
@@ -492,7 +495,7 @@ export default function TenancyContractPage() {
                 <Label htmlFor="property">Property</Label>
                  <Combobox
                     options={lookups.properties}
-                    value={contract.property}
+                    value={contract.property || ''}
                     onSelect={handlePropertySelect}
                     placeholder="Select Property"
                     disabled={!isEditing}
@@ -569,13 +572,14 @@ export default function TenancyContractPage() {
             </div>
              <div>
                 <Label htmlFor="status">Status</Label>
-                 <Select value={contract.status} onValueChange={(value: 'New' | 'Renew') => handleInputChange('status', value)} disabled={!isEditing}>
+                 <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
                     <SelectTrigger id="status">
                         <SelectValue/>
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="New">New</SelectItem>
                         <SelectItem value="Renew">Renew</SelectItem>
+                        <SelectItem value="Cancel">Cancel</SelectItem>
                     </SelectContent>
                  </Select>
             </div>
