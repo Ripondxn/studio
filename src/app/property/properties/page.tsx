@@ -5,6 +5,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -133,7 +134,8 @@ type Agent = {
 type Attachment = {
   id: number;
   name: string;
-  file: File | null;
+  file: File | null | string;
+  url?: string;
   remarks: string;
 };
 
@@ -254,6 +256,16 @@ export default function PropertyPage() {
         setPropertyData(initialPropertyData);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      attachments.forEach(attachment => {
+        if (attachment.url) {
+          URL.revokeObjectURL(attachment.url);
+        }
+      });
+    };
+  }, [attachments]);
 
 
 
@@ -401,7 +413,19 @@ export default function PropertyPage() {
   };
 
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
-    setAttachments(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+    setAttachments(prev => prev.map(item => {
+        if (item.id === id) {
+            if (field === 'file' && value instanceof File) {
+                if (item.url) {
+                    URL.revokeObjectURL(item.url);
+                }
+                const newUrl = URL.createObjectURL(value);
+                return {...item, file: value, url: newUrl};
+            }
+            return {...item, [field]: value};
+        }
+        return item;
+    }));
   };
 
   const addAttachmentRow = () => {
@@ -417,6 +441,10 @@ export default function PropertyPage() {
   };
 
   const removeAttachmentRow = (id: number) => {
+    const attachmentToRemove = attachments.find(item => item.id === id);
+    if (attachmentToRemove && attachmentToRemove.url) {
+        URL.revokeObjectURL(attachmentToRemove.url);
+    }
     setAttachments(prev => prev.filter(item => item.id !== id));
   };
   
@@ -492,7 +520,7 @@ export default function PropertyPage() {
     setSpecialConditions(data.specialConditions || []);
     setNotes(data.notes || []);
     setAgents(data.agents || []);
-    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : []);
+    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: null, url: undefined})) : []);
     setParkings(data.parkings || []);
     setAssignments(data.assignments || []);
     setShareHolders(data.shareHolders || []);
@@ -531,7 +559,7 @@ export default function PropertyPage() {
         vatItems,
         otherDetails,
         specialConditions,
-        attachments: attachments.map(a => ({...a, file: a.file?.name})), // Just saving file name for now
+        attachments: attachments.map(a => ({...a, file: a.file instanceof File ? a.file.name : a.file})),
         parkings,
         assignments,
         shareHolders,
@@ -1202,7 +1230,6 @@ export default function PropertyPage() {
                        <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="w-[50px]">Sr. No.</TableHead>
                             <TableHead>Attachment Name</TableHead>
                             <TableHead>File</TableHead>
                             <TableHead>Remarks</TableHead>
@@ -1212,7 +1239,6 @@ export default function PropertyPage() {
                         <TableBody>
                             {attachments.map((item, index) => (
                                 <TableRow key={item.id}>
-                                    <TableCell>{index + 1}</TableCell>
                                     <TableCell>
                                         <Input 
                                             value={item.name} 
@@ -1222,12 +1248,21 @@ export default function PropertyPage() {
                                         />
                                     </TableCell>
                                     <TableCell>
-                                        <Input 
-                                            type="file" 
-                                            className="text-sm" 
-                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                            disabled={!isEditing}
-                                        />
+                                        <div className="flex items-center gap-2">
+                                            <Input 
+                                                type="file" 
+                                                className="text-sm" 
+                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                disabled={!isEditing}
+                                            />
+                                            {item.url ? (
+                                                <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                    View
+                                                </Link>
+                                            ) : item.file && typeof item.file === 'string' ? (
+                                                <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                            ) : null}
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <Input 

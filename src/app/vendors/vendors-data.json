@@ -1,2 +1,23 @@
-
-[]
+[
+  {
+    "id": "V-1755669825846",
+    "vendorData": {
+      "code": "V001",
+      "name": "Md Ripon Ahmed",
+      "mobile": "0509231340",
+      "email": "ripondxn@gmail.com",
+      "address": "Village : Rahut Hati , Post office : Hasnabad",
+      "bankName": "ADDC",
+      "accountNumber": "24460789",
+      "iban": "AE01254"
+    },
+    "attachments": [
+      {
+        "id": 1,
+        "name": "Trade Lisences",
+        "file": "Multi tab.jpg",
+        "remarks": ""
+      }
+    ]
+  }
+]

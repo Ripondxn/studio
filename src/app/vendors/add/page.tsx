@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -48,6 +49,7 @@ type Attachment = {
   id: number;
   name: string;
   file: File | null;
+  url?: string;
   remarks: string;
 };
 
@@ -78,6 +80,16 @@ export default function VendorPage() {
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
 
   useEffect(() => {
+    return () => {
+      attachments.forEach(attachment => {
+        if (attachment.url) {
+          URL.revokeObjectURL(attachment.url);
+        }
+      });
+    };
+  }, [attachments]);
+
+  useEffect(() => {
     const vendorCode = searchParams.get('code');
     if (vendorCode) {
       setIsNewRecord(false);
@@ -95,7 +107,20 @@ export default function VendorPage() {
   };
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
-    setAttachments(prev => prev.map(item => item.id === id ? {...item, [field]: value} : item));
+    setAttachments(prev => prev.map(item => {
+        if (item.id === id) {
+            if (field === 'file' && value instanceof File) {
+                 // Clean up old object URL if it exists
+                if (item.url) {
+                    URL.revokeObjectURL(item.url);
+                }
+                const newUrl = URL.createObjectURL(value);
+                return {...item, file: value, url: newUrl};
+            }
+            return {...item, [field]: value};
+        }
+        return item;
+    }));
   };
 
   const addAttachmentRow = () => {
@@ -111,12 +136,16 @@ export default function VendorPage() {
   };
 
   const removeAttachmentRow = (id: number) => {
+    const attachmentToRemove = attachments.find(item => item.id === id);
+    if (attachmentToRemove && attachmentToRemove.url) {
+        URL.revokeObjectURL(attachmentToRemove.url);
+    }
     setAttachments(prev => prev.filter(item => item.id !== id));
   };
 
   const setAllData = (data: any) => {
     setVendorData(data.vendorData || initialVendorData);
-    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : []);
+    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: null, url: undefined})) : []);
   }
 
   const setInitialAllData = (data: any) => {
@@ -142,7 +171,7 @@ export default function VendorPage() {
     try {
       const dataToSave = {
         vendorData,
-        attachments: attachments.map(a => ({...a, file: a.file?.name})),
+        attachments: attachments.map(a => ({ id: a.id, name: a.name, file: a.file?.name, remarks: a.remarks })),
       };
 
       const result = await saveVendorData(dataToSave, isNewRecord);
@@ -342,8 +371,8 @@ export default function VendorPage() {
                  <Table>
                     <TableHeader>
                         <TableRow>
-                        <TableHead>Name</TableHead>
                         <TableHead>File</TableHead>
+                        <TableHead>Attachment Name</TableHead>
                         <TableHead>Action</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -352,19 +381,22 @@ export default function VendorPage() {
                             <TableRow key={item.id}>
                                 <TableCell>
                                     <Input 
-                                        value={item.name} 
-                                        onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
-                                        disabled={!isEditing} 
-                                        placeholder="e.g. Trade License"
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <Input 
                                         type="file" 
                                         className="text-sm" 
                                         onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
                                         disabled={!isEditing}
                                     />
+                                </TableCell>
+                                <TableCell>
+                                    {item.url ? (
+                                        <Link href={item.url} target="_blank" className="text-primary hover:underline" rel="noopener noreferrer">
+                                            {item.file?.name || 'View File'}
+                                        </Link>
+                                    ) : item.file ? (
+                                        <span className="text-muted-foreground italic">{typeof item.file === 'string' ? item.file : item.file.name}</span>
+                                    ) : (
+                                        <span className="text-muted-foreground italic">No file</span>
+                                    )}
                                 </TableCell>
                                 <TableCell>
                                 <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
@@ -387,7 +419,7 @@ export default function VendorPage() {
             <AlertDialogTrigger asChild>
             <Button
                 variant="destructive"
-                disabled={isNewRecord || !isEditing}
+                disabled={isNewRecord || isEditing}
             >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete Vendor
             </Button>
