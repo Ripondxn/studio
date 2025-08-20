@@ -90,6 +90,11 @@ import { getRoomsForProperty } from '../rooms/actions';
 import { DataTable as RoomsDataTable } from '../rooms/data-table';
 import { columns as roomColumns } from '../rooms/columns';
 import { AddRoomDialog } from '../rooms/add-room-dialog';
+import { type Partition } from '../partitions/schema';
+import { getPartitionsForProperty } from '../partitions/actions';
+import { DataTable as PartitionsDataTable } from '../partitions/data-table';
+import { columns as partitionColumns } from '../partitions/columns';
+import { AddPartitionDialog } from '../partitions/add-partition-dialog';
 
 
 type Particular = {
@@ -181,6 +186,9 @@ export default function PropertyPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   
+  const [partitions, setPartitions] = useState<Partition[]>([]);
+  const [isLoadingPartitions, setIsLoadingPartitions] = useState(false);
+  
   const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
 
 
@@ -238,6 +246,15 @@ export default function PropertyPage() {
                 }
             })
             .finally(() => setIsLoadingRooms(false));
+        
+        setIsLoadingPartitions(true);
+        getPartitionsForProperty(propertyData.code)
+            .then(result => {
+                if (result.success && result.data) {
+                    setPartitions(result.data);
+                }
+            })
+            .finally(() => setIsLoadingPartitions(false));
     }
   }, [propertyData.code, isNewRecord]);
 
@@ -736,13 +753,17 @@ export default function PropertyPage() {
                         <CardTitle>Partitions</CardTitle>
                         <CardDescription>Manage partitions for units in this property.</CardDescription>
                     </div>
-                    <Button><Plus className="mr-2 h-4 w-4"/>Add Partition</Button>
+                    <AddPartitionDialog propertyCode={propertyData.code} onPartitionAdded={() => handleFindClick(propertyData.code)} />
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="border rounded-md p-10 text-center text-muted-foreground">
-                    <p>Partition management functionality coming soon.</p>
-                </div>
+                 {isLoadingPartitions ? (
+                    <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : (
+                    <PartitionsDataTable columns={partitionColumns} data={partitions} />
+                )}
             </CardContent>
            </Card>
         </TabsContent>
