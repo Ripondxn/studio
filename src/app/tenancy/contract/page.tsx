@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams }from 'next/navigation';
 import {
   Card,
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Save, X, Search, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit, getPartitionDetails } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
@@ -76,7 +77,7 @@ export default function TenancyContractPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSaving, setIsSaving] = useState(false);
-  const [isFinding, setIsFinding] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
 
@@ -86,6 +87,41 @@ export default function TenancyContractPage() {
   const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], partitions: [], tenants: [] });
 
 
+  const fetchContractData = useCallback(async (contractId: string) => {
+    setIsLoading(true);
+    try {
+        const result = await findContract({ contractId });
+        if (result.success && result.data) {
+            const fetchedContract = result.data;
+            setContract(fetchedContract);
+            setInitialContract(fetchedContract);
+            setIsNewRecord(false);
+            setIsEditing(false);
+            setEditedInstallmentIndexes(new Set());
+
+            if (fetchedContract.property) {
+                const units = await getUnitsForProperty(fetchedContract.property);
+                setLookups(prev => ({...prev, units}));
+            }
+            if (fetchedContract.property && fetchedContract.unitCode) {
+                const rooms = await getRoomsForUnit(fetchedContract.property, fetchedContract.unitCode);
+                setLookups(prev => ({...prev, rooms}));
+                const partitions = await getPartitionsForUnit(fetchedContract.property, fetchedContract.unitCode);
+                setLookups(prev => ({...prev, partitions}));
+            }
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.error || "Contract not found" });
+            router.push('/tenancy/contracts');
+        }
+    } catch (err) {
+        toast({ variant: 'destructive', title: 'Error', description: "Failed to fetch contract." });
+        router.push('/tenancy/contracts');
+    } finally {
+        setIsLoading(false);
+    }
+  }, [router, toast]);
+
+
   useEffect(() => {
     getContractLookups().then(data => {
         setLookups(prev => ({...prev, properties: data.properties, tenants: data.tenants}));
@@ -93,40 +129,16 @@ export default function TenancyContractPage() {
 
     const contractId = searchParams.get('id');
     if (contractId) {
-        setIsFinding(true);
-        findContract({ contractId })
-            .then(result => {
-                if (result.success && result.data) {
-                    setContract(result.data);
-                    setInitialContract(result.data);
-                    setIsNewRecord(false);
-                    setIsEditing(false);
-                    setEditedInstallmentIndexes(new Set());
-                    if (result.data.property) {
-                        getUnitsForProperty(result.data.property).then(units => setLookups(prev => ({...prev, units})));
-                    }
-                    if (result.data.property && result.data.unitCode) {
-                        getRoomsForUnit(result.data.property, result.data.unitCode).then(rooms => setLookups(prev => ({...prev, rooms})));
-                        getPartitionsForUnit(result.data.property, result.data.unitCode).then(partitions => setLookups(prev => ({...prev, partitions})));
-                    }
-                } else {
-                    toast({ variant: 'destructive', title: 'Error', description: result.error || "Contract not found" });
-                    router.push('/tenancy/contracts');
-                }
-            })
-            .catch(err => {
-                 toast({ variant: 'destructive', title: 'Error', description: "Failed to fetch contract." });
-                 router.push('/tenancy/contracts');
-            })
-            .finally(() => setIsFinding(false));
+       fetchContractData(contractId);
     } else {
         setIsNewRecord(true);
         setIsEditing(true);
         const newContractNo = `TC-${Date.now()}`;
         setContract({...initialContractState, contractNo: newContractNo});
         setEditedInstallmentIndexes(new Set());
+        setIsLoading(false);
     }
-  }, [searchParams, router, toast]);
+  }, [searchParams, fetchContractData]);
 
   const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
@@ -161,10 +173,13 @@ export default function TenancyContractPage() {
             setContract(prev => ({
                 ...prev,
                 property: result.data.property,
-                tenantName: result.data.tenant?.name || '',
-                tenantCode: result.data.tenant?.code || '',
                 totalRent: result.data.totalRent,
             }));
+            
+            const tenant = result.data.tenant;
+            if(tenant) {
+                 handleTenantSelect(tenant.code);
+            }
         }
     }
   }
@@ -180,7 +195,6 @@ export default function TenancyContractPage() {
             }));
         }
     } else {
-        // If partition is deselected, fallback to unit rent
         if(contract.unitCode) {
             const result = await getUnitDetails(contract.unitCode);
             if (result.success && result.data) {
@@ -319,24 +333,6 @@ export default function TenancyContractPage() {
     setContract(prev => ({ ...prev, paymentSchedule: newSchedule }));
     toast({ title: 'Schedule Generated', description: `${numberOfPayments} installments have been created.`});
   }
-  
-  const handleFind = async (findBy: 'unitCode' | 'tenantName') => {
-    const query = findBy === 'unitCode' ? { unitCode: contract.unitCode } : { tenantName: contract.tenantName };
-    if ((findBy === 'unitCode' && !contract.unitCode) || (findBy === 'tenantName' && !contract.tenantName)) {
-        toast({ variant: 'destructive', title: 'Search Error', description: 'Please enter a value to search.'});
-        return;
-    }
-    
-    setIsFinding(true);
-    const result = await findContract(query);
-    if(result.success && result.data){
-        toast({ title: 'Contract Found', description: `Loaded contract ${result.data.contractNo}`});
-        router.push(`/tenancy/contract?id=${result.data.id}`);
-    } else {
-        toast({ variant: 'destructive', title: 'Not Found', description: result.error });
-    }
-    setIsFinding(false);
-  }
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -404,7 +400,7 @@ export default function TenancyContractPage() {
 
   const pageTitle = isNewRecord ? 'New Tenancy Contract' : `Edit Contract: ${initialContract.contractNo}`;
 
-  if (isFinding && !isNewRecord) {
+  if (isLoading) {
     return (
         <div className="container mx-auto p-4 flex justify-center items-center h-full">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -431,7 +427,7 @@ export default function TenancyContractPage() {
             </>
            ) : (
              <>
-                <Button onClick={() => setIsEditing(true)} disabled={isFinding}>
+                <Button onClick={() => setIsEditing(true)} disabled={isLoading}>
                     <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
                 <Button variant="outline" onClick={handlePrint}>
@@ -697,3 +693,4 @@ export default function TenancyContractPage() {
     </div>
   );
 }
+
