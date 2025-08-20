@@ -1288,12 +1288,12 @@ export default function PropertyPage() {
                                             </Link>
                                         )}
                                         {item.file && typeof item.file === 'string' && (
-                                            item.isLink ? (
+                                            item.isLink && item.file.startsWith('http') ? (
                                                 <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
                                                     Open Link
                                                 </Link>
                                             ) : (
-                                                <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                                !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
                                             )
                                         )}
                                     </TableCell>
