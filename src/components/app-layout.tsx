@@ -31,6 +31,7 @@ import {
   LogOut,
   FileSignature,
   Wrench,
+  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -73,7 +74,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   
   const navLinks = [
     { href: '/', label: 'Dashboard', icon: <LayoutDashboard /> },
-    { href: '/property/properties/list', label: 'Leases', icon: <FileSignature /> },
+    { 
+        label: 'Leases', 
+        icon: <FileSignature />,
+        subItems: [
+            { href: '/property/properties/list', label: 'Properties' },
+            { href: '/landlord', label: 'Landlord' },
+        ]
+    },
     { href: '/property/tenants', label: 'Tenant', icon: <Users /> },
     { href: '/finance/chart-of-accounts', label: 'Finance', icon: <Banknote /> },
     { href: '#', label: 'Maintenance', icon: <Wrench /> },
@@ -92,15 +100,37 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <Building2 className="h-6 w-6 text-primary" />
                 <span className="font-headline">PropVue</span>
                 </Link>
-                {navLinks.map(link => (
-                     <Link
-                        key={link.href}
-                        href={link.href}
-                        className={cn("transition-colors hover:text-foreground", pathname === link.href ? "text-foreground" : "text-muted-foreground")}
-                    >
-                        {link.label}
-                    </Link>
-                ))}
+                {navLinks.map((link, index) => {
+                    if (link.subItems) {
+                        const isActive = link.subItems.some(sub => pathname.startsWith(sub.href));
+                        return (
+                            <DropdownMenu key={index}>
+                                <DropdownMenuTrigger asChild>
+                                     <Button variant="ghost" className={cn("flex items-center gap-1 transition-colors hover:text-foreground data-[state=open]:text-foreground", isActive ? "text-foreground" : "text-muted-foreground")}>
+                                        {link.label}
+                                        <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start">
+                                    {link.subItems.map(subItem => (
+                                        <DropdownMenuItem key={subItem.href} asChild>
+                                            <Link href={subItem.href}>{subItem.label}</Link>
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )
+                    }
+                    return (
+                        <Link
+                            key={link.href}
+                            href={link.href!}
+                            className={cn("transition-colors hover:text-foreground", pathname === link.href ? "text-foreground" : "text-muted-foreground")}
+                        >
+                            {link.label}
+                        </Link>
+                    )
+                })}
             </nav>
             <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
                 <div className="ml-auto flex-1 sm:flex-initial">
