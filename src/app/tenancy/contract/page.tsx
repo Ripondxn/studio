@@ -198,6 +198,10 @@ export default function TenancyContractPage() {
     }
   }
 
+   const handleClose = () => {
+    router.push('/tenancy/contracts');
+  };
+
   const pageTitle = isNewRecord ? 'New Tenancy Contract' : `Edit Contract: ${initialContract.contractNo}`;
 
   if (isFinding) {
@@ -263,6 +267,9 @@ export default function TenancyContractPage() {
                 </AlertDialog>
              </>
            )}
+            <Button variant="outline" onClick={handleClose}>
+                <X className="mr-2 h-4 w-4" /> Close
+            </Button>
         </div>
       </div>
       <Card>
