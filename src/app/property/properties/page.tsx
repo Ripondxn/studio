@@ -419,14 +419,14 @@ export default function PropertyPage() {
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
         if (item.id === id) {
-            if (field === 'file') {
-                if (item.url) URL.revokeObjectURL(item.url);
+             if (field === 'file') {
+                if (item.url) URL.revokeObjectURL(item.url); // Clean up old object URL
                 const newUrl = (value instanceof File) ? URL.createObjectURL(value) : undefined;
                 return {...item, file: value, url: newUrl};
             }
-             if (field === 'isLink') {
+            if (field === 'isLink') {
                  if (item.url) URL.revokeObjectURL(item.url);
-                 return {...item, isLink: value, file: null, url: undefined };
+                 return {...item, isLink: value, file: null, url: undefined }; // Reset file and url when switching mode
             }
             return {...item, [field]: value};
         }
@@ -613,17 +613,19 @@ export default function PropertyPage() {
      if (isNewRecord) {
         router.push('/property/properties/list');
      } else {
-        setPropertyData(initialData);
-        setParticulars(initialParticulars);
-        setVatItems(initialVatItems);
-        setOtherDetails(initialOtherDetails);
-        setSpecialConditions(initialSpecialConditions);
-        setAttachments(initialAttachments);
-        setParkings(initialParkings);
-        setAssignments(initialAssignments);
-        setShareHolders(initialShareHolders);
-        setNotes(initialNotes);
-        setAgents(initialAgents);
+        setAllData({
+            propertyData: initialData,
+            particulars: initialParticulars,
+            vatItems: initialVatItems,
+            otherDetails: initialOtherDetails,
+            specialConditions: initialSpecialConditions,
+            attachments: initialAttachments,
+            parkings: initialParkings,
+            assignments: initialAssignments,
+            shareHolders: initialShareHolders,
+            notes: initialNotes,
+            agents: initialAgents,
+        });
         setIsEditing(false);
      }
   }
@@ -646,14 +648,14 @@ export default function PropertyPage() {
     try {
       const result = await findPropertyData(codeToFind);
       if (result.success && result.data) {
-        toast({
-          title: 'Found',
-          description: `Found record for Property Code: ${codeToFind}`,
-        });
         setAllData(result.data);
         setInitialAllData(result.data);
         setIsNewRecord(false);
         setIsEditing(false);
+        toast({
+          title: 'Found',
+          description: `Found record for Property Code: ${codeToFind}`,
+        });
       } else {
         toast({
           variant: 'destructive',
@@ -691,11 +693,11 @@ export default function PropertyPage() {
       } else {
         throw new Error(result.error || 'An unknown error occurred');
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: (error as Error).message || 'Failed to delete property.',
+        description: error.message || 'Failed to delete property.',
       });
     }
   };
@@ -1270,7 +1272,7 @@ export default function PropertyPage() {
                                                 <Input
                                                     type="text"
                                                     placeholder="https://example.com"
-                                                    value={item.file && typeof item.file === 'string' ? item.file : ''}
+                                                    value={typeof item.file === 'string' ? item.file : ''}
                                                     onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
                                                     disabled={!isEditing}
                                                 />
