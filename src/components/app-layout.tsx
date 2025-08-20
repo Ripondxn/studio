@@ -30,6 +30,7 @@ import {
   Settings,
   LogOut,
   FileSignature,
+  Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -75,6 +76,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { href: '/property/properties/list', label: 'Leases', icon: <FileSignature /> },
     { href: '/property/tenants', label: 'Tenant', icon: <Users /> },
     { href: '/finance/chart-of-accounts', label: 'Finance', icon: <Banknote /> },
+    { href: '#', label: 'Maintenance', icon: <Wrench /> },
     { href: '/reports', label: 'Reports', icon: <LineChart /> },
     { href: '/admin/user-roles', label: 'Settings', icon: <Settings /> },
   ]
