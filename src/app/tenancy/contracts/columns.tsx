@@ -31,6 +31,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { deleteContract } from '../contract/actions';
 import { Contract } from '../contract/schema';
+import { cn } from '@/lib/utils';
 
 const ActionsCell = ({ row }: { row: { original: Contract } }) => {
   const contract = row.original;
@@ -120,7 +121,7 @@ const ActionsCell = ({ row }: { row: { original: Contract } }) => {
 
 const RemainingDaysCell = ({ row }: { row: { original: Contract } }) => {
     const { endDate } = row.original;
-    const [remainingText, setRemainingText] = useState('');
+    const [remaining, setRemaining] = useState<{ text: string, className: string }>({ text: '', className: '' });
   
     useEffect(() => {
         try {
@@ -129,18 +130,27 @@ const RemainingDaysCell = ({ row }: { row: { original: Contract } }) => {
             const days = differenceInDays(end, now);
             
             if (days < 0) {
-                setRemainingText(`Expired ${formatDistanceToNowStrict(end, { addSuffix: true })}`);
-            } else if (days === 0) {
-                setRemainingText('Expires today');
+                setRemaining({ 
+                    text: `Expired ${formatDistanceToNowStrict(end, { addSuffix: true })}`,
+                    className: 'text-destructive'
+                });
+            } else if (days <= 30) {
+                 setRemaining({ 
+                    text: days === 0 ? 'Expires today' : `${days} days`,
+                    className: 'text-amber-600'
+                });
             } else {
-                setRemainingText(`${days} days`);
+                 setRemaining({ 
+                    text: `${days} days`,
+                    className: ''
+                });
             }
         } catch (e) {
-            setRemainingText('Invalid date');
+            setRemaining({text: 'Invalid date', className: 'text-muted-foreground'});
         }
     }, [endDate]);
 
-    return <span>{remainingText}</span>;
+    return <span className={cn('font-medium', remaining.className)}>{remaining.text}</span>;
 }
 
 export const columns: ColumnDef<Contract>[] = [
