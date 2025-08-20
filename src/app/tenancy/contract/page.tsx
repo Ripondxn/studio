@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Save, X, Search, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit } from './actions';
+import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit, getPartitionDetails } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
@@ -45,7 +45,7 @@ const initialContractState: Contract = {
     contractDate: '',
     unitCode: '',
     roomCode: '',
-    partitionName: '',
+    partitionCode: '',
     property: '',
     tenantCode: '',
     tenantName: '',
@@ -66,6 +66,7 @@ type LookupData = {
     properties: {value: string, label: string}[];
     units: {value: string, label: string}[];
     rooms: {value: string, label: string}[];
+    partitions: {value: string, label: string}[];
     tenants: {value: string, label: string}[];
 }
 
@@ -81,7 +82,7 @@ export default function TenancyContractPage() {
   const [contract, setContract] = useState<Contract>(initialContractState);
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
-  const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], tenants: [] });
+  const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], partitions: [], tenants: [] });
 
 
   useEffect(() => {
@@ -105,6 +106,7 @@ export default function TenancyContractPage() {
                     }
                     if (result.data.property && result.data.unitCode) {
                         getRoomsForUnit(result.data.property, result.data.unitCode).then(rooms => setLookups(prev => ({...prev, rooms})));
+                        getPartitionsForUnit(result.data.property, result.data.unitCode).then(partitions => setLookups(prev => ({...prev, partitions})));
                     }
                 } else {
                     toast({ variant: 'destructive', title: 'Error', description: result.error || "Contract not found" });
@@ -134,8 +136,8 @@ export default function TenancyContractPage() {
 
   const handlePropertySelect = async (propertyCode: string) => {
       handleInputChange('property', propertyCode);
-      setLookups(prev => ({...prev, units: [], rooms: []}));
-      setContract(prev => ({...prev, unitCode: '', roomCode: ''}));
+      setLookups(prev => ({...prev, units: [], rooms: [], partitions: []}));
+      setContract(prev => ({...prev, unitCode: '', roomCode: '', partitionCode: ''}));
       if(propertyCode) {
           const units = await getUnitsForProperty(propertyCode);
           setLookups(prev => ({...prev, units}));
@@ -144,11 +146,13 @@ export default function TenancyContractPage() {
   
   const handleUnitSelect = async (unitCode: string) => {
     handleInputChange('unitCode', unitCode);
-    setLookups(prev => ({...prev, rooms: []}));
-    setContract(prev => ({...prev, roomCode: ''}));
+    setLookups(prev => ({...prev, rooms: [], partitions: []}));
+    setContract(prev => ({...prev, roomCode: '', partitionCode: ''}));
     if (unitCode) {
         const rooms = await getRoomsForUnit(contract.property, unitCode);
         setLookups(prev => ({...prev, rooms}));
+        const partitions = await getPartitionsForUnit(contract.property, unitCode);
+        setLookups(prev => ({...prev, partitions}));
 
         const result = await getUnitDetails(unitCode);
         if (result.success && result.data) {
@@ -157,8 +161,28 @@ export default function TenancyContractPage() {
                 tenantName: result.data.tenantName,
                 tenantCode: result.data.tenantCode,
                 totalRent: result.data.totalRent,
-                partitionName: result.data.partitionName,
             }));
+        }
+    }
+  }
+
+  const handlePartitionSelect = async (partitionCode: string) => {
+    handleInputChange('partitionCode', partitionCode);
+     if (partitionCode) {
+        const result = await getPartitionDetails(partitionCode);
+        if (result.success && result.data) {
+            setContract(prev => ({
+                ...prev,
+                totalRent: result.data.totalRent
+            }));
+        }
+    } else {
+        // If partition is deselected, fallback to unit rent
+        if(contract.unitCode) {
+            const result = await getUnitDetails(contract.unitCode);
+            if (result.success && result.data) {
+                setContract(prev => ({ ...prev, totalRent: result.data.totalRent }));
+            }
         }
     }
   }
@@ -489,9 +513,15 @@ export default function TenancyContractPage() {
                     disabled={!isEditing || !contract.unitCode}
                  />
             </div>
-            <div>
-              <Label htmlFor="partitionName">Partition Name</Label>
-              <Input id="partitionName" value={contract.partitionName || ''} disabled />
+             <div>
+                <Label htmlFor="partition-code">Partition</Label>
+                <Combobox
+                    options={lookups.partitions}
+                    value={contract.partitionCode || ''}
+                    onSelect={handlePartitionSelect}
+                    placeholder="Select Partition"
+                    disabled={!isEditing || !contract.unitCode || lookups.partitions.length === 0}
+                 />
             </div>
             <div>
                 <Label htmlFor="tenant-name">Tenant Name</Label>

@@ -214,6 +214,29 @@ export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
         .map((r: any) => ({ value: r.roomCode, label: `${r.roomCode} (${r.roomName || 'No Name'})` }));
 }
 
+export async function getPartitionsForUnit(propertyCode: string, unitCode: string) {
+    const partitions = await readPartitions();
+    return partitions
+        .filter(p => p.propertyCode === propertyCode && p.unitCode === unitCode)
+        .map((p: any) => ({ value: p.partitionCode, label: p.partitionName }));
+}
+
+export async function getPartitionDetails(partitionCode: string) {
+    const allPartitions = await readPartitions();
+    const partition = allPartitions.find(p => p.partitionCode === partitionCode);
+
+    if (!partition) {
+        return { success: false, error: 'Partition not found' };
+    }
+    
+    return { 
+        success: true, 
+        data: {
+            totalRent: partition.monthlyRent,
+        }
+    };
+}
+
 
 export async function getUnitDetails(unitCode: string) {
     const allUnits = await readUnits();
@@ -225,9 +248,6 @@ export async function getUnitDetails(unitCode: string) {
 
     const allProperties = await readProperties();
     const property = allProperties.find(p => (p.propertyData || p).code === unit.propertyCode);
-
-    const allPartitions = await readPartitions();
-    const partition = allPartitions.find(p => p.unitCode === unit.unitCode);
     
     const allTenants = await readTenants();
     const tenant = allTenants.find((t: any) => t.tenantData.unitCode === unit.unitCode);
@@ -239,7 +259,6 @@ export async function getUnitDetails(unitCode: string) {
             tenantName: tenant ? tenant.tenantData.name : '',
             tenantCode: tenant ? tenant.tenantData.code : '',
             totalRent: unit.annualRent,
-            partitionName: partition ? partition.partitionName : '',
         }
     };
 }
