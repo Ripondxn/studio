@@ -100,6 +100,7 @@ import { AddPartitionDialog } from '../partitions/add-partition-dialog';
 import { UnitGrid } from '../units/unit-grid';
 import { FloorGrid } from '../floors/floor-grid';
 import { RoomGrid } from '../rooms/room-grid';
+import { PartitionGrid } from '../partitions/partition-grid';
 
 
 type Particular = {
@@ -200,6 +201,7 @@ export default function PropertyPage() {
   const [unitsViewMode, setUnitsViewMode] = useState<ViewMode>('grid');
   const [floorsViewMode, setFloorsViewMode] = useState<ViewMode>('list');
   const [roomsViewMode, setRoomsViewMode] = useState<ViewMode>('list');
+  const [partitionsViewMode, setPartitionsViewMode] = useState<ViewMode>('list');
 
 
   useEffect(() => {
@@ -795,7 +797,17 @@ export default function PropertyPage() {
                         <CardTitle>Partitions</CardTitle>
                         <CardDescription>Manage partitions for units in this property.</CardDescription>
                     </div>
-                    <AddPartitionDialog propertyCode={propertyData.code} onPartitionAdded={() => fetchPropertySubData(propertyData.code)} />
+                    <div className="flex items-center gap-2">
+                         <div className="flex items-center rounded-md bg-muted p-1">
+                            <Button variant={partitionsViewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setPartitionsViewMode('grid')}>
+                                <LayoutGrid className="h-5 w-5" />
+                            </Button>
+                             <Button variant={partitionsViewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setPartitionsViewMode('list')}>
+                                <List className="h-5 w-5" />
+                            </Button>
+                        </div>
+                        <AddPartitionDialog propertyCode={propertyData.code} onPartitionAdded={() => fetchPropertySubData(propertyData.code)} />
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -803,8 +815,10 @@ export default function PropertyPage() {
                     <div className="flex justify-center items-center h-40">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
-                ) : (
+                ) : partitionsViewMode === 'list' ? (
                     <PartitionsDataTable columns={partitionColumns} data={partitions} />
+                ) : (
+                    <PartitionGrid partitions={partitions} />
                 )}
             </CardContent>
            </Card>
