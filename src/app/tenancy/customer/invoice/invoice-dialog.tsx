@@ -142,7 +142,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   if (isViewMode && invoice) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-6xl">
                  <DialogHeader>
                     <DialogTitle>View Invoice: {invoice.invoiceNo}</DialogTitle>
                 </DialogHeader>
@@ -162,7 +162,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-6xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
