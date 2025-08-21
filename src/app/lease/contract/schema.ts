@@ -27,6 +27,7 @@ export const leaseContractSchema = z.object({
   numberOfPayments: z.number().optional(),
   paymentSchedule: z.array(paymentInstallmentSchema),
   terms: z.string().optional(),
+  gracePeriod: z.number().optional(),
 });
 
 export type PaymentInstallment = z.infer<typeof paymentInstallmentSchema>;

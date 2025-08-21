@@ -202,6 +202,14 @@ export const columns: ColumnDef<LeaseContract>[] = [
     }
   },
   {
+    accessorKey: 'gracePeriod',
+    header: 'Grace Period',
+    cell: ({ row }) => {
+        const gracePeriod = row.getValue('gracePeriod') as number;
+        return <span>{gracePeriod || 0} days</span>;
+    }
+  },
+  {
     id: 'actions',
     cell: ActionsCell,
   },

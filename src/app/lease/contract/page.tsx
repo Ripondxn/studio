@@ -62,6 +62,7 @@ const initialContractState: LeaseContract = {
     terminationDate: '',
     paymentFrequency: 'Monthly',
     numberOfPayments: 1,
+    gracePeriod: 0,
     paymentSchedule: [],
     terms: '',
 };
@@ -128,11 +129,11 @@ export default function LeaseContractPage() {
         }));
     }, [contract.totalRent, contract.vatPercentage]);
 
-  const handleInputChange = (field: keyof Omit<LeaseContract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'vatPercentage' | 'vatAmount' | 'totalRentWithVat'>, value: string) => {
+  const handleInputChange = (field: keyof Omit<LeaseContract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'vatPercentage' | 'vatAmount' | 'totalRentWithVat' | 'gracePeriod'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
   }
   
-  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'vatPercentage', value: string) => {
+  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'vatPercentage' | 'gracePeriod', value: string) => {
     setContract(prev => ({...prev, [field]: parseFloat(value) || 0 }));
   }
 
@@ -481,6 +482,10 @@ export default function LeaseContractPage() {
                         <SelectItem value="Cancel">Cancel</SelectItem>
                     </SelectContent>
                  </Select>
+            </div>
+            <div>
+                <Label htmlFor="grace-period">Grace Period (days)</Label>
+                <Input id="grace-period" type="number" placeholder="0" value={contract.gracePeriod || ''} onChange={e => handleNumberInputChange('gracePeriod', e.target.value)} disabled={!isEditing}/>
             </div>
           </div>
           <Separator />
