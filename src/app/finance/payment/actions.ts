@@ -9,12 +9,14 @@ import { paymentSchema, type Payment } from './schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Landlord } from '@/app/landlord/schema';
 import { type Vendor } from '@/app/vendors/schema';
+import { type Customer } from '@/app/tenancy/customer/schema';
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
 const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
+const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
 
 
 async function readPayments(): Promise<Payment[]> {
@@ -68,11 +70,14 @@ export async function getLookups() {
     const tenants: {tenantData: Tenant}[] = await fs.readFile(tenantsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const landlords: {landlordData: Landlord}[] = await fs.readFile(landlordsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const vendors: {vendorData: Vendor}[] = await fs.readFile(vendorsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const customers: {customerData: Customer}[] = await fs.readFile(customersFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+
 
     return {
         tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
         landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
         vendors: vendors.map(v => ({ value: v.vendorData.name, label: v.vendorData.name })),
+        customers: customers.map(c => ({ value: c.customerData.name, label: c.customerData.name })),
     }
 }
 

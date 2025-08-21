@@ -19,6 +19,7 @@ const partyTypeConfig: {
   'Tenant': { icon: <User className="h-3 w-3" /> },
   'Landlord': { icon: <Building className="h-3 w-3" /> },
   'Vendor': { icon: <Wrench className="h-3 w-3" /> },
+  'Customer': { icon: <User className="h-3 w-3" /> },
 };
 
 

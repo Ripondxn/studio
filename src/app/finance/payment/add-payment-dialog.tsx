@@ -33,13 +33,14 @@ type Lookups = {
     tenants: { value: string, label: string }[];
     landlords: { value: string, label: string }[];
     vendors: { value: string, label: string }[];
+    customers: { value: string, label: string }[];
 }
 
 export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [] });
 
   const {
     register,
@@ -95,6 +96,7 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
       'Tenant': lookups.tenants,
       'Landlord': lookups.landlords,
       'Vendor': lookups.vendors,
+      'Customer': lookups.customers
   }[partyType] || [];
 
 
@@ -165,11 +167,17 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
                             name="partyType"
                             control={control}
                             render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value} disabled={paymentType === 'Receipt'}>
+                                <Select onValueChange={(value) => {
+                                    field.onChange(value);
+                                    setValue('partyName', '');
+                                }} value={field.value} disabled={paymentType === 'Receipt'}>
                                     <SelectTrigger><SelectValue/></SelectTrigger>
                                     <SelectContent>
                                          {paymentType === 'Receipt' ? (
-                                            <SelectItem value="Tenant">Tenant</SelectItem>
+                                            <>
+                                                <SelectItem value="Tenant">Tenant</SelectItem>
+                                                <SelectItem value="Customer">Customer</SelectItem>
+                                            </>
                                          ) : (
                                             <>
                                                 <SelectItem value="Landlord">Landlord</SelectItem>
