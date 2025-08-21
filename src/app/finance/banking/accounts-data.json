@@ -1,3 +1,4 @@
+
 [
   {
     "id": "acc_1",
@@ -13,14 +14,6 @@
     "bankName": "ADCB",
     "accountNumber": "**** **** **** 5678",
     "balance": 75000,
-    "currency": "AED"
-  },
-  {
-    "id": "acc_3",
-    "accountName": "Petty Cash",
-    "bankName": "Cash on Hand",
-    "accountNumber": "N/A",
-    "balance": 55000,
     "currency": "AED"
   }
 ]

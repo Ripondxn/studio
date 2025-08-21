@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreVertical, Edit, Trash2, Banknote, Landmark, Loader2 } from 'lucide-react';
+import { Plus, MoreVertical, Edit, Trash2, Banknote, Landmark, Loader2, Wallet } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -130,13 +130,14 @@ const BankAccountDialog = ({ account, onSave, children }: { account?: BankAccoun
 
 const BankAccountCard = ({ account, onEdit, onDelete }: { account: BankAccount, onEdit: () => void, onDelete: (id: string) => void }) => {
     const [isDeleting, setIsDeleting] = useState(false);
-    
+    const isPettyCash = account.id === 'acc_3';
+
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-full bg-primary/10 text-primary">
-                        <Landmark className="h-6 w-6" />
+                       {isPettyCash ? <Wallet className="h-6 w-6" /> : <Landmark className="h-6 w-6" />}
                     </div>
                     <div>
                         <CardTitle>{account.accountName}</CardTitle>
@@ -149,13 +150,13 @@ const BankAccountCard = ({ account, onEdit, onDelete }: { account: BankAccount, 
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                         <BankAccountDialog account={account} onSave={onEdit}>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={isPettyCash}>
                                 <Edit className="mr-2 h-4 w-4"/> Edit
                             </DropdownMenuItem>
                         </BankAccountDialog>
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                 <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                                 <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} disabled={isPettyCash}>
                                     <Trash2 className="mr-2 h-4 w-4"/> Delete
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
@@ -193,6 +194,11 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
   const [accounts, setAccounts] = useState(initialAccounts);
   const { toast } = useToast();
 
+  const totalBalance = useMemo(() => {
+    return accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  }, [accounts]);
+
+
   const refreshAccounts = async () => {
     const updatedAccounts = await getBankAccounts();
     setAccounts(updatedAccounts);
@@ -220,6 +226,21 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
         <BankAccountDialog onSave={refreshAccounts}>
             <Button><Plus className="mr-2 h-4 w-4"/>Add New Account</Button>
         </BankAccountDialog>
+      </div>
+      
+       <div className="mb-6">
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+                <Banknote className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                 <div className="text-2xl font-bold">
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'AED' }).format(totalBalance)}
+                 </div>
+                 <p className="text-xs text-muted-foreground">Aggregated balance from all accounts.</p>
+            </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -31,9 +31,21 @@ async function writeAccounts(data: BankAccount[]) {
     await fs.writeFile(accountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+const pettyCashAccount: BankAccount = {
+    id: "acc_3",
+    accountName: "Petty Cash",
+    bankName: "Cash on Hand",
+    accountNumber: "N/A",
+    balance: 55000,
+    currency: "AED",
+};
+
+
 export async function getBankAccounts() {
-    return await readAccounts();
+    const storedAccounts = await readAccounts();
+    return [pettyCashAccount, ...storedAccounts];
 }
+
 
 const formSchema = bankAccountSchema.omit({ id: true });
 
@@ -70,6 +82,9 @@ export async function saveBankAccount(data: z.infer<typeof bankAccountSchema>, i
 }
 
 export async function deleteBankAccount(accountId: string) {
+     if (accountId === pettyCashAccount.id) {
+        return { success: false, error: 'The Petty Cash account cannot be deleted.' };
+     }
      try {
         const allAccounts = await readAccounts();
         const updatedAccounts = allAccounts.filter(acc => acc.id !== accountId);
@@ -92,7 +107,12 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         const paymentsData = await fs.readFile(paymentsFilePath, 'utf-8');
         const allPayments: Payment[] = JSON.parse(paymentsData);
         
-        const accountPayments = allPayments.filter((p: Payment) => p.bankAccountId === accountId);
+        const accountPayments = allPayments.filter((p: Payment) => {
+             if (accountId === pettyCashAccount.id) {
+                return p.paymentMethod === 'Cash' && p.paymentFrom === 'Petty Cash';
+            }
+            return p.bankAccountId === accountId
+        });
 
         return accountPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (error) {
