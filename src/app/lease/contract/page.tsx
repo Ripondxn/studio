@@ -106,7 +106,8 @@ export default function LeaseContractPage() {
     } else {
         setIsNewRecord(true);
         setIsEditing(true);
-        setContract(initialContractState);
+        const newContractNo = `LCON-${Date.now()}`;
+        setContract({...initialContractState, contractNo: newContractNo});
         setEditedInstallmentIndexes(new Set());
         setIsLoading(false);
     }
@@ -121,7 +122,8 @@ export default function LeaseContractPage() {
   }
 
   const handleTenancyContractSelect = async (contractNo: string) => {
-    handleInputChange('contractNo', contractNo);
+    // This function might need to be adjusted or removed if lease contract numbers are independent
+    // For now, let's assume it can pre-fill data from a tenancy contract if selected
     if (contractNo) {
         const result = await getContractDetails(contractNo);
         if (result.success && result.data) {
@@ -386,14 +388,8 @@ export default function LeaseContractPage() {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-                <Label htmlFor="tenancyContractNo">Tenancy Contract No</Label>
-                 <Combobox
-                    options={lookups.tenancyContracts}
-                    value={contract.contractNo}
-                    onSelect={handleTenancyContractSelect}
-                    placeholder="Select Tenancy Contract"
-                    disabled={!isEditing}
-                 />
+                <Label htmlFor="leaseContractNo">Lease Contract No</Label>
+                 <Input id="leaseContractNo" value={contract.contractNo} disabled />
             </div>
             <div>
               <Label htmlFor="contract-date">Date</Label>
