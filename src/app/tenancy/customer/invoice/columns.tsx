@@ -11,6 +11,7 @@ import { type Invoice } from './schema';
 import { deleteInvoice } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice: Invoice) => void, onView: (invoice: Invoice) => void, onRecordPayment: (invoice: Invoice) => void }): ColumnDef<Invoice>[] => {
   
@@ -56,6 +57,15 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
     )
   }
 
+  const statusVariantMap: { [key in Invoice['status']]: string } = {
+    Draft: 'bg-gray-500/20 text-gray-700',
+    Sent: 'bg-blue-500/20 text-blue-700',
+    Overdue: 'bg-red-500/20 text-red-700',
+    Paid: 'bg-green-500/20 text-green-700',
+    Cancelled: 'bg-gray-500/20 text-gray-700 line-through'
+  };
+
+
   return [
       {
           accessorKey: 'invoiceNo',
@@ -77,9 +87,19 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
           cell: ({ row }) => <div className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.original.total)}</div>
       },
       {
+          accessorKey: 'amountPaid',
+          header: () => <div className="text-right">Amount Paid</div>,
+          cell: ({ row }) => <div className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.original.amountPaid || 0)}</div>
+      },
+       {
+          accessorKey: 'remainingBalance',
+          header: () => <div className="text-right">Balance</div>,
+          cell: ({ row }) => <div className="text-right font-medium text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.original.remainingBalance || 0)}</div>
+      },
+      {
           accessorKey: 'status',
           header: 'Status',
-          cell: ({ row }) => <Badge>{row.original.status}</Badge>,
+          cell: ({ row }) => <Badge variant="outline" className={cn(statusVariantMap[row.original.status], 'border-transparent')}>{row.original.status}</Badge>,
       },
       {
           id: 'actions',
@@ -87,3 +107,4 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
       }
   ];
 }
+```

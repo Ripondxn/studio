@@ -32,8 +32,8 @@ export async function getInvoicesForCustomer(customerCode: string) {
     return allInvoices.filter(inv => inv.customerCode === customerCode);
 }
 
-export async function saveInvoice(data: Omit<Invoice, 'id'> & { id?: string }) {
-    const validation = invoiceSchema.omit({id: true}).safeParse(data);
+export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string }) {
+    const validation = invoiceSchema.omit({id: true, amountPaid: true}).safeParse(data);
 
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -47,6 +47,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id'> & { id?: string }) {
             const newInvoice: Invoice = {
                 ...validation.data,
                 id: `INV-${Date.now()}`,
+                amountPaid: 0,
             };
             allInvoices.push(newInvoice);
         } else {
@@ -97,3 +98,27 @@ export async function updateInvoiceStatus(invoiceId: string, status: Invoice['st
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+export async function applyPaymentToInvoices(invoicePayments: { invoiceId: string; amount: number }[], customerCode: string) {
+    try {
+        const allInvoices = await readInvoices();
+
+        for (const payment of invoicePayments) {
+            const index = allInvoices.findIndex(inv => inv.id === payment.invoiceId);
+            if (index !== -1) {
+                allInvoices[index].amountPaid = (allInvoices[index].amountPaid || 0) + payment.amount;
+                if (allInvoices[index].amountPaid >= allInvoices[index].total) {
+                    allInvoices[index].status = 'Paid';
+                }
+            }
+        }
+
+        await writeInvoices(allInvoices);
+        revalidatePath(`/tenancy/customer/add?code=${customerCode}`);
+        return { success: true };
+    } catch (error) {
+         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+```

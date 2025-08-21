@@ -20,9 +20,12 @@ export const invoiceSchema = z.object({
   subTotal: z.number(),
   tax: z.number(),
   total: z.number(),
+  amountPaid: z.number().optional().default(0),
+  remainingBalance: z.number().optional(),
   notes: z.string().optional(),
   status: z.enum(['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled']),
 });
 
 export type Invoice = z.infer<typeof invoiceSchema>;
 export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
+```

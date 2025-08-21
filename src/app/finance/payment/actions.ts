@@ -12,6 +12,7 @@ import { type Vendor } from '@/app/vendors/schema';
 import { type Customer } from '@/app/tenancy/customer/schema';
 import { type BankAccount } from '@/app/finance/banking/schema';
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { applyPaymentToInvoices } from '@/app/tenancy/customer/invoice/actions';
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
@@ -61,13 +62,21 @@ export async function getPayments() {
     return payments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
-export async function addPayment(data: Omit<Payment, 'id'>) {
-    const validation = paymentSchema.omit({ id: true }).safeParse(data);
+const addPaymentFormSchema = paymentSchema.omit({ id: true }).extend({
+    invoiceAllocations: z.array(z.object({
+        invoiceId: z.string(),
+        amount: z.number(),
+    })).optional(),
+});
+
+
+export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
+    const validation = addPaymentFormSchema.safeParse(data);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
     }
     
-    const paymentData = validation.data;
+    const { invoiceAllocations, ...paymentData } = validation.data;
 
     try {
         // Adjust bank balance if it's an outgoing payment from a bank account
@@ -92,10 +101,17 @@ export async function addPayment(data: Omit<Payment, 'id'>) {
 
         allPayments.push(newPayment);
         await writePayments(allPayments);
+
+        if (paymentData.type === 'Receipt' && paymentData.partyType === 'Customer' && invoiceAllocations && invoiceAllocations.length > 0) {
+            await applyPaymentToInvoices(invoiceAllocations, paymentData.partyName);
+        }
         
         revalidatePath('/finance/payment');
         revalidatePath('/finance/due-payments');
         revalidatePath('/finance/banking'); // Revalidate banking to show new balance
+        if(paymentData.partyType === 'Customer') {
+             revalidatePath(`/tenancy/customer/add?code=${paymentData.partyName}`);
+        }
         return { success: true, data: newPayment };
 
     } catch (error) {

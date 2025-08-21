@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2 } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema, type Payment } from './schema';
 import { addPayment, getLookups } from './actions';
@@ -26,11 +26,21 @@ import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
-import { updateInvoiceStatus } from '@/app/tenancy/customer/invoice/actions';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { z } from 'zod';
 
+const invoiceAllocationSchema = z.object({
+  invoiceId: z.string(),
+  amount: z.number(),
+});
 
-type PaymentFormData = Omit<Payment, 'id'>;
-const paymentFormSchema = paymentSchema.omit({ id: true });
+const formSchema = paymentSchema.omit({ id: true }).extend({
+    invoiceAllocations: z.array(invoiceAllocationSchema).optional(),
+});
+
+type PaymentFormData = z.infer<typeof formSchema>;
+
 
 type Lookups = {
     tenants: { value: string, label: string }[];
@@ -46,11 +56,12 @@ interface AddPaymentDialogProps {
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
   defaultValues?: Partial<PaymentFormData>;
-  associatedInvoiceId?: string | null;
+  customerInvoices?: Invoice[];
+  customerCode?: string;
 }
 
 
-export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpen, setIsOpen: setExternalOpen, defaultValues, associatedInvoiceId }: AddPaymentDialogProps) {
+export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpen, setIsOpen: setExternalOpen, defaultValues, customerInvoices, customerCode }: AddPaymentDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = externalOpen ?? internalOpen;
   const setIsOpen = setExternalOpen ?? setInternalOpen;
@@ -68,12 +79,23 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     setValue,
     formState: { errors },
   } = useForm<PaymentFormData>({
-    resolver: zodResolver(paymentFormSchema),
+    resolver: zodResolver(formSchema),
   });
 
   const paymentType = watch('type');
   const partyType = watch('partyType');
   const paymentMethod = watch('paymentMethod');
+  const paymentAmount = watch('amount');
+
+  const { fields, append, remove, replace } = useFieldArray({
+      control,
+      name: "invoiceAllocations",
+  });
+
+  const allocations = watch('invoiceAllocations');
+  const totalAllocated = allocations?.reduce((sum, current) => sum + (current.amount || 0), 0) || 0;
+  const remainingToAllocate = (paymentAmount || 0) - totalAllocated;
+
 
   useEffect(() => {
       if(isOpen) {
@@ -87,9 +109,15 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
             paymentMethod: 'Cash',
             paymentFrom: 'Petty Cash',
             status: 'Received',
+            invoiceAllocations: [],
         });
+        if(customerInvoices){
+            replace(customerInvoices.map(inv => ({ invoiceId: inv.id, amount: 0 })));
+        } else {
+            replace([]);
+        }
       }
-  }, [isOpen, reset, defaultValues]);
+  }, [isOpen, reset, defaultValues, customerInvoices, replace]);
 
   useEffect(() => {
     if(!defaultValues) {
@@ -114,6 +142,17 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
   const onSubmit = async (data: PaymentFormData) => {
     setIsSaving(true);
+
+    if (partyType === 'Customer' && (data.amount || 0) !== totalAllocated) {
+        toast({
+            variant: 'destructive',
+            title: 'Allocation Mismatch',
+            description: 'The total amount allocated to invoices must match the payment amount.',
+        });
+        setIsSaving(false);
+        return;
+    }
+
     const result = await addPayment(data);
 
     if (result.success) {
@@ -121,10 +160,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
         title: 'Payment Recorded',
         description: `Successfully recorded payment of ${data.amount}.`,
       });
-       if(associatedInvoiceId && data.type === 'Receipt') {
-        await updateInvoiceStatus(associatedInvoiceId, 'Paid');
-        toast({ title: 'Invoice Updated', description: 'Invoice status set to Paid.'});
-      }
       setIsOpen(false);
       onPaymentAdded();
     } else {
@@ -141,7 +176,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {!children && <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Payment</Button></DialogTrigger>}
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
             <DialogTitle>Record a New Payment</DialogTitle>
@@ -285,12 +320,49 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="referenceNo">Reference No.</Label>
-                    <Input id="referenceNo" placeholder="Cheque No, Transaction ID, Installment ID etc." {...register('referenceNo')} />
+                    <Input id="referenceNo" placeholder="Cheque No, Transaction ID, etc." {...register('referenceNo')} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="remarks">Remarks</Label>
                     <Textarea id="remarks" {...register('remarks')} />
                 </div>
+
+                {partyType === 'Customer' && customerInvoices && customerInvoices.length > 0 && (
+                    <div className="space-y-2 pt-4 border-t">
+                        <Label className="text-lg font-semibold">Apply Payment to Invoices</Label>
+                        <div className="grid grid-cols-2 gap-4 text-sm font-medium">
+                            <div className="p-2 border rounded-md">Total Payment: <span className="font-bold text-blue-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(paymentAmount || 0)}</span></div>
+                            <div className="p-2 border rounded-md">Remaining to Allocate: <span className="font-bold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingToAllocate)}</span></div>
+                        </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Invoice #</TableHead>
+                                    <TableHead>Due Date</TableHead>
+                                    <TableHead>Balance</TableHead>
+                                    <TableHead className="w-40">Amount to Apply</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {customerInvoices.map((invoice, index) => (
+                                     <TableRow key={invoice.id}>
+                                         <TableCell>{invoice.invoiceNo}</TableCell>
+                                         <TableCell>{format(new Date(invoice.dueDate), 'PP')}</TableCell>
+                                         <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</TableCell>
+                                         <TableCell>
+                                            <Input 
+                                                type="number" 
+                                                {...register(`invoiceAllocations.${index}.amount`, { valueAsNumber: true })}
+                                                max={invoice.remainingBalance}
+                                                min={0}
+                                            />
+                                         </TableCell>
+                                     </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                )}
             </div>
             <DialogFooter>
                 <DialogClose asChild>

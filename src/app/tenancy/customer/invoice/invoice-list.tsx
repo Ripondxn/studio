@@ -24,7 +24,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
     const fetchInvoices = useCallback(async () => {
         setIsLoading(true);
         const data = await getInvoicesForCustomer(customerCode);
-        setInvoices(data);
+        setInvoices(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
         setIsLoading(false);
     }, [customerCode]);
 
@@ -52,8 +52,8 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
         setIsInvoiceDialogOpen(true);
     }
 
-    const handleRecordPaymentClick = (invoice: Invoice) => {
-        setSelectedInvoice(invoice);
+    const handleRecordPaymentClick = (invoice?: Invoice) => {
+        setSelectedInvoice(invoice || null);
         setIsPaymentDialogOpen(true);
     }
 
@@ -65,18 +65,14 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
         type: 'Receipt',
         partyType: 'Customer',
         partyName: selectedInvoice.customerName,
-        amount: selectedInvoice.total,
+        amount: selectedInvoice.remainingBalance,
         referenceNo: selectedInvoice.invoiceNo,
         remarks: `Payment for Invoice #${selectedInvoice.invoiceNo}`
-    } : undefined;
-
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center h-40">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
+    } : {
+        type: 'Receipt',
+        partyType: 'Customer',
+        partyName: customerName,
+    };
 
     return (
         <Card>
@@ -86,13 +82,22 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                         <CardTitle>Invoices</CardTitle>
                         <CardDescription>Manage invoices for {customerName}.</CardDescription>
                     </div>
-                    <Button onClick={handleAddClick}>
-                        <Plus className="mr-2 h-4 w-4" /> Create Invoice
-                    </Button>
+                     <div className="flex items-center gap-2">
+                        <Button onClick={() => handleRecordPaymentClick()}>Receive Payment</Button>
+                        <Button onClick={handleAddClick}>
+                            <Plus className="mr-2 h-4 w-4" /> Create Invoice
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPaymentClick })} data={invoices} />
+                {isLoading ? (
+                     <div className="flex justify-center items-center h-40">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : (
+                    <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPaymentClick })} data={invoices} />
+                )}
                 <InvoiceDialog
                     isOpen={isInvoiceDialogOpen}
                     setIsOpen={setIsInvoiceDialogOpen}
@@ -106,9 +111,11 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                     setIsOpen={setIsPaymentDialogOpen}
                     defaultValues={paymentDefaultValues}
                     onPaymentAdded={handlePaymentSuccess}
-                    associatedInvoiceId={selectedInvoice?.id}
+                    customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')}
+                    customerCode={customerCode}
                 />
             </CardContent>
         </Card>
     )
 }
+```
