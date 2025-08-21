@@ -1,0 +1,76 @@
+
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, Loader2 } from 'lucide-react';
+import { columns } from './columns';
+import { DataTable } from './data-table';
+import { InvoiceDialog } from './invoice-dialog';
+import { getInvoicesForCustomer } from './actions';
+import { type Invoice } from './schema';
+
+export function InvoiceList({ customerCode, customerName }: { customerCode: string, customerName: string }) {
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+    const fetchInvoices = useCallback(async () => {
+        setIsLoading(true);
+        const data = await getInvoicesForCustomer(customerCode);
+        setInvoices(data);
+        setIsLoading(false);
+    }, [customerCode]);
+
+    useEffect(() => {
+        if (customerCode) {
+            fetchInvoices();
+        }
+    }, [customerCode, fetchInvoices]);
+
+    const handleAddClick = () => {
+        setSelectedInvoice(null);
+        setIsDialogOpen(true);
+    }
+    
+    const handleEditClick = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setIsDialogOpen(true);
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Invoices</CardTitle>
+                        <CardDescription>Manage invoices for {customerName}.</CardDescription>
+                    </div>
+                    <Button onClick={handleAddClick}>
+                        <Plus className="mr-2 h-4 w-4" /> Create Invoice
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <DataTable columns={columns({ onEdit: handleEditClick })} data={invoices} />
+                <InvoiceDialog
+                    isOpen={isDialogOpen}
+                    setIsOpen={setIsDialogOpen}
+                    invoice={selectedInvoice}
+                    customer={{ code: customerCode, name: customerName }}
+                    onSuccess={fetchInvoices}
+                />
+            </CardContent>
+        </Card>
+    )
+}

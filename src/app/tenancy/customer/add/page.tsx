@@ -48,6 +48,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { saveCustomerData, findCustomerData, deleteCustomerData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InvoiceList } from '../invoice/invoice-list';
 
 type Attachment = {
   id: number;
@@ -320,6 +321,7 @@ export default function CustomerAddPage() {
       <Tabs defaultValue="info">
         <TabsList>
             <TabsTrigger value="info">Customer Information</TabsTrigger>
+            <TabsTrigger value="invoices" disabled={isNewRecord}>Invoices</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="info">
@@ -358,6 +360,9 @@ export default function CustomerAddPage() {
                 </div>
                 </CardContent>
             </Card>
+        </TabsContent>
+        <TabsContent value="invoices">
+            <InvoiceList customerCode={customerData.code} customerName={customerData.name} />
         </TabsContent>
         <TabsContent value="attachments">
             <Card>
@@ -473,3 +478,4 @@ export default function CustomerAddPage() {
     </div>
   );
 }
+
