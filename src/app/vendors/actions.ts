@@ -76,6 +76,27 @@ export async function saveVendorData(dataToSave: any, isNewRecord: boolean) {
 export async function findVendorData(vendorCode: string) {
   try {
     const allVendors = await getVendors();
+    
+    if (vendorCode === 'new') {
+        let maxVendorNum = 0;
+        let maxAgentNum = 0;
+        allVendors.forEach((v: any) => {
+            const vendorCodeMatch = v.vendorData.code?.match(/^V(\d+)$/);
+            if (vendorCodeMatch) {
+                const num = parseInt(vendorCodeMatch[1], 10);
+                if (num > maxVendorNum) maxVendorNum = num;
+            }
+            const agentCodeMatch = v.vendorData.agentCode?.match(/^A(\d+)$/);
+             if (agentCodeMatch) {
+                const num = parseInt(agentCodeMatch[1], 10);
+                if (num > maxAgentNum) maxAgentNum = num;
+            }
+        });
+        const newVendorCode = `V${(maxVendorNum + 1).toString().padStart(3, '0')}`;
+        const newAgentCode = `A${(maxAgentNum + 1).toString().padStart(3, '0')}`;
+        return { success: true, data: { vendorData: { code: newVendorCode, agentCode: newAgentCode } } };
+    }
+
     const vendor = allVendors.find((v: any) => v.vendorData.code === vendorCode);
 
     if (vendor) {

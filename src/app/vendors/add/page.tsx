@@ -66,6 +66,7 @@ const initialVendorData = {
     bankName: '',
     accountNumber: '',
     iban: '',
+    agentCode: '',
     agentName: '',
     agentMobile: '',
     agentEmail: '',
@@ -106,8 +107,7 @@ export default function VendorPage() {
     } else {
         setIsNewRecord(true);
         setIsEditing(true); 
-        setVendorData(initialVendorData);
-        setAttachments([]);
+        handleFindClick('new');
     }
   }, [searchParams]);
 
@@ -241,24 +241,23 @@ export default function VendorPage() {
     try {
       const result = await findVendorData(codeToFind);
       if (result.success && result.data) {
-        toast({
-          title: 'Found',
-          description: `Found record for Vendor Code: ${codeToFind}`,
-        });
         setAllData(result.data);
-        setInitialAllData(result.data);
-        setIsNewRecord(false);
-        setIsEditing(false);
+        if (codeToFind !== 'new') {
+            setInitialAllData(result.data);
+            setIsNewRecord(false);
+            setIsEditing(false);
+        } else {
+             setInitialAllData({ vendorData: { ...initialVendorData, ...result.data.vendorData } });
+            setIsNewRecord(true);
+            setIsEditing(true);
+        }
       } else {
         toast({
           variant: 'destructive',
           title: 'Not Found',
           description: `No record found for Vendor Code: ${codeToFind}. You can create a new one.`,
         });
-        const newVendor = { ...initialVendorData, code: codeToFind };
-        setAllData({ vendorData: newVendor });
-        setIsNewRecord(true);
-        setIsEditing(true);
+        handleFindClick('new');
       }
     } catch (error) {
       toast({
@@ -344,8 +343,8 @@ export default function VendorPage() {
                             <Label htmlFor="code">Code</Label>
                             <Input id="code" value={vendorData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
                         </div>
-                        <Button variant="outline" size="icon" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
-                            {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                         <Button variant="outline" size="icon" onClick={() => router.push('/vendors/add')} disabled={isFinding || !isNewRecord}>
+                            <Plus className="h-4 w-4" />
                         </Button>
                     </div>
                     <div>
@@ -376,6 +375,10 @@ export default function VendorPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <Label htmlFor="agentCode">Agent Code</Label>
+                            <Input id="agentCode" value={vendorData.agentCode} disabled />
+                        </div>
                         <div>
                             <Label htmlFor="agentName">Agent Name</Label>
                             <Input id="agentName" value={vendorData.agentName} onChange={(e) => handleInputChange('agentName', e.target.value)} disabled={!isEditing} />

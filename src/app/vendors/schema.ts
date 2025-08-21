@@ -20,6 +20,7 @@ export const vendorSchema = z.object({
   accountNumber: z.string().optional(),
   iban: z.string().optional(),
   attachments: z.array(attachmentSchema).optional(),
+  agentCode: z.string().optional(),
   agentName: z.string().optional(),
   agentMobile: z.string().optional(),
   agentEmail: z.string().email().optional().or(z.literal('')),
