@@ -12,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +22,6 @@ import {
   Plus,
   Pencil,
   Loader2,
-  Search,
   X,
   FileUp,
   Link2
@@ -83,7 +81,6 @@ export default function VendorPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isFinding, setIsFinding] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -223,7 +220,7 @@ export default function VendorPage() {
       });
       return;
     }
-    setIsFinding(true);
+    
     try {
       const result = await findVendorData(codeToFind);
       if (result.success && result.data) {
@@ -252,8 +249,6 @@ export default function VendorPage() {
         title: 'Error',
         description: (error as Error).message || 'Failed to find vendor data.',
       });
-    } finally {
-      setIsFinding(false);
     }
   };
 
@@ -317,6 +312,7 @@ export default function VendorPage() {
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
+            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="vendor-info">
@@ -337,7 +333,7 @@ export default function VendorPage() {
                                 <FormControl>
                                     <Input {...field} disabled={!isNewRecord} />
                                 </FormControl>
-                                <Button type="button" variant="outline" size="icon" onClick={() => router.push('/vendors/add')} disabled={isFinding || !isNewRecord}>
+                                <Button type="button" variant="outline" size="icon" onClick={() => router.push('/vendors/add')} disabled={!isNewRecord}>
                                     <Plus className="h-4 w-4" />
                                 </Button>
                            </div>
@@ -432,6 +428,73 @@ export default function VendorPage() {
                         </FormItem>
                       )}
                     />
+                </CardContent>
+            </Card>
+        </TabsContent>
+         <TabsContent value="agent-info">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Agent Information</CardTitle>
+                    <CardDescription>Details of the agent associated with this vendor.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="agentCode"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="agentCode">Agent Code</Label>
+                           <FormControl><Input {...field} disabled /></FormControl>
+                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="agentName"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="agentName">Agent Name</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="agentMobile"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="agentMobile">Agent Mobile</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="agentEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="agentEmail">Agent Email</Label>
+                           <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="agentCommission"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="agentCommission">Commission Amount</Label>
+                           <FormControl><Input {...field} type="number" disabled={!isEditing} /></FormControl>
+                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                </div>
                 </CardContent>
             </Card>
         </TabsContent>
