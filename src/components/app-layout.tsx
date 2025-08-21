@@ -90,7 +90,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/property/partitions/list', label: 'Partitions' },
             { href: '/property/units/vacant', label: 'Vacant Units' },
             { href: '/landlord', label: 'Landlord' },
-            { href: '/vendors', label: 'Vendor' },
             { href: '/lease/contracts', label: 'Lease Contracts' },
         ]
     },
@@ -105,6 +104,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { 
       href: '/tenancy/customer', 
       label: 'Customer', 
+      icon: <Users />,
+    },
+    { 
+      href: '/vendors', 
+      label: 'Vendor', 
       icon: <Users />,
     },
     { 
