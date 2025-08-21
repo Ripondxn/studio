@@ -100,8 +100,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       subItems: [
           { href: '/tenancy/tenants', label: 'Tenant' },
           { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
-          { href: '/tenancy/customer', label: 'Customer' },
       ]
+    },
+    { 
+      href: '/tenancy/customer', 
+      label: 'Customer', 
+      icon: <Users />,
     },
     { 
         label: 'Finance', 
@@ -163,6 +167,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                     ))}
                                 </DropdownMenuContent>
                             </DropdownMenu>
+                        )
+                    } else if (link.href) {
+                        const isActive = pathname.startsWith(link.href);
+                        return (
+                             <Link
+                                key={index}
+                                href={link.href}
+                                className={cn("flex items-center gap-1 transition-colors hover:text-foreground", isActive ? "text-foreground" : "text-muted-foreground")}
+                            >
+                                {link.icon && React.cloneElement(link.icon, { className: 'h-4 w-4 mr-1' })}
+                                {link.label}
+                            </Link>
                         )
                     }
                     return null;
