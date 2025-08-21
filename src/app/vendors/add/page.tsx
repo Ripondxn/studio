@@ -220,6 +220,12 @@ export default function VendorPage() {
       setIsSaving(false);
     }
   }
+  
+  const handleSaveAgentInfoClick = async () => {
+    // This function can be expanded later to only save agent data if needed.
+    // For now, it will save all vendor data, which includes agent info.
+    await handleSaveClick();
+  }
 
   const handleCancelClick = () => {
      if (isNewRecord) {
@@ -503,7 +509,7 @@ export default function VendorPage() {
                 </CardContent>
                  {isEditing && (
                     <CardFooter>
-                        <Button onClick={handleSaveClick} disabled={isSaving}>
+                        <Button onClick={handleSaveAgentInfoClick} disabled={isSaving}>
                             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                             Save Agent Info
                         </Button>
@@ -547,3 +553,4 @@ export default function VendorPage() {
     </div>
   );
 }
+
