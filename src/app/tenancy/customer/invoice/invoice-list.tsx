@@ -15,6 +15,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
     const fetchInvoices = useCallback(async () => {
@@ -32,11 +33,19 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
 
     const handleAddClick = () => {
         setSelectedInvoice(null);
+        setIsViewMode(false);
         setIsDialogOpen(true);
     }
     
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
+        setIsViewMode(false);
+        setIsDialogOpen(true);
+    }
+    
+    const handleViewClick = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setIsViewMode(true);
         setIsDialogOpen(true);
     }
 
@@ -62,13 +71,14 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                 </div>
             </CardHeader>
             <CardContent>
-                <DataTable columns={columns({ onEdit: handleEditClick })} data={invoices} />
+                <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick })} data={invoices} />
                 <InvoiceDialog
                     isOpen={isDialogOpen}
                     setIsOpen={setIsDialogOpen}
                     invoice={selectedInvoice}
                     customer={{ code: customerCode, name: customerName }}
                     onSuccess={fetchInvoices}
+                    isViewMode={isViewMode}
                 />
             </CardContent>
         </Card>

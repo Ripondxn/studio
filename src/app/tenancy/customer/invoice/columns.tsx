@@ -12,7 +12,7 @@ import { deleteInvoice } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
-export const columns = ({ onEdit }: { onEdit: (invoice: Invoice) => void }): ColumnDef<Invoice>[] => {
+export const columns = ({ onEdit, onView }: { onEdit: (invoice: Invoice) => void, onView: (invoice: Invoice) => void }): ColumnDef<Invoice>[] => {
   
   const ActionsCell = ({ row }: { row: { original: Invoice } }) => {
     const { toast } = useToast();
@@ -41,7 +41,7 @@ export const columns = ({ onEdit }: { onEdit: (invoice: Invoice) => void }): Col
                 <DropdownMenuItem onClick={() => onEdit(row.original)}>
                     <Edit className="mr-2 h-4 w-4" /> Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem><FileText className="mr-2 h-4 w-4" /> View/Print</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onView(row.original)}><FileText className="mr-2 h-4 w-4" /> View/Print</DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
                     <Trash className="mr-2 h-4 w-4" /> Delete
                 </DropdownMenuItem>

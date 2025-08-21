@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,10 +29,11 @@ import {
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, Printer } from 'lucide-react';
 import { saveInvoice } from './actions';
 import { invoiceSchema, invoiceItemSchema } from './schema';
 import { format } from 'date-fns';
+import { InvoiceView } from './invoice-view';
 
 const formSchema = invoiceSchema.omit({ id: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
@@ -43,11 +44,13 @@ interface InvoiceDialogProps {
   invoice: z.infer<typeof invoiceSchema> | null;
   customer: { code: string; name: string };
   onSuccess: () => void;
+  isViewMode?: boolean;
 }
 
-export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess }: InvoiceDialogProps) {
+export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess, isViewMode = false }: InvoiceDialogProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -109,6 +112,52 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess 
         toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to save invoice.'});
     }
     setIsSaving(false);
+  }
+
+  const handlePrint = () => {
+    const printContent = printRef.current;
+    if (printContent) {
+        const printWindow = window.open('', '', 'height=800,width=800');
+        if (printWindow) {
+            printWindow.document.write('<html><head><title>Print Invoice</title>');
+            // A simple stylesheet for printing
+            printWindow.document.write(`
+                <style>
+                    body { font-family: sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; }
+                    th { background-color: #f2f2f2; }
+                    .no-print { display: none; }
+                </style>
+            `);
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContent.innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+    }
+  }
+
+  if (isViewMode && invoice) {
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent className="max-w-4xl">
+                 <DialogHeader>
+                    <DialogTitle>View Invoice: {invoice.invoiceNo}</DialogTitle>
+                </DialogHeader>
+                <div className="max-h-[70vh] overflow-y-auto" ref={printRef}>
+                    <InvoiceView invoice={invoice} />
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="outline" onClick={handlePrint}>
+                        <Printer className="mr-2 h-4 w-4" /> Print
+                    </Button>
+                    <DialogClose asChild><Button type="button">Close</Button></DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
   }
 
   return (
