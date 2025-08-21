@@ -28,7 +28,6 @@ import { Combobox } from '@/components/ui/combobox';
 import { type Vendor } from '../schema';
 
 const formSchema = z.object({
-  vendorCode: z.string().min(1, "Please select a vendor."),
   agentName: z.string().min(1, "Agent name is required."),
   agentMobile: z.string().optional(),
   agentEmail: z.string().email().optional().or(z.literal('')),
@@ -43,8 +42,7 @@ export function AddAgentDialog() {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-
+  
   const {
     control,
     register,
@@ -54,7 +52,6 @@ export function AddAgentDialog() {
   } = useForm<AgentFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      vendorCode: '',
       agentName: '',
       agentMobile: '',
       agentEmail: '',
@@ -64,13 +61,13 @@ export function AddAgentDialog() {
   
   useEffect(() => {
     if (isOpen) {
-        getAllVendors().then(setVendors);
         reset();
     }
   }, [isOpen, reset])
 
   const onSubmit = async (data: AgentFormData) => {
     setIsSaving(true);
+    // @ts-ignore
     const result = await addAgent(data);
 
     if (result.success) {
@@ -90,8 +87,6 @@ export function AddAgentDialog() {
     setIsSaving(false);
   };
 
-  const vendorOptions = vendors.map(v => ({ value: v.code, label: v.name }));
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -108,22 +103,6 @@ export function AddAgentDialog() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-                <Label htmlFor="vendorCode">Vendor</Label>
-                <Controller
-                    name="vendorCode"
-                    control={control}
-                    render={({ field }) => (
-                        <Combobox
-                            options={vendorOptions}
-                            value={field.value}
-                            onSelect={field.onChange}
-                            placeholder="Select a vendor"
-                        />
-                    )}
-                />
-                 {errors.vendorCode && <p className="text-destructive text-xs mt-1">{errors.vendorCode.message}</p>}
-            </div>
             <div className="space-y-2">
               <Label htmlFor="agentName">Agent Name</Label>
               <Input id="agentName" {...register('agentName')} />

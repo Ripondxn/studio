@@ -170,7 +170,6 @@ export async function updateAgentData(data: z.infer<typeof updateAgentSchema>) {
 }
 
 const addAgentSchema = z.object({
-  vendorCode: z.string().min(1, "Please select a vendor."),
   agentName: z.string().min(1, "Agent name is required."),
   agentMobile: z.string().optional(),
   agentEmail: z.string().email().optional().or(z.literal('')),
@@ -186,14 +185,12 @@ export async function addAgent(data: z.infer<typeof addAgentSchema>) {
 
     try {
         const allVendors = await getVendors();
-        const vendorIndex = allVendors.findIndex((v: any) => v.vendorData.code === data.vendorCode);
-
-        if (vendorIndex === -1) {
-            return { success: false, error: 'Associated vendor not found.' };
-        }
         
-        if (allVendors[vendorIndex].vendorData.agentName) {
-            return { success: false, error: `Vendor "${allVendors[vendorIndex].vendorData.name}" already has an agent.`}
+        // Find the first vendor that does not have an agent
+        const vendorIndex = allVendors.findIndex((v: any) => !v.vendorData.agentName);
+        
+        if (vendorIndex === -1) {
+            return { success: false, error: 'No available vendors to assign an agent to. Please create a new vendor first.'}
         }
 
         let maxAgentNum = 0;
@@ -206,7 +203,7 @@ export async function addAgent(data: z.infer<typeof addAgentSchema>) {
         });
         const newAgentCode = `A${(maxAgentNum + 1).toString().padStart(3, '0')}`;
 
-        // Update only the agent fields
+        // Update the found vendor with the new agent's details
         allVendors[vendorIndex].vendorData = {
             ...allVendors[vendorIndex].vendorData,
             agentCode: newAgentCode,
