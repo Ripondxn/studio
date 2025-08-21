@@ -83,8 +83,42 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
   }, [isOpen, reset]);
   
   const chequeType = watch('type');
+  const selectedContractNo = watch('contractNo');
+  const selectedPartyName = watch('partyName');
 
+  const contractOptions = chequeType === 'Incoming' ? lookups.tenancyContracts : lookups.leaseContracts;
   const partyOptions = chequeType === 'Incoming' ? lookups.tenants : lookups.landlords;
+  
+  const filteredContracts = contractOptions.filter(c => c.partyName === selectedPartyName);
+
+  const selectedContract = contractOptions.find(c => c.value === selectedContractNo);
+  
+  const handleContractSelect = (contractNo: string) => {
+      setValue('contractNo', contractNo);
+      const contract = contractOptions.find(c => c.value === contractNo);
+      if (contract) {
+          setValue('property', contract.property || '');
+          // Reset installment details when contract changes
+          setValue('chequeNo', '');
+          setValue('chequeDate', '');
+          setValue('amount', 0);
+          setValue('bankName', '');
+      }
+  }
+
+  const handleInstallmentSelect = (installmentString: string) => {
+    if (!selectedContract || !selectedContract.paymentSchedule) return;
+
+    const installmentIndex = parseInt(installmentString, 10);
+    const installment = selectedContract.paymentSchedule[installmentIndex];
+    
+    if (installment) {
+      setValue('chequeNo', installment.chequeNo || '');
+      setValue('chequeDate', installment.dueDate);
+      setValue('amount', installment.amount);
+      setValue('bankName', installment.bankName || '');
+    }
+  };
 
   const onSubmit = async (data: ChequeFormData) => {
     setIsSaving(true);
@@ -119,7 +153,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
             <DialogHeader>
             <DialogTitle>Add New Cheque</DialogTitle>
             <DialogDescription>
-                Fill in the details below to record a new cheque. This is for manual entries not linked to a contract payment schedule.
+                Fill in the details below to record a new cheque. Select a contract to auto-fill details.
             </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
@@ -130,7 +164,12 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                         name="type"
                         control={control}
                         render={({ field }) => (
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select onValueChange={(value) => {
+                                field.onChange(value);
+                                setValue('partyName', '');
+                                setValue('contractNo', '');
+                                setValue('property', '');
+                            }} value={field.value}>
                                 <SelectTrigger><SelectValue/></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Incoming">Incoming (from Tenant)</SelectItem>
@@ -142,10 +181,6 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div className="space-y-2">
-                        <Label htmlFor="contractNo">Contract No (Optional)</Label>
-                        <Input id="contractNo" {...register('contractNo')} placeholder="Associated contract no" />
-                    </div>
-                    <div className="space-y-2">
                         <Label htmlFor="partyName">{chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}</Label>
                         <Controller
                             name="partyName"
@@ -154,19 +189,57 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                                 <Combobox
                                     options={partyOptions}
                                     value={field.value}
-                                    onSelect={(value) => setValue('partyName', value)}
+                                    onSelect={(value) => {
+                                        setValue('partyName', value);
+                                        setValue('contractNo', '');
+                                        setValue('property', '');
+                                    }}
                                     placeholder={`Select ${chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}`}
                                 />
                             )}
                         />
                          {errors.partyName && <p className="text-destructive text-xs mt-1">{errors.partyName.message}</p>}
                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="contractNo">Contract No</Label>
+                         <Controller
+                            name="contractNo"
+                            control={control}
+                            render={({ field }) => (
+                                <Combobox
+                                    options={filteredContracts}
+                                    value={field.value}
+                                    onSelect={handleContractSelect}
+                                    placeholder="Select Contract"
+                                    disabled={!selectedPartyName}
+                                />
+                            )}
+                        />
+                    </div>
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="property">Property</Label>
-                    <Input id="property" {...register('property')} placeholder="Associated property" />
+                    <Input id="property" {...register('property')} placeholder="Associated property" disabled />
                 </div>
+                
+                {selectedContract && selectedContract.paymentSchedule && (
+                     <div className="space-y-2">
+                        <Label>Select Installment to Populate</Label>
+                        <Select onValueChange={handleInstallmentSelect}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select an installment..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {selectedContract.paymentSchedule.map((item, index) => (
+                                    <SelectItem key={index} value={String(index)}>
+                                        Installment {item.installment} - {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.amount)} - Due: {item.dueDate}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
