@@ -11,6 +11,7 @@ import { Banknote, Clock, CheckCircle, Hourglass } from 'lucide-react';
 import { type Cheque } from './schema';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type Summary = {
     inHandCount: number;
