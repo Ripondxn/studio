@@ -110,6 +110,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/finance/chart-of-accounts', label: 'Chart of Accounts' },
         ]
     },
+    {
+        label: 'Maintenance',
+        icon: <Wrench />,
+        subItems: [
+        ]
+    },
     { 
         label: 'Settings', 
         icon: <Settings />,
