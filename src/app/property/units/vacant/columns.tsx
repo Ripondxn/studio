@@ -82,7 +82,7 @@ export const columns: ColumnDef<Unit>[] = [
         const unit = row.original;
         return (
             <Button asChild variant="outline" size="sm">
-                <Link href={`/tenancy/contract/add?unitCode=${unit.unitCode}&propertyCode=${unit.propertyCode}`}>
+                <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
                     <Eye className="mr-2 h-4 w-4" />
                     Create Lease
                 </Link>

@@ -134,13 +134,27 @@ export default function TenancyContractPage() {
     });
 
     const contractId = searchParams.get('id');
+    const propertyCode = searchParams.get('propertyCode');
+    const unitCode = searchParams.get('unitCode');
+
     if (contractId) {
        fetchContractData(contractId);
     } else {
         setIsNewRecord(true);
         setIsEditing(true);
         const newContractNo = `TC-${Date.now()}`;
-        setContract({...initialContractState, contractNo: newContractNo});
+        const newContract = {...initialContractState, contractNo: newContractNo};
+        if(propertyCode) newContract.property = propertyCode;
+        if(unitCode) newContract.unitCode = unitCode;
+        
+        setContract(newContract);
+
+        if(propertyCode && unitCode){
+            handlePropertySelect(propertyCode).then(() => {
+                handleUnitSelect(unitCode);
+            })
+        }
+
         setEditedInstallmentIndexes(new Set());
         setIsLoading(false);
     }
