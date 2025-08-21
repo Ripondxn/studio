@@ -114,6 +114,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         label: 'Maintenance',
         icon: <Wrench />,
         subItems: [
+            { href: '/maintenance/ticket-issue', label: 'Ticket Issue' },
         ]
     },
     { 
