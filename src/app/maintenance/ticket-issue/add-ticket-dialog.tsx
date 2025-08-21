@@ -18,7 +18,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { maintenanceTicketSchema, type MaintenanceTicket } from './schema';
@@ -40,7 +39,6 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
   const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], tenants: [] });
 
   const {
@@ -103,7 +101,7 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
         description: `Successfully created new ticket "${data.ticketNo}".`,
       });
       setIsOpen(false);
-      router.refresh();
+      onTicketAdded(); // Refresh data on parent
     } else {
       toast({
         variant: 'destructive',
