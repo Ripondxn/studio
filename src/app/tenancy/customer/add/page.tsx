@@ -48,7 +48,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { saveCustomerData, findCustomerData, deleteCustomerData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InvoiceList } from '../invoice/invoice-list';
+import { InvoiceList } from './invoice/invoice-list';
 
 type Attachment = {
   id: number;
@@ -478,4 +478,3 @@ export default function CustomerAddPage() {
     </div>
   );
 }
-
