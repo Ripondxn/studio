@@ -110,7 +110,7 @@ export default function LeaseContractPage() {
     } else {
         setIsNewRecord(true);
         setIsEditing(true);
-        const newContractNo = `LCON-${Date.now()}`;
+        const newContractNo = `LA-${Date.now()}`;
         setContract({...initialContractState, contractNo: newContractNo});
         setEditedInstallmentIndexes(new Set());
         setIsLoading(false);
