@@ -7,12 +7,23 @@ import { columns } from './columns';
 import { DataTable } from './data-table';
 import { AddChequeDialog } from './add-cheque-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Banknote, Clock, CheckCircle, Hourglass } from 'lucide-react';
+import { Banknote, Clock, CheckCircle, Hourglass, FileText, FileSpreadsheet } from 'lucide-react';
 import { type Cheque } from './schema';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+
+// Extend jsPDF type to include autoTable from the plugin
+declare module 'jspdf' {
+    interface jsPDF {
+      autoTable: (options: any) => jsPDF;
+    }
+}
+
 
 type Summary = {
     inHandCount: number;
@@ -47,6 +58,61 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
     setSummary(initialSummary);
   }, [initialCheques, initialSummary]);
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const exportableColumns = columns.filter(col => 'accessorKey' in col && col.accessorKey && col.id !== 'actions');
+    
+    const head = [exportableColumns.map(col => {
+        if (typeof col.header === 'string') return col.header;
+        // @ts-ignore
+        const key = col.accessorKey as string || col.id || '';
+        return key.charAt(0).toUpperCase() + key.slice(1);
+    })];
+
+    const body = cheques.map(cheque => 
+        exportableColumns.map(col => {
+            // @ts-ignore
+            const value = cheque[col.accessorKey as keyof Cheque];
+            if (col.accessorKey === 'amount') {
+                 return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                }).format(value as number);
+            }
+            if (col.accessorKey === 'chequeDate') {
+                return format(new Date(value as string), 'PP');
+            }
+            return String(value ?? '');
+        })
+    );
+
+    doc.text("Cheques List", 14, 16);
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: 20,
+    });
+    doc.save('cheques.pdf');
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = cheques.map(cheque => {
+        let obj: any = {};
+         columns.filter(col => 'accessorKey' in col && col.accessorKey && col.id !== 'actions').forEach(col => {
+            // @ts-ignore
+            const headerText = (typeof col.header === 'string' ? col.header : col.accessorKey) as string;
+            // @ts-ignore
+            obj[headerText] = cheque[col.accessorKey as keyof Cheque];
+         })
+         return obj;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cheques");
+    XLSX.writeFile(wb, "cheques.xlsx");
+  };
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -57,6 +123,12 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             </p>
         </div>
         <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                <FileText className="mr-2 h-4 w-4" /> Export PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
+            </Button>
             <AddChequeDialog onChequeAdded={refreshData} />
             <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
                 <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
