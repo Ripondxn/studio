@@ -521,7 +521,7 @@ export default function TenantPage() {
                 </div>
             </TabsContent>
             <TabsContent value="rental-details">
-                <Card>
+                 <Card>
                     <CardHeader>
                         <CardTitle>Rental Details</CardTitle>
                         <CardDescription>Information about the contract and property occupied by the tenant.</CardDescription>
@@ -529,7 +529,7 @@ export default function TenantPage() {
                     <CardContent>
                         {contractData.id && unitData.property ? (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <Card>
                                     <CardHeader><CardTitle>Contract Information</CardTitle></CardHeader>
                                     <CardContent className="space-y-2 text-sm">
@@ -556,29 +556,29 @@ export default function TenantPage() {
                                         </Button>
                                     </CardContent>
                                 </Card>
-                                <div className="space-y-6">
-                                    {roomData.id && (
-                                        <Card>
-                                            <CardHeader className="p-4"><CardTitle className="text-base">Room Details</CardTitle></CardHeader>
-                                            <CardContent className="space-y-2 text-sm p-4">
-                                                <div className="flex justify-between"><span>Room Code:</span> <span className="font-medium">{roomData.roomCode}</span></div>
-                                                <div className="flex justify-between"><span>Room Name:</span> <span className="font-medium">{roomData.roomName}</span></div>
-                                                <div className="flex justify-between"><span>Room Type:</span> <span className="font-medium">{roomData.roomType}</span></div>
-                                                <div className="flex justify-between"><span>Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(roomData.rentAmount || 0)} / {roomData.rentFrequency}</span></div>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                     {partitionData.id && (
-                                        <Card>
-                                            <CardHeader className="p-4"><CardTitle className="text-base">Partition Details</CardTitle></CardHeader>
-                                            <CardContent className="space-y-2 text-sm p-4">
-                                                 <div className="flex justify-between"><span>Partition Code:</span> <span className="font-medium">{partitionData.partitionCode}</span></div>
-                                                 <div className="flex justify-between"><span>Partition Name:</span> <span className="font-medium">{partitionData.partitionName}</span></div>
-                                                 <div className="flex justify-between"><span>Monthly Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(partitionData.monthlyRent || 0)}</span></div>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {roomData.id && (
+                                    <Card>
+                                        <CardHeader className="p-4"><CardTitle className="text-base">Room Details</CardTitle></CardHeader>
+                                        <CardContent className="space-y-2 text-sm p-4">
+                                            <div className="flex justify-between"><span>Room Code:</span> <span className="font-medium">{roomData.roomCode}</span></div>
+                                            <div className="flex justify-between"><span>Room Name:</span> <span className="font-medium">{roomData.roomName}</span></div>
+                                            <div className="flex justify-between"><span>Room Type:</span> <span className="font-medium">{roomData.roomType}</span></div>
+                                            <div className="flex justify-between"><span>Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(roomData.rentAmount || 0)} / {roomData.rentFrequency}</span></div>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                                 {partitionData.id && (
+                                    <Card>
+                                        <CardHeader className="p-4"><CardTitle className="text-base">Partition Details</CardTitle></CardHeader>
+                                        <CardContent className="space-y-2 text-sm p-4">
+                                             <div className="flex justify-between"><span>Partition Code:</span> <span className="font-medium">{partitionData.partitionCode}</span></div>
+                                             <div className="flex justify-between"><span>Partition Name:</span> <span className="font-medium">{partitionData.partitionName}</span></div>
+                                             <div className="flex justify-between"><span>Monthly Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(partitionData.monthlyRent || 0)}</span></div>
+                                        </CardContent>
+                                    </Card>
+                                )}
                             </div>
                         </div>
                         ) : (
@@ -743,3 +743,4 @@ export default function TenantPage() {
     </div>
   );
 }
+

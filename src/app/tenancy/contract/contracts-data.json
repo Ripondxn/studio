@@ -34,5 +34,53 @@
     "tawtheeqRegistrationNo": "12012445",
     "tawtheeqStatus": "Registered",
     "tawtheeqRegistrationDate": "2025-08-21"
+  },
+  {
+    "id": "CON-1755761251503",
+    "contractNo": "TC-1755761192274",
+    "contractDate": "2025-08-22",
+    "property": "LT-C38",
+    "unitCode": "102",
+    "roomCode": "",
+    "partitionCode": "",
+    "tenantCode": "T002",
+    "tenantName": "Monju Begum",
+    "mobile": "01731627179",
+    "email": "ripondxn@gmail.com",
+    "address": "Village : Rahut Hati , Post office : Hasnabad",
+    "startDate": "2025-08-22",
+    "endDate": "2026-01-20",
+    "totalRent": 75000,
+    "paymentMode": "cash",
+    "status": "New",
+    "terminationDate": "",
+    "rentBasedOn": "Monthly",
+    "paymentFrequency": "Quarterly",
+    "numberOfPayments": 3,
+    "gracePeriod": 0,
+    "paymentSchedule": [
+      {
+        "installment": 1,
+        "dueDate": "2025-08-22",
+        "amount": 25000,
+        "status": "unpaid"
+      },
+      {
+        "installment": 2,
+        "dueDate": "2025-11-22",
+        "amount": 25000,
+        "status": "unpaid"
+      },
+      {
+        "installment": 3,
+        "dueDate": "2026-02-22",
+        "amount": 25000,
+        "status": "unpaid"
+      }
+    ],
+    "terms": "",
+    "tawtheeqRegistrationNo": "",
+    "tawtheeqStatus": "Not Registered",
+    "tawtheeqRegistrationDate": ""
   }
 ]
