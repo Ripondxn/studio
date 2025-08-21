@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -155,12 +156,14 @@ export default function VendorPage() {
   };
 
   const setAllData = (data: any) => {
-    setVendorData(data.vendorData || initialVendorData);
+    const fullVendorData = { ...initialVendorData, ...(data.vendorData || {}) };
+    setVendorData(fullVendorData);
     setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
   }
 
   const setInitialAllData = (data: any) => {
-    setInitialData(JSON.parse(JSON.stringify(data.vendorData || initialVendorData)));
+    const fullVendorData = { ...initialVendorData, ...(data.vendorData || {}) };
+    setInitialData(JSON.parse(JSON.stringify(fullVendorData)));
     setInitialAttachments(JSON.parse(JSON.stringify(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : [])));
   }
 
