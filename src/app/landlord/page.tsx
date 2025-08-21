@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -18,12 +18,12 @@ export default function LandlordsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isLoading, setIsLoading] = useState(true);
 
-  useState(() => {
+  useEffect(() => {
     getAllLandlords().then(data => {
       setLandlords(data);
       setIsLoading(false);
     });
-  });
+  }, []);
 
   if (isLoading) {
     return (
