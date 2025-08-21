@@ -417,33 +417,6 @@ export default function TenantPage() {
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Tawtheeq Registration</CardTitle>
-                            <CardDescription>View official registration details from the contract.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {contractData.id ? (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div>
-                                        <Label>Status</Label>
-                                        <Input value={contractData.tawtheeqStatus || 'N/A'} disabled />
-                                    </div>
-                                    <div>
-                                        <Label>Registration No</Label>
-                                        <Input value={contractData.tawtheeqRegistrationNo || 'N/A'} disabled />
-                                    </div>
-                                    <div>
-                                        <Label>Registration Date</Label>
-                                        <Input value={contractData.tawtheeqRegistrationDate ? format(new Date(contractData.tawtheeqRegistrationDate), 'PP') : 'N/A'} disabled />
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">No contract linked to view Tawtheeq details.</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Card>
                             <CardHeader>
