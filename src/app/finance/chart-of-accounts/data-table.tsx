@@ -44,7 +44,7 @@ declare module 'jspdf' {
     }
 }
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData extends Account, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
@@ -84,50 +84,61 @@ export function DataTable<TData extends Account, TValue>({
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const exportableColumns = columns.filter(col => 'accessorKey' in col && col.accessorKey);
-    
-    const head = [exportableColumns.map(col => {
-        if (typeof col.header === 'string') return col.header;
-        // @ts-ignore
-        return col.accessorKey as string || col.id || '';
-    })];
-
-    const body = table.getRowModel().rows.map(row => 
-        exportableColumns.map(col => {
-            // @ts-ignore
-            const value = row.original[col.accessorKey as keyof TData];
-            if (col.accessorKey === 'balance') {
-                 return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                }).format(value as number);
-            }
-            return String(value);
-        })
-    );
+    const tableData = table.getRowModel().rows.map(row => row.original);
 
     doc.text("Chart of Accounts", 14, 16);
     doc.autoTable({
-        head: head,
-        body: body,
+        head: [['Code', 'Name', 'Type', 'Status', 'Balance']],
+        body: tableData.map(acc => [
+            acc.code,
+            acc.name,
+            acc.type,
+            acc.status,
+            new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(acc.balance)
+        ]),
         startY: 20,
+        styles: {
+            halign: 'right',
+        },
+        columnStyles: {
+            0: { halign: 'left' },
+            1: { halign: 'left' },
+            2: { halign: 'left' },
+            3: { halign: 'left' },
+        }
     });
     doc.save('chart-of-accounts.pdf');
   };
 
   const handleExportExcel = () => {
     const dataToExport = table.getRowModel().rows.map(row => {
-        let obj: any = {};
-         columns.filter(col => 'accessorKey' in col && col.accessorKey).forEach(col => {
-            // @ts-ignore
-            const headerText = (typeof col.header === 'string' ? col.header : col.accessorKey) as string;
-            // @ts-ignore
-            obj[headerText] = row.original[col.accessorKey as keyof TData];
-         })
-         return obj;
+        const acc = row.original;
+        return {
+            'Code': acc.code,
+            'Name': acc.name,
+            'Type': acc.type,
+            'Status': acc.status,
+            'Balance': acc.balance,
+        }
     });
 
     const ws = XLSX.utils.json_to_sheet(dataToExport);
+    
+    // Formatting currency
+    ws['!cols'] = [{ wch: 10 }, { wch: 40 }, { wch: 15 }, { wch: 10 }, { wch: 15 }];
+    Object.keys(ws).forEach(key => {
+        if (key.startsWith('E')) { // Assuming 'E' is the Balance column
+            const cell = ws[key];
+            if (cell && typeof cell.v === 'number') {
+                cell.z = '"$"#,##0.00';
+            }
+        }
+    });
+
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Accounts");
     XLSX.writeFile(wb, "chart-of-accounts.xlsx");
@@ -256,3 +267,4 @@ export function DataTable<TData extends Account, TValue>({
     </div>
   );
 }
+
