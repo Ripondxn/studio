@@ -90,14 +90,9 @@ export async function deleteBankAccount(accountId: string) {
 export async function getTransactionsForAccount(accountId: string): Promise<Payment[]> {
      try {
         const paymentsData = await fs.readFile(paymentsFilePath, 'utf-8');
-        const allPayments = JSON.parse(paymentsData);
+        const allPayments: Payment[] = JSON.parse(paymentsData);
         
-        const accountPayments = allPayments.filter((p: Payment) => {
-            if (p.paymentMethod === 'Cash' && p.paymentFrom === 'Petty Cash' && accountId === 'acc_3') {
-                return true;
-            }
-            return p.bankAccountId === accountId;
-        });
+        const accountPayments = allPayments.filter((p: Payment) => p.bankAccountId === accountId);
 
         return accountPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (error) {
