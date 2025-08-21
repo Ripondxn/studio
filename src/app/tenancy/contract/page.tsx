@@ -479,40 +479,26 @@ export default function TenancyContractPage() {
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-1">
-            <CardContent className="space-y-4 pt-6">
-                <div>
-                    <Label htmlFor="tenant-name">Tenant Name</Label>
-                    <Combobox
-                        options={lookups.tenants}
-                        value={contract.tenantCode || ''}
-                        onSelect={handleTenantSelect}
-                        placeholder="Select a Tenant"
-                        disabled={!isEditing}
-                    />
-                </div>
-                <div>
-                    <Label htmlFor="tenant-code">Tenant Code</Label>
-                    <Input id="tenant-code" value={contract.tenantCode || ''} disabled />
-                </div>
-                <div>
-                    <Label htmlFor="tenant-mobile">Tenant Mobile</Label>
-                    <Input id="tenant-mobile" value={contract.mobile || ''} disabled />
-                </div>
-                <div>
-                    <Label htmlFor="tenant-email">Tenant Email</Label>
-                    <Input id="tenant-email" value={contract.email || ''} disabled />
-                </div>
-                <div>
-                    <Label htmlFor="tenant-address">Tenant Address</Label>
-                    <Input id="tenant-address" value={contract.address || ''} disabled />
-                </div>
-            </CardContent>
-        </Card>
         <div className="lg:col-span-2 space-y-6">
             <Card>
+                 <CardHeader>
+                    <CardTitle>Contract & Property</CardTitle>
+                    <CardDescription>
+                        Details of the tenancy agreement and the rented property.
+                    </CardDescription>
+                </CardHeader>
                 <CardContent className="space-y-4 pt-6">
                       <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="contract-no">Tenancy Contract No</Label>
+                            <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled/>
+                        </div>
+                        <div>
+                            <Label htmlFor="contract-date">Date</Label>
+                            <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
+                        </div>
+                    </div>
+                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="property">Property</Label>
                             <Combobox
@@ -554,20 +540,6 @@ export default function TenancyContractPage() {
                                 placeholder="Select Partition"
                                 disabled={!isEditing || !contract.unitCode || lookups.partitions.length === 0}
                             />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardContent className="space-y-4 pt-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="contract-no">Tenancy Contract No</Label>
-                            <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled/>
-                        </div>
-                        <div>
-                            <Label htmlFor="contract-date">Date</Label>
-                            <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -620,38 +592,77 @@ export default function TenancyContractPage() {
                     </div>
                 </CardContent>
             </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Tawtheeq Registration</CardTitle>
+                    <CardDescription>Manage Tawtheeq registration details for this contract.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <Label htmlFor="tawtheeq-status">Status</Label>
+                            <Select value={contract.tawtheeqStatus} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!isEditing}>
+                                <SelectTrigger id="tawtheeq-status"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Not Registered">Not Registered</SelectItem>
+                                    <SelectItem value="Under Process">Under Process</SelectItem>
+                                    <SelectItem value="Registered">Registered</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="tawtheeq-reg-no">Registration No</Label>
+                            <Input id="tawtheeq-reg-no" value={contract.tawtheeqRegistrationNo || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationNo', e.target.value)} disabled={!isEditing}/>
+                        </div>
+                        <div>
+                            <Label htmlFor="tawtheeq-reg-date">Registration Date</Label>
+                            <Input id="tawtheeq-reg-date" type="date" value={contract.tawtheeqRegistrationDate || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationDate', e.target.value)} disabled={!isEditing}/>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
-      </div>
-       <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Tawtheeq Registration</CardTitle>
-            <CardDescription>Manage Tawtheeq registration details for this contract.</CardDescription>
-          </CardHeader>
-          <CardContent>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+         <Card className="lg:col-span-1">
+            <CardHeader>
+                <CardTitle>Tenant Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
                 <div>
-                    <Label htmlFor="tawtheeq-status">Status</Label>
-                    <Select value={contract.tawtheeqStatus} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!isEditing}>
-                        <SelectTrigger id="tawtheeq-status"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Not Registered">Not Registered</SelectItem>
-                            <SelectItem value="Under Process">Under Process</SelectItem>
-                            <SelectItem value="Registered">Registered</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Label htmlFor="tenant-name">Tenant Name</Label>
+                    <Combobox
+                        options={lookups.tenants}
+                        value={contract.tenantCode || ''}
+                        onSelect={handleTenantSelect}
+                        placeholder="Select a Tenant"
+                        disabled={!isEditing}
+                    />
                 </div>
-                 <div>
-                    <Label htmlFor="tawtheeq-reg-no">Registration No</Label>
-                    <Input id="tawtheeq-reg-no" value={contract.tawtheeqRegistrationNo || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationNo', e.target.value)} disabled={!isEditing}/>
+                <div>
+                    <Label htmlFor="tenant-code">Tenant Code</Label>
+                    <Input id="tenant-code" value={contract.tenantCode || ''} disabled />
                 </div>
-                 <div>
-                    <Label htmlFor="tawtheeq-reg-date">Registration Date</Label>
-                    <Input id="tawtheeq-reg-date" type="date" value={contract.tawtheeqRegistrationDate || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationDate', e.target.value)} disabled={!isEditing}/>
+                <div>
+                    <Label htmlFor="tenant-mobile">Tenant Mobile</Label>
+                    <Input id="tenant-mobile" value={contract.mobile || ''} disabled />
                 </div>
-            </div>
-          </CardContent>
-      </Card>
+                <div>
+                    <Label htmlFor="tenant-email">Tenant Email</Label>
+                    <Input id="tenant-email" value={contract.email || ''} disabled />
+                </div>
+                <div>
+                    <Label htmlFor="tenant-address">Tenant Address</Label>
+                    <Input id="tenant-address" value={contract.address || ''} disabled />
+                </div>
+            </CardContent>
+        </Card>
+      </div>
       <Card className="mt-6">
+        <CardHeader>
+            <CardTitle>Payment Schedule</CardTitle>
+            <CardDescription>
+                Review or define the payment installments for this contract.
+            </CardDescription>
+        </CardHeader>
         <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4 p-4 border rounded-md bg-muted/50">
                   <div>
