@@ -68,7 +68,7 @@ async function createChequesFromContract(contract: Contract) {
                 chequeNo: installment.chequeNo,
                 chequeDate: installment.dueDate,
                 amount: installment.amount,
-                bankName: '', // This can be enhanced later if needed
+                bankName: installment.bankName || '',
                 status: 'In Hand',
                 type: 'Incoming',
                 partyName: contract.tenantName,

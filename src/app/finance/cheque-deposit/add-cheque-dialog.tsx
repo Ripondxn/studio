@@ -93,15 +93,6 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
     if (contract) {
         if(contract.property) setValue('property', contract.property);
         if(contract.partyName) setValue('partyName', contract.partyName);
-        
-        // Find the next unpaid installment and populate the form
-        const nextInstallment = contract.paymentSchedule?.find(p => p.status === 'unpaid');
-        if (nextInstallment) {
-            if(nextInstallment.chequeNo) setValue('chequeNo', nextInstallment.chequeNo);
-            if(nextInstallment.dueDate) setValue('chequeDate', nextInstallment.dueDate);
-            if(nextInstallment.amount) setValue('amount', nextInstallment.amount);
-            if(nextInstallment.bankName) setValue('bankName', nextInstallment.bankName);
-        }
     }
   }
 
