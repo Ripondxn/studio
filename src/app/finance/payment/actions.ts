@@ -39,6 +39,23 @@ async function writePayments(data: Payment[]) {
     await fs.writeFile(paymentsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+async function readBankAccounts(): Promise<BankAccount[]> {
+    try {
+        const data = await fs.readFile(bankAccountsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+async function writeBankAccounts(data: BankAccount[]) {
+    await fs.writeFile(bankAccountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+
 export async function getPayments() {
     const payments = await readPayments();
     return payments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -49,11 +66,27 @@ export async function addPayment(data: Omit<Payment, 'id'>) {
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
     }
+    
+    const paymentData = validation.data;
 
     try {
+        // Adjust bank balance if it's an outgoing payment from a bank account
+        if (paymentData.type === 'Payment' && paymentData.bankAccountId) {
+            const allBankAccounts = await readBankAccounts();
+            const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
+
+            if (bankAccountIndex !== -1) {
+                if (allBankAccounts[bankAccountIndex].balance < paymentData.amount) {
+                    return { success: false, error: 'Insufficient funds in the selected bank account.' };
+                }
+                allBankAccounts[bankAccountIndex].balance -= paymentData.amount;
+                await writeBankAccounts(allBankAccounts);
+            }
+        }
+        
         const allPayments = await readPayments();
         const newPayment: Payment = {
-            ...validation.data,
+            ...paymentData,
             id: `PAY-${Date.now()}`,
         };
 
@@ -62,6 +95,7 @@ export async function addPayment(data: Omit<Payment, 'id'>) {
         
         revalidatePath('/finance/payment');
         revalidatePath('/finance/due-payments');
+        revalidatePath('/finance/banking'); // Revalidate banking to show new balance
         return { success: true, data: newPayment };
 
     } catch (error) {
