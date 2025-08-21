@@ -11,7 +11,7 @@ import { columns } from './columns';
 import { Customer } from './schema';
 
 export function CustomerContent({ customers }: { customers: Customer[] }) {
-  const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('list');
   const [filter, setFilter] = React.useState('');
 
   const filteredCustomers = React.useMemo(() => {
