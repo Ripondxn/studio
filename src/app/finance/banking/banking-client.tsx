@@ -40,6 +40,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { bankAccountSchema, type BankAccount } from './schema';
 import { saveBankAccount, deleteBankAccount, getBankAccounts } from './actions';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type BankAccountFormData = Omit<BankAccount, 'id'> & { id?: string };
 
@@ -181,7 +182,9 @@ const BankAccountCard = ({ account, onEdit, onDelete }: { account: BankAccount, 
                 </p>
             </CardContent>
             <CardFooter>
-                <Button variant="outline" className="w-full">View Transactions</Button>
+                 <Button asChild variant="outline" className="w-full">
+                    <Link href={`/finance/payment?accountId=${account.id}`}>View Transactions</Link>
+                </Button>
             </CardFooter>
         </Card>
     );

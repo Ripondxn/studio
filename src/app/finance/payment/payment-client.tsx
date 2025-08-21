@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { getPayments, getSummary } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -21,6 +22,8 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
   const [payments, setPayments] = useState(initialPayments);
   const [summary, setSummary] = useState(initialSummary);
   const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const accountIdFilter = searchParams.get('accountId');
 
   const refreshData = async () => {
     setIsLoading(true);
@@ -37,6 +40,18 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
     setPayments(initialPayments);
     setSummary(initialSummary);
   }, [initialPayments, initialSummary]);
+
+  const filteredPayments = useMemo(() => {
+    if (!accountIdFilter) {
+      return payments;
+    }
+    return payments.filter(p => {
+        if (p.paymentMethod === 'Cash' && p.paymentFrom === 'Petty Cash' && accountIdFilter === 'acc_3') {
+            return true;
+        }
+        return p.bankAccountId === accountIdFilter
+    });
+  }, [payments, accountIdFilter]);
 
   return (
     <div className="container mx-auto py-10">
@@ -78,7 +93,7 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
         </Card>
       </div>
 
-      <DataTable columns={columns} data={payments} />
+      <DataTable columns={columns} data={filteredPayments} />
     </div>
   );
 }
