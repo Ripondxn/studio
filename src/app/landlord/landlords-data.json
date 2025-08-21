@@ -1,1 +1,37 @@
-[]
+
+[
+  {
+    "id": "L1755761358933",
+    "landlordData": {
+      "code": "L-001",
+      "name": "Emaar Properties",
+      "mobile": "+97143673333",
+      "email": "info@emaar.ae",
+      "address": "Dubai, UAE",
+      "bankName": "Emirates NBD",
+      "accountNumber": "101202030304",
+      "iban": "AE880260001012020303040",
+      "securityDepositAmount": 5000,
+      "securityDepositStatus": "paid",
+      "securityDepositReturnDate": "",
+      "securityDepositReturnedAmount": 0,
+      "securityDepositRemarks": ""
+    },
+    "attachments": [
+      {
+        "id": 1,
+        "name": "Trade License",
+        "file": "trade-license.pdf",
+        "remarks": "Valid until Dec 2025",
+        "isLink": false
+      },
+      {
+        "id": 2,
+        "name": "Company Website",
+        "file": "https://www.emaar.com",
+        "remarks": "Official website link",
+        "isLink": true
+      }
+    ]
+  }
+]
