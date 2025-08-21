@@ -170,7 +170,7 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
                                 <Select onValueChange={(value) => {
                                     field.onChange(value);
                                     setValue('partyName', '');
-                                }} value={field.value} disabled={paymentType === 'Receipt'}>
+                                }} value={field.value}>
                                     <SelectTrigger><SelectValue/></SelectTrigger>
                                     <SelectContent>
                                          {paymentType === 'Receipt' ? (
