@@ -24,15 +24,24 @@ import { chequeSchema, type Cheque } from './schema';
 import { addCheque, getLookups } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type PaymentInstallment } from '@/app/tenancy/contract/schema';
 
 type ChequeFormData = Omit<Cheque, 'id'>;
 const chequeFormSchema = chequeSchema.omit({ id: true });
 
+type ContractLookup = { 
+    value: string, 
+    label: string, 
+    property?: string, 
+    partyName?: string,
+    paymentSchedule?: PaymentInstallment[],
+};
+
 type Lookups = {
     tenants: { value: string, label: string, contractNo?: string }[];
     landlords: { value: string, label: string }[];
-    tenancyContracts: { value: string, label: string, property?: string, partyName?: string }[];
-    leaseContracts: { value: string, label: string, property?: string, partyName?: string }[];
+    tenancyContracts: ContractLookup[];
+    leaseContracts: ContractLookup[];
 }
 
 export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }) {
@@ -83,6 +92,14 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
     if (contract) {
         if(contract.property) setValue('property', contract.property);
         if(contract.partyName) setValue('partyName', contract.partyName);
+        
+        // Find the next unpaid installment and populate the form
+        const nextInstallment = contract.paymentSchedule?.find(p => p.status === 'unpaid');
+        if (nextInstallment) {
+            if(nextInstallment.chequeNo) setValue('chequeNo', nextInstallment.chequeNo);
+            if(nextInstallment.dueDate) setValue('chequeDate', nextInstallment.dueDate);
+            if(nextInstallment.amount) setValue('amount', nextInstallment.amount);
+        }
     }
   }
 
