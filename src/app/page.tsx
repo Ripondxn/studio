@@ -178,7 +178,9 @@ export default async function Dashboard() {
                     ))}
                 </TableBody>
              </Table>
-             <Button variant="link" className="w-full mt-2">View All Expiring Contracts</Button>
+             <Button asChild variant="link" className="w-full mt-2">
+                <Link href="/tenancy/contracts">View All Expiring Contracts</Link>
+             </Button>
           </CardContent>
         </Card>
         <Card>
@@ -209,7 +211,9 @@ export default async function Dashboard() {
                     ))}
                 </TableBody>
              </Table>
-             <Button variant="link" className="w-full mt-2">View All Vacant Units</Button>
+             <Button asChild variant="link" className="w-full mt-2">
+                <Link href="/property/units/vacant">View All Vacant Units</Link>
+             </Button>
           </CardContent>
         </Card>
       </div>
