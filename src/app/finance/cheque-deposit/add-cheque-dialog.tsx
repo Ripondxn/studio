@@ -24,7 +24,6 @@ import { chequeSchema, type Cheque } from './schema';
 import { addCheque, getLookups } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useRouter } from 'next/navigation';
 
 type ChequeFormData = Omit<Cheque, 'id'>;
 const chequeFormSchema = chequeSchema.omit({ id: true });
@@ -36,11 +35,10 @@ type Lookups = {
     leaseContracts: { value: string, label: string, property?: string }[];
 }
 
-export function AddChequeDialog() {
+export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
   const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], tenancyContracts: [], leaseContracts: [] });
 
   const {
@@ -103,7 +101,7 @@ export function AddChequeDialog() {
         description: `Successfully added cheque #${data.chequeNo}.`,
       });
       setIsOpen(false);
-      router.refresh();
+      onChequeAdded();
     } else {
       toast({
         variant: 'destructive',

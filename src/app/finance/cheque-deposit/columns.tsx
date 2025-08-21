@@ -55,12 +55,13 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
     const [status, setStatus] = useState<Cheque['status']>(cheque.status);
     const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const { toast } = useToast();
+    const router = useRouter();
 
     const handleUpdate = async () => {
         const result = await updateChequeStatus(cheque.id, status, date);
         if (result.success) {
             toast({ title: 'Status Updated', description: `Cheque ${cheque.chequeNo} status updated to ${status}.` });
-            onUpdate();
+            router.refresh();
             setIsOpen(false);
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error });
@@ -119,7 +120,7 @@ const ActionsCell = ({ row }: { row: { original: Cheque } }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <UpdateStatusDialog cheque={row.original} onUpdate={() => router.refresh()} />
+          <UpdateStatusDialog cheque={row.original} onUpdate={() => {}} />
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-destructive">
             <Trash2 className="mr-2 h-4 w-4" />

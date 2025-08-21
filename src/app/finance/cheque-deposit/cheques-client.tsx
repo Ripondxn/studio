@@ -12,6 +12,7 @@ import { type Cheque } from './schema';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 type Summary = {
     inHandCount: number;
@@ -28,6 +29,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
   const [cheques, setCheques] = useState(initialCheques);
   const [summary, setSummary] = useState(initialSummary);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const refreshData = async () => {
     setIsLoading(true);
@@ -55,7 +57,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             </p>
         </div>
         <div className="flex items-center gap-2">
-            <AddChequeDialog />
+            <AddChequeDialog onChequeAdded={refreshData} />
             <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
                 <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
