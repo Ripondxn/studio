@@ -1,5 +1,4 @@
 
-'use client';
 
 import {
   Card,
@@ -30,9 +29,8 @@ import {
 import Link from 'next/link';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { differenceInDays, parseISO } from 'date-fns';
-import { useEffect, useState } from 'react';
 import { Contract } from '@/app/tenancy/contract/schema';
-import { SendRenewalDialog } from '@/components/send-renewal-dialog';
+import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
 
 const kpiData = [
   {
@@ -80,47 +78,37 @@ type ExpiryReportItem = {
     status: string;
 }
 
-export default function Dashboard() {
-  const [expiryReport, setExpiryReport] = useState<ExpiryReportItem[]>([]);
-  const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
+async function getExpiryReport(): Promise<ExpiryReportItem[]> {
+    const contracts = await getAllContracts();
+    const today = new Date();
 
-  useEffect(() => {
-    async function fetchContracts() {
-        const contracts = await getAllContracts();
-        const today = new Date();
+    const report = contracts
+        .map(contract => ({
+        ...contract,
+        daysRemaining: differenceInDays(parseISO(contract.endDate), today),
+        }))
+        .filter(contract => contract.daysRemaining >= 0 && contract.daysRemaining <= 90)
+        .sort((a, b) => a.daysRemaining - b.daysRemaining)
+        .map(contract => ({
+            unit: contract.unitCode,
+            tenant: contract.tenantName,
+            endDate: contract.endDate,
+            rent: contract.totalRent,
+            status: contract.daysRemaining <= 30 ? 'Renewal Due' : 'Notified'
+        }));
+    return report;
+}
 
-        const report = contracts
-            .map(contract => ({
-            ...contract,
-            daysRemaining: differenceInDays(parseISO(contract.endDate), today),
-            }))
-            .filter(contract => contract.daysRemaining >= 0 && contract.daysRemaining <= 90)
-            .sort((a, b) => a.daysRemaining - b.daysRemaining)
-            .map(contract => ({
-                unit: contract.unitCode,
-                tenant: contract.tenantName,
-                endDate: contract.endDate,
-                rent: contract.totalRent,
-                status: contract.daysRemaining <= 30 ? 'Renewal Due' : 'Notified'
-            }));
-        setExpiryReport(report);
-    }
-    fetchContracts();
-  }, [])
-
+export default async function Dashboard() {
+  const expiryReport = await getExpiryReport();
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-       <SendRenewalDialog 
-        isOpen={isRenewalDialogOpen}
-        setIsOpen={setIsRenewalDialogOpen}
-        expiringContracts={expiryReport}
-       />
+       <SendRenewalDialogWrapper expiringContracts={expiryReport} />
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
             <Button asChild><Link href="/tenancy/contract"><Plus className="mr-2 h-4 w-4"/> Generate New Contract</Link></Button>
-            <Button variant="outline" onClick={() => setIsRenewalDialogOpen(true)}><Mail className="mr-2 h-4 w-4"/> Send Renewal Email</Button>
             <Button variant="outline"><Receipt className="mr-2 h-4 w-4"/> Record Payment</Button>
         </div>
       </div>

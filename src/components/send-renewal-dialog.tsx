@@ -10,6 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -19,7 +20,7 @@ import { Checkbox } from './ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from './ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 
 type ExpiringContract = {
   unit: string;
@@ -28,8 +29,6 @@ type ExpiringContract = {
 };
 
 type SendRenewalDialogProps = {
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
   expiringContracts: ExpiringContract[];
 };
 
@@ -46,11 +45,10 @@ const whatsappTemplate = `Hi [Tenant Name]! Just a reminder that your contract f
 
 
 export function SendRenewalDialog({
-  isOpen,
-  setIsOpen,
   expiringContracts,
 }: SendRenewalDialogProps) {
   const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
   const [notificationType, setNotificationType] = useState<'email' | 'whatsapp'>('email');
   const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);
@@ -106,86 +104,89 @@ export function SendRenewalDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Send Renewal Notifications</DialogTitle>
-          <DialogDescription>
-            Select tenants and choose the notification method.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-            <div className="flex items-center space-x-2">
-                <Label htmlFor="notification-type">Email</Label>
-                <Switch 
-                    id="notification-type"
-                    checked={notificationType === 'whatsapp'}
-                    onCheckedChange={handleTypeChange}
-                />
-                <Label htmlFor="notification-type">WhatsApp</Label>
-            </div>
-            
-             <div className="h-64 rounded-md border">
-                <ScrollArea className="h-full w-full">
-                <Table>
-                    <TableHeader className="sticky top-0 bg-background">
-                        <TableRow>
-                            <TableHead className="w-12">
-                                <Checkbox
-                                    checked={isAllSelected}
-                                    onCheckedChange={handleToggleAll}
-                                    aria-label="Select all tenants"
-                                />
-                            </TableHead>
-                            <TableHead>Tenant</TableHead>
-                            <TableHead>Unit</TableHead>
-                            <TableHead>End Date</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {expiringContracts.map((contract) => (
-                            <TableRow key={contract.tenant} data-state={selectedTenants.includes(contract.tenant) && "selected"}>
-                                <TableCell>
-                                    <Checkbox 
-                                        checked={selectedTenants.includes(contract.tenant)}
-                                        onCheckedChange={() => handleSelectTenant(contract.tenant)}
-                                        aria-label={`Select ${contract.tenant}`}
+        <DialogTrigger asChild>
+            <Button variant="outline"><Mail className="mr-2 h-4 w-4"/> Send Renewal Email</Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+            <DialogTitle>Send Renewal Notifications</DialogTitle>
+            <DialogDescription>
+                Select tenants and choose the notification method.
+            </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="flex items-center space-x-2">
+                    <Label htmlFor="notification-type">Email</Label>
+                    <Switch 
+                        id="notification-type"
+                        checked={notificationType === 'whatsapp'}
+                        onCheckedChange={handleTypeChange}
+                    />
+                    <Label htmlFor="notification-type">WhatsApp</Label>
+                </div>
+                
+                <div className="h-64 rounded-md border">
+                    <ScrollArea className="h-full w-full">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-background">
+                            <TableRow>
+                                <TableHead className="w-12">
+                                    <Checkbox
+                                        checked={isAllSelected}
+                                        onCheckedChange={handleToggleAll}
+                                        aria-label="Select all tenants"
                                     />
-                                </TableCell>
-                                <TableCell className="font-medium">{contract.tenant}</TableCell>
-                                <TableCell>{contract.unit}</TableCell>
-                                <TableCell>{contract.endDate}</TableCell>
+                                </TableHead>
+                                <TableHead>Tenant</TableHead>
+                                <TableHead>Unit</TableHead>
+                                <TableHead>End Date</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                </ScrollArea>
-             </div>
+                        </TableHeader>
+                        <TableBody>
+                            {expiringContracts.map((contract) => (
+                                <TableRow key={contract.tenant} data-state={selectedTenants.includes(contract.tenant) && "selected"}>
+                                    <TableCell>
+                                        <Checkbox 
+                                            checked={selectedTenants.includes(contract.tenant)}
+                                            onCheckedChange={() => handleSelectTenant(contract.tenant)}
+                                            aria-label={`Select ${contract.tenant}`}
+                                        />
+                                    </TableCell>
+                                    <TableCell className="font-medium">{contract.tenant}</TableCell>
+                                    <TableCell>{contract.unit}</TableCell>
+                                    <TableCell>{contract.endDate}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    </ScrollArea>
+                </div>
 
-            <div>
-                <Label htmlFor="message-template">Message Template</Label>
-                <Textarea
-                    id="message-template"
-                    rows={8}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Enter your message here. Use placeholders like [Tenant Name], [Unit No.], and [End Date]."
-                />
-                <p className="text-xs text-muted-foreground mt-1">Placeholders: [Tenant Name], [Unit No.], [End Date]</p>
+                <div>
+                    <Label htmlFor="message-template">Message Template</Label>
+                    <Textarea
+                        id="message-template"
+                        rows={8}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Enter your message here. Use placeholders like [Tenant Name], [Unit No.], and [End Date]."
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Placeholders: [Tenant Name], [Unit No.], [End Date]</p>
+                </div>
+
             </div>
-
-        </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="outline">
-              Cancel
+            <DialogFooter>
+            <DialogClose asChild>
+                <Button type="button" variant="outline">
+                Cancel
+                </Button>
+            </DialogClose>
+            <Button onClick={handleSend} disabled={isSending}>
+                {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                Send to {selectedTenants.length} Tenant(s)
             </Button>
-          </DialogClose>
-          <Button onClick={handleSend} disabled={isSending}>
-            {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-            Send to {selectedTenants.length} Tenant(s)
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+            </DialogFooter>
+        </DialogContent>
     </Dialog>
   );
 }
