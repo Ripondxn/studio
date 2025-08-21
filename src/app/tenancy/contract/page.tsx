@@ -298,7 +298,7 @@ export default function TenancyContractPage() {
         ...prev,
         paymentSchedule: [
             ...prev.paymentSchedule,
-            { installment: prev.paymentSchedule.length + 1, dueDate: '', amount: 0, status: 'unpaid', chequeNo: '' }
+            { installment: prev.paymentSchedule.length + 1, dueDate: '', amount: 0, status: 'unpaid', chequeNo: '', bankName: '' }
         ]
     }));
   }
@@ -344,7 +344,8 @@ export default function TenancyContractPage() {
             dueDate: formatDate(dueDate, 'yyyy-MM-dd'),
             amount: installmentAmount,
             status: 'unpaid',
-            chequeNo: ''
+            chequeNo: '',
+            bankName: '',
         });
     }
     
@@ -709,6 +710,7 @@ export default function TenancyContractPage() {
               <TableRow>
                 <TableHead>Installment</TableHead>
                 <TableHead>Due Date</TableHead>
+                <TableHead>Bank Name</TableHead>
                 <TableHead>Cheque No.</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
@@ -721,6 +723,9 @@ export default function TenancyContractPage() {
                 <TableCell>{item.installment}</TableCell>
                 <TableCell>
                   <Input type="date" value={item.dueDate} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!isEditing}/>
+                </TableCell>
+                <TableCell>
+                  <Input placeholder="Bank Name" value={item.bankName || ''} onChange={(e) => handleScheduleChange(index, 'bankName', e.target.value)} disabled={!isEditing}/>
                 </TableCell>
                 <TableCell>
                   <Input placeholder="Cheque number" value={item.chequeNo || ''} onChange={(e) => handleScheduleChange(index, 'chequeNo', e.target.value)} disabled={!isEditing}/>
@@ -762,4 +767,3 @@ export default function TenancyContractPage() {
     </div>
   );
 }
-

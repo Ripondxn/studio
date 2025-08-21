@@ -8,6 +8,7 @@ export const paymentInstallmentSchema = z.object({
   amount: z.number(),
   status: z.enum(['paid', 'unpaid']),
   chequeNo: z.string().optional(),
+  bankName: z.string().optional(),
 });
 
 export const contractSchema = z.object({
