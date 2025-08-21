@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { LayoutGrid, List } from 'lucide-react';
 import { TenantGrid } from './tenant-grid';
 import { DataTable } from './data-table';
@@ -11,10 +12,26 @@ import { Tenant } from './schema';
 
 export function TenantContent({ tenants }: { tenants: Tenant[] }) {
   const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('grid');
+  const [filter, setFilter] = React.useState('');
+
+  const filteredTenants = React.useMemo(() => {
+    if (!filter) {
+      return tenants;
+    }
+    return tenants.filter(tenant =>
+      tenant.name.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [tenants, filter]);
 
   return (
     <>
-      <div className="flex justify-end items-center mb-4">
+      <div className="flex justify-between items-center mb-4">
+        <Input
+          placeholder="Filter by name..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="max-w-sm"
+        />
         <div className="flex items-center rounded-md bg-muted p-1">
           <Button
             variant={viewMode === 'list' ? 'secondary' : 'ghost'}
@@ -33,9 +50,9 @@ export function TenantContent({ tenants }: { tenants: Tenant[] }) {
         </div>
       </div>
       {viewMode === 'list' ? (
-        <DataTable columns={columns} data={tenants} />
+        <DataTable columns={columns} data={filteredTenants} />
       ) : (
-        <TenantGrid tenants={tenants} />
+        <TenantGrid tenants={filteredTenants} />
       )}
     </>
   );
