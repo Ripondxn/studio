@@ -59,9 +59,9 @@ export async function getAllLandlords() {
 export async function saveLandlordData(dataToSave: any, isNewRecord: boolean) {
   try {
     const allLandlords = await getLandlords();
-    const { code } = dataToSave.landlordData;
-
+    
     if (isNewRecord) {
+        const { code } = dataToSave.landlordData;
         const landlordExists = allLandlords.some((l: any) => l.landlordData.code === code);
         if (landlordExists) {
             return { success: false, error: `Landlord with code "${code}" already exists.` };
@@ -72,6 +72,7 @@ export async function saveLandlordData(dataToSave: any, isNewRecord: boolean) {
         };
         allLandlords.push(newLandlord);
     } else {
+        const { code } = dataToSave.landlordData;
         const index = allLandlords.findIndex((l: any) => l.landlordData.code === code);
 
         if (index !== -1) {
@@ -95,10 +96,27 @@ export async function saveLandlordData(dataToSave: any, isNewRecord: boolean) {
   }
 }
 
-export async function findLandlordData(landlordCode: string) {
+export async function findLandlordData(vendorCode: string) {
   try {
     const allLandlords = await getLandlords();
-    const landlord = allLandlords.find((l: any) => l.landlordData.code === landlordCode);
+    
+    if (vendorCode === 'new') {
+        let maxNum = 0;
+        allLandlords.forEach((l: any) => {
+            const code = l.landlordData.code || '';
+            const match = code.match(/^L(\d+)$/);
+            if(match) {
+                const num = parseInt(match[1], 10);
+                if (num > maxNum) {
+                    maxNum = num;
+                }
+            }
+        });
+        const newCode = `L${(maxNum + 1).toString().padStart(3, '0')}`;
+        return { success: true, data: { landlordData: { code: newCode } } };
+    }
+      
+    const landlord = allLandlords.find((l: any) => l.landlordData.code === vendorCode);
 
     if (landlord) {
        return { success: true, data: landlord };

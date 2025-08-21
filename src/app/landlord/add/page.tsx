@@ -129,8 +129,7 @@ export default function LandlordPage() {
     } else {
         setIsNewRecord(true);
         setIsEditing(true); 
-        setLandlordData(initialLandlordData);
-        setAttachments([]);
+        handleFindClick('new');
     }
   }, [searchParams]);
 
@@ -301,24 +300,23 @@ export default function LandlordPage() {
     try {
       const result = await findLandlordData(codeToFind);
       if (result.success && result.data) {
-        toast({
-          title: 'Found',
-          description: `Found record for Landlord Code: ${codeToFind}`,
-        });
         setAllData(result.data);
-        setInitialAllData(result.data);
-        setIsNewRecord(false);
-        setIsEditing(false);
+        if (codeToFind !== 'new') {
+            setInitialAllData(result.data);
+            setIsNewRecord(false);
+            setIsEditing(false);
+        } else {
+            setInitialAllData({ landlordData: { code: result.data.landlordData.code } });
+            setIsNewRecord(true);
+            setIsEditing(true);
+        }
       } else {
         toast({
           variant: 'destructive',
           title: 'Not Found',
           description: `No record found for Landlord Code: ${codeToFind}. You can create a new one.`,
         });
-        const newLandlord = { ...initialLandlordData, code: codeToFind };
-        setAllData({ landlordData: newLandlord });
-        setIsNewRecord(true);
-        setIsEditing(true);
+        handleFindClick('new');
       }
     } catch (error) {
       toast({
@@ -403,10 +401,10 @@ export default function LandlordPage() {
                     <div className="flex items-end gap-2">
                         <div className="flex-grow">
                             <Label htmlFor="code">Code</Label>
-                            <Input id="code" value={landlordData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
+                            <Input id="code" value={landlordData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled />
                         </div>
-                        <Button variant="outline" size="icon" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
-                            {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                        <Button variant="outline" size="icon" onClick={() => router.push('/landlord/add')} disabled={isFinding || !isNewRecord}>
+                            <Plus className="h-4 w-4" />
                         </Button>
                     </div>
                     <div>
