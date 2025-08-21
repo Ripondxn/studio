@@ -39,6 +39,24 @@ async function writeCheques(data: Cheque[]) {
     await fs.writeFile(chequesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+async function readBankAccounts(): Promise<BankAccount[]> {
+    try {
+        await fs.access(bankAccountsFilePath);
+        const data = await fs.readFile(bankAccountsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+async function writeBankAccounts(data: BankAccount[]) {
+    await fs.writeFile(bankAccountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+
 export async function getCheques() {
     const cheques = await readCheques();
     return cheques.sort((a,b) => new Date(b.chequeDate).getTime() - new Date(a.chequeDate).getTime());
@@ -77,16 +95,31 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         if (chequeIndex === -1) {
             return { success: false, error: 'Cheque not found.' };
         }
-
-        allCheques[chequeIndex].status = status;
+        
+        const originalCheque = allCheques[chequeIndex];
+        const updatedCheque = { ...originalCheque, status };
+        
         if(status === 'Deposited') {
-            allCheques[chequeIndex].depositDate = date;
+            updatedCheque.depositDate = date;
         } else if (status === 'Cleared' || status === 'Bounced') {
-            allCheques[chequeIndex].clearanceDate = date;
+            updatedCheque.clearanceDate = date;
         }
 
+        allCheques[chequeIndex] = updatedCheque;
+
+        if (status === 'Cleared' && updatedCheque.bankAccountId) {
+            const allBankAccounts = await readBankAccounts();
+            const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === updatedCheque.bankAccountId);
+
+            if (bankAccountIndex !== -1) {
+                allBankAccounts[bankAccountIndex].balance += updatedCheque.amount;
+                await writeBankAccounts(allBankAccounts);
+            }
+        }
+        
         await writeCheques(allCheques);
         revalidatePath('/finance/cheque-deposit');
+        revalidatePath('/finance/banking');
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message };
