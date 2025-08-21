@@ -162,7 +162,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   if (isViewMode && invoice) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="sm:max-w-4xl">
                  <DialogHeader>
                     <DialogTitle>View Invoice: {invoice.invoiceNo}</DialogTitle>
                 </DialogHeader>
@@ -182,7 +182,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="sm:max-w-4xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
@@ -191,7 +191,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
             <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled/></div>
             <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
             <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
