@@ -28,9 +28,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
+import { getUnits } from '@/app/property/units/actions';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
+import { Unit } from '@/app/property/units/schema';
 
 const kpiData = [
   {
@@ -63,13 +65,6 @@ const kpiData = [
   },
 ];
 
-const vacantUnits = [
-    { unit: 'D-401', type: '2-Bed', daysVacant: 45, marketRent: 6800 },
-    { unit: 'B-115', type: 'Studio', daysVacant: 21, marketRent: 3200 },
-    { unit: 'C-208', type: '1-Bed', daysVacant: 14, marketRent: 4500 },
-    { unit: 'E-501', type: 'Penthouse', daysVacant: 68, marketRent: 12500 },
-];
-
 type ExpiryReportItem = {
     unit: string;
     tenant: string;
@@ -99,8 +94,26 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
     return report;
 }
 
+async function getVacantUnits() {
+    const allUnits = await getUnits();
+    const allContracts = await getAllContracts();
+
+    const activeContractUnitCodes = new Set(
+        allContracts
+            .filter(c => c.status === 'New' || c.status === 'Renew')
+            .map(c => c.unitCode)
+    );
+
+    const vacantUnits = allUnits.filter(unit => 
+        unit.unitStatus === 'Active' && !activeContractUnitCodes.has(unit.unitCode)
+    );
+
+    return vacantUnits;
+}
+
 export default async function Dashboard() {
   const expiryReport = await getExpiryReport();
+  const vacantUnits = await getVacantUnits();
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
@@ -181,17 +194,17 @@ export default async function Dashboard() {
                     <TableRow>
                         <TableHead>Unit</TableHead>
                         <TableHead>Type</TableHead>
-                        <TableHead>Days Vacant</TableHead>
-                        <TableHead className="text-right">Market Rent</TableHead>
+                        <TableHead>Floor</TableHead>
+                        <TableHead className="text-right">Annual Rent</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {vacantUnits.map((item) => (
-                        <TableRow key={item.unit}>
-                            <TableCell className="font-medium">{item.unit}</TableCell>
-                            <TableCell>{item.type}</TableCell>
-                            <TableCell>{item.daysVacant}</TableCell>
-                            <TableCell className="text-right">${item.marketRent.toLocaleString()}</TableCell>
+                        <TableRow key={item.unitCode}>
+                            <TableCell className="font-medium">{item.unitCode}</TableCell>
+                            <TableCell>{item.unitType}</TableCell>
+                            <TableCell>{item.floor}</TableCell>
+                            <TableCell className="text-right">${item.annualRent.toLocaleString()}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
