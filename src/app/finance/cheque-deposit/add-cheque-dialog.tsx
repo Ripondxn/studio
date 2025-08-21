@@ -24,7 +24,8 @@ import { chequeSchema, type Cheque } from './schema';
 import { addCheque, getLookups } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { type PaymentInstallment } from '@/app/tenancy/contract/schema';
+import { type PaymentInstallment as TenancyPaymentInstallment } from '@/app/tenancy/contract/schema';
+import { type PaymentInstallment as LeasePaymentInstallment } from '@/app/lease/contract/schema';
 
 type ChequeFormData = Omit<Cheque, 'id'>;
 const chequeFormSchema = chequeSchema.omit({ id: true });
@@ -34,7 +35,7 @@ type ContractLookup = {
     label: string, 
     property?: string, 
     partyName?: string,
-    paymentSchedule?: PaymentInstallment[],
+    paymentSchedule?: (TenancyPaymentInstallment | LeasePaymentInstallment)[],
 };
 
 type Lookups = {
@@ -99,6 +100,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
             if(nextInstallment.chequeNo) setValue('chequeNo', nextInstallment.chequeNo);
             if(nextInstallment.dueDate) setValue('chequeDate', nextInstallment.dueDate);
             if(nextInstallment.amount) setValue('amount', nextInstallment.amount);
+            if(nextInstallment.bankName) setValue('bankName', nextInstallment.bankName);
         }
     }
   }

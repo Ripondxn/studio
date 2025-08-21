@@ -20,15 +20,24 @@
     "terminationDate": "",
     "rentBasedOn": "Monthly",
     "paymentFrequency": "Monthly",
-    "numberOfPayments": 1,
+    "numberOfPayments": 2,
     "gracePeriod": 0,
     "paymentSchedule": [
       {
         "installment": 1,
         "dueDate": "2025-08-20",
-        "amount": 55000,
-        "status": "paid",
-        "chequeNo": "123456"
+        "amount": 27500,
+        "status": "unpaid",
+        "chequeNo": "123456",
+        "bankName": "ADCB"
+      },
+      {
+        "installment": 2,
+        "dueDate": "2025-09-20",
+        "amount": 27500,
+        "status": "unpaid",
+        "chequeNo": "123457",
+        "bankName": "ADCB"
       }
     ],
     "terms": "",
@@ -65,21 +74,24 @@
         "dueDate": "2025-08-22",
         "amount": 25000,
         "status": "paid",
-        "chequeNo": "2258765"
+        "chequeNo": "2258765",
+        "bankName": "NBD"
       },
       {
         "installment": 2,
         "dueDate": "2025-11-22",
         "amount": 25000,
         "status": "paid",
-        "chequeNo": "256878"
+        "chequeNo": "256878",
+        "bankName": "NBD"
       },
       {
         "installment": 3,
         "dueDate": "2026-02-22",
         "amount": 25000,
         "status": "paid",
-        "chequeNo": "65879978"
+        "chequeNo": "65879978",
+        "bankName": "NBD"
       }
     ],
     "terms": "",

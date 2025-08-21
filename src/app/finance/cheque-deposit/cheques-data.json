@@ -1,54 +1,15 @@
 [
   {
-    "id": "CHQ-1",
-    "chequeNo": "100101",
-    "chequeDate": "2024-08-15",
-    "amount": 12500,
-    "bankName": "First National Bank",
+    "chequeNo": "123456",
+    "chequeDate": "2025-08-20",
+    "amount": 27500,
+    "bankName": "ADDC",
     "status": "In Hand",
     "type": "Incoming",
     "partyName": "Md Ripon Ahmed",
-    "property": "Lewa Tower",
-    "contractNo": "TC-1755718766747"
-  },
-  {
-    "id": "CHQ-2",
-    "chequeNo": "100102",
-    "chequeDate": "2024-09-15",
-    "amount": 12500,
-    "bankName": "First National Bank",
-    "status": "In Hand",
-    "type": "Incoming",
-    "partyName": "Md Ripon Ahmed",
-    "property": "Lewa Tower",
-    "contractNo": "TC-1755718766747"
-  },
-  {
-    "id": "CHQ-3",
-    "chequeNo": "500501",
-    "chequeDate": "2024-07-25",
-    "amount": 50000,
-    "bankName": "Corporate Bank",
-    "status": "Deposited",
-    "type": "Outgoing",
-    "partyName": "Emaar Properties",
-    "property": "Lewa Tower",
-    "contractNo": "LA-1755754374045",
-    "depositDate": "2024-07-28"
-  },
-  {
-    "id": "CHQ-5",
-    "chequeNo": "200202",
-    "chequeDate": "2024-07-20",
-    "amount": 2500,
-    "bankName": "Community Bank",
-    "status": "Bounced",
-    "type": "Incoming",
-    "partyName": "Monju Begum",
-    "property": "Lewa Tower",
-    "contractNo": "TC-1755761192274",
-    "depositDate": "2024-07-21",
-    "clearanceDate": "2024-07-23",
-    "remarks": "Insufficient funds"
+    "property": "LT-C38",
+    "contractNo": "TC-1755718766747",
+    "remarks": "1",
+    "id": "CHQ-1755772026808"
   }
 ]
