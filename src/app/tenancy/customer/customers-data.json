@@ -1,0 +1,14 @@
+
+[
+  {
+    "id": "C1755848381111",
+    "customerData": {
+      "code": "C001",
+      "name": "General Customer",
+      "mobile": "+971501234567",
+      "email": "customer@example.com",
+      "address": "123 Main Street, Dubai"
+    },
+    "attachments": []
+  }
+]

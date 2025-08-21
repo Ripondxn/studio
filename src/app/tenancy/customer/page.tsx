@@ -1,5 +1,14 @@
 
-export default function CustomerPage() {
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { getAllCustomers } from './actions';
+import { CustomerContent } from './customer-content';
+import { Customer } from './schema';
+
+export default async function CustomersPage() {
+  const customers: Customer[] = await getAllCustomers();
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -7,11 +16,13 @@ export default function CustomerPage() {
             <h1 className="text-3xl font-bold font-headline">Customers</h1>
             <p className="text-muted-foreground">Manage customer profiles and interactions.</p>
         </div>
+        <Button asChild>
+          <Link href="/tenancy/customer/add">
+            <Plus className="mr-2 h-4 w-4" /> Add New Customer
+          </Link>
+        </Button>
       </div>
-      <div className="text-center py-20 bg-background rounded-lg border-dashed border-2">
-        <h2 className="text-xl font-semibold">Customer Module</h2>
-        <p className="text-muted-foreground mt-2">This page is under construction.</p>
-      </div>
+      <CustomerContent customers={customers} />
     </div>
   );
 }
