@@ -97,6 +97,15 @@ export const columns: ColumnDef<Payment>[] = [
     header: 'Method',
   },
   {
+    accessorKey: 'bankAccountId',
+    header: 'Bank Account',
+    cell: ({ row }) => {
+        // In a real app, you would look up the bank account name by its ID.
+        // For now, we just display the ID if it exists.
+        return row.original.bankAccountId || <span className="text-muted-foreground">N/A</span>;
+    }
+  },
+  {
     accessorKey: 'referenceNo',
     header: 'Reference',
   },

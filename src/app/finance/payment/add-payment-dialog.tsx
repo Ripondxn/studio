@@ -34,13 +34,14 @@ type Lookups = {
     landlords: { value: string, label: string }[];
     vendors: { value: string, label: string }[];
     customers: { value: string, label: string }[];
+    bankAccounts: { value: string, label: string }[];
 }
 
 export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [], bankAccounts: [] });
 
   const {
     register,
@@ -229,6 +230,23 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
                                 </Select>
                             )} />
                     </div>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="bankAccountId">Bank Account</Label>
+                    <Controller
+                        name="bankAccountId"
+                        control={control}
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger><SelectValue placeholder="Select a bank account (optional)"/></SelectTrigger>
+                                <SelectContent>
+                                    {lookups.bankAccounts.map(account => (
+                                        <SelectItem key={account.value} value={account.value}>{account.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="referenceNo">Reference No.</Label>

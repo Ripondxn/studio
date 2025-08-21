@@ -10,6 +10,7 @@ import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Landlord } from '@/app/landlord/schema';
 import { type Vendor } from '@/app/vendors/schema';
 import { type Customer } from '@/app/tenancy/customer/schema';
+import { type BankAccount } from '@/app/finance/banking/schema';
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -17,6 +18,7 @@ const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenant
 const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
 const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
 const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
+const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 
 
 async function readPayments(): Promise<Payment[]> {
@@ -72,6 +74,7 @@ export async function getLookups() {
     const landlords: {landlordData: Landlord}[] = await fs.readFile(landlordsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const vendors: {vendorData: Vendor}[] = await fs.readFile(vendorsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const customers: {customerData: Customer}[] = await fs.readFile(customersFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const bankAccounts: BankAccount[] = await fs.readFile(bankAccountsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
 
 
     return {
@@ -79,6 +82,7 @@ export async function getLookups() {
         landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
         vendors: vendors.map(v => ({ value: v.vendorData.name, label: v.vendorData.name })),
         customers: customers.map(c => ({ value: c.customerData.name, label: c.customerData.name })),
+        bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`}))
     }
 }
 
