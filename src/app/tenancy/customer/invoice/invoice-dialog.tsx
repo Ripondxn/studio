@@ -182,7 +182,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-3xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
@@ -191,109 +191,111 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-            <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled/></div>
-            <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
-            <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
-            <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
-          </div>
+          <div className="max-h-[60vh] overflow-y-auto p-1">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
+              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled/></div>
+              <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
+              <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
+              <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
+            </div>
 
-          <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="w-1/2">Description</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Unit Price</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead></TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {fields.map((field, index) => (
-                    <TableRow key={field.id}>
-                        <TableCell><Input {...register(`items.${index}.description`)} /></TableCell>
-                        <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} /></TableCell>
-                        <TableCell><Input type="number" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
-                        <TableCell className="text-right">
-                           {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
-                        </TableCell>
-                        <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-          <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
-             <Plus className="mr-2 h-4 w-4" /> Add Item
-          </Button>
+            <Table>
+              <TableHeader>
+                  <TableRow>
+                      <TableHead className="w-1/2">Description</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Unit Price</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead></TableHead>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {fields.map((field, index) => (
+                      <TableRow key={field.id}>
+                          <TableCell><Input {...register(`items.${index}.description`)} /></TableCell>
+                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} /></TableCell>
+                          <TableCell><Input type="number" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
+                          <TableCell className="text-right">
+                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
+                          </TableCell>
+                          <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
+                      </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
+              <Plus className="mr-2 h-4 w-4" /> Add Item
+            </Button>
 
-            <div className="flex justify-end mt-4">
-                <div className="w-full max-w-sm space-y-2">
-                    <div className="flex justify-between items-center">
-                        <Label>Subtotal</Label>
-                        <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('subTotal') || 0)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <Label>Tax</Label>
-                        <div className="flex items-center gap-2">
-                            <Controller
-                                name="taxType"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger className="w-[120px] h-8">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="exclusive">Exclusive</SelectItem>
-                                            <SelectItem value="inclusive">Inclusive</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            />
-                            <div className="flex items-center gap-1">
-                                <Input type="number" className="w-[70px] h-8 text-right" {...register('taxRate', { valueAsNumber: true })} />
-                                <span className="text-sm font-medium">%</span>
-                            </div>
-                        </div>
-                    </div>
-                     <div className="flex justify-between items-center">
-                        <Label>Tax Amount</Label>
-                        <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('tax') || 0)}</span>
-                    </div>
-                    <div className="flex justify-between border-t pt-2 mt-2">
-                        <Label className="text-lg font-bold">Total</Label>
-                        <span className="font-bold text-lg">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('total') || 0)}</span>
-                    </div>
+              <div className="flex justify-end mt-4">
+                  <div className="w-full max-w-sm space-y-2">
+                      <div className="flex justify-between items-center">
+                          <Label>Subtotal</Label>
+                          <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('subTotal') || 0)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                          <Label>Tax</Label>
+                          <div className="flex items-center gap-2">
+                              <Controller
+                                  name="taxType"
+                                  control={control}
+                                  render={({ field }) => (
+                                      <Select onValueChange={field.onChange} value={field.value}>
+                                          <SelectTrigger className="w-[120px] h-8">
+                                              <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                              <SelectItem value="exclusive">Exclusive</SelectItem>
+                                              <SelectItem value="inclusive">Inclusive</SelectItem>
+                                          </SelectContent>
+                                      </Select>
+                                  )}
+                              />
+                              <div className="flex items-center gap-1">
+                                  <Input type="number" className="w-[70px] h-8 text-right" {...register('taxRate', { valueAsNumber: true })} />
+                                  <span className="text-sm font-medium">%</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                          <Label>Tax Amount</Label>
+                          <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('tax') || 0)}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2 mt-2">
+                          <Label className="text-lg font-bold">Total</Label>
+                          <span className="font-bold text-lg">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('total') || 0)}</span>
+                      </div>
+                  </div>
+              </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div>
+                  <Label>Notes</Label>
+                  <Textarea {...register('notes')} />
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="Draft">Draft</SelectItem>
+                              <SelectItem value="Sent">Sent</SelectItem>
+                              <SelectItem value="Paid">Paid</SelectItem>
+                              <SelectItem value="Overdue">Overdue</SelectItem>
+                              <SelectItem value="Cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
             </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <div>
-                <Label>Notes</Label>
-                <Textarea {...register('notes')} />
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Controller
-                  name="status"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Draft">Draft</SelectItem>
-                            <SelectItem value="Sent">Sent</SelectItem>
-                            <SelectItem value="Paid">Paid</SelectItem>
-                            <SelectItem value="Overdue">Overdue</SelectItem>
-                            <SelectItem value="Cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
           </div>
 
-          <DialogFooter className="mt-6">
+          <DialogFooter className="mt-6 pt-4 border-t">
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>
             </DialogClose>
