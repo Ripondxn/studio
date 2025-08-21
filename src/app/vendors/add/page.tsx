@@ -332,8 +332,8 @@ export default function VendorPage() {
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
-            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
+            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
         </TabsList>
         <TabsContent value="vendor-info">
             <Card>
@@ -370,46 +370,6 @@ export default function VendorPage() {
                     </div>
                 </div>
                 </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="agent-info">
-             <Card>
-                <CardHeader>
-                    <CardTitle>Agent Information</CardTitle>
-                    <CardDescription>Details of the agent associated with this vendor.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <Label htmlFor="agentCode">Agent Code</Label>
-                            <Input id="agentCode" value={vendorData.agentCode || ''} disabled />
-                        </div>
-                        <div>
-                            <Label htmlFor="agentName">Agent Name</Label>
-                            <Input id="agentName" value={vendorData.agentName || ''} onChange={(e) => handleInputChange('agentName', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                            <Label htmlFor="agentMobile">Agent Mobile</Label>
-                            <Input id="agentMobile" value={vendorData.agentMobile || ''} onChange={(e) => handleInputChange('agentMobile', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                            <Label htmlFor="agentEmail">Agent Email</Label>
-                            <Input id="agentEmail" value={vendorData.agentEmail || ''} onChange={(e) => handleInputChange('agentEmail', e.target.value)} disabled={!isEditing} />
-                        </div>
-                         <div>
-                            <Label htmlFor="agentCommission">Commission Amount</Label>
-                            <Input id="agentCommission" type="number" value={vendorData.agentCommission || 0} onChange={(e) => handleInputChange('agentCommission', parseFloat(e.target.value) || 0)} disabled={!isEditing} />
-                        </div>
-                    </div>
-                </CardContent>
-                 {isEditing && (
-                    <CardFooter>
-                        <Button onClick={handleSaveClick} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                            Save Agent Info
-                        </Button>
-                    </CardFooter>
-                 )}
             </Card>
         </TabsContent>
         <TabsContent value="bank-details">
@@ -511,6 +471,46 @@ export default function VendorPage() {
                 </CardContent>
             </Card>
         </TabsContent>
+        <TabsContent value="agent-info">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Agent Information</CardTitle>
+                    <CardDescription>Details of the agent associated with this vendor.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <Label htmlFor="agentCode">Agent Code</Label>
+                            <Input id="agentCode" value={vendorData.agentCode || ''} disabled />
+                        </div>
+                        <div>
+                            <Label htmlFor="agentName">Agent Name</Label>
+                            <Input id="agentName" value={vendorData.agentName || ''} onChange={(e) => handleInputChange('agentName', e.target.value)} disabled={!isEditing} />
+                        </div>
+                        <div>
+                            <Label htmlFor="agentMobile">Agent Mobile</Label>
+                            <Input id="agentMobile" value={vendorData.agentMobile || ''} onChange={(e) => handleInputChange('agentMobile', e.target.value)} disabled={!isEditing} />
+                        </div>
+                        <div>
+                            <Label htmlFor="agentEmail">Agent Email</Label>
+                            <Input id="agentEmail" value={vendorData.agentEmail || ''} onChange={(e) => handleInputChange('agentEmail', e.target.value)} disabled={!isEditing} />
+                        </div>
+                         <div>
+                            <Label htmlFor="agentCommission">Commission Amount</Label>
+                            <Input id="agentCommission" type="number" value={vendorData.agentCommission || 0} onChange={(e) => handleInputChange('agentCommission', parseFloat(e.target.value) || 0)} disabled={!isEditing} />
+                        </div>
+                    </div>
+                </CardContent>
+                 {isEditing && (
+                    <CardFooter>
+                        <Button onClick={handleSaveClick} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save Agent Info
+                        </Button>
+                    </CardFooter>
+                 )}
+            </Card>
+        </TabsContent>
       </Tabs>
       
 
@@ -547,3 +547,4 @@ export default function VendorPage() {
     </div>
   );
 }
+
