@@ -89,19 +89,20 @@ export async function getAllTenants() {
 export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
   try {
     const allTenants = await getTenants();
-    const { code } = dataToSave.tenantData;
-
+    
     if (isNewRecord) {
+        const { code } = dataToSave.tenantData;
         const tenantExists = allTenants.some((l: any) => l.tenantData.code === code);
         if (tenantExists) {
             return { success: false, error: `Tenant with code "${code}" already exists.` };
         }
         const newTenant = {
-            id: `T-${Date.now()}`,
+            id: `T${Date.now()}`,
             ...dataToSave
         };
         allTenants.push(newTenant);
     } else {
+        const { code } = dataToSave.tenantData;
         const index = allTenants.findIndex((l: any) => l.tenantData.code === code);
 
         if (index !== -1) {
@@ -128,6 +129,23 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
 export async function findTenantData(tenantCode: string) {
   try {
     const allTenants = await getTenants();
+
+    if (tenantCode === 'new') {
+        let maxNum = 0;
+        allTenants.forEach((t: any) => {
+            const code = t.tenantData.code || '';
+            const match = code.match(/^T(\d+)$/);
+            if(match) {
+                const num = parseInt(match[1], 10);
+                if (num > maxNum) {
+                    maxNum = num;
+                }
+            }
+        });
+        const newCode = `T${(maxNum + 1).toString().padStart(3, '0')}`;
+        return { success: true, data: { tenantData: { code: newCode } } };
+    }
+
     const tenant = allTenants.find((l: any) => l.tenantData.code === tenantCode);
 
     if (tenant) {

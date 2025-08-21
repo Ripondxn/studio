@@ -125,10 +125,7 @@ export default function TenantPage() {
     } else {
         setIsNewRecord(true);
         setIsEditing(true); 
-        setTenantData(initialTenantData);
-        setAttachments([]);
-        setContractData({});
-        setUnitData({});
+        handleFindClick('new');
     }
   }, [searchParams]);
 
@@ -176,7 +173,8 @@ export default function TenantPage() {
   };
 
   const setAllData = (data: any) => {
-    setTenantData(data.tenantData || initialTenantData);
+    const fullTenantData = { ...initialTenantData, ...(data.tenantData || {}) };
+    setTenantData(fullTenantData);
     setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
     setContractData(data.contractData || {});
     setUnitData(data.unitData || {});
@@ -185,7 +183,8 @@ export default function TenantPage() {
   }
 
   const setInitialAllData = (data: any) => {
-    setInitialData(JSON.parse(JSON.stringify(data.tenantData || initialTenantData)));
+    const fullTenantData = { ...initialTenantData, ...(data.tenantData || {}) };
+    setInitialData(JSON.parse(JSON.stringify(fullTenantData)));
     setInitialAttachments(JSON.parse(JSON.stringify(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : [])));
   }
 
@@ -266,24 +265,23 @@ export default function TenantPage() {
     try {
       const result = await findTenantData(codeToFind);
       if (result.success && result.data) {
-        toast({
-          title: 'Found',
-          description: `Found record for Tenant Code: ${codeToFind}`,
-        });
         setAllData(result.data);
-        setInitialAllData(result.data);
-        setIsNewRecord(false);
-        setIsEditing(false);
+        if (codeToFind !== 'new') {
+            setInitialAllData(result.data);
+            setIsNewRecord(false);
+            setIsEditing(false);
+        } else {
+            setInitialAllData({ tenantData: { ...initialTenantData, code: result.data.tenantData.code } });
+            setIsNewRecord(true);
+            setIsEditing(true);
+        }
       } else {
         toast({
           variant: 'destructive',
           title: 'Not Found',
           description: `No record found for Tenant Code: ${codeToFind}. You can create a new one.`,
         });
-        const newTenant = { ...initialTenantData, code: codeToFind };
-        setAllData({ tenantData: newTenant, contractData: {}, unitData: {}, roomData: {}, partitionData: {} });
-        setIsNewRecord(true);
-        setIsEditing(true);
+        handleFindClick('new');
       }
     } catch (error) {
       toast({
@@ -368,10 +366,10 @@ export default function TenantPage() {
                         <div className="flex items-end gap-2">
                             <div className="flex-grow">
                                 <Label htmlFor="code">Code</Label>
-                                <Input id="code" value={tenantData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
+                                <Input id="code" value={tenantData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled />
                             </div>
-                            <Button variant="outline" size="icon" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
-                                {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                            <Button variant="outline" size="icon" onClick={() => router.push('/tenancy/tenants/add')} disabled={isFinding || !isNewRecord}>
+                                <Plus className="h-4 w-4" />
                             </Button>
                         </div>
                         <div>
