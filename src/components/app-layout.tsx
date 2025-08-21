@@ -108,6 +108,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         icon: <Banknote />,
         subItems: [
             { href: '/finance/chart-of-accounts', label: 'Chart of Accounts' },
+            { href: '/finance/cheque-deposit', label: 'Cheque Deposit' },
         ]
     },
     {
