@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
