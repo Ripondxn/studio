@@ -219,7 +219,7 @@ export default function LeaseContractPage() {
         toast({
             variant: 'destructive',
             title: 'Missing Information',
-            description: 'Please provide Total Rent, Number of Payments, and a Start Date.'
+            description: 'Please provide Rental Amount, Number of Payments, and a Start Date.'
         });
         return;
     }
@@ -439,7 +439,7 @@ export default function LeaseContractPage() {
               <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
             </div>
             <div>
-                <Label htmlFor="rent-amount">Total Rent</Label>
+                <Label htmlFor="rent-amount">Rental Amount</Label>
                 <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
             </div>
              <div className="grid grid-cols-3 gap-2">

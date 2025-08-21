@@ -183,7 +183,7 @@ export const columns: ColumnDef<LeaseContract>[] = [
   },
   {
     accessorKey: 'totalRentWithVat',
-    header: () => <div className="text-right">Rent Amount</div>,
+    header: () => <div className="text-right">Rental Amount</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('totalRentWithVat') || row.original.totalRent);
       const formatted = new Intl.NumberFormat('en-US', {
