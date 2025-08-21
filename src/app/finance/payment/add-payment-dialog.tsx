@@ -232,7 +232,7 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="referenceNo">Reference No.</Label>
-                    <Input id="referenceNo" placeholder="Cheque No, Transaction ID, etc." {...register('referenceNo')} />
+                    <Input id="referenceNo" placeholder="Cheque No, Transaction ID, Installment ID etc." {...register('referenceNo')} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="remarks">Remarks</Label>

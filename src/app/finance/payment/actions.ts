@@ -59,6 +59,7 @@ export async function addPayment(data: Omit<Payment, 'id'>) {
         await writePayments(allPayments);
         
         revalidatePath('/finance/payment');
+        revalidatePath('/finance/due-payments');
         return { success: true, data: newPayment };
 
     } catch (error) {
