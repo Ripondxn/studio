@@ -1,11 +1,23 @@
 
 'use client';
 
+import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash, FileText, DollarSign } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { type Invoice } from './schema';
 import { deleteInvoice } from './actions';
@@ -18,9 +30,10 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
   const ActionsCell = ({ row }: { row: { original: Invoice } }) => {
     const { toast } = useToast();
     const router = useRouter();
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
-        if(!confirm('Are you sure you want to delete this invoice?')) return;
+        setIsDeleting(true);
         const result = await deleteInvoice(row.original.id);
         if (result.success) {
             toast({ title: 'Invoice Deleted' });
@@ -28,32 +41,51 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error });
         }
+        setIsDeleting(false);
     }
 
     const isPaidOrCancelled = row.original.status === 'Paid' || row.original.status === 'Cancelled';
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Open menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onView(row.original)}><FileText className="mr-2 h-4 w-4" /> View/Print</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(row.original)} disabled={isPaidOrCancelled}>
-                    <Edit className="mr-2 h-4 w-4" /> Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onRecordPayment(row.original)} disabled={isPaidOrCancelled}>
-                    <DollarSign className="mr-2 h-4 w-4" /> Record Payment
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
-                    <Trash className="mr-2 h-4 w-4" /> Delete
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <AlertDialog>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onView(row.original)}><FileText className="mr-2 h-4 w-4" /> View/Print</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onEdit(row.original)} disabled={isPaidOrCancelled}>
+                        <Edit className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onRecordPayment(row.original)} disabled={isPaidOrCancelled}>
+                        <DollarSign className="mr-2 h-4 w-4" /> Record Payment
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                            <Trash className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                </DropdownMenuContent>
+            </DropdownMenu>
+             <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete invoice {row.original.invoiceNo}.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     )
   }
 
