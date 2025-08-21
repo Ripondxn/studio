@@ -109,7 +109,7 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         
         const accountPayments = allPayments.filter((p: Payment) => {
              if (accountId === pettyCashAccount.id) {
-                return p.paymentMethod === 'Cash' && p.paymentFrom === 'Petty Cash';
+                return p.paymentMethod === 'Cash';
             }
             return p.bankAccountId === accountId
         });
@@ -120,3 +120,5 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         return [];
     }
 }
+
+    

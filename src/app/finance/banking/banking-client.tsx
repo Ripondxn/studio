@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreVertical, Edit, Trash2, Banknote, Landmark, Loader2, Wallet } from 'lucide-react';
+import { Plus, MoreVertical, Edit, Trash2, Banknote, Landmark, Loader2, Wallet, ArrowRightLeft } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -133,7 +133,7 @@ const BankAccountCard = ({ account, onEdit, onDelete }: { account: BankAccount, 
     const isPettyCash = account.id === 'acc_3';
 
     return (
-        <Card>
+        <Card className="flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-full bg-primary/10 text-primary">
@@ -176,7 +176,7 @@ const BankAccountCard = ({ account, onEdit, onDelete }: { account: BankAccount, 
                     </DropdownMenuContent>
                 </DropdownMenu>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-grow">
                 <p className="text-sm text-muted-foreground">Current Balance</p>
                 <p className="text-3xl font-bold">
                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: account.currency }).format(account.balance)}
@@ -251,3 +251,5 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
     </div>
   );
 }
+
+    

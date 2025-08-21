@@ -101,3 +101,5 @@ export function TransactionHistoryDialog({ account }: { account: BankAccount }) 
     </Dialog>
   );
 }
+
+    
