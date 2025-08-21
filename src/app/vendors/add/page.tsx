@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -12,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,11 +72,6 @@ const initialVendorData: Vendor = {
     bankName: '',
     accountNumber: '',
     iban: '',
-    agentCode: '',
-    agentName: '',
-    agentMobile: '',
-    agentEmail: '',
-    agentCommission: 0,
 };
 
 export default function VendorPage() {
@@ -300,7 +295,7 @@ export default function VendorPage() {
                 <>
                     <Button type="submit" disabled={isSaving}>
                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    {isSaving ? 'Saving...' : 'Save All'}
+                    Save
                     </Button>
                     <Button type="button" variant="ghost" onClick={handleCancelClick}>
                     <X className="mr-2 h-4 w-4" /> Cancel
@@ -317,7 +312,6 @@ export default function VendorPage() {
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
-            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="vendor-info">
@@ -433,53 +427,6 @@ export default function VendorPage() {
                         </FormItem>
                       )}
                     />
-                </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="agent-info">
-             <Card>
-                <CardHeader>
-                    <CardTitle>Agent Information</CardTitle>
-                    <CardDescription>Details of the agent associated with this vendor.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField
-                            control={form.control}
-                            name="agentCode"
-                            render={({ field }) => (
-                                <FormItem><Label>Agent Code</Label><FormControl><Input {...field} disabled /></FormControl><FormMessage /></FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="agentName"
-                            render={({ field }) => (
-                                <FormItem><Label>Agent Name</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl><FormMessage /></FormItem>
-                            )}
-                        />
-                       <FormField
-                            control={form.control}
-                            name="agentMobile"
-                            render={({ field }) => (
-                                <FormItem><Label>Agent Mobile</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl><FormMessage /></FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="agentEmail"
-                            render={({ field }) => (
-                                <FormItem><Label>Agent Email</Label><FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl><FormMessage /></FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="agentCommission"
-                            render={({ field }) => (
-                                <FormItem><Label>Commission Amount</Label><FormControl><Input {...field} type="number" disabled={!isEditing} /></FormControl><FormMessage /></FormItem>
-                            )}
-                        />
-                    </div>
                 </CardContent>
             </Card>
         </TabsContent>

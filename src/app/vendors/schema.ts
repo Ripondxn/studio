@@ -20,20 +20,6 @@ export const vendorSchema = z.object({
   accountNumber: z.string().optional(),
   iban: z.string().optional(),
   attachments: z.array(attachmentSchema).optional(),
-  agentCode: z.string().optional(),
-  agentName: z.string().optional(),
-  agentMobile: z.string().optional(),
-  agentEmail: z.string().email("Invalid email address.").optional().or(z.literal('')),
-  agentCommission: z.coerce.number().optional(),
-}).refine(data => {
-    // If any agent field is filled, agentName becomes required.
-    if (data.agentMobile || data.agentEmail || (data.agentCommission && data.agentCommission > 0)) {
-        return !!data.agentName;
-    }
-    return true;
-}, {
-    message: "Agent name is required if other agent details are provided.",
-    path: ["agentName"],
 });
 
 

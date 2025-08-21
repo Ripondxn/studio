@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -12,6 +13,14 @@ export const columns: ColumnDef<Agent>[] = [
   {
     accessorKey: 'code',
     header: 'Agent Code',
+    cell: ({ row }) => {
+        const agent = row.original;
+        return (
+             <Button variant="link" asChild className="p-0 h-auto font-normal">
+                <Link href={`/vendors/add?code=${agent.vendorCode}`}>{agent.code}</Link>
+            </Button>
+        )
+    }
   },
   {
     accessorKey: 'name',
