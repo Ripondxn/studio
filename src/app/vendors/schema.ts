@@ -1,5 +1,4 @@
 
-
 import { z } from 'zod';
 
 export const attachmentSchema = z.object({
@@ -21,6 +20,11 @@ export const vendorSchema = z.object({
   accountNumber: z.string().optional(),
   iban: z.string().optional(),
   attachments: z.array(attachmentSchema).optional(),
+  agentCode: z.string().optional(),
+  agentName: z.string().optional(),
+  agentMobile: z.string().optional(),
+  agentEmail: z.string().email("Invalid email address.").optional().or(z.literal('')),
+  agentCommission: z.coerce.number().optional(),
 });
 
 

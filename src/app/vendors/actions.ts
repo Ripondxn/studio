@@ -4,6 +4,8 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
+import { vendorSchema } from './schema';
+import { z } from 'zod';
 
 const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
 
@@ -124,6 +126,51 @@ export async function deleteVendorData(vendorCode: string) {
         return { success: true };
     } catch (error) {
         console.error('Failed to delete vendor data:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+const updateAgentSchema = z.object({
+  vendorCode: z.string(),
+  agentCode: z.string().optional(),
+  agentName: z.string().optional(),
+  agentMobile: z.string().optional(),
+  agentEmail: z.string().email().optional().or(z.literal('')),
+  agentCommission: z.coerce.number().optional(),
+});
+
+
+export async function updateAgentData(data: z.infer<typeof updateAgentSchema>) {
+    const validation = updateAgentSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: 'Invalid data format for agent update.' };
+    }
+
+    try {
+        const allVendors = await getVendors();
+        const vendorIndex = allVendors.findIndex((v: any) => v.vendorData.code === data.vendorCode);
+
+        if (vendorIndex === -1) {
+            return { success: false, error: 'Associated vendor not found.' };
+        }
+
+        // Update only the agent fields
+        allVendors[vendorIndex].vendorData = {
+            ...allVendors[vendorIndex].vendorData,
+            agentCode: data.agentCode,
+            agentName: data.agentName,
+            agentMobile: data.agentMobile,
+            agentEmail: data.agentEmail,
+            agentCommission: data.agentCommission,
+        };
+        
+        await writeVendors(allVendors);
+        revalidatePath('/vendors/agents');
+        revalidatePath(`/vendors/add?code=${data.vendorCode}`);
+
+        return { success: true, data: allVendors[vendorIndex] };
+    } catch (error) {
+        console.error('Failed to update agent data:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }
