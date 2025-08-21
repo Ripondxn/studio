@@ -312,7 +312,6 @@ export default function VendorPage() {
       <Tabs defaultValue="vendor-info">
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
-            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
@@ -382,73 +381,6 @@ export default function VendorPage() {
                         <FormItem className="md:col-span-2">
                            <Label htmlFor="address">Address</Label>
                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                </div>
-                </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="agent-info">
-             <Card>
-                <CardHeader>
-                <CardTitle>Agent Information</CardTitle>
-                <CardDescription>Fill in the details of the associated agent.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="agentCode"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentCode">Agent Code</Label>
-                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="agentName"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentName">Agent Name</Label>
-                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="agentMobile"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentMobile">Agent Mobile No</Label>
-                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name="agentEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentEmail">Agent Email</Label>
-                           <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name="agentCommission"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentCommission">Commission Amount</Label>
-                           <FormControl><Input {...field} type="number" disabled={!isEditing} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
