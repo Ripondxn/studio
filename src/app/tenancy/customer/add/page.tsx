@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -46,6 +47,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveCustomerData, findCustomerData, deleteCustomerData } from '../actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Attachment = {
   id: number;
@@ -315,8 +317,13 @@ export default function CustomerAddPage() {
             </Button>
         </div>
       </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
+      <Tabs defaultValue="info">
+        <TabsList>
+            <TabsTrigger value="info">Customer Information</TabsTrigger>
+            <TabsTrigger value="attachments">Attachments</TabsTrigger>
+        </TabsList>
+        <TabsContent value="info">
+            <Card>
                 <CardHeader>
                 <CardTitle>Customer Information</CardTitle>
                 <CardDescription>Fill in the details of the customer.</CardDescription>
@@ -351,7 +358,8 @@ export default function CustomerAddPage() {
                 </div>
                 </CardContent>
             </Card>
-
+        </TabsContent>
+        <TabsContent value="attachments">
             <Card>
                 <CardHeader>
                     <CardTitle>Attachments</CardTitle>
@@ -428,7 +436,8 @@ export default function CustomerAddPage() {
                     </Button>
                 </CardContent>
             </Card>
-        </div>
+        </TabsContent>
+      </Tabs>
 
 
        <div className="mt-6 flex justify-end">

@@ -67,5 +67,19 @@
     "remarks": "Payment for installment LA-1755754374045-1",
     "status": "Paid",
     "id": "PAY-1755784896866"
+  },
+  {
+    "type": "Payment",
+    "date": "2025-08-21",
+    "partyType": "Landlord",
+    "partyName": "Emaar Properties",
+    "amount": 28000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "bankAccountId": "acc_1",
+    "referenceNo": "cash transation",
+    "remarks": "",
+    "status": "Paid",
+    "id": "PAY-1755786523956"
   }
 ]
