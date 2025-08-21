@@ -51,7 +51,7 @@ async function createChequesFromLeaseContract(contract: LeaseContract) {
                 chequeNo: installment.chequeNo,
                 chequeDate: installment.dueDate,
                 amount: installment.amount,
-                bankName: '',
+                bankName: installment.bankName || '',
                 status: 'In Hand',
                 type: 'Outgoing',
                 partyName: landlordName,
