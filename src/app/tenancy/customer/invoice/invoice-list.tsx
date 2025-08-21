@@ -34,7 +34,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
         }
     }, [customerCode, fetchInvoices]);
 
-    const handleAddClick = () => {
+    const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
         setIsInvoiceDialogOpen(true);
@@ -84,7 +84,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPaymentClick()}>Receive Payment</Button>
-                        <Button onClick={handleAddClick}>
+                        <Button onClick={handleCreateClick}>
                             <Plus className="mr-2 h-4 w-4" /> Create Invoice
                         </Button>
                     </div>
