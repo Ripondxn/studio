@@ -26,7 +26,7 @@ export function DuePaymentsClient({ initialPayments, initialSummary }: { initial
   const refreshData = async () => {
     setIsLoading(true);
     const paymentsResult = await getDuePayments();
-    const summaryResult = getSummary(paymentsResult);
+    const summaryResult = await getSummary(paymentsResult);
     setPayments(paymentsResult);
     setSummary(summaryResult);
     setIsLoading(false);

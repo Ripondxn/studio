@@ -106,7 +106,7 @@ export async function getDuePayments(): Promise<DuePayment[]> {
     return dueItems.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 }
 
-export function getSummary(duePayments: DuePayment[]) {
+export async function getSummary(duePayments: DuePayment[]) {
     const summary = {
         totalReceivable: 0,
         totalPayable: 0,
