@@ -1,4 +1,5 @@
 
+
 import { getAllAgents } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -19,7 +20,7 @@ export default async function AgentsPage() {
         </div>
         <Button asChild>
             <Link href="/vendors/add">
-                <Plus className="mr-2 h-4 w-4" /> Add New Agent
+                <Plus className="mr-2 h-4 w-4" /> Add New Vendor/Agent
             </Link>
         </Button>
       </div>
