@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -47,6 +46,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveVendorData, findVendorData, deleteVendorData } from '../actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Attachment = {
   id: number;
@@ -66,6 +66,10 @@ const initialVendorData = {
     bankName: '',
     accountNumber: '',
     iban: '',
+    agentName: '',
+    agentMobile: '',
+    agentEmail: '',
+    agentCommission: 0,
 };
 
 export default function VendorPage() {
@@ -107,7 +111,7 @@ export default function VendorPage() {
     }
   }, [searchParams]);
 
-  const handleInputChange = (field: keyof typeof vendorData, value: string) => {
+  const handleInputChange = (field: keyof typeof vendorData, value: string | number) => {
     setVendorData(prev => ({ ...prev, [field]: value }));
   };
   
@@ -319,140 +323,180 @@ export default function VendorPage() {
             </Button>
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendor Information</CardTitle>
-          <CardDescription>Fill in the details of the vendor.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-end gap-2">
-                <div className="flex-grow">
-                    <Label htmlFor="code">Code</Label>
-                    <Input id="code" value={vendorData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
-                </div>
-                <Button variant="outline" size="icon" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
-                    {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                </Button>
-            </div>
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" value={vendorData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
-            </div>
-            <div>
-              <Label htmlFor="mobile">Mobile No</Label>
-              <Input id="mobile" value={vendorData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={vendorData.email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={!isEditing} />
-            </div>
-            <div className="md:col-span-2">
-              <Label htmlFor="address">Address</Label>
-              <Input id="address" value={vendorData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <Card>
-            <CardHeader>
-                <CardTitle>Bank Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                 <div>
-                    <Label htmlFor="bankName">Bank Name</Label>
-                    <Input id="bankName" value={vendorData.bankName} onChange={(e) => handleInputChange('bankName', e.target.value)} disabled={!isEditing} />
+      <Tabs defaultValue="vendor-info">
+        <TabsList>
+            <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
+            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
+            <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
+            <TabsTrigger value="attachments">Attachments</TabsTrigger>
+        </TabsList>
+        <TabsContent value="vendor-info">
+            <Card>
+                <CardHeader>
+                <CardTitle>Vendor Information</CardTitle>
+                <CardDescription>Fill in the details of the vendor.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="flex items-end gap-2">
+                        <div className="flex-grow">
+                            <Label htmlFor="code">Code</Label>
+                            <Input id="code" value={vendorData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
+                        </div>
+                        <Button variant="outline" size="icon" onClick={() => handleFindClick()} disabled={isFinding || !isNewRecord}>
+                            {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                        </Button>
+                    </div>
+                    <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" value={vendorData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
+                    </div>
+                    <div>
+                    <Label htmlFor="mobile">Mobile No</Label>
+                    <Input id="mobile" value={vendorData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} />
+                    </div>
+                    <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" value={vendorData.email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={!isEditing} />
+                    </div>
+                    <div className="md:col-span-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input id="address" value={vendorData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
+                    </div>
                 </div>
-                <div>
-                    <Label htmlFor="accountNumber">Account No</Label>
-                    <Input id="accountNumber" value={vendorData.accountNumber} onChange={(e) => handleInputChange('accountNumber', e.target.value)} disabled={!isEditing} />
-                </div>
-                <div>
-                    <Label htmlFor="iban">IBAN No</Label>
-                    <Input id="iban" value={vendorData.iban} onChange={(e) => handleInputChange('iban', e.target.value)} disabled={!isEditing} />
-                </div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Attachments</CardTitle>
-            </CardHeader>
-            <CardContent>
-                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                        <TableHead>Attachment Name</TableHead>
-                        <TableHead>File / Link</TableHead>
-                        <TableHead>Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {attachments.map((item, index) => (
-                            <TableRow key={item.id}>
-                                <TableCell>
-                                    <Input 
-                                        value={item.name} 
-                                        onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
-                                        disabled={!isEditing} 
-                                        placeholder="e.g. Trade License"
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                     <div className="flex items-center gap-2">
-                                        {item.isLink ? (
-                                            <Input
-                                                type="text"
-                                                placeholder="https://example.com"
-                                                value={typeof item.file === 'string' ? item.file : ''}
-                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
-                                                disabled={!isEditing}
-                                            />
-                                        ) : (
-                                            <Input
-                                                type="file"
-                                                className="text-sm w-full"
-                                                ref={(el) => (fileInputRefs.current[index] = el)}
-                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                                disabled={!isEditing}
-                                            />
-                                        )}
-                                        <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
-                                            {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                                        </Button>
-                                    </div>
-                                    {item.url && !item.isLink && (
-                                        <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                            View Uploaded File
-                                        </Link>
-                                    )}
-                                     {item.file && typeof item.file === 'string' && (
-                                        item.isLink && item.file.startsWith('http') ? (
-                                             <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                Open Link
-                                            </Link>
-                                        ) : (
-                                             !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                        )
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                                </TableCell>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="agent-info">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Agent Information</CardTitle>
+                    <CardDescription>Details of the agent associated with this vendor.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <Label htmlFor="agentName">Agent Name</Label>
+                            <Input id="agentName" value={vendorData.agentName} onChange={(e) => handleInputChange('agentName', e.target.value)} disabled={!isEditing} />
+                        </div>
+                        <div>
+                            <Label htmlFor="agentMobile">Agent Mobile</Label>
+                            <Input id="agentMobile" value={vendorData.agentMobile} onChange={(e) => handleInputChange('agentMobile', e.target.value)} disabled={!isEditing} />
+                        </div>
+                        <div>
+                            <Label htmlFor="agentEmail">Agent Email</Label>
+                            <Input id="agentEmail" value={vendorData.agentEmail} onChange={(e) => handleInputChange('agentEmail', e.target.value)} disabled={!isEditing} />
+                        </div>
+                         <div>
+                            <Label htmlFor="agentCommission">Commission Amount</Label>
+                            <Input id="agentCommission" type="number" value={vendorData.agentCommission} onChange={(e) => handleInputChange('agentCommission', parseFloat(e.target.value) || 0)} disabled={!isEditing} />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="bank-details">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Bank Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 max-w-lg">
+                    <div>
+                        <Label htmlFor="bankName">Bank Name</Label>
+                        <Input id="bankName" value={vendorData.bankName} onChange={(e) => handleInputChange('bankName', e.target.value)} disabled={!isEditing} />
+                    </div>
+                    <div>
+                        <Label htmlFor="accountNumber">Account No</Label>
+                        <Input id="accountNumber" value={vendorData.accountNumber} onChange={(e) => handleInputChange('accountNumber', e.target.value)} disabled={!isEditing} />
+                    </div>
+                    <div>
+                        <Label htmlFor="iban">IBAN No</Label>
+                        <Input id="iban" value={vendorData.iban} onChange={(e) => handleInputChange('iban', e.target.value)} disabled={!isEditing} />
+                    </div>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="attachments">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Attachments</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Attachment Name</TableHead>
+                            <TableHead>File / Link</TableHead>
+                            <TableHead>Action</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                <Button variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
-                    <Plus className="mr-2 h-4 w-4"/> Add Attachment
-                </Button>
-            </CardContent>
-        </Card>
-      </div>
+                        </TableHeader>
+                        <TableBody>
+                            {attachments.map((item, index) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>
+                                        <Input 
+                                            value={item.name} 
+                                            onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                            disabled={!isEditing} 
+                                            placeholder="e.g. Trade License"
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            {item.isLink ? (
+                                                <Input
+                                                    type="text"
+                                                    placeholder="https://example.com"
+                                                    value={typeof item.file === 'string' ? item.file : ''}
+                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                    disabled={!isEditing}
+                                                />
+                                            ) : (
+                                                <Input
+                                                    type="file"
+                                                    className="text-sm w-full"
+                                                    ref={(el) => (fileInputRefs.current[index] = el)}
+                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                    disabled={!isEditing}
+                                                />
+                                            )}
+                                            <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                                {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                            </Button>
+                                        </div>
+                                        {item.url && !item.isLink && (
+                                            <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                View Uploaded File
+                                            </Link>
+                                        )}
+                                        {item.file && typeof item.file === 'string' && (
+                                            item.isLink && item.file.startsWith('http') ? (
+                                                <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                    Open Link
+                                                </Link>
+                                            ) : (
+                                                !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                            )
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                    <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    <Button variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                        <Plus className="mr-2 h-4 w-4"/> Add Attachment
+                    </Button>
+                </CardContent>
+            </Card>
+        </TabsContent>
+      </Tabs>
+      
 
        <div className="mt-6 flex justify-end">
          <AlertDialog>
