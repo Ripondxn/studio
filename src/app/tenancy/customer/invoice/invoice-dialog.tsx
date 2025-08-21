@@ -70,14 +70,32 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   });
 
   const watchedItems = watch('items');
-  const watchedTax = watch('tax');
+  const watchedTaxRate = watch('taxRate');
+  const watchedTaxType = watch('taxType');
 
   useEffect(() => {
     if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    setValue('subTotal', subTotal);
-    setValue('total', subTotal + (watchedTax || 0));
-  }, [watchedItems, watchedTax, setValue]);
+    const taxRate = watchedTaxRate || 0;
+    
+    let taxAmount = 0;
+    let totalAmount = subTotal;
+    let finalSubTotal = subTotal;
+
+    if (watchedTaxType === 'exclusive') {
+        taxAmount = subTotal * (taxRate / 100);
+        totalAmount = subTotal + taxAmount;
+    } else { // inclusive
+        taxAmount = subTotal - (subTotal / (1 + (taxRate / 100)));
+        finalSubTotal = subTotal - taxAmount;
+        totalAmount = subTotal;
+    }
+
+    setValue('subTotal', finalSubTotal);
+    setValue('tax', taxAmount);
+    setValue('total', totalAmount);
+
+  }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
 
   useEffect(() => {
     if (isOpen) {
@@ -90,9 +108,11 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             customerName: customer.name,
             invoiceDate: format(new Date(), 'yyyy-MM-dd'),
             dueDate: format(new Date(), 'yyyy-MM-dd'),
-            items: [{ id: 'item-1', description: '', quantity: 1, unitPrice: 0, total: 0 }],
+            items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
             subTotal: 0,
             tax: 0,
+            taxType: 'exclusive',
+            taxRate: 0,
             total: 0,
             notes: '',
             status: 'Draft',
@@ -201,28 +221,51 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                     </TableRow>
                 ))}
             </TableBody>
-            <TableFooter>
-                <TableRow>
-                    <TableCell colSpan={4} className="text-right">Subtotal</TableCell>
-                    <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('subTotal') || 0)}</TableCell>
-                    <TableCell></TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell colSpan={3}></TableCell>
-                    <TableCell className="text-right">Tax</TableCell>
-                    <TableCell><Input type="number" className="text-right" {...register('tax', { valueAsNumber: true })} /></TableCell>
-                    <TableCell></TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell colSpan={4} className="text-right font-bold">Total</TableCell>
-                    <TableCell className="text-right font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('total') || 0)}</TableCell>
-                    <TableCell></TableCell>
-                </TableRow>
-            </TableFooter>
           </Table>
           <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
              <Plus className="mr-2 h-4 w-4" /> Add Item
           </Button>
+
+            <div className="flex justify-end mt-4">
+                <div className="w-full max-w-sm space-y-2">
+                    <div className="flex justify-between items-center">
+                        <Label>Subtotal</Label>
+                        <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('subTotal') || 0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <Label>Tax</Label>
+                        <div className="flex items-center gap-2">
+                            <Controller
+                                name="taxType"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger className="w-[120px] h-8">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="exclusive">Exclusive</SelectItem>
+                                            <SelectItem value="inclusive">Inclusive</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            <div className="flex items-center gap-1">
+                                <Input type="number" className="w-[70px] h-8 text-right" {...register('taxRate', { valueAsNumber: true })} />
+                                <span className="text-sm font-medium">%</span>
+                            </div>
+                        </div>
+                    </div>
+                     <div className="flex justify-between items-center">
+                        <Label>Tax Amount</Label>
+                        <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('tax') || 0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t pt-2 mt-2">
+                        <Label className="text-lg font-bold">Total</Label>
+                        <span className="font-bold text-lg">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('total') || 0)}</span>
+                    </div>
+                </div>
+            </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div>

@@ -18,6 +18,8 @@ export const invoiceSchema = z.object({
   dueDate: z.string().min(1, 'Due date is required.'),
   items: z.array(invoiceItemSchema).min(1, 'At least one item is required.'),
   subTotal: z.number(),
+  taxType: z.enum(['exclusive', 'inclusive']).default('exclusive'),
+  taxRate: z.number().optional().default(0),
   tax: z.number(),
   total: z.number(),
   amountPaid: z.number().optional().default(0),
