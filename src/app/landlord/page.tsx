@@ -1,4 +1,7 @@
 
+'use client';
+
+import * as React from 'react';
 import Link from 'next/link';
 import { columns } from './columns';
 import { Button } from '@/components/ui/button';
@@ -50,29 +53,5 @@ function LandlordContent({ landlords }: { landlords: Landlord[] }) {
     </>
   );
 }
-
-// We need a client component to manage the view mode state
-function LandlordPageWrapper() {
-    const [landlords, setLandlords] = React.useState<Landlord[]>([]);
-    const [isLoading, setIsLoading] = React.useState(true);
-
-    React.useEffect(() => {
-        getAllLandlords().then(data => {
-            setLandlords(data);
-            setIsLoading(false);
-        });
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="container mx-auto py-10 flex justify-center items-center">
-                <p>Loading...</p>
-            </div>
-        )
-    }
-    
-    return <LandlordsPage/>
-}
-
 
 export default LandlordsPage;
