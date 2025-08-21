@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -214,12 +215,14 @@ export default function LandlordPage() {
   };
 
   const setAllData = (data: any) => {
-    setLandlordData(data.landlordData || initialLandlordData);
+    const fullLandlordData = { ...initialLandlordData, ...(data.landlordData || {}) };
+    setLandlordData(fullLandlordData);
     setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
   }
 
   const setInitialAllData = (data: any) => {
-    setInitialData(JSON.parse(JSON.stringify(data.landlordData || initialLandlordData)));
+    const fullLandlordData = { ...initialLandlordData, ...(data.landlordData || {}) };
+    setInitialData(JSON.parse(JSON.stringify(fullLandlordData)));
     setInitialAttachments(JSON.parse(JSON.stringify(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : [])));
   }
 
@@ -306,7 +309,7 @@ export default function LandlordPage() {
             setIsNewRecord(false);
             setIsEditing(false);
         } else {
-            setInitialAllData({ landlordData: { code: result.data.landlordData.code } });
+            setInitialAllData({ landlordData: { ...initialLandlordData, code: result.data.landlordData.code } });
             setIsNewRecord(true);
             setIsEditing(true);
         }
