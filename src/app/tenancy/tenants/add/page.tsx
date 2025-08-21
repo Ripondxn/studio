@@ -536,6 +536,11 @@ export default function TenantPage() {
                                         <div className="flex justify-between"><span>End Date:</span> <span className="font-medium">{format(new Date(contractData.endDate!), 'PP')}</span></div>
                                         <div className="flex justify-between"><span>Total Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(contractData.totalRent || 0)}</span></div>
                                         <div className="flex justify-between items-center"><span>Status:</span> <Badge>{contractData.status}</Badge></div>
+                                        <div className="flex justify-between items-center">
+                                            <span>Tawtheeq:</span> 
+                                            <Badge variant={contractData.tawtheeqStatus === 'Registered' ? 'default' : 'secondary'}>{contractData.tawtheeqStatus}</Badge>
+                                        </div>
+                                         {contractData.tawtheeqRegistrationNo && <div className="flex justify-between"><span>Reg No:</span> <span className="font-medium">{contractData.tawtheeqRegistrationNo}</span></div>}
                                         <Button asChild className="w-full mt-4">
                                             <Link href={`/tenancy/contract?id=${contractData.id}`}>View Full Contract</Link>
                                         </Button>
