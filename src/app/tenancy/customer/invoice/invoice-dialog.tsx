@@ -70,6 +70,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess 
   const watchedTax = watch('tax');
 
   useEffect(() => {
+    if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     setValue('subTotal', subTotal);
     setValue('total', subTotal + (watchedTax || 0));
@@ -145,7 +146,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess 
                         <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} /></TableCell>
                         <TableCell><Input type="number" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
                         <TableCell className="text-right">
-                           {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((watchedItems[index]?.quantity || 0) * (watchedItems[index]?.unitPrice || 0))}
+                           {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                         </TableCell>
                         <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
                     </TableRow>
@@ -181,16 +182,22 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess 
               </div>
               <div>
                 <Label>Status</Label>
-                <Select value={watch('status')} onValueChange={(value) => setValue('status', value)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Sent">Sent</SelectItem>
-                        <SelectItem value="Paid">Paid</SelectItem>
-                        <SelectItem value="Overdue">Overdue</SelectItem>
-                        <SelectItem value="Cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                </Select>
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Draft">Draft</SelectItem>
+                            <SelectItem value="Sent">Sent</SelectItem>
+                            <SelectItem value="Paid">Paid</SelectItem>
+                            <SelectItem value="Overdue">Overdue</SelectItem>
+                            <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
           </div>
 
@@ -206,4 +213,3 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess 
     </Dialog>
   );
 }
-
