@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -223,6 +224,15 @@ export default function VendorPage() {
   }
   
   const handleSaveAgentInfoClick = async () => {
+    const hasAgentInfo = vendorData.agentMobile || vendorData.agentEmail || vendorData.agentCommission > 0;
+    if (hasAgentInfo && !vendorData.agentName) {
+        toast({
+            variant: "destructive",
+            title: "Validation Error",
+            description: "Agent Name is required when other agent details are provided.",
+        });
+        return;
+    }
     await handleSaveClick();
   }
 
