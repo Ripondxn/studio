@@ -103,9 +103,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       ]
     },
     { 
-      href: '/vendors', 
       label: 'Vendor', 
       icon: <Users />,
+      subItems: [
+        { href: '/vendors', label: 'Vendors' },
+        { href: '/vendors/agents', label: 'Agents' },
+      ]
     },
     { 
         label: 'Finance', 
