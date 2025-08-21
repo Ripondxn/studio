@@ -362,57 +362,87 @@ export default function TenantPage() {
                 <TabsTrigger value="termination">Termination</TabsTrigger>
             </TabsList>
             <TabsContent value="info">
-                <Card>
-                    <CardHeader>
-                    <CardTitle>Tenant Information</CardTitle>
-                    <CardDescription>Fill in the details of the tenant.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="flex items-end gap-2">
-                            <div className="flex-grow">
-                                <Label htmlFor="code">Code</Label>
-                                <Input id="code" value={tenantData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled />
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                        <CardTitle>Tenant Information</CardTitle>
+                        <CardDescription>Fill in the details of the tenant.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="flex items-end gap-2">
+                                <div className="flex-grow">
+                                    <Label htmlFor="code">Code</Label>
+                                    <Input id="code" value={tenantData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled />
+                                </div>
+                                <Button variant="outline" size="icon" onClick={() => router.push('/tenancy/tenants/add')} disabled={isFinding || !isNewRecord}>
+                                    <Plus className="h-4 w-4" />
+                                </Button>
                             </div>
-                            <Button variant="outline" size="icon" onClick={() => router.push('/tenancy/tenants/add')} disabled={isFinding || !isNewRecord}>
-                                <Plus className="h-4 w-4" />
-                            </Button>
+                            <div>
+                            <Label htmlFor="name">Name</Label>
+                            <Input id="name" value={tenantData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
+                            </div>
+                            <div>
+                            <Label htmlFor="mobile">Mobile No</Label>
+                            <Input id="mobile" value={tenantData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} />
+                            </div>
+                            <div>
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" value={tenantData.email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={!isEditing} />
+                            </div>
+                            <div className="md:col-span-2">
+                            <Label htmlFor="address">Address</Label>
+                            <Input id="address" value={tenantData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
+                            </div>
+                            <div>
+                            <Label htmlFor="eid">EID/Passport/Visa</Label>
+                            <Input id="eid" value={tenantData.eid} onChange={(e) => handleInputChange('eid', e.target.value)} disabled={!isEditing} />
+                            </div>
+                            <div>
+                            <Label htmlFor="occupation">Occupation</Label>
+                            <Input id="occupation" value={tenantData.occupation} onChange={(e) => handleInputChange('occupation', e.target.value)} disabled={!isEditing} />
+                            </div>
+                            <div>
+                                <Label htmlFor="contractNo">Tenancy Contract No</Label>
+                                {contractData.id ? (
+                                <Button asChild variant="link" className="p-0 h-auto font-normal block truncate">
+                                    <Link href={`/tenancy/contract?id=${contractData.id}`}>{tenantData.contractNo}</Link>
+                                </Button>
+                                ) : (
+                                <Input id="contractNo" value={tenantData.contractNo} onChange={(e) => handleInputChange('contractNo', e.target.value)} disabled={!isEditing} />
+                                )}
+                            </div>
                         </div>
-                        <div>
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" value={tenantData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                        <Label htmlFor="mobile">Mobile No</Label>
-                        <Input id="mobile" value={tenantData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={tenantData.email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div className="md:col-span-2">
-                        <Label htmlFor="address">Address</Label>
-                        <Input id="address" value={tenantData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                          <Label htmlFor="eid">EID/Passport/Visa</Label>
-                          <Input id="eid" value={tenantData.eid} onChange={(e) => handleInputChange('eid', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                          <Label htmlFor="occupation">Occupation</Label>
-                          <Input id="occupation" value={tenantData.occupation} onChange={(e) => handleInputChange('occupation', e.target.value)} disabled={!isEditing} />
-                        </div>
-                         <div>
-                            <Label htmlFor="contractNo">Tenancy Contract No</Label>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Tawtheeq Registration</CardTitle>
+                            <CardDescription>View official registration details from the contract.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
                             {contractData.id ? (
-                              <Button asChild variant="link" className="p-0 h-auto font-normal block truncate">
-                                <Link href={`/tenancy/contract?id=${contractData.id}`}>{tenantData.contractNo}</Link>
-                              </Button>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <Label>Status</Label>
+                                        <Input value={contractData.tawtheeqStatus || 'N/A'} disabled />
+                                    </div>
+                                    <div>
+                                        <Label>Registration No</Label>
+                                        <Input value={contractData.tawtheeqRegistrationNo || 'N/A'} disabled />
+                                    </div>
+                                    <div>
+                                        <Label>Registration Date</Label>
+                                        <Input value={contractData.tawtheeqRegistrationDate ? format(new Date(contractData.tawtheeqRegistrationDate), 'PP') : 'N/A'} disabled />
+                                    </div>
+                                </div>
                             ) : (
-                               <Input id="contractNo" value={tenantData.contractNo} onChange={(e) => handleInputChange('contractNo', e.target.value)} disabled={!isEditing} />
+                                <p className="text-sm text-muted-foreground">No contract linked to view Tawtheeq details.</p>
                             )}
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Card>
@@ -424,7 +454,7 @@ export default function TenantPage() {
                                     <Label htmlFor="brokerName">Broker Name</Label>
                                     <Input id="brokerName" value={tenantData.brokerName} onChange={(e) => handleInputChange('brokerName', e.target.value)} disabled={!isEditing} />
                                 </div>
-                                 <div>
+                                <div>
                                     <Label htmlFor="brokerMobile">Broker Mobile</Label>
                                     <Input id="brokerMobile" value={tenantData.brokerMobile} onChange={(e) => handleInputChange('brokerMobile', e.target.value)} disabled={!isEditing} />
                                 </div>
@@ -515,8 +545,7 @@ export default function TenantPage() {
                             </CardContent>
                         </Card>
                     </div>
-                    </CardContent>
-                </Card>
+                </div>
             </TabsContent>
             <TabsContent value="rental-details">
                 <Card>
@@ -536,11 +565,6 @@ export default function TenantPage() {
                                         <div className="flex justify-between"><span>End Date:</span> <span className="font-medium">{format(new Date(contractData.endDate!), 'PP')}</span></div>
                                         <div className="flex justify-between"><span>Total Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(contractData.totalRent || 0)}</span></div>
                                         <div className="flex justify-between items-center"><span>Status:</span> <Badge>{contractData.status}</Badge></div>
-                                        <div className="flex justify-between items-center">
-                                            <span>Tawtheeq:</span> 
-                                            <Badge variant={contractData.tawtheeqStatus === 'Registered' ? 'default' : 'secondary'}>{contractData.tawtheeqStatus}</Badge>
-                                        </div>
-                                         {contractData.tawtheeqRegistrationNo && <div className="flex justify-between"><span>Reg No:</span> <span className="font-medium">{contractData.tawtheeqRegistrationNo}</span></div>}
                                         <Button asChild className="w-full mt-4">
                                             <Link href={`/tenancy/contract?id=${contractData.id}`}>View Full Contract</Link>
                                         </Button>
