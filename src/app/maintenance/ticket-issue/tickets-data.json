@@ -1,0 +1,48 @@
+
+[
+  {
+    "id": "TKT-001",
+    "ticketNo": "TKT-2024-001",
+    "requestDate": "2024-07-30",
+    "propertyCode": "LT-C38",
+    "unitCode": "101",
+    "tenantName": "Md Ripon Ahmed",
+    "issueType": "Plumbing",
+    "description": "Leaky faucet in the kitchen sink. It's been dripping for the past two days.",
+    "priority": "High",
+    "status": "Open",
+    "assignedTo": "plumbing_team",
+    "resolutionDetails": "",
+    "completedDate": ""
+  },
+  {
+    "id": "TKT-002",
+    "ticketNo": "TKT-2024-002",
+    "requestDate": "2024-07-29",
+    "propertyCode": "LT-C38",
+    "unitCode": "202",
+    "tenantName": "Monju Begum",
+    "issueType": "Electrical",
+    "description": "The main light in the living room is flickering constantly. Changing the bulb didn't help.",
+    "priority": "Medium",
+    "status": "In Progress",
+    "assignedTo": "sparky_co",
+    "resolutionDetails": "Electrician scheduled to visit on 2024-08-01.",
+    "completedDate": ""
+  },
+    {
+    "id": "TKT-003",
+    "ticketNo": "TKT-2024-003",
+    "requestDate": "2024-07-25",
+    "propertyCode": "LT-C38",
+    "unitCode": "G01",
+    "tenantName": "Another Tenant",
+    "issueType": "HVAC",
+    "description": "AC is not cooling properly. It runs but the air is not cold.",
+    "priority": "Urgent",
+    "status": "Completed",
+    "assignedTo": "ac_cool_guys",
+    "resolutionDetails": "Replaced the compressor and refilled the coolant. System is now working correctly.",
+    "completedDate": "2024-07-27"
+  }
+]
