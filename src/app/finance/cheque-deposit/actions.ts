@@ -91,11 +91,28 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
     }
 }
 
+export async function deleteCheque(chequeId: string) {
+    try {
+        const allCheques = await readCheques();
+        const updatedCheques = allCheques.filter(c => c.id !== chequeId);
+
+        if (allCheques.length === updatedCheques.length) {
+            return { success: false, error: 'Cheque not found.' };
+        }
+
+        await writeCheques(updatedCheques);
+        revalidatePath('/finance/cheque-deposit');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
+}
+
 export async function getLookups() {
-    const tenants: {tenantData: Tenant}[] = await fs.readFile(tenantsFilePath, 'utf-8').then(JSON.parse);
-    const landlords: {landlordData: Landlord}[] = await fs.readFile(landlordsFilePath, 'utf-8').then(JSON.parse);
-    const tenancyContracts: TenancyContract[] = await fs.readFile(tenancyContractsFilePath, 'utf-8').then(JSON.parse);
-    const leaseContracts: LeaseContract[] = await fs.readFile(leaseContractsFilePath, 'utf-8').then(JSON.parse);
+    const tenants: {tenantData: Tenant}[] = await fs.readFile(tenantsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const landlords: {landlordData: Landlord}[] = await fs.readFile(landlordsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const tenancyContracts: TenancyContract[] = await fs.readFile(tenancyContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const leaseContracts: LeaseContract[] = await fs.readFile(leaseContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
 
     return {
         tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),

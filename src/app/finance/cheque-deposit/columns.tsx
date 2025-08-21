@@ -27,10 +27,20 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { updateChequeStatus } from './actions';
+import { updateChequeStatus, deleteCheque } from './actions';
 import { Cheque } from './schema';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -110,24 +120,68 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
 
 const ActionsCell = ({ row }: { row: { original: Cheque } }) => {
     const router = useRouter();
+    const cheque = row.original;
+    const { toast } = useToast();
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        const result = await deleteCheque(cheque.id);
+        if (result.success) {
+            toast({
+                title: 'Cheque Deleted',
+                description: `Cheque "${cheque.chequeNo}" has been deleted.`,
+            });
+            router.refresh();
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: result.error || 'Failed to delete cheque.',
+            });
+        }
+        setIsDeleting(false);
+        setIsDeleteDialogOpen(false);
+    };
+
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <UpdateStatusDialog cheque={row.original} onUpdate={() => {}} />
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Cheque
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete cheque #{cheque.chequeNo}.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+            </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <UpdateStatusDialog cheque={row.original} onUpdate={() => router.refresh()} />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Cheque
+            </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+      </>
     );
 };
 
