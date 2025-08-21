@@ -25,45 +25,16 @@ import {
   Plus,
   Mail,
   Receipt,
+  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { getUnits } from '@/app/property/units/actions';
+import { getSummary as getChequeSummary } from '@/app/finance/cheque-deposit/actions';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
 import { Unit } from '@/app/property/units/schema';
-
-const kpiData = [
-  {
-    title: 'Vacancy Rate',
-    value: '12.5%',
-    change: '+1.2%',
-    changeType: 'increase' as const,
-    icon: <Home className="h-6 w-6 text-muted-foreground" />,
-  },
-  {
-    title: 'Total Monthly Rent Roll',
-    value: '$2,150,000',
-    change: '-0.5%',
-    changeType: 'decrease' as const,
-    icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />,
-  },
-  {
-    title: 'Contracts Expiring (30d)',
-    value: '42',
-    change: '+5',
-    changeType: 'increase' as const,
-    icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
-  },
-  {
-    title: 'Total Vacant Loss',
-    value: '$268,750',
-    change: '+3.1%',
-    changeType: 'increase' as const,
-    icon: <TrendingDown className="h-6 w-6 text-muted-foreground" />,
-  },
-];
 
 type ExpiryReportItem = {
     unit: string;
@@ -114,6 +85,38 @@ async function getVacantUnits() {
 export default async function Dashboard() {
   const expiryReport = await getExpiryReport();
   const vacantUnits = await getVacantUnits();
+  const chequeSummary = await getChequeSummary();
+
+  const kpiData = [
+    {
+      title: 'Vacancy Rate',
+      value: '12.5%',
+      change: '+1.2%',
+      changeType: 'increase' as const,
+      icon: <Home className="h-6 w-6 text-muted-foreground" />,
+    },
+    {
+      title: 'Total Monthly Rent Roll',
+      value: '$2,150,000',
+      change: '-0.5%',
+      changeType: 'decrease' as const,
+      icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />,
+    },
+    {
+      title: 'Contracts Expiring (30d)',
+      value: '42',
+      change: '+5',
+      changeType: 'increase' as const,
+      icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
+    },
+    {
+        title: 'Overdue Cheques',
+        value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(chequeSummary.overdueTotal),
+        change: `${chequeSummary.overdueCount} cheques`,
+        changeType: 'increase' as const,
+        icon: <AlertTriangle className="h-6 w-6 text-muted-foreground" />,
+      },
+  ];
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
