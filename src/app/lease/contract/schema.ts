@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const paymentInstallmentSchema = z.object({
@@ -6,6 +7,7 @@ export const paymentInstallmentSchema = z.object({
   dueDate: z.string(),
   amount: z.number(),
   status: z.enum(['paid', 'unpaid']),
+  chequeNo: z.string().optional(),
 });
 
 export const leaseContractSchema = z.object({

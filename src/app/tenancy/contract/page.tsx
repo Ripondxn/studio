@@ -9,7 +9,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
+  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -298,7 +298,7 @@ export default function TenancyContractPage() {
         ...prev,
         paymentSchedule: [
             ...prev.paymentSchedule,
-            { installment: prev.paymentSchedule.length + 1, dueDate: '', amount: 0, status: 'unpaid' }
+            { installment: prev.paymentSchedule.length + 1, dueDate: '', amount: 0, status: 'unpaid', chequeNo: '' }
         ]
     }));
   }
@@ -343,7 +343,8 @@ export default function TenancyContractPage() {
             installment: i + 1,
             dueDate: formatDate(dueDate, 'yyyy-MM-dd'),
             amount: installmentAmount,
-            status: 'unpaid'
+            status: 'unpaid',
+            chequeNo: ''
         });
     }
     
@@ -708,6 +709,7 @@ export default function TenancyContractPage() {
               <TableRow>
                 <TableHead>Installment</TableHead>
                 <TableHead>Due Date</TableHead>
+                <TableHead>Cheque No.</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
@@ -719,6 +721,9 @@ export default function TenancyContractPage() {
                 <TableCell>{item.installment}</TableCell>
                 <TableCell>
                   <Input type="date" value={item.dueDate} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!isEditing}/>
+                </TableCell>
+                <TableCell>
+                  <Input placeholder="Cheque number" value={item.chequeNo || ''} onChange={(e) => handleScheduleChange(index, 'chequeNo', e.target.value)} disabled={!isEditing}/>
                 </TableCell>
                 <TableCell>
                   <Input type="number" placeholder="Amount" value={item.amount} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!isEditing}/>

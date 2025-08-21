@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -7,6 +8,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { leaseContractSchema, type LeaseContract } from './schema';
 import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema';
+import { addCheque } from '@/app/finance/cheque-deposit/actions';
 
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
@@ -34,6 +36,32 @@ async function writeContracts(data: LeaseContract[]) {
     await fs.writeFile(contractsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+async function createChequesFromLeaseContract(contract: LeaseContract) {
+    if (contract.paymentMode !== 'cheque' || !contract.paymentSchedule) {
+        return;
+    }
+
+    const landlords = await readLandlords();
+    const landlord = landlords.find((l: any) => l.landlordData.code === contract.landlordCode);
+    const landlordName = landlord ? landlord.landlordData.name : 'Unknown Landlord';
+
+    for (const installment of contract.paymentSchedule) {
+        if (installment.chequeNo) {
+            await addCheque({
+                chequeNo: installment.chequeNo,
+                chequeDate: installment.dueDate,
+                amount: installment.amount,
+                bankName: '',
+                status: 'In Hand',
+                type: 'Outgoing',
+                partyName: landlordName,
+                property: contract.property,
+                contractNo: contract.contractNo,
+            });
+        }
+    }
+}
+
 export async function getAllLeaseContracts() {
     return await readContracts();
 }
@@ -48,6 +76,7 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
 
     try {
         const allContracts = await readContracts();
+        let savedContract: LeaseContract;
         
         if (isNewRecord) {
              const contractExists = allContracts.some(c => c.contractNo === data.contractNo);
@@ -59,10 +88,12 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
                 id: `LCON-${Date.now()}`,
             };
             allContracts.push(newContract);
+            savedContract = newContract;
         } else {
             const index = allContracts.findIndex(c => c.id === data.id);
             if (index !== -1) {
                 allContracts[index] = validation.data;
+                savedContract = validation.data;
             } else {
                  return { success: false, error: `Lease Contract with ID "${data.id}" not found.` };
             }
@@ -70,9 +101,12 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
         
         await writeContracts(allContracts);
         
+        await createChequesFromLeaseContract(savedContract);
+
         revalidatePath('/lease/contracts');
+        revalidatePath('/finance/cheque-deposit');
         revalidatePath(`/lease/contract?id=${data.id}`);
-        return { success: true, data: isNewRecord ? allContracts[allContracts.length - 1] : data };
+        return { success: true, data: savedContract };
 
     } catch (error) {
         console.error('Failed to save lease contract:', error);

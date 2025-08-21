@@ -12,6 +12,7 @@ import { type Floor } from '@/app/property/floors/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { type Partition } from '@/app/property/partitions/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
+import { addCheque } from '@/app/finance/cheque-deposit/actions';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
@@ -56,6 +57,28 @@ export async function getAllContracts() {
     return await readContracts();
 }
 
+async function createChequesFromContract(contract: Contract) {
+    if (contract.paymentMode !== 'cheque' || !contract.paymentSchedule) {
+        return;
+    }
+
+    for (const installment of contract.paymentSchedule) {
+        if (installment.chequeNo) {
+            await addCheque({
+                chequeNo: installment.chequeNo,
+                chequeDate: installment.dueDate,
+                amount: installment.amount,
+                bankName: '', // This can be enhanced later if needed
+                status: 'In Hand',
+                type: 'Incoming',
+                partyName: contract.tenantName,
+                property: contract.property,
+                contractNo: contract.contractNo,
+            });
+        }
+    }
+}
+
 export async function saveContractData(data: Contract, isNewRecord: boolean) {
     const validation = contractSchema.safeParse(data);
 
@@ -66,6 +89,7 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
 
     try {
         const allContracts = await readContracts();
+        let savedContract: Contract;
         
         if (isNewRecord) {
              const contractExists = allContracts.some(c => c.contractNo === data.contractNo);
@@ -77,20 +101,26 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
                 id: `CON-${Date.now()}`,
             };
             allContracts.push(newContract);
+            savedContract = newContract;
         } else {
             const index = allContracts.findIndex(c => c.id === data.id);
             if (index !== -1) {
                 allContracts[index] = validation.data;
+                savedContract = validation.data;
             } else {
                  return { success: false, error: `Contract with ID "${data.id}" not found.` };
             }
         }
         
         await writeContracts(allContracts);
+
+        // After successfully saving contract, create cheques
+        await createChequesFromContract(savedContract);
         
         revalidatePath('/tenancy/contracts');
+        revalidatePath('/finance/cheque-deposit');
         revalidatePath(`/tenancy/contract?id=${data.id}`);
-        return { success: true, data: isNewRecord ? allContracts[allContracts.length - 1] : data };
+        return { success: true, data: savedContract };
 
     } catch (error) {
         console.error('Failed to save contract:', error);
