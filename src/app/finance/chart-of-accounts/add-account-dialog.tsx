@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +31,7 @@ const accountFormSchema = accountSchema.extend({
   balance: z.number().optional(),
 });
 
-type AccountFormData = Zod.infer<typeof accountFormSchema>;
+type AccountFormData = z.infer<typeof accountFormSchema>;
 
 
 export function AddAccountDialog() {
