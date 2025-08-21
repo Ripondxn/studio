@@ -117,6 +117,16 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
       {
           accessorKey: 'unitCode',
           header: 'Unit',
+          cell: ({row}) => {
+            const invoice = row.original;
+            if (invoice.partitionCode) {
+              return <span>{invoice.unitCode} / {invoice.partitionCode}</span>
+            }
+            if (invoice.roomCode) {
+              return <span>{invoice.unitCode} / {invoice.roomCode}</span>
+            }
+            return invoice.unitCode;
+          }
       },
       {
           accessorKey: 'total',

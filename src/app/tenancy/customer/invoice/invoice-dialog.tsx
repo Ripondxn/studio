@@ -34,7 +34,7 @@ import { saveInvoice } from './actions';
 import { invoiceSchema, invoiceItemSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
-import { getContractLookups, getUnitsForProperty } from '../../contract/actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit } from '../../contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 
 const formSchema = invoiceSchema.omit({ id: true });
@@ -55,8 +55,10 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const printRef = useRef<HTMLDivElement>(null);
   const [lookups, setLookups] = useState<{
     properties: {value: string, label: string}[],
-    units: {value: string, label: string}[]
-  }>({ properties: [], units: [] });
+    units: {value: string, label: string}[],
+    rooms: {value: string, label: string}[],
+    partitions: {value: string, label: string}[]
+  }>({ properties: [], units: [], rooms: [], partitions: [] });
 
   const {
     register,
@@ -79,6 +81,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const watchedTaxRate = watch('taxRate');
   const watchedTaxType = watch('taxType');
   const watchedProperty = watch('property');
+  const watchedUnit = watch('unitCode');
 
   useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
@@ -95,6 +98,19 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     }
     fetchUnits();
   }, [watchedProperty]);
+
+  useEffect(() => {
+    const fetchSubUnits = async () => {
+        if (watchedProperty && watchedUnit) {
+            const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
+            const partitions = await getPartitionsForUnit(watchedProperty, watchedUnit);
+            setLookups(prev => ({...prev, rooms, partitions}));
+        } else {
+            setLookups(prev => ({...prev, rooms: [], partitions: []}));
+        }
+    }
+    fetchSubUnits();
+  }, [watchedProperty, watchedUnit]);
 
 
   useEffect(() => {
@@ -132,6 +148,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             customerName: customer.name,
             property: '',
             unitCode: '',
+            roomCode: '',
+            partitionCode: '',
             invoiceDate: format(new Date(), 'yyyy-MM-dd'),
             dueDate: format(new Date(), 'yyyy-MM-dd'),
             items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
@@ -225,7 +243,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div>
                     <Label>Property</Label>
                     <Controller
@@ -238,6 +256,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                                 onSelect={(value) => {
                                     field.onChange(value);
                                     setValue('unitCode', '');
+                                    setValue('roomCode', '');
+                                    setValue('partitionCode', '');
                                 }}
                                 placeholder="Select Property"
                             />
@@ -253,9 +273,45 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                             <Combobox
                                 options={lookups.units}
                                 value={field.value || ''}
-                                onSelect={field.onChange}
+                                onSelect={(value) => {
+                                    field.onChange(value);
+                                    setValue('roomCode', '');
+                                    setValue('partitionCode', '');
+                                }}
                                 placeholder="Select Unit"
                                 disabled={!watchedProperty}
+                            />
+                        )}
+                    />
+                </div>
+                <div>
+                    <Label>Room</Label>
+                     <Controller
+                        name="roomCode"
+                        control={control}
+                        render={({ field }) => (
+                            <Combobox
+                                options={lookups.rooms}
+                                value={field.value || ''}
+                                onSelect={field.onChange}
+                                placeholder="Select Room"
+                                disabled={!watchedUnit || lookups.rooms.length === 0}
+                            />
+                        )}
+                    />
+                </div>
+                 <div>
+                    <Label>Partition</Label>
+                     <Controller
+                        name="partitionCode"
+                        control={control}
+                        render={({ field }) => (
+                            <Combobox
+                                options={lookups.partitions}
+                                value={field.value || ''}
+                                onSelect={field.onChange}
+                                placeholder="Select Partition"
+                                disabled={!watchedUnit || lookups.partitions.length === 0}
                             />
                         )}
                     />
