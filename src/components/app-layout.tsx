@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -109,6 +108,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         subItems: [
             { href: '/finance/chart-of-accounts', label: 'Chart of Accounts' },
             { href: '/finance/cheque-deposit', label: 'Cheque Deposit' },
+            { href: '/finance/payment', label: 'Payment' },
         ]
     },
     {
