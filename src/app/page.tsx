@@ -109,13 +109,6 @@ export default async function Dashboard() {
       changeType: 'increase' as const,
       icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
     },
-    {
-        title: 'Overdue Cheques',
-        value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(chequeSummary.overdueTotal),
-        change: `${chequeSummary.overdueCount} cheques`,
-        changeType: 'increase' as const,
-        icon: <AlertTriangle className="h-6 w-6 text-muted-foreground" />,
-      },
   ];
 
   return (
@@ -145,6 +138,20 @@ export default async function Dashboard() {
             </CardContent>
           </Card>
         ))}
+         <Link href="/finance/cheque-deposit">
+            <Card className="hover:bg-muted/50 transition-colors">
+                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Overdue Cheques</CardTitle>
+                    <AlertTriangle className="h-6 w-6 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-destructive">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(chequeSummary.overdueTotal)}</div>
+                    <p className="text-xs text-destructive">
+                       {chequeSummary.overdueCount} cheques require attention
+                    </p>
+                </CardContent>
+            </Card>
+        </Link>
       </div>
 
       {/* Interactive Summary Widgets */}
