@@ -36,6 +36,7 @@ import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit } from '../../contract/actions';
 import { Combobox } from '@/components/ui/combobox';
+import { Switch } from '@/components/ui/switch';
 
 const formSchema = invoiceSchema.omit({ id: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
@@ -53,6 +54,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const [isPropertyInvoice, setIsPropertyInvoice] = useState(true);
+
   const [lookups, setLookups] = useState<{
     properties: {value: string, label: string}[],
     units: {value: string, label: string}[],
@@ -136,12 +139,23 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     setValue('total', totalAmount);
 
   }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
+  
+  useEffect(() => {
+    if (!isPropertyInvoice) {
+        setValue('property', '');
+        setValue('unitCode', '');
+        setValue('roomCode', '');
+        setValue('partitionCode', '');
+    }
+  }, [isPropertyInvoice, setValue]);
 
   useEffect(() => {
     if (isOpen) {
       if (invoice) {
+        setIsPropertyInvoice(!!invoice.property);
         reset(invoice);
       } else {
+        setIsPropertyInvoice(true);
         reset({
             invoiceNo: `INV-${Date.now()}`,
             customerCode: customer.code,
@@ -243,80 +257,91 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div>
-                    <Label>Property</Label>
-                    <Controller
-                        name="property"
-                        control={control}
-                        render={({ field }) => (
-                            <Combobox
-                                options={lookups.properties}
-                                value={field.value || ''}
-                                onSelect={(value) => {
-                                    field.onChange(value);
-                                    setValue('unitCode', '');
-                                    setValue('roomCode', '');
-                                    setValue('partitionCode', '');
-                                }}
-                                placeholder="Select Property"
-                            />
-                        )}
-                    />
-                </div>
-                 <div>
-                    <Label>Unit</Label>
-                    <Controller
-                        name="unitCode"
-                        control={control}
-                        render={({ field }) => (
-                            <Combobox
-                                options={lookups.units}
-                                value={field.value || ''}
-                                onSelect={(value) => {
-                                    field.onChange(value);
-                                    setValue('roomCode', '');
-                                    setValue('partitionCode', '');
-                                }}
-                                placeholder="Select Unit"
-                                disabled={!watchedProperty}
-                            />
-                        )}
-                    />
-                </div>
-                <div>
-                    <Label>Room</Label>
-                     <Controller
-                        name="roomCode"
-                        control={control}
-                        render={({ field }) => (
-                            <Combobox
-                                options={lookups.rooms}
-                                value={field.value || ''}
-                                onSelect={field.onChange}
-                                placeholder="Select Room"
-                                disabled={!watchedUnit || lookups.rooms.length === 0}
-                            />
-                        )}
-                    />
-                </div>
-                 <div>
-                    <Label>Partition</Label>
-                     <Controller
-                        name="partitionCode"
-                        control={control}
-                        render={({ field }) => (
-                            <Combobox
-                                options={lookups.partitions}
-                                value={field.value || ''}
-                                onSelect={field.onChange}
-                                placeholder="Select Partition"
-                                disabled={!watchedUnit || lookups.partitions.length === 0}
-                            />
-                        )}
-                    />
-                </div>
+            <div className="flex items-center space-x-2 mb-4">
+                <Switch 
+                    id="property-invoice-switch" 
+                    checked={isPropertyInvoice} 
+                    onCheckedChange={setIsPropertyInvoice}
+                />
+                <Label htmlFor="property-invoice-switch">Property-Related Invoice</Label>
             </div>
+
+            {isPropertyInvoice && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 p-4 border rounded-md bg-muted/50">
+                  <div>
+                      <Label>Property</Label>
+                      <Controller
+                          name="property"
+                          control={control}
+                          render={({ field }) => (
+                              <Combobox
+                                  options={lookups.properties}
+                                  value={field.value || ''}
+                                  onSelect={(value) => {
+                                      field.onChange(value);
+                                      setValue('unitCode', '');
+                                      setValue('roomCode', '');
+                                      setValue('partitionCode', '');
+                                  }}
+                                  placeholder="Select Property"
+                              />
+                          )}
+                      />
+                  </div>
+                  <div>
+                      <Label>Unit</Label>
+                      <Controller
+                          name="unitCode"
+                          control={control}
+                          render={({ field }) => (
+                              <Combobox
+                                  options={lookups.units}
+                                  value={field.value || ''}
+                                  onSelect={(value) => {
+                                      field.onChange(value);
+                                      setValue('roomCode', '');
+                                      setValue('partitionCode', '');
+                                  }}
+                                  placeholder="Select Unit"
+                                  disabled={!watchedProperty}
+                              />
+                          )}
+                      />
+                  </div>
+                  <div>
+                      <Label>Room</Label>
+                      <Controller
+                          name="roomCode"
+                          control={control}
+                          render={({ field }) => (
+                              <Combobox
+                                  options={lookups.rooms}
+                                  value={field.value || ''}
+                                  onSelect={field.onChange}
+                                  placeholder="Select Room"
+                                  disabled={!watchedUnit || lookups.rooms.length === 0}
+                              />
+                          )}
+                      />
+                  </div>
+                  <div>
+                      <Label>Partition</Label>
+                      <Controller
+                          name="partitionCode"
+                          control={control}
+                          render={({ field }) => (
+                              <Combobox
+                                  options={lookups.partitions}
+                                  value={field.value || ''}
+                                  onSelect={field.onChange}
+                                  placeholder="Select Partition"
+                                  disabled={!watchedUnit || lookups.partitions.length === 0}
+                              />
+                          )}
+                      />
+                  </div>
+              </div>
+            )}
 
             <Table>
               <TableHeader>
