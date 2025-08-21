@@ -27,7 +27,8 @@
         "installment": 1,
         "dueDate": "2025-08-20",
         "amount": 55000,
-        "status": "unpaid"
+        "status": "unpaid",
+        "chequeNo": "123456"
       }
     ],
     "terms": "",
