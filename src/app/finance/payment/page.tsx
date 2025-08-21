@@ -1,11 +1,13 @@
 
-export default function PaymentPage() {
+import { getPayments, getSummary } from './actions';
+import { PaymentsClient } from './payment-client';
+
+
+export default async function PaymentPage() {
+  const payments = await getPayments();
+  const summary = await getSummary();
+
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold font-headline">Payments</h1>
-      <p className="text-muted-foreground">
-        This is the payment page.
-      </p>
-    </div>
+    <PaymentsClient initialPayments={payments} initialSummary={summary} />
   );
 }

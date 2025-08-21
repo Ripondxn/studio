@@ -1,0 +1,44 @@
+
+[
+  {
+    "id": "PAY-001",
+    "type": "Receipt",
+    "date": "2024-07-25",
+    "partyType": "Tenant",
+    "partyName": "Md Ripon Ahmed",
+    "amount": 2500,
+    "paymentMethod": "Cheque",
+    "referenceNo": "123456",
+    "contractNo": "TC-1755718766747",
+    "property": "LT-C38",
+    "remarks": "Rent for August",
+    "status": "Received"
+  },
+  {
+    "id": "PAY-002",
+    "type": "Payment",
+    "date": "2024-07-28",
+    "partyType": "Vendor",
+    "partyName": "Cooling Solutions Inc.",
+    "amount": 350,
+    "paymentMethod": "Bank Transfer",
+    "referenceNo": "TRF-89234",
+    "property": "LT-C38",
+    "remarks": "AC Repair for Unit 101",
+    "status": "Paid"
+  },
+  {
+    "id": "PAY-003",
+    "type": "Payment",
+    "date": "2024-08-01",
+    "partyType": "Landlord",
+    "partyName": "Emaar Properties",
+    "amount": 10000,
+    "paymentMethod": "Cheque",
+    "referenceNo": "555666",
+    "contractNo": "LC-2024-001",
+    "property": "Lewa Tower",
+    "remarks": "Landlord Payout",
+    "status": "Paid"
+  }
+]
