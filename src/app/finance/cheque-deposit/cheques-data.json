@@ -29,5 +29,21 @@
     "depositDate": "2025-08-21",
     "bankAccountId": "acc_3",
     "clearanceDate": "2025-08-21"
+  },
+  {
+    "chequeNo": "65879978",
+    "chequeDate": "2026-02-22",
+    "amount": 25000,
+    "bankName": "NBD",
+    "status": "Cleared",
+    "type": "Incoming",
+    "partyName": "Monju Begum",
+    "property": "LT-C38",
+    "contractNo": "TC-1755761192274",
+    "remarks": "",
+    "id": "CHQ-1755784955574",
+    "depositDate": "2025-08-21",
+    "bankAccountId": "acc_3",
+    "clearanceDate": "2025-08-21"
   }
 ]

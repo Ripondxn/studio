@@ -53,5 +53,19 @@
     "remarks": "Payment for installment TC-1755718766747-1",
     "status": "Received",
     "id": "PAY-1755780107012"
+  },
+  {
+    "type": "Payment",
+    "date": "2025-08-21",
+    "partyType": "Landlord",
+    "partyName": "Emaar Properties",
+    "amount": 131250,
+    "paymentMethod": "Cash",
+    "referenceNo": "LA-1755754374045-1",
+    "contractNo": "LA-1755754374045",
+    "property": "Lewa Tower",
+    "remarks": "Payment for installment LA-1755754374045-1",
+    "status": "Paid",
+    "id": "PAY-1755784896866"
   }
 ]

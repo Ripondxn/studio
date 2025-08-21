@@ -6,8 +6,25 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { accountSchema, type Account } from './schema';
+import { type BankAccount } from '../banking/schema';
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json');
+const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
+
+
+async function readBankAccounts(): Promise<BankAccount[]> {
+    try {
+        await fs.access(bankAccountsFilePath);
+        const data = await fs.readFile(bankAccountsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
 
 async function readAccounts(): Promise<Account[]> {
     try {
@@ -28,7 +45,48 @@ async function writeAccounts(data: Account[]) {
 }
 
 export async function getAccounts() {
-    return await readAccounts();
+    const accounts = await readAccounts();
+    const bankAccounts = await readBankAccounts();
+
+    const totalBankBalance = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+    
+    // Find the 'Cash and Bank' account and update its balance
+    const cashAndBankAccount = accounts.find(acc => acc.code === '1110');
+    if (cashAndBankAccount) {
+        cashAndBankAccount.balance = totalBankBalance;
+    }
+    
+    // Recalculate parent balances
+    const accountMap = new Map(accounts.map(acc => [acc.code, { ...acc, children: [] as Account[] }]));
+
+    accounts.forEach(acc => {
+        if (acc.parentCode && accountMap.has(acc.parentCode)) {
+            accountMap.get(acc.parentCode)!.children.push(acc);
+        }
+    });
+
+    const recalculateBalances = (accountCode: string) => {
+        const account = accountMap.get(accountCode);
+        if (!account || !account.isGroup) {
+            return account?.balance || 0;
+        }
+
+        let sum = 0;
+        account.children.forEach(child => {
+            sum += recalculateBalances(child.code);
+        });
+        account.balance = sum;
+        return sum;
+    }
+    
+    // Recalculate starting from the root nodes (those without parents)
+    accounts.forEach(acc => {
+        if(!acc.parentCode) {
+            recalculateBalances(acc.code);
+        }
+    })
+
+    return Array.from(accountMap.values());
 }
 
 const addAccountFormSchema = accountSchema.omit({ balance: true }).extend({
