@@ -38,7 +38,7 @@ type Lookups = {
     bankAccounts: { value: string, label: string }[];
 }
 
-export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => void }) {
+export function AddPaymentDialog({ onPaymentAdded, children }: { onPaymentAdded: () => void, children?: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -129,9 +129,7 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Payment
-        </Button>
+        {children || <Button><Plus className="mr-2 h-4 w-4" /> Add Payment</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit(onSubmit)}>

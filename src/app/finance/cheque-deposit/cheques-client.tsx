@@ -18,6 +18,8 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
+import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
+import { getPayments } from '@/app/finance/payment/actions';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -57,6 +59,11 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
     setIsLoading(false);
   }
 
+  const handlePaymentAdded = async () => {
+    // A payment affects cheques, so refresh everything
+    refreshData();
+  }
+
   useEffect(() => {
     setCheques(initialCheques);
     setSummary(initialSummary);
@@ -78,10 +85,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             // @ts-ignore
             const value = cheque[col.accessorKey as keyof Cheque];
             if (col.accessorKey === 'amount') {
-                 return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                }).format(value as number);
+                 return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value as number);
             }
             if (col.accessorKey === 'chequeDate' && value) {
                 return format(new Date(value as string), 'PP');
@@ -133,7 +137,9 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             <Button variant="outline" size="sm" onClick={handleExportExcel}>
                 <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
             </Button>
-            <Button variant="outline"><Minus className="mr-2 h-4 w-4"/> Withdrawal</Button>
+            <AddPaymentDialog onPaymentAdded={handlePaymentAdded}>
+              <Button variant="outline"><Minus className="mr-2 h-4 w-4"/> Withdrawal</Button>
+            </AddPaymentDialog>
             <DepositChequesDialog cheques={cheques.filter(c => c.status === 'In Hand')} onDeposit={refreshData} />
             <AddChequeDialog onChequeAdded={refreshData} />
             <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
