@@ -1,0 +1,163 @@
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { z } from 'zod';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Plus } from 'lucide-react';
+
+import { addAgent, getAllVendors } from '../actions';
+import { Combobox } from '@/components/ui/combobox';
+import { type Vendor } from '../schema';
+
+const formSchema = z.object({
+  vendorCode: z.string().min(1, "Please select a vendor."),
+  agentName: z.string().min(1, "Agent name is required."),
+  agentMobile: z.string().optional(),
+  agentEmail: z.string().email().optional().or(z.literal('')),
+  agentCommission: z.coerce.number().optional(),
+});
+
+type AgentFormData = z.infer<typeof formSchema>;
+
+
+export function AddAgentDialog() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<AgentFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      vendorCode: '',
+      agentName: '',
+      agentMobile: '',
+      agentEmail: '',
+      agentCommission: 0,
+    }
+  });
+  
+  useEffect(() => {
+    if (isOpen) {
+        getAllVendors().then(setVendors);
+        reset();
+    }
+  }, [isOpen, reset])
+
+  const onSubmit = async (data: AgentFormData) => {
+    setIsSaving(true);
+    const result = await addAgent(data);
+
+    if (result.success) {
+      toast({
+        title: 'Agent Added',
+        description: `Successfully added agent "${data.agentName}".`,
+      });
+      setIsOpen(false);
+      router.refresh();
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: result.error || 'Failed to add agent.',
+      });
+    }
+    setIsSaving(false);
+  };
+
+  const vendorOptions = vendors.map(v => ({ value: v.code, label: v.name }));
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+            <Plus className="mr-2 h-4 w-4" /> Add New Agent
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader>
+            <DialogTitle>Add New Agent</DialogTitle>
+            <DialogDescription>
+              Assign a new agent to an existing vendor.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+                <Label htmlFor="vendorCode">Vendor</Label>
+                <Controller
+                    name="vendorCode"
+                    control={control}
+                    render={({ field }) => (
+                        <Combobox
+                            options={vendorOptions}
+                            value={field.value}
+                            onSelect={field.onChange}
+                            placeholder="Select a vendor"
+                        />
+                    )}
+                />
+                 {errors.vendorCode && <p className="text-destructive text-xs mt-1">{errors.vendorCode.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="agentName">Agent Name</Label>
+              <Input id="agentName" {...register('agentName')} />
+              {errors.agentName && <p className="text-destructive text-xs mt-1">{errors.agentName.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="agentMobile">Agent Mobile</Label>
+              <Input id="agentMobile" {...register('agentMobile')} />
+               {errors.agentMobile && <p className="text-destructive text-xs mt-1">{errors.agentMobile.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="agentEmail">Agent Email</Label>
+              <Input id="agentEmail" type="email" {...register('agentEmail')} />
+               {errors.agentEmail && <p className="text-destructive text-xs mt-1">{errors.agentEmail.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="agentCommission">Agent Commission</Label>
+              <Input id="agentCommission" type="number" {...register('agentCommission')} />
+              {errors.agentCommission && <p className="text-destructive text-xs mt-1">{errors.agentCommission.message}</p>}
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline" onClick={() => reset()}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Agent
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
