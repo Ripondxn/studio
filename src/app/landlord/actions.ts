@@ -46,9 +46,11 @@ export async function getAllLandlords() {
             contractsByLandlord.get(contract.landlordCode)!.push({ id: contract.id, contractNo: contract.contractNo });
         }
     }
-
+    
+    // Return a flattened structure
     return landlords.map((l: any) => ({
         ...l.landlordData,
+        id: l.id, // Ensure top-level id is preserved
         attachments: l.attachments || [],
         leaseContracts: contractsByLandlord.get(l.landlordData.code) || [],
     }));
