@@ -74,6 +74,7 @@ async function createChequesFromContract(contract: Contract) {
                 partyName: contract.tenantName,
                 property: contract.property,
                 contractNo: contract.contractNo,
+                remarks: `Installment ${installment.installment}`,
             });
         }
     }
@@ -113,7 +114,7 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
         }
         
         await writeContracts(allContracts);
-
+        
         // After successfully saving contract, create cheques
         await createChequesFromContract(savedContract);
         

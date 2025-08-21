@@ -57,6 +57,7 @@ async function createChequesFromLeaseContract(contract: LeaseContract) {
                 partyName: landlordName,
                 property: contract.property,
                 contractNo: contract.contractNo,
+                remarks: `Installment ${installment.installment}`,
             });
         }
     }
