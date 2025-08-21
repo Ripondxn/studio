@@ -182,10 +182,10 @@ export const columns: ColumnDef<LeaseContract>[] = [
      cell: ({ row }) => format(new Date(row.getValue('endDate')), 'PP'),
   },
   {
-    accessorKey: 'totalRent',
+    accessorKey: 'totalRentWithVat',
     header: () => <div className="text-right">Rent Amount</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('totalRent'));
+      const amount = parseFloat(row.getValue('totalRentWithVat') || row.original.totalRent);
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',

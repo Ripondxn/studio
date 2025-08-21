@@ -54,6 +54,9 @@ const initialContractState: LeaseContract = {
     startDate: '',
     endDate: '',
     totalRent: 0,
+    vatPercentage: 0,
+    vatAmount: 0,
+    totalRentWithVat: 0,
     paymentMode: 'cash',
     status: 'New',
     terminationDate: '',
@@ -113,17 +116,27 @@ export default function LeaseContractPage() {
     }
   }, [searchParams, router, toast]);
 
-  const handleInputChange = (field: keyof Omit<LeaseContract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments'>, value: string) => {
+    useEffect(() => {
+        const { totalRent, vatPercentage } = contract;
+        const vat = (totalRent * (vatPercentage || 0)) / 100;
+        const totalWithVat = totalRent + vat;
+
+        setContract(prev => ({
+            ...prev,
+            vatAmount: vat,
+            totalRentWithVat: totalWithVat
+        }));
+    }, [contract.totalRent, contract.vatPercentage]);
+
+  const handleInputChange = (field: keyof Omit<LeaseContract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'vatPercentage' | 'vatAmount' | 'totalRentWithVat'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
   }
   
-  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments', value: string) => {
-    setContract(prev => ({...prev, [field]: parseInt(value, 10) || 0 }));
+  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'vatPercentage', value: string) => {
+    setContract(prev => ({...prev, [field]: parseFloat(value) || 0 }));
   }
 
   const handleTenancyContractSelect = async (contractNo: string) => {
-    // This function might need to be adjusted or removed if lease contract numbers are independent
-    // For now, let's assume it can pre-fill data from a tenancy contract if selected
     if (contractNo) {
         const result = await getContractDetails(contractNo);
         if (result.success && result.data) {
@@ -139,6 +152,7 @@ export default function LeaseContractPage() {
   
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
     const currentSchedule = [...contract.paymentSchedule];
+    const totalRent = contract.totalRentWithVat || contract.totalRent;
 
     if (field === 'amount') {
         const newAmount = Number(value);
@@ -150,7 +164,7 @@ export default function LeaseContractPage() {
             .filter((_, i) => newEditedIndexes.has(i))
             .reduce((sum, item) => sum + item.amount, 0);
         
-        const remainingRent = contract.totalRent - totalManuallySetAmount;
+        const remainingRent = totalRent - totalManuallySetAmount;
         const uneditedInstallments = currentSchedule.filter((_, i) => !newEditedIndexes.has(i));
 
         if (uneditedInstallments.length > 0) {
@@ -162,7 +176,7 @@ export default function LeaseContractPage() {
             });
 
             const totalRecalculated = currentSchedule.reduce((sum, item) => sum + item.amount, 0);
-            const finalDifference = contract.totalRent - totalRecalculated;
+            const finalDifference = totalRent - totalRecalculated;
 
             if (finalDifference !== 0) {
                 const lastUneditedIndex = currentSchedule.map((item,i) => ({...item, originalIndex: i}))
@@ -198,9 +212,10 @@ export default function LeaseContractPage() {
   }
 
   const handleGenerateSchedule = () => {
-    const { totalRent, numberOfPayments, paymentFrequency, startDate } = contract;
+    const { totalRentWithVat, numberOfPayments, paymentFrequency, startDate } = contract;
+    const rentToUse = totalRentWithVat || 0;
 
-    if (!totalRent || !numberOfPayments || !startDate) {
+    if (!rentToUse || !numberOfPayments || !startDate) {
         toast({
             variant: 'destructive',
             title: 'Missing Information',
@@ -210,7 +225,7 @@ export default function LeaseContractPage() {
     }
     
     setEditedInstallmentIndexes(new Set());
-    const installmentAmount = parseFloat((totalRent / numberOfPayments).toFixed(2));
+    const installmentAmount = parseFloat((rentToUse / numberOfPayments).toFixed(2));
     const newSchedule: PaymentInstallment[] = [];
     const contractStartDate = new Date(startDate);
     
@@ -235,7 +250,7 @@ export default function LeaseContractPage() {
     }
     
     const totalCalculated = installmentAmount * numberOfPayments;
-    const remainder = totalRent - totalCalculated;
+    const remainder = rentToUse - totalCalculated;
     if(remainder !== 0 && newSchedule.length > 0) {
         newSchedule[newSchedule.length - 1].amount += remainder;
     }
@@ -426,6 +441,20 @@ export default function LeaseContractPage() {
             <div>
                 <Label htmlFor="rent-amount">Total Rent</Label>
                 <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
+            </div>
+             <div className="grid grid-cols-3 gap-2">
+                <div>
+                    <Label htmlFor="vatPercentage">VAT %</Label>
+                    <Input id="vatPercentage" type="number" placeholder="0" value={contract.vatPercentage || ''} onChange={e => handleNumberInputChange('vatPercentage', e.target.value)} disabled={!isEditing} />
+                </div>
+                <div className="col-span-2">
+                    <Label htmlFor="vatAmount">VAT Amount</Label>
+                    <Input id="vatAmount" type="number" value={contract.vatAmount?.toFixed(2) || '0.00'} disabled />
+                </div>
+             </div>
+             <div>
+                <Label htmlFor="totalRentWithVat">Total Rent with VAT</Label>
+                <Input id="totalRentWithVat" type="number" value={contract.totalRentWithVat?.toFixed(2) || '0.00'} disabled />
             </div>
             <div>
                 <Label htmlFor="payment-mode">Payment Mode</Label>
