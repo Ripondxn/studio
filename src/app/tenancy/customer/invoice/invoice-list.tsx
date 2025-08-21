@@ -106,14 +106,16 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                     onSuccess={fetchInvoices}
                     isViewMode={isViewMode}
                 />
-                <AddPaymentDialog
-                    isOpen={isPaymentDialogOpen}
-                    setIsOpen={setIsPaymentDialogOpen}
-                    defaultValues={paymentDefaultValues}
-                    onPaymentAdded={handlePaymentSuccess}
-                    customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')}
-                    customerCode={customerCode}
-                />
+                {isPaymentDialogOpen && (
+                    <AddPaymentDialog
+                        isOpen={isPaymentDialogOpen}
+                        setIsOpen={setIsPaymentDialogOpen}
+                        defaultValues={paymentDefaultValues}
+                        onPaymentAdded={handlePaymentSuccess}
+                        customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')}
+                        customerCode={customerCode}
+                    />
+                )}
             </CardContent>
         </Card>
     )
