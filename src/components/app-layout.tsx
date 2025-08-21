@@ -89,6 +89,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/property/rooms/list', label: 'Rooms' },
             { href: '/property/units/list', label: 'Units' },
             { href: '/property/partitions/list', label: 'Partitions' },
+            { href: '/property/units/vacant', label: 'Vacant Units' },
             { href: '/landlord', label: 'Landlord' },
             { href: '/vendors', label: 'Vendor' },
             { href: '/lease/contracts', label: 'Lease Contracts' },
