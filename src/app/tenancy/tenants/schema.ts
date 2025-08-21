@@ -19,6 +19,12 @@ export const tenantSchema = z.object({
   contractNo: z.string().optional(),
   contractId: z.string().nullable().optional(),
   attachments: z.array(attachmentSchema).optional(),
+  eid: z.string().optional(),
+  occupation: z.string().optional(),
+  brokerName: z.string().optional(),
+  brokerMobile: z.string().optional(),
+  brokerEmail: z.string().email().optional().or(z.literal('')),
+  brokerCommission: z.number().optional(),
 });
 
 export type Tenant = z.infer<typeof tenantSchema>;

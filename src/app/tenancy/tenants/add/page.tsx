@@ -78,6 +78,12 @@ const initialTenantData = {
     mobile: '',
     email: '',
     address: '',
+    eid: '',
+    occupation: '',
+    brokerName: '',
+    brokerMobile: '',
+    brokerEmail: '',
+    brokerCommission: 0,
     contractNo: '',
     securityDepositAmount: 0,
     securityDepositStatus: 'unpaid',
@@ -388,6 +394,14 @@ export default function TenantPage() {
                         <Label htmlFor="address">Address</Label>
                         <Input id="address" value={tenantData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
                         </div>
+                        <div>
+                          <Label htmlFor="eid">EID/Passport/Visa</Label>
+                          <Input id="eid" value={tenantData.eid} onChange={(e) => handleInputChange('eid', e.target.value)} disabled={!isEditing} />
+                        </div>
+                        <div>
+                          <Label htmlFor="occupation">Occupation</Label>
+                          <Input id="occupation" value={tenantData.occupation} onChange={(e) => handleInputChange('occupation', e.target.value)} disabled={!isEditing} />
+                        </div>
                          <div>
                             <Label htmlFor="contractNo">Contract No</Label>
                             {contractData.id ? (
@@ -399,83 +413,108 @@ export default function TenantPage() {
                             )}
                         </div>
                     </div>
-
-                     <Card>
-                        <CardHeader>
-                            <CardTitle>Attachments</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                    <TableHead>Attachment Name</TableHead>
-                                    <TableHead>File / Link</TableHead>
-                                    <TableHead>Action</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {attachments.map((item, index) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell>
-                                                <Input 
-                                                    value={item.name} 
-                                                    onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
-                                                    disabled={!isEditing} 
-                                                    placeholder="e.g. Passport Copy"
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    {item.isLink ? (
-                                                        <Input
-                                                            type="text"
-                                                            placeholder="https://example.com"
-                                                            value={typeof item.file === 'string' ? item.file : ''}
-                                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
-                                                            disabled={!isEditing}
-                                                        />
-                                                    ) : (
-                                                        <Input
-                                                            type="file"
-                                                            className="text-sm w-full"
-                                                            ref={(el) => (fileInputRefs.current[index] = el)}
-                                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                                            disabled={!isEditing}
-                                                        />
-                                                    )}
-                                                    <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
-                                                        {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                                                    </Button>
-                                                </div>
-                                                {item.url && !item.isLink && (
-                                                    <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                        View Uploaded File
-                                                    </Link>
-                                                )}
-                                                {item.file && typeof item.file === 'string' && (
-                                                    item.isLink && item.file.startsWith('http') ? (
-                                                        <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                            Open Link
-                                                        </Link>
-                                                    ) : (
-                                                        !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                                    )
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                            <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                            </TableCell>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Broker / Agent Reference</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div>
+                                    <Label htmlFor="brokerName">Broker Name</Label>
+                                    <Input id="brokerName" value={tenantData.brokerName} onChange={(e) => handleInputChange('brokerName', e.target.value)} disabled={!isEditing} />
+                                </div>
+                                 <div>
+                                    <Label htmlFor="brokerMobile">Broker Mobile</Label>
+                                    <Input id="brokerMobile" value={tenantData.brokerMobile} onChange={(e) => handleInputChange('brokerMobile', e.target.value)} disabled={!isEditing} />
+                                </div>
+                                <div>
+                                    <Label htmlFor="brokerEmail">Broker Email</Label>
+                                    <Input id="brokerEmail" type="email" value={tenantData.brokerEmail} onChange={(e) => handleInputChange('brokerEmail', e.target.value)} disabled={!isEditing} />
+                                </div>
+                                <div>
+                                    <Label htmlFor="brokerCommission">Commission Amount</Label>
+                                    <Input id="brokerCommission" type="number" value={tenantData.brokerCommission} onChange={(e) => handleInputChange('brokerCommission', parseFloat(e.target.value) || 0)} disabled={!isEditing} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Attachments</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                        <TableHead>Attachment Name</TableHead>
+                                        <TableHead>File / Link</TableHead>
+                                        <TableHead>Action</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            <Button variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
-                                <Plus className="mr-2 h-4 w-4"/> Add Attachment
-                            </Button>
-                        </CardContent>
-                    </Card>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {attachments.map((item, index) => (
+                                            <TableRow key={item.id}>
+                                                <TableCell>
+                                                    <Input 
+                                                        value={item.name} 
+                                                        onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                                        disabled={!isEditing} 
+                                                        placeholder="e.g. Passport Copy"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-2">
+                                                        {item.isLink ? (
+                                                            <Input
+                                                                type="text"
+                                                                placeholder="https://example.com"
+                                                                value={typeof item.file === 'string' ? item.file : ''}
+                                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                                disabled={!isEditing}
+                                                            />
+                                                        ) : (
+                                                            <Input
+                                                                type="file"
+                                                                className="text-sm w-full"
+                                                                ref={(el) => (fileInputRefs.current[index] = el)}
+                                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                                disabled={!isEditing}
+                                                            />
+                                                        )}
+                                                        <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                                            {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                                        </Button>
+                                                    </div>
+                                                    {item.url && !item.isLink && (
+                                                        <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                            View Uploaded File
+                                                        </Link>
+                                                    )}
+                                                    {item.file && typeof item.file === 'string' && (
+                                                        item.isLink && item.file.startsWith('http') ? (
+                                                            <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                                Open Link
+                                                            </Link>
+                                                        ) : (
+                                                            !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                                        )
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                <Button variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                                    <Plus className="mr-2 h-4 w-4"/> Add Attachment
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -702,5 +741,3 @@ export default function TenantPage() {
     </div>
   );
 }
-
-    

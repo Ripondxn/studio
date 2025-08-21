@@ -13,7 +13,13 @@
       "securityDepositStatus": "unpaid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "",
+      "occupation": "",
+      "brokerName": "",
+      "brokerMobile": "",
+      "brokerEmail": "",
+      "brokerCommission": 0
     },
     "attachments": []
   },
@@ -30,7 +36,13 @@
       "securityDepositStatus": "paid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "784-1990-1234567-1",
+      "occupation": "Graphic Designer",
+      "brokerName": "Prime Properties",
+      "brokerMobile": "555-0201",
+      "brokerEmail": "contact@primeprop.com",
+      "brokerCommission": 500
     },
     "attachments": []
   },
@@ -47,7 +59,13 @@
       "securityDepositStatus": "paid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "784-1985-9876543-2",
+      "occupation": "Software Engineer",
+      "brokerName": "",
+      "brokerMobile": "",
+      "brokerEmail": "",
+      "brokerCommission": 0
     },
     "attachments": []
   },
@@ -64,7 +82,13 @@
       "securityDepositStatus": "unpaid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "",
+      "occupation": "Architect",
+      "brokerName": "",
+      "brokerMobile": "",
+      "brokerEmail": "",
+      "brokerCommission": 0
     },
     "attachments": []
   },
@@ -81,7 +105,13 @@
       "securityDepositStatus": "paid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "784-1992-2468135-7",
+      "occupation": "Project Manager",
+      "brokerName": "Realty Kings",
+      "brokerMobile": "555-0202",
+      "brokerEmail": "info@realtykings.com",
+      "brokerCommission": 1000
     },
     "attachments": []
   },
@@ -98,7 +128,13 @@
       "securityDepositStatus": "unpaid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "",
+      "occupation": "Marketing Manager",
+      "brokerName": "",
+      "brokerMobile": "",
+      "brokerEmail": "",
+      "brokerCommission": 0
     },
     "attachments": []
   },
@@ -115,7 +151,13 @@
       "securityDepositStatus": "paid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "784-1988-1357924-6",
+      "occupation": "Doctor",
+      "brokerName": "",
+      "brokerMobile": "",
+      "brokerEmail": "",
+      "brokerCommission": 0
     },
     "attachments": []
   },
@@ -132,7 +174,13 @@
       "securityDepositStatus": "unpaid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "",
+      "occupation": "Teacher",
+      "brokerName": "Prime Properties",
+      "brokerMobile": "555-0201",
+      "brokerEmail": "contact@primeprop.com",
+      "brokerCommission": 0
     },
     "attachments": []
   },
@@ -149,7 +197,13 @@
       "securityDepositStatus": "paid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "784-1995-1122334-4",
+      "occupation": "Lawyer",
+      "brokerName": "",
+      "brokerMobile": "",
+      "brokerEmail": "",
+      "brokerCommission": 0
     },
     "attachments": []
   },
@@ -166,7 +220,13 @@
       "securityDepositStatus": "unpaid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "",
+      "occupation": "Artist",
+      "brokerName": "",
+      "brokerMobile": "",
+      "brokerEmail": "",
+      "brokerCommission": 0
     },
     "attachments": []
   },
@@ -183,7 +243,13 @@
       "securityDepositStatus": "paid",
       "securityDepositReturnDate": "",
       "securityDepositReturnedAmount": 0,
-      "securityDepositRemarks": ""
+      "securityDepositRemarks": "",
+      "eid": "784-1991-5566778-8",
+      "occupation": "Accountant",
+      "brokerName": "Realty Kings",
+      "brokerMobile": "555-0202",
+      "brokerEmail": "info@realtykings.com",
+      "brokerCommission": 800
     },
     "attachments": []
   }
