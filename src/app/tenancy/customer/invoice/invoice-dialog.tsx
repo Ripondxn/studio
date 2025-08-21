@@ -162,7 +162,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   if (isViewMode && invoice) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-3xl">
                  <DialogHeader>
                     <DialogTitle>View Invoice: {invoice.invoiceNo}</DialogTitle>
                 </DialogHeader>
@@ -182,7 +182,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-3xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
@@ -260,7 +260,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                         <Label>Tax Amount</Label>
                         <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('tax') || 0)}</span>
                     </div>
-                    <div className="flex justify-between items-center border-t pt-2 mt-2">
+                    <div className="flex justify-between border-t pt-2 mt-2">
                         <Label className="text-lg font-bold">Total</Label>
                         <span className="font-bold text-lg">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('total') || 0)}</span>
                     </div>
