@@ -84,7 +84,7 @@ export const columns: ColumnDef<Unit>[] = [
             <Button asChild variant="outline" size="sm">
                 <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
                     <Eye className="mr-2 h-4 w-4" />
-                    Create Lease
+                    Create Tenancy
                 </Link>
             </Button>
         )
