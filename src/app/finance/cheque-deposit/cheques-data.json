@@ -19,7 +19,7 @@
     "chequeDate": "2025-11-22",
     "amount": 25000,
     "bankName": "NBD",
-    "status": "Deposited",
+    "status": "Cleared",
     "type": "Incoming",
     "partyName": "Monju Begum",
     "property": "LT-C38",
@@ -27,6 +27,7 @@
     "remarks": "",
     "id": "CHQ-1755784346320",
     "depositDate": "2025-08-21",
-    "bankAccountId": "acc_3"
+    "bankAccountId": "acc_3",
+    "clearanceDate": "2025-08-21"
   }
 ]

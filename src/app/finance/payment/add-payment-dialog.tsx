@@ -24,6 +24,7 @@ import { paymentSchema, type Payment } from './schema';
 import { addPayment, getLookups } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 
 type PaymentFormData = Omit<Payment, 'id'>;
@@ -60,12 +61,14 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
         partyName: '',
         amount: 0,
         paymentMethod: 'Cash',
+        paymentFrom: 'Petty Cash',
         status: 'Received',
     }
   });
 
   const paymentType = watch('type');
   const partyType = watch('partyType');
+  const paymentMethod = watch('paymentMethod');
 
   useEffect(() => {
       if(isOpen) {
@@ -77,6 +80,7 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
             partyName: '',
             amount: 0,
             paymentMethod: 'Cash',
+            paymentFrom: 'Petty Cash',
             status: 'Received',
         });
       }
@@ -231,6 +235,29 @@ export function AddPaymentDialog({ onPaymentAdded }: { onPaymentAdded: () => voi
                             )} />
                     </div>
                 </div>
+                 
+                 {paymentMethod === 'Cash' && (
+                    <div className="space-y-2">
+                        <Label>Payment From</Label>
+                         <Controller
+                            name="paymentFrom"
+                            control={control}
+                            render={({ field }) => (
+                                <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-4">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="Bank" id="bank" />
+                                        <Label htmlFor="bank">Bank</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="Petty Cash" id="petty-cash" />
+                                        <Label htmlFor="petty-cash">Petty Cash</Label>
+                                    </div>
+                                </RadioGroup>
+                            )}
+                        />
+                    </div>
+                 )}
+
                  <div className="space-y-2">
                     <Label htmlFor="bankAccountId">Bank Account</Label>
                     <Controller
