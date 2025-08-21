@@ -117,12 +117,12 @@ export default async function Dashboard() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-       <SendRenewalDialogWrapper expiringContracts={expiryReport} />
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
             <Button asChild><Link href="/tenancy/contract"><Plus className="mr-2 h-4 w-4"/> Generate New Contract</Link></Button>
             <Button variant="outline"><Receipt className="mr-2 h-4 w-4"/> Record Payment</Button>
+            <SendRenewalDialogWrapper expiringContracts={expiryReport} />
         </div>
       </div>
       
