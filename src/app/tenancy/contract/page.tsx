@@ -7,6 +7,9 @@ import { useRouter, useSearchParams }from 'next/navigation';
 import {
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +65,9 @@ const initialContractState: Contract = {
     gracePeriod: 0,
     paymentSchedule: [],
     terms: '',
+    tawtheeqRegistrationNo: '',
+    tawtheeqStatus: 'Not Registered',
+    tawtheeqRegistrationDate: '',
 };
 
 type LookupData = {
@@ -616,6 +622,35 @@ export default function TenancyContractPage() {
             </Card>
         </div>
       </div>
+       <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Tawtheeq Registration</CardTitle>
+            <CardDescription>Manage Tawtheeq registration details for this contract.</CardDescription>
+          </CardHeader>
+          <CardContent>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <Label htmlFor="tawtheeq-status">Status</Label>
+                    <Select value={contract.tawtheeqStatus} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!isEditing}>
+                        <SelectTrigger id="tawtheeq-status"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Not Registered">Not Registered</SelectItem>
+                            <SelectItem value="Under Process">Under Process</SelectItem>
+                            <SelectItem value="Registered">Registered</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div>
+                    <Label htmlFor="tawtheeq-reg-no">Registration No</Label>
+                    <Input id="tawtheeq-reg-no" value={contract.tawtheeqRegistrationNo || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationNo', e.target.value)} disabled={!isEditing}/>
+                </div>
+                 <div>
+                    <Label htmlFor="tawtheeq-reg-date">Registration Date</Label>
+                    <Input id="tawtheeq-reg-date" type="date" value={contract.tawtheeqRegistrationDate || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationDate', e.target.value)} disabled={!isEditing}/>
+                </div>
+            </div>
+          </CardContent>
+      </Card>
       <Card className="mt-6">
         <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4 p-4 border rounded-md bg-muted/50">

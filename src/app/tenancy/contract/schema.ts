@@ -33,6 +33,9 @@ export const contractSchema = z.object({
   gracePeriod: z.number().optional(),
   paymentSchedule: z.array(paymentInstallmentSchema),
   terms: z.string().optional(),
+  tawtheeqRegistrationNo: z.string().optional(),
+  tawtheeqStatus: z.enum(['Not Registered', 'Under Process', 'Registered']).optional(),
+  tawtheeqRegistrationDate: z.string().optional(),
 });
 
 export type PaymentInstallment = z.infer<typeof paymentInstallmentSchema>;
