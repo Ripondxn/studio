@@ -252,11 +252,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
           <DialogFooter className="mt-6">
             <DialogClose asChild>
-                <Button type="button" variant="ghost">
-                    <X className="mr-2 h-4 w-4" /> Close
-                </Button>
+                <Button type="button" variant="outline">Close</Button>
             </DialogClose>
-            <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
             <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 Save Invoice
