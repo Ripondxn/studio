@@ -10,11 +10,14 @@ import { DataTable } from './data-table';
 import { InvoiceDialog } from './invoice-dialog';
 import { getInvoicesForCustomer } from './actions';
 import { type Invoice } from './schema';
+import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
+import { type Payment } from '@/app/finance/payment/schema';
 
 export function InvoiceList({ customerCode, customerName }: { customerCode: string, customerName: string }) {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
@@ -34,20 +37,38 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
     const handleAddClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
-        setIsDialogOpen(true);
+        setIsInvoiceDialogOpen(true);
     }
     
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(false);
-        setIsDialogOpen(true);
+        setIsInvoiceDialogOpen(true);
     }
     
     const handleViewClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(true);
-        setIsDialogOpen(true);
+        setIsInvoiceDialogOpen(true);
     }
+
+    const handleRecordPaymentClick = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setIsPaymentDialogOpen(true);
+    }
+
+    const handlePaymentSuccess = () => {
+        fetchInvoices();
+    }
+    
+    const paymentDefaultValues: Partial<Omit<Payment, 'id'>> | undefined = selectedInvoice ? {
+        type: 'Receipt',
+        partyType: 'Customer',
+        partyName: selectedInvoice.customerName,
+        amount: selectedInvoice.total,
+        referenceNo: selectedInvoice.invoiceNo,
+        remarks: `Payment for Invoice #${selectedInvoice.invoiceNo}`
+    } : undefined;
 
     if (isLoading) {
         return (
@@ -71,14 +92,21 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                 </div>
             </CardHeader>
             <CardContent>
-                <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick })} data={invoices} />
+                <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPaymentClick })} data={invoices} />
                 <InvoiceDialog
-                    isOpen={isDialogOpen}
-                    setIsOpen={setIsDialogOpen}
+                    isOpen={isInvoiceDialogOpen}
+                    setIsOpen={setIsInvoiceDialogOpen}
                     invoice={selectedInvoice}
                     customer={{ code: customerCode, name: customerName }}
                     onSuccess={fetchInvoices}
                     isViewMode={isViewMode}
+                />
+                <AddPaymentDialog
+                    isOpen={isPaymentDialogOpen}
+                    setIsOpen={setIsPaymentDialogOpen}
+                    defaultValues={paymentDefaultValues}
+                    onPaymentAdded={handlePaymentSuccess}
+                    associatedInvoiceId={selectedInvoice?.id}
                 />
             </CardContent>
         </Card>

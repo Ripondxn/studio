@@ -81,3 +81,19 @@ export async function deleteInvoice(invoiceId: string) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+export async function updateInvoiceStatus(invoiceId: string, status: Invoice['status']) {
+    try {
+        const allInvoices = await readInvoices();
+        const index = allInvoices.findIndex(inv => inv.id === invoiceId);
+        if (index === -1) {
+            return { success: false, error: 'Invoice not found to update status.' };
+        }
+        allInvoices[index].status = status;
+        await writeInvoices(allInvoices);
+        revalidatePath(`/tenancy/customer/add?code=${allInvoices[index].customerCode}`);
+        return { success: true };
+    } catch (error) {
+         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}

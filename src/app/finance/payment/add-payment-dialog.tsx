@@ -26,6 +26,8 @@ import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
+import { updateInvoiceStatus } from '@/app/tenancy/customer/invoice/actions';
+
 
 type PaymentFormData = Omit<Payment, 'id'>;
 const paymentFormSchema = paymentSchema.omit({ id: true });
@@ -38,8 +40,21 @@ type Lookups = {
     bankAccounts: { value: string, label: string }[];
 }
 
-export function AddPaymentDialog({ onPaymentAdded, children }: { onPaymentAdded: () => void, children?: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
+interface AddPaymentDialogProps {
+  onPaymentAdded: () => void;
+  children?: React.ReactNode;
+  isOpen?: boolean;
+  setIsOpen?: (open: boolean) => void;
+  defaultValues?: Partial<PaymentFormData>;
+  associatedInvoiceId?: string | null;
+}
+
+
+export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpen, setIsOpen: setExternalOpen, defaultValues, associatedInvoiceId }: AddPaymentDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = externalOpen ?? internalOpen;
+  const setIsOpen = setExternalOpen ?? setInternalOpen;
+  
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [], bankAccounts: [] });
@@ -54,16 +69,6 @@ export function AddPaymentDialog({ onPaymentAdded, children }: { onPaymentAdded:
     formState: { errors },
   } = useForm<PaymentFormData>({
     resolver: zodResolver(paymentFormSchema),
-    defaultValues: {
-        type: 'Receipt',
-        date: format(new Date(), 'yyyy-MM-dd'),
-        partyType: 'Tenant',
-        partyName: '',
-        amount: 0,
-        paymentMethod: 'Cash',
-        paymentFrom: 'Petty Cash',
-        status: 'Received',
-    }
   });
 
   const paymentType = watch('type');
@@ -73,7 +78,7 @@ export function AddPaymentDialog({ onPaymentAdded, children }: { onPaymentAdded:
   useEffect(() => {
       if(isOpen) {
         getLookups().then(setLookups);
-        reset({
+        reset(defaultValues || {
             type: 'Receipt',
             date: format(new Date(), 'yyyy-MM-dd'),
             partyType: 'Tenant',
@@ -84,18 +89,20 @@ export function AddPaymentDialog({ onPaymentAdded, children }: { onPaymentAdded:
             status: 'Received',
         });
       }
-  }, [isOpen, reset]);
+  }, [isOpen, reset, defaultValues]);
 
   useEffect(() => {
-    if (paymentType === 'Receipt') {
-        setValue('partyType', 'Tenant');
-        setValue('status', 'Received');
-    } else { // Payment
-        setValue('partyType', 'Landlord');
-        setValue('status', 'Paid');
+    if(!defaultValues) {
+        if (paymentType === 'Receipt') {
+            setValue('partyType', 'Tenant');
+            setValue('status', 'Received');
+        } else { // Payment
+            setValue('partyType', 'Landlord');
+            setValue('status', 'Paid');
+        }
+        setValue('partyName', '');
     }
-    setValue('partyName', '');
-  }, [paymentType, setValue]);
+  }, [paymentType, setValue, defaultValues]);
   
   const partyOptions = {
       'Tenant': lookups.tenants,
@@ -114,6 +121,10 @@ export function AddPaymentDialog({ onPaymentAdded, children }: { onPaymentAdded:
         title: 'Payment Recorded',
         description: `Successfully recorded payment of ${data.amount}.`,
       });
+       if(associatedInvoiceId && data.type === 'Receipt') {
+        await updateInvoiceStatus(associatedInvoiceId, 'Paid');
+        toast({ title: 'Invoice Updated', description: 'Invoice status set to Paid.'});
+      }
       setIsOpen(false);
       onPaymentAdded();
     } else {
@@ -128,9 +139,8 @@ export function AddPaymentDialog({ onPaymentAdded, children }: { onPaymentAdded:
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children || <Button><Plus className="mr-2 h-4 w-4" /> Add Payment</Button>}
-      </DialogTrigger>
+      {!children && <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Payment</Button></DialogTrigger>}
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
