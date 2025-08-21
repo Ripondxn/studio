@@ -85,17 +85,6 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
   const chequeType = watch('type');
 
   const partyOptions = chequeType === 'Incoming' ? lookups.tenants : lookups.landlords;
-  const contractOptions = chequeType === 'Incoming' ? lookups.tenancyContracts : lookups.leaseContracts;
-
-  const handleContractSelect = (value: string) => {
-    setValue('contractNo', value);
-    const contract = contractOptions.find(c => c.value === value);
-    if (contract) {
-        if(contract.property) setValue('property', contract.property);
-        if(contract.partyName) setValue('partyName', contract.partyName);
-    }
-  }
-
 
   const onSubmit = async (data: ChequeFormData) => {
     setIsSaving(true);
@@ -130,7 +119,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
             <DialogHeader>
             <DialogTitle>Add New Cheque</DialogTitle>
             <DialogDescription>
-                Fill in the details below to record a new cheque.
+                Fill in the details below to record a new cheque. This is for manual entries not linked to a contract payment schedule.
             </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
@@ -153,20 +142,8 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div className="space-y-2">
-                        <Label htmlFor="contractNo">Contract No</Label>
-                        <Controller
-                            name="contractNo"
-                            control={control}
-                            render={({ field }) => (
-                                <Combobox
-                                    options={contractOptions}
-                                    value={field.value || ''}
-                                    onSelect={handleContractSelect}
-                                    placeholder="Select Contract"
-                                />
-                            )}
-                        />
-                         {errors.contractNo && <p className="text-destructive text-xs mt-1">{errors.contractNo.message}</p>}
+                        <Label htmlFor="contractNo">Contract No (Optional)</Label>
+                        <Input id="contractNo" {...register('contractNo')} placeholder="Associated contract no" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="partyName">{chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}</Label>
