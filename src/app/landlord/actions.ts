@@ -65,7 +65,7 @@ export async function saveLandlordData(dataToSave: any, isNewRecord: boolean) {
             return { success: false, error: `Landlord with code "${code}" already exists.` };
         }
         const newLandlord = {
-            id: `L-${Date.now()}`,
+            id: `L${Date.now()}`,
             ...dataToSave
         };
         allLandlords.push(newLandlord);

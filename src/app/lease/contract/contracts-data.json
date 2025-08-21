@@ -1,38 +1,36 @@
 [
   {
-    "id": "LCON-1755692787545",
-    "contractNo": "TC-2005-11",
-    "contractDate": "2025-08-20",
-    "property": "Lewa Tower-715",
+    "id": "LCON-1755754431858",
+    "contractNo": "LA-1755754374045",
+    "contractDate": "2025-08-21",
+    "property": "Lewa Tower",
     "landlordCode": "L-001",
-    "startDate": "2025-08-20",
-    "endDate": "2026-12-19",
-    "totalRent": 500000,
+    "startDate": "2025-08-21",
+    "endDate": "2026-08-20",
+    "totalRent": 250000,
+    "vatPercentage": 5,
+    "vatAmount": 12500,
+    "totalRentWithVat": 262500,
     "paymentMode": "cash",
     "status": "New",
     "terminationDate": "",
     "paymentFrequency": "Quarterly",
-    "numberOfPayments": 3,
+    "numberOfPayments": 2,
     "paymentSchedule": [
       {
         "installment": 1,
-        "dueDate": "2025-08-20",
-        "amount": 166666.67,
+        "dueDate": "2025-08-21",
+        "amount": 131250,
         "status": "unpaid"
       },
       {
         "installment": 2,
-        "dueDate": "2025-11-20",
-        "amount": 166666.67,
-        "status": "unpaid"
-      },
-      {
-        "installment": 3,
-        "dueDate": "2026-02-20",
-        "amount": 166666.66,
+        "dueDate": "2025-11-21",
+        "amount": 131250,
         "status": "unpaid"
       }
     ],
-    "terms": ""
+    "terms": "",
+    "gracePeriod": 30
   }
 ]
