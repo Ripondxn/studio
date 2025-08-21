@@ -251,6 +251,7 @@ export default function VendorPage() {
             setIsEditing(false);
         } else {
              setInitialAllData({ vendorData: { ...initialVendorData, ...result.data.vendorData } });
+             setVendorData({ ...initialVendorData, ...result.data.vendorData });
             setIsNewRecord(true);
             setIsEditing(true);
         }
@@ -537,3 +538,4 @@ export default function VendorPage() {
     </div>
   );
 }
+
