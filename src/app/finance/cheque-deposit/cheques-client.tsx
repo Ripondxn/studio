@@ -8,7 +8,7 @@ import { DataTable } from './data-table';
 import { AddChequeDialog } from './add-cheque-dialog';
 import { DepositChequesDialog } from './deposit-cheques-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Banknote, Clock, CheckCircle, Hourglass, FileText, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { Banknote, Clock, CheckCircle, Hourglass, FileText, FileSpreadsheet, AlertTriangle, Minus } from 'lucide-react';
 import { type Cheque } from './schema';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -133,6 +133,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             <Button variant="outline" size="sm" onClick={handleExportExcel}>
                 <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
             </Button>
+            <Button variant="outline"><Minus className="mr-2 h-4 w-4"/> Withdrawal</Button>
             <DepositChequesDialog cheques={cheques.filter(c => c.status === 'In Hand')} onDeposit={refreshData} />
             <AddChequeDialog onChequeAdded={refreshData} />
             <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>

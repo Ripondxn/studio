@@ -51,12 +51,14 @@
     "chequeDate": "2025-08-21",
     "amount": 131250,
     "bankName": "NBD",
-    "status": "In Hand",
+    "status": "Deposited",
     "type": "Outgoing",
     "partyName": "Emaar Properties",
     "property": "Lewa Tower",
     "contractNo": "LA-1755754374045",
     "remarks": "",
-    "id": "CHQ-1755785927328"
+    "id": "CHQ-1755785927328",
+    "depositDate": "2025-08-21",
+    "bankAccountId": "acc_1"
   }
 ]
