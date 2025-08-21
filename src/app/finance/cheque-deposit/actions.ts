@@ -177,3 +177,33 @@ export async function getSummary() {
     
     return summary;
 }
+
+export async function batchDepositCheques(chequeIds: string[], depositDate: string) {
+    try {
+        const allCheques = await readCheques();
+        let updatedCount = 0;
+        
+        const updatedCheques = allCheques.map(cheque => {
+            if (chequeIds.includes(cheque.id) && cheque.status === 'In Hand') {
+                updatedCount++;
+                return {
+                    ...cheque,
+                    status: 'Deposited' as const,
+                    depositDate: depositDate,
+                };
+            }
+            return cheque;
+        });
+
+        if (updatedCount === 0) {
+            return { success: false, error: "No valid 'In Hand' cheques were selected for deposit." };
+        }
+
+        await writeCheques(updatedCheques);
+        revalidatePath('/finance/cheque-deposit');
+        return { success: true, count: updatedCount };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
