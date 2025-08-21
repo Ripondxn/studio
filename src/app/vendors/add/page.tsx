@@ -62,7 +62,7 @@ type Attachment = {
   isLink: boolean;
 };
 
-const initialVendorData: Vendor = {
+const initialVendorData: Omit<Vendor, 'agentCode' | 'agentName' | 'agentMobile' | 'agentEmail' | 'agentCommission'> = {
     code: '',
     name: '',
     mobile: '',
@@ -71,11 +71,6 @@ const initialVendorData: Vendor = {
     bankName: '',
     accountNumber: '',
     iban: '',
-    agentCode: '',
-    agentName: '',
-    agentMobile: '',
-    agentEmail: '',
-    agentCommission: 0,
 };
 
 export default function VendorPage() {
