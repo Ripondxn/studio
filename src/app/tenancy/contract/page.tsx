@@ -348,7 +348,7 @@ export default function TenancyContractPage() {
         });
     }
     
-    const totalCalculated = installmentAmount * numberOfPayments;
+    const totalCalculated = newSchedule.reduce((sum, item) => sum + item.amount, 0);
     const remainder = totalRent - totalCalculated;
     if(remainder !== 0 && newSchedule.length > 0) {
         newSchedule[newSchedule.length - 1].amount += remainder;
@@ -762,3 +762,4 @@ export default function TenancyContractPage() {
     </div>
   );
 }
+
