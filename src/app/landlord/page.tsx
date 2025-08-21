@@ -12,7 +12,10 @@ export default async function LandlordsPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold font-headline">Landlords</h1>
+        <div>
+            <h1 className="text-3xl font-bold font-headline">Landlords</h1>
+            <p className="text-muted-foreground">Manage landlord profiles, properties, and contracts.</p>
+        </div>
         <Button asChild>
           <Link href="/landlord/add">
             <Plus className="mr-2 h-4 w-4" /> Add New Landlord
