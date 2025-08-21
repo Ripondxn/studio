@@ -1,4 +1,3 @@
-
 [
   {
     "id": "PAY-001",
@@ -40,5 +39,19 @@
     "property": "Lewa Tower",
     "remarks": "Landlord Payout",
     "status": "Paid"
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-21",
+    "partyType": "Tenant",
+    "partyName": "Md Ripon Ahmed",
+    "amount": 27500,
+    "paymentMethod": "Cash",
+    "referenceNo": "TC-1755718766747-1",
+    "contractNo": "TC-1755718766747",
+    "property": "LT-C38",
+    "remarks": "Payment for installment TC-1755718766747-1",
+    "status": "Received",
+    "id": "PAY-1755780107012"
   }
 ]

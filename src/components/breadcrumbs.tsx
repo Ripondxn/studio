@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { Fragment, useEffect, useState } from 'react';
@@ -41,6 +40,7 @@ const breadcrumbNameMap: { [key: string]: string } = {
   add: 'Add',
   lease: 'Lease',
   communication: 'Communication',
+  'cheque-deposit': 'Cheque Deposit',
   'pdc-cheque': 'PDC Cheque',
   '': 'Dashboard', // For the root path
 };
