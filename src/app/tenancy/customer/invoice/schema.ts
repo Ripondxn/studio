@@ -14,6 +14,8 @@ export const invoiceSchema = z.object({
   invoiceNo: z.string().min(1, 'Invoice number is required.'),
   customerCode: z.string().min(1, 'Customer is required.'),
   customerName: z.string().min(1, 'Customer name is required.'),
+  property: z.string().optional(),
+  unitCode: z.string().optional(),
   invoiceDate: z.string().min(1, 'Invoice date is required.'),
   dueDate: z.string().min(1, 'Due date is required.'),
   items: z.array(invoiceItemSchema).min(1, 'At least one item is required.'),

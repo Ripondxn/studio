@@ -34,6 +34,8 @@ import { saveInvoice } from './actions';
 import { invoiceSchema, invoiceItemSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
+import { getContractLookups, getUnitsForProperty } from '../../contract/actions';
+import { Combobox } from '@/components/ui/combobox';
 
 const formSchema = invoiceSchema.omit({ id: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
@@ -51,6 +53,10 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const [lookups, setLookups] = useState<{
+    properties: {value: string, label: string}[],
+    units: {value: string, label: string}[]
+  }>({ properties: [], units: [] });
 
   const {
     register,
@@ -72,6 +78,24 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const watchedItems = watch('items');
   const watchedTaxRate = watch('taxRate');
   const watchedTaxType = watch('taxType');
+  const watchedProperty = watch('property');
+
+  useEffect(() => {
+    getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
+  }, []);
+
+  useEffect(() => {
+    const fetchUnits = async () => {
+        if (watchedProperty) {
+            const units = await getUnitsForProperty(watchedProperty);
+            setLookups(prev => ({...prev, units}));
+        } else {
+            setLookups(prev => ({...prev, units: []}));
+        }
+    }
+    fetchUnits();
+  }, [watchedProperty]);
+
 
   useEffect(() => {
     if (!watchedItems) return;
@@ -106,6 +130,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             invoiceNo: `INV-${Date.now()}`,
             customerCode: customer.code,
             customerName: customer.name,
+            property: '',
+            unitCode: '',
             invoiceDate: format(new Date(), 'yyyy-MM-dd'),
             dueDate: format(new Date(), 'yyyy-MM-dd'),
             items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
@@ -197,6 +223,43 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
               <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <Label>Property</Label>
+                    <Controller
+                        name="property"
+                        control={control}
+                        render={({ field }) => (
+                            <Combobox
+                                options={lookups.properties}
+                                value={field.value || ''}
+                                onSelect={(value) => {
+                                    field.onChange(value);
+                                    setValue('unitCode', '');
+                                }}
+                                placeholder="Select Property"
+                            />
+                        )}
+                    />
+                </div>
+                 <div>
+                    <Label>Unit</Label>
+                    <Controller
+                        name="unitCode"
+                        control={control}
+                        render={({ field }) => (
+                            <Combobox
+                                options={lookups.units}
+                                value={field.value || ''}
+                                onSelect={field.onChange}
+                                placeholder="Select Unit"
+                                disabled={!watchedProperty}
+                            />
+                        )}
+                    />
+                </div>
             </div>
 
             <Table>

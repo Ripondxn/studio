@@ -16,7 +16,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { type Invoice } from './schema';
@@ -31,6 +30,7 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
     const { toast } = useToast();
     const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -47,7 +47,7 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
     const isPaidOrCancelled = row.original.status === 'Paid' || row.original.status === 'Cancelled';
 
     return (
-        <AlertDialog>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -112,6 +112,10 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
           accessorKey: 'dueDate',
           header: 'Due Date',
           cell: ({ row }) => format(new Date(row.original.dueDate), 'PP'),
+      },
+      {
+          accessorKey: 'unitCode',
+          header: 'Unit',
       },
       {
           accessorKey: 'total',
