@@ -331,8 +331,8 @@ export default function VendorPage() {
       <Tabs defaultValue="vendor-info">
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
-            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
+            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="vendor-info">
