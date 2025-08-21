@@ -10,7 +10,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
+  CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -381,26 +382,34 @@ export default function VendorPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <Label htmlFor="agentCode">Agent Code</Label>
-                            <Input id="agentCode" value={vendorData.agentCode} disabled />
+                            <Input id="agentCode" value={vendorData.agentCode || ''} disabled />
                         </div>
                         <div>
                             <Label htmlFor="agentName">Agent Name</Label>
-                            <Input id="agentName" value={vendorData.agentName} onChange={(e) => handleInputChange('agentName', e.target.value)} disabled={!isEditing} />
+                            <Input id="agentName" value={vendorData.agentName || ''} onChange={(e) => handleInputChange('agentName', e.target.value)} disabled={!isEditing} />
                         </div>
                         <div>
                             <Label htmlFor="agentMobile">Agent Mobile</Label>
-                            <Input id="agentMobile" value={vendorData.agentMobile} onChange={(e) => handleInputChange('agentMobile', e.target.value)} disabled={!isEditing} />
+                            <Input id="agentMobile" value={vendorData.agentMobile || ''} onChange={(e) => handleInputChange('agentMobile', e.target.value)} disabled={!isEditing} />
                         </div>
                         <div>
                             <Label htmlFor="agentEmail">Agent Email</Label>
-                            <Input id="agentEmail" value={vendorData.agentEmail} onChange={(e) => handleInputChange('agentEmail', e.target.value)} disabled={!isEditing} />
+                            <Input id="agentEmail" value={vendorData.agentEmail || ''} onChange={(e) => handleInputChange('agentEmail', e.target.value)} disabled={!isEditing} />
                         </div>
                          <div>
                             <Label htmlFor="agentCommission">Commission Amount</Label>
-                            <Input id="agentCommission" type="number" value={vendorData.agentCommission} onChange={(e) => handleInputChange('agentCommission', parseFloat(e.target.value) || 0)} disabled={!isEditing} />
+                            <Input id="agentCommission" type="number" value={vendorData.agentCommission || 0} onChange={(e) => handleInputChange('agentCommission', parseFloat(e.target.value) || 0)} disabled={!isEditing} />
                         </div>
                     </div>
                 </CardContent>
+                 {isEditing && (
+                    <CardFooter>
+                        <Button onClick={handleSaveClick} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save Agent Info
+                        </Button>
+                    </CardFooter>
+                 )}
             </Card>
         </TabsContent>
         <TabsContent value="bank-details">
@@ -411,15 +420,15 @@ export default function VendorPage() {
                 <CardContent className="space-y-4 max-w-lg">
                     <div>
                         <Label htmlFor="bankName">Bank Name</Label>
-                        <Input id="bankName" value={vendorData.bankName} onChange={(e) => handleInputChange('bankName', e.target.value)} disabled={!isEditing} />
+                        <Input id="bankName" value={vendorData.bankName || ''} onChange={(e) => handleInputChange('bankName', e.target.value)} disabled={!isEditing} />
                     </div>
                     <div>
                         <Label htmlFor="accountNumber">Account No</Label>
-                        <Input id="accountNumber" value={vendorData.accountNumber} onChange={(e) => handleInputChange('accountNumber', e.target.value)} disabled={!isEditing} />
+                        <Input id="accountNumber" value={vendorData.accountNumber || ''} onChange={(e) => handleInputChange('accountNumber', e.target.value)} disabled={!isEditing} />
                     </div>
                     <div>
                         <Label htmlFor="iban">IBAN No</Label>
-                        <Input id="iban" value={vendorData.iban} onChange={(e) => handleInputChange('iban', e.target.value)} disabled={!isEditing} />
+                        <Input id="iban" value={vendorData.iban || ''} onChange={(e) => handleInputChange('iban', e.target.value)} disabled={!isEditing} />
                     </div>
                 </CardContent>
             </Card>
@@ -538,4 +547,3 @@ export default function VendorPage() {
     </div>
   );
 }
-
