@@ -100,6 +100,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       subItems: [
           { href: '/tenancy/tenants', label: 'Tenant' },
           { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
+          { href: '/tenancy/customer', label: 'Customer' },
       ]
     },
     { 
