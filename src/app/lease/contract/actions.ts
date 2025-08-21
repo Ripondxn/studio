@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { leaseContractSchema, type LeaseContract } from './schema';
 import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema';
-import { addCheque } from '@/app/finance/cheque-deposit/actions';
+import { addPdcCheque } from '@/app/finance/pdc-cheque/actions';
 
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
@@ -47,7 +47,7 @@ async function createChequesFromLeaseContract(contract: LeaseContract) {
 
     for (const installment of contract.paymentSchedule) {
         if (installment.chequeNo) {
-            await addCheque({
+            await addPdcCheque({
                 chequeNo: installment.chequeNo,
                 chequeDate: installment.dueDate,
                 amount: installment.amount,
@@ -105,7 +105,7 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
         await createChequesFromLeaseContract(savedContract);
 
         revalidatePath('/lease/contracts');
-        revalidatePath('/finance/cheque-deposit');
+        revalidatePath('/finance/pdc-cheque');
         revalidatePath(`/lease/contract?id=${data.id}`);
         return { success: true, data: savedContract };
 

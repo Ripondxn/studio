@@ -30,7 +30,7 @@ import {
 import Link from 'next/link';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { getUnits } from '@/app/property/units/actions';
-import { getSummary as getChequeSummary } from '@/app/finance/cheque-deposit/actions';
+import { getSummary as getPdcChequeSummary } from '@/app/finance/pdc-cheque/actions';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
@@ -85,7 +85,7 @@ async function getVacantUnits() {
 export default async function Dashboard() {
   const expiryReport = await getExpiryReport();
   const vacantUnits = await getVacantUnits();
-  const chequeSummary = await getChequeSummary();
+  const chequeSummary = await getPdcChequeSummary();
 
   const kpiData = [
     {
@@ -143,7 +143,7 @@ export default async function Dashboard() {
             </Card>
           </Link>
         ))}
-         <Link href="/finance/cheque-deposit">
+         <Link href="/finance/pdc-cheque">
             <Card className="hover:bg-muted/50 transition-colors">
                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Overdue Cheques</CardTitle>

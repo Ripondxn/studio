@@ -41,6 +41,7 @@ const breadcrumbNameMap: { [key: string]: string } = {
   add: 'Add',
   lease: 'Lease',
   communication: 'Communication',
+  'pdc-cheque': 'PDC Cheque',
   '': 'Dashboard', // For the root path
 };
 
