@@ -31,8 +31,8 @@ const chequeFormSchema = chequeSchema.omit({ id: true });
 type Lookups = {
     tenants: { value: string, label: string, contractNo?: string }[];
     landlords: { value: string, label: string }[];
-    tenancyContracts: { value: string, label: string, property?: string }[];
-    leaseContracts: { value: string, label: string, property?: string }[];
+    tenancyContracts: { value: string, label: string, property?: string, partyName?: string }[];
+    leaseContracts: { value: string, label: string, property?: string, partyName?: string }[];
 }
 
 export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }) {
@@ -77,16 +77,12 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
   const partyOptions = chequeType === 'Incoming' ? lookups.tenants : lookups.landlords;
   const contractOptions = chequeType === 'Incoming' ? lookups.tenancyContracts : lookups.leaseContracts;
 
-  const handlePartySelect = (value: string) => {
-    setValue('partyName', value);
-    const party = lookups.tenants.find(t => t.value === value) || lookups.landlords.find(l => l.value === value);
-    if (party && 'contractNo' in party && party.contractNo) {
-        setValue('contractNo', party.contractNo);
-        
-        const contract = lookups.tenancyContracts.find(c => c.value === party.contractNo);
-        if(contract?.property) {
-            setValue('property', contract.property);
-        }
+  const handleContractSelect = (value: string) => {
+    setValue('contractNo', value);
+    const contract = contractOptions.find(c => c.value === value);
+    if (contract) {
+        if(contract.property) setValue('property', contract.property);
+        if(contract.partyName) setValue('partyName', contract.partyName);
     }
   }
 
@@ -146,22 +142,6 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="partyName">{chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}</Label>
-                        <Controller
-                            name="partyName"
-                            control={control}
-                            render={({ field }) => (
-                                <Combobox
-                                    options={partyOptions}
-                                    value={field.value}
-                                    onSelect={handlePartySelect}
-                                    placeholder={`Select ${chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}`}
-                                />
-                            )}
-                        />
-                         {errors.partyName && <p className="text-destructive text-xs mt-1">{errors.partyName.message}</p>}
-                    </div>
                      <div className="space-y-2">
                         <Label htmlFor="contractNo">Contract No</Label>
                         <Controller
@@ -171,12 +151,28 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                                 <Combobox
                                     options={contractOptions}
                                     value={field.value || ''}
-                                    onSelect={field.onChange}
+                                    onSelect={handleContractSelect}
                                     placeholder="Select Contract"
                                 />
                             )}
                         />
                          {errors.contractNo && <p className="text-destructive text-xs mt-1">{errors.contractNo.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="partyName">{chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}</Label>
+                        <Controller
+                            name="partyName"
+                            control={control}
+                            render={({ field }) => (
+                                <Combobox
+                                    options={partyOptions}
+                                    value={field.value}
+                                    onSelect={(value) => setValue('partyName', value)}
+                                    placeholder={`Select ${chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}`}
+                                />
+                            )}
+                        />
+                         {errors.partyName && <p className="text-destructive text-xs mt-1">{errors.partyName.message}</p>}
                     </div>
                 </div>
 

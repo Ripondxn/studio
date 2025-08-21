@@ -27,7 +27,7 @@
         "installment": 1,
         "dueDate": "2025-08-20",
         "amount": 55000,
-        "status": "unpaid",
+        "status": "paid",
         "chequeNo": "123456"
       }
     ],
@@ -64,19 +64,22 @@
         "installment": 1,
         "dueDate": "2025-08-22",
         "amount": 25000,
-        "status": "unpaid"
+        "status": "paid",
+        "chequeNo": "2258765"
       },
       {
         "installment": 2,
         "dueDate": "2025-11-22",
         "amount": 25000,
-        "status": "unpaid"
+        "status": "paid",
+        "chequeNo": "256878"
       },
       {
         "installment": 3,
         "dueDate": "2026-02-22",
         "amount": 25000,
-        "status": "unpaid"
+        "status": "paid",
+        "chequeNo": "65879978"
       }
     ],
     "terms": "",

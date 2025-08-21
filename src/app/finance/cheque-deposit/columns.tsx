@@ -71,7 +71,7 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
         const result = await updateChequeStatus(cheque.id, status, date);
         if (result.success) {
             toast({ title: 'Status Updated', description: `Cheque ${cheque.chequeNo} status updated to ${status}.` });
-            router.refresh();
+            onUpdate();
             setIsOpen(false);
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error });
