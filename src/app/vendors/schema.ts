@@ -1,5 +1,4 @@
 
-
 import { z } from 'zod';
 
 export const attachmentSchema = z.object({
@@ -25,7 +24,7 @@ export const vendorSchema = z.object({
   agentName: z.string().optional(),
   agentMobile: z.string().optional(),
   agentEmail: z.string().email("Invalid email address.").optional().or(z.literal('')),
-  agentCommission: z.number().optional(),
+  agentCommission: z.coerce.number().optional(),
 }).refine(data => {
     // If any agent field is filled, agentName becomes required.
     if (data.agentMobile || data.agentEmail || (data.agentCommission && data.agentCommission > 0)) {
@@ -39,4 +38,3 @@ export const vendorSchema = z.object({
 
 
 export type Vendor = z.infer<typeof vendorSchema>;
-
