@@ -94,6 +94,7 @@ export default async function Dashboard() {
       change: '+1.2%',
       changeType: 'increase' as const,
       icon: <Home className="h-6 w-6 text-muted-foreground" />,
+      href: '/property/units/vacant',
     },
     {
       title: 'Total Monthly Rent Roll',
@@ -101,13 +102,15 @@ export default async function Dashboard() {
       change: '-0.5%',
       changeType: 'decrease' as const,
       icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />,
+      href: '#', // Placeholder link
     },
     {
       title: 'Contracts Expiring (30d)',
-      value: '42',
-      change: '+5',
+      value: expiryReport.filter(c => (differenceInDays(parseISO(c.endDate), new Date()) <= 30)).length.toString(),
+      change: `+${expiryReport.length}`,
       changeType: 'increase' as const,
       icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
+      href: '/tenancy/contracts',
     },
   ];
 
@@ -125,18 +128,20 @@ export default async function Dashboard() {
       {/* Key Metrics Overview */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {kpiData.map((kpi) => (
-          <Card key={kpi.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-              {kpi.icon}
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpi.value}</div>
-              <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-destructive' : 'text-emerald-600'}`}>
-                {kpi.change} from last month
-              </p>
-            </CardContent>
-          </Card>
+          <Link href={kpi.href} key={kpi.title}>
+            <Card className="hover:bg-muted/50 transition-colors">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                {kpi.icon}
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{kpi.value}</div>
+                <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-destructive' : 'text-emerald-600'}`}>
+                  {kpi.change} from last month
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
          <Link href="/finance/cheque-deposit">
             <Card className="hover:bg-muted/50 transition-colors">
