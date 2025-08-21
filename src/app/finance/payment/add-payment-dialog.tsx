@@ -158,7 +158,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     if (result.success) {
       toast({
         title: 'Payment Recorded',
-        description: `Successfully recorded payment of ${data.amount}.`,
+        description: `Successfully recorded payment of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data.amount)}.`,
       });
       setIsOpen(false);
       onPaymentAdded();

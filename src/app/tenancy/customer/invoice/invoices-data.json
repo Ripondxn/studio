@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "invoiceNo": "INV-1755797815768",
+    "customerCode": "C001",
+    "customerName": "General Customer",
+    "invoiceDate": "2025-08-21",
+    "dueDate": "2025-08-21",
+    "items": [
+      {
+        "id": "item-1755797815769",
+        "description": "Consulting Services",
+        "quantity": 1,
+        "unitPrice": 500,
+        "total": 0
+      }
+    ],
+    "subTotal": 500,
+    "taxType": "inclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 500,
+    "notes": "",
+    "status": "Sent",
+    "id": "INV-1755797845234",
+    "amountPaid": 0
+  }
+]
