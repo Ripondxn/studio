@@ -159,7 +159,6 @@ export async function findTenantData(tenantCode: string) {
        
        if(relatedContract) {
             contractData = relatedContract;
-            // Also update the tenant's contractNo field for consistency
             tenant.tenantData.contractNo = relatedContract.contractNo;
 
             if (relatedContract.unitCode) {
