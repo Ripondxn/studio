@@ -6,8 +6,12 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { bankAccountSchema, type BankAccount } from './schema';
+import { type Payment } from '../payment/schema';
+
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
+const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+
 
 async function readAccounts(): Promise<BankAccount[]> {
     try {
@@ -80,5 +84,24 @@ export async function deleteBankAccount(accountId: string) {
 
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function getTransactionsForAccount(accountId: string): Promise<Payment[]> {
+     try {
+        const paymentsData = await fs.readFile(paymentsFilePath, 'utf-8');
+        const allPayments = JSON.parse(paymentsData);
+        
+        const accountPayments = allPayments.filter((p: Payment) => {
+            if (p.paymentMethod === 'Cash' && p.paymentFrom === 'Petty Cash' && accountId === 'acc_3') {
+                return true;
+            }
+            return p.bankAccountId === accountId;
+        });
+
+        return accountPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } catch (error) {
+        console.error('Failed to read payments file:', error);
+        return [];
     }
 }

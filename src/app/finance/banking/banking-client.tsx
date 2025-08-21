@@ -39,8 +39,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { bankAccountSchema, type BankAccount } from './schema';
 import { saveBankAccount, deleteBankAccount, getBankAccounts } from './actions';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { TransactionHistoryDialog } from './transaction-history-dialog';
+
 
 type BankAccountFormData = Omit<BankAccount, 'id'> & { id?: string };
 
@@ -182,9 +182,7 @@ const BankAccountCard = ({ account, onEdit, onDelete }: { account: BankAccount, 
                 </p>
             </CardContent>
             <CardFooter>
-                 <Button asChild variant="outline" className="w-full">
-                    <Link href={`/finance/payment?accountId=${account.id}`}>View Transactions</Link>
-                </Button>
+                 <TransactionHistoryDialog account={account} />
             </CardFooter>
         </Card>
     );
@@ -194,7 +192,6 @@ const BankAccountCard = ({ account, onEdit, onDelete }: { account: BankAccount, 
 export function BankingClient({ initialAccounts }: { initialAccounts: BankAccount[] }) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const { toast } = useToast();
-  const router = useRouter();
 
   const refreshAccounts = async () => {
     const updatedAccounts = await getBankAccounts();
