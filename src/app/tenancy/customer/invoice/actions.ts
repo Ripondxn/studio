@@ -120,5 +120,3 @@ export async function applyPaymentToInvoices(invoicePayments: { invoiceId: strin
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
-
-```

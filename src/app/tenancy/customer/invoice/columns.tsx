@@ -107,4 +107,3 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
       }
   ];
 }
-```

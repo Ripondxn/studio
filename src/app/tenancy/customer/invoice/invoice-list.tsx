@@ -118,4 +118,3 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
         </Card>
     )
 }
-```
