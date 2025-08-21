@@ -5,6 +5,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
   CardContent,
@@ -49,6 +51,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { saveVendorData, findVendorData, deleteVendorData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { vendorSchema, type Vendor } from '../schema';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+
 
 type Attachment = {
   id: number;
@@ -59,7 +64,7 @@ type Attachment = {
   isLink: boolean;
 };
 
-const initialVendorData = {
+const initialVendorData: Vendor = {
     code: '',
     name: '',
     mobile: '',
@@ -84,14 +89,15 @@ export default function VendorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [vendorData, setVendorData] = useState(initialVendorData);
-  const [initialData, setInitialData] = useState(initialVendorData);
-  
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [activeTab, setActiveTab] = useState('vendor-info');
-
+  
+  const form = useForm<Vendor>({
+    resolver: zodResolver(vendorSchema),
+    defaultValues: initialVendorData,
+  });
 
   useEffect(() => {
     return () => {
@@ -115,9 +121,6 @@ export default function VendorPage() {
     }
   }, [searchParams]);
 
-  const handleInputChange = (field: keyof typeof vendorData, value: string | number) => {
-    setVendorData(prev => ({ ...prev, [field]: value }));
-  };
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
@@ -145,7 +148,7 @@ export default function VendorPage() {
         name: '',
         file: null,
         remarks: '',
-        isLink: false,
+        isLink: false
       }
     ]);
   };
@@ -160,40 +163,25 @@ export default function VendorPage() {
 
   const setAllData = (data: any) => {
     const fullVendorData = { ...initialVendorData, ...(data.vendorData || {}) };
-    setVendorData(fullVendorData);
+    form.reset(fullVendorData);
     setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
   }
 
-  const setInitialAllData = (data: any) => {
-    const fullVendorData = { ...initialVendorData, ...(data.vendorData || {}) };
-    setInitialData(JSON.parse(JSON.stringify(fullVendorData)));
-    setInitialAttachments(JSON.parse(JSON.stringify(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : [])));
-  }
-
   const handleEditClick = () => {
-    setInitialAllData({ vendorData, attachments });
     setIsEditing(true);
   }
 
-  const handleSaveClick = async () => {
-    if (!vendorData.code || !vendorData.name) {
-         toast({
-            variant: "destructive",
-            title: "Validation Error",
-            description: "Vendor Code and Name are required fields.",
-        });
-        return;
-    }
+  const onSave = async (data: Vendor) => {
     setIsSaving(true);
     try {
       const dataToSave = {
-        vendorData,
+        vendorData: data,
         attachments: attachments.map(a => ({ 
             id: a.id, 
             name: a.name, 
             file: a.file instanceof File ? a.file.name : a.file, 
             remarks: a.remarks,
-            isLink: a.isLink,
+            isLink: a.isLink 
         })),
       };
 
@@ -201,13 +189,13 @@ export default function VendorPage() {
       if (result.success) {
         toast({
           title: "Success",
-          description: `Vendor "${vendorData.name}" saved successfully.`,
+          description: `Vendor "${data.name}" saved successfully.`,
         });
         setIsEditing(false);
         if (isNewRecord) {
-            router.push(`/vendors/add?code=${vendorData.code}`);
+            router.push(`/vendors/add?code=${data.code}`);
         } else {
-            setInitialAllData(dataToSave);
+            form.reset(data);
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -222,32 +210,20 @@ export default function VendorPage() {
       setIsSaving(false);
     }
   }
-  
-  const handleSaveAgentInfoClick = async () => {
-    const hasAgentInfo = vendorData.agentMobile || vendorData.agentEmail || vendorData.agentCommission > 0;
-    if (hasAgentInfo && !vendorData.agentName) {
-        toast({
-            variant: "destructive",
-            title: "Validation Error",
-            description: "Agent Name is required when other agent details are provided.",
-        });
-        return;
-    }
-    await handleSaveClick();
-  }
+
 
   const handleCancelClick = () => {
      if (isNewRecord) {
         router.push('/vendors');
      } else {
-        setVendorData(initialData);
+        form.reset();
         setAttachments(initialAttachments);
         setIsEditing(false);
      }
   }
 
   const handleFindClick = async (code?: string) => {
-    const codeToFind = code || vendorData.code;
+    const codeToFind = code || form.getValues('code');
     if (!codeToFind) {
       toast({
         variant: 'destructive',
@@ -262,12 +238,10 @@ export default function VendorPage() {
       if (result.success && result.data) {
         setAllData(result.data);
         if (codeToFind !== 'new') {
-            setInitialAllData(result.data);
             setIsNewRecord(false);
             setIsEditing(false);
         } else {
-             setInitialAllData({ vendorData: { ...initialVendorData, ...result.data.vendorData } });
-             setVendorData({ ...initialVendorData, ...result.data.vendorData });
+             form.reset({ ...initialVendorData, ...result.data.vendorData });
             setIsNewRecord(true);
             setIsEditing(true);
         }
@@ -291,13 +265,14 @@ export default function VendorPage() {
   };
 
   const handleDelete = async () => {
-    if (!vendorData.code) return;
+    const code = form.getValues('code');
+    if (!code) return;
     try {
-      const result = await deleteVendorData(vendorData.code);
+      const result = await deleteVendorData(code);
       if (result.success) {
         toast({
           title: 'Deleted',
-          description: `Vendor "${vendorData.name}" has been deleted.`,
+          description: `Vendor "${form.getValues('name')}" has been deleted.`,
         });
         router.push('/vendors');
       } else {
@@ -312,36 +287,38 @@ export default function VendorPage() {
     }
   };
   
-  const pageTitle = isNewRecord ? 'Add New Vendor' : `Edit Vendor: ${initialData.name}`;
+  const pageTitle = isNewRecord ? 'Add New Vendor' : `Edit Vendor: ${form.watch('name')}`;
 
   return (
     <div className="container mx-auto p-4 bg-background">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-primary font-headline">
-          {pageTitle}
-        </h1>
-        <div className="flex items-center gap-2">
-            {!isEditing && (
-              <Button onClick={handleEditClick}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Button>
-            )}
-            {isEditing && (
-              <>
-                <Button onClick={handleSaveClick} disabled={isSaving || (activeTab !== 'vendor-info' && activeTab !== 'bank-details')}>
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  {isSaving ? 'Saving...' : 'Save'}
+     <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSave)}>
+        <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-primary font-headline">
+            {pageTitle}
+            </h1>
+            <div className="flex items-center gap-2">
+                {!isEditing && (
+                <Button type="button" onClick={handleEditClick}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
-                <Button variant="ghost" onClick={handleCancelClick}>
-                  <X className="mr-2 h-4 w-4" /> Cancel
+                )}
+                {isEditing && (
+                <>
+                    <Button type="submit" disabled={isSaving || (activeTab !== 'vendor-info' && activeTab !== 'bank-details' && activeTab !== 'agent-info')}>
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    {isSaving ? 'Saving...' : 'Save'}
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={handleCancelClick}>
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
+                </>
+                )}
+                <Button type="button" variant="outline" onClick={() => router.push('/vendors')}>
+                    <X className="mr-2 h-4 w-4" /> Close
                 </Button>
-              </>
-            )}
-            <Button variant="outline" onClick={() => router.push('/vendors')}>
-                <X className="mr-2 h-4 w-4" /> Close
-            </Button>
+            </div>
         </div>
-      </div>
       
       <Tabs defaultValue="vendor-info" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -358,31 +335,68 @@ export default function VendorPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="flex items-end gap-2">
-                        <div className="flex-grow">
-                            <Label htmlFor="code">Code</Label>
-                            <Input id="code" value={vendorData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={!isNewRecord} />
-                        </div>
-                         <Button variant="outline" size="icon" onClick={() => router.push('/vendors/add')} disabled={isFinding || !isNewRecord}>
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" value={vendorData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                    <Label htmlFor="mobile">Mobile No</Label>
-                    <Input id="mobile" value={vendorData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={vendorData.email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div className="md:col-span-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input id="address" value={vendorData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="code"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="code">Code</Label>
+                           <div className="flex items-end gap-2">
+                                <FormControl>
+                                    <Input {...field} disabled={!isNewRecord} />
+                                </FormControl>
+                                <Button type="button" variant="outline" size="icon" onClick={() => router.push('/vendors/add')} disabled={isFinding || !isNewRecord}>
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="name">Name</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="mobile"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="mobile">Mobile No</Label>
+                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="email">Email</Label>
+                           <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                           <Label htmlFor="address">Address</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
                 </CardContent>
             </Card>
@@ -393,18 +407,39 @@ export default function VendorPage() {
                     <CardTitle>Bank Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 max-w-lg">
-                    <div>
-                        <Label htmlFor="bankName">Bank Name</Label>
-                        <Input id="bankName" value={vendorData.bankName || ''} onChange={(e) => handleInputChange('bankName', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                        <Label htmlFor="accountNumber">Account No</Label>
-                        <Input id="accountNumber" value={vendorData.accountNumber || ''} onChange={(e) => handleInputChange('accountNumber', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                        <Label htmlFor="iban">IBAN No</Label>
-                        <Input id="iban" value={vendorData.iban || ''} onChange={(e) => handleInputChange('iban', e.target.value)} disabled={!isEditing} />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="bankName"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="bankName">Bank Name</Label>
+                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="accountNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="accountNumber">Account No</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="iban"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="iban">IBAN No</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </CardContent>
             </Card>
         </TabsContent>
@@ -416,31 +451,46 @@ export default function VendorPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <Label htmlFor="agentCode">Agent Code</Label>
-                            <Input id="agentCode" value={vendorData.agentCode || ''} disabled />
-                        </div>
-                        <div>
-                            <Label htmlFor="agentName">Agent Name</Label>
-                            <Input id="agentName" value={vendorData.agentName || ''} onChange={(e) => handleInputChange('agentName', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                            <Label htmlFor="agentMobile">Agent Mobile</Label>
-                            <Input id="agentMobile" value={vendorData.agentMobile || ''} onChange={(e) => handleInputChange('agentMobile', e.target.value)} disabled={!isEditing} />
-                        </div>
-                        <div>
-                            <Label htmlFor="agentEmail">Agent Email</Label>
-                            <Input id="agentEmail" value={vendorData.agentEmail || ''} onChange={(e) => handleInputChange('agentEmail', e.target.value)} disabled={!isEditing} />
-                        </div>
-                         <div>
-                            <Label htmlFor="agentCommission">Commission Amount</Label>
-                            <Input id="agentCommission" type="number" value={vendorData.agentCommission || 0} onChange={(e) => handleInputChange('agentCommission', parseFloat(e.target.value) || 0)} disabled={!isEditing} />
-                        </div>
+                        <FormField
+                            control={form.control}
+                            name="agentCode"
+                            render={({ field }) => (
+                                <FormItem><Label>Agent Code</Label><FormControl><Input {...field} disabled /></FormControl><FormMessage /></FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="agentName"
+                            render={({ field }) => (
+                                <FormItem><Label>Agent Name</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl><FormMessage /></FormItem>
+                            )}
+                        />
+                       <FormField
+                            control={form.control}
+                            name="agentMobile"
+                            render={({ field }) => (
+                                <FormItem><Label>Agent Mobile</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl><FormMessage /></FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="agentEmail"
+                            render={({ field }) => (
+                                <FormItem><Label>Agent Email</Label><FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl><FormMessage /></FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="agentCommission"
+                            render={({ field }) => (
+                                <FormItem><Label>Commission Amount</Label><FormControl><Input {...field} type="number" disabled={!isEditing} /></FormControl><FormMessage /></FormItem>
+                            )}
+                        />
                     </div>
                 </CardContent>
                  {isEditing && (
                     <CardFooter>
-                        <Button onClick={handleSaveAgentInfoClick} disabled={isSaving || activeTab !== 'agent-info'}>
+                        <Button type="submit" disabled={isSaving || activeTab !== 'agent-info'}>
                             {isSaving && activeTab === 'agent-info' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                             Save Agent Info
                         </Button>
@@ -492,7 +542,7 @@ export default function VendorPage() {
                                                     disabled={!isEditing}
                                                 />
                                             )}
-                                            <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
                                                 {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                             </Button>
                                         </div>
@@ -512,7 +562,7 @@ export default function VendorPage() {
                                         )}
                                     </TableCell>
                                     <TableCell>
-                                    <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                     </TableCell>
@@ -520,19 +570,21 @@ export default function VendorPage() {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>
             </Card>
         </TabsContent>
       </Tabs>
-      
+      </form>
+    </Form>
 
        <div className="mt-6 flex justify-end">
          <AlertDialog>
             <AlertDialogTrigger asChild>
             <Button
+                type="button"
                 variant="destructive"
                 disabled={isNewRecord || isEditing}
             >
@@ -544,7 +596,7 @@ export default function VendorPage() {
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete the
-                vendor "{vendorData.name}".
+                vendor "{form.getValues('name')}".
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -562,3 +614,4 @@ export default function VendorPage() {
     </div>
   );
 }
+

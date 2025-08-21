@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const attachmentSchema = z.object({
@@ -14,7 +15,7 @@ export const vendorSchema = z.object({
   code: z.string().min(1, "Code is required."),
   name: z.string().min(1, "Name is required."),
   mobile: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
+  email: z.string().email("Invalid email address.").optional().or(z.literal('')),
   address: z.string().optional(),
   bankName: z.string().optional(),
   accountNumber: z.string().optional(),
@@ -23,8 +24,19 @@ export const vendorSchema = z.object({
   agentCode: z.string().optional(),
   agentName: z.string().optional(),
   agentMobile: z.string().optional(),
-  agentEmail: z.string().email().optional().or(z.literal('')),
+  agentEmail: z.string().email("Invalid email address.").optional().or(z.literal('')),
   agentCommission: z.number().optional(),
+}).refine(data => {
+    // If any agent field is filled, agentName becomes required.
+    if (data.agentMobile || data.agentEmail || (data.agentCommission && data.agentCommission > 0)) {
+        return !!data.agentName;
+    }
+    return true;
+}, {
+    message: "Agent name is required if other agent details are provided.",
+    path: ["agentName"],
 });
 
+
 export type Vendor = z.infer<typeof vendorSchema>;
+
