@@ -11,12 +11,14 @@ import { type Landlord } from '@/app/landlord/schema';
 import { type Contract as TenancyContract, type PaymentInstallment as TenancyPaymentInstallment } from '@/app/tenancy/contract/schema';
 import { type LeaseContract, type PaymentInstallment as LeasePaymentInstallment } from '@/app/lease/contract/schema';
 import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO, isBefore, startOfToday } from 'date-fns';
+import { type BankAccount } from '../banking/schema';
 
 const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
 const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
+const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 
 
 async function readCheques(): Promise<Cheque[]> {
@@ -113,6 +115,7 @@ export async function getLookups() {
     const landlords: {landlordData: Landlord}[] = await fs.readFile(landlordsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const tenancyContracts: TenancyContract[] = await fs.readFile(tenancyContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const leaseContracts: LeaseContract[] = await fs.readFile(leaseContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const bankAccounts: BankAccount[] = await fs.readFile(bankAccountsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
 
     const landlordMap = new Map<string, string>();
     landlords.forEach(l => landlordMap.set(l.landlordData.code, l.landlordData.name));
@@ -122,6 +125,7 @@ export async function getLookups() {
         landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
         tenancyContracts: tenancyContracts.map(c => ({ value: c.contractNo, label: c.contractNo, property: c.property, partyName: c.tenantName, paymentSchedule: c.paymentSchedule })),
         leaseContracts: leaseContracts.map(c => ({ value: c.contractNo, label: c.contractNo, property: c.property, partyName: c.landlordCode ? (landlordMap.get(c.landlordCode) || c.landlordCode) : 'Unknown', paymentSchedule: c.paymentSchedule })),
+        bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`}))
     }
 }
 
@@ -178,7 +182,7 @@ export async function getSummary() {
     return summary;
 }
 
-export async function batchDepositCheques(chequeIds: string[], depositDate: string) {
+export async function batchDepositCheques(chequeIds: string[], depositDate: string, bankAccountId: string) {
     try {
         const allCheques = await readCheques();
         let updatedCount = 0;
@@ -190,6 +194,7 @@ export async function batchDepositCheques(chequeIds: string[], depositDate: stri
                     ...cheque,
                     status: 'Deposited' as const,
                     depositDate: depositDate,
+                    bankAccountId: bankAccountId,
                 };
             }
             return cheque;

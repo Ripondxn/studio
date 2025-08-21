@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -20,9 +20,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2, Banknote } from 'lucide-react';
-import { batchDepositCheques } from './actions';
+import { batchDepositCheques, getLookups } from './actions';
 import { format } from 'date-fns';
 import { type Cheque } from './schema';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DepositChequesDialogProps {
     cheques: Cheque[];
@@ -35,6 +36,19 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
     const { toast } = useToast();
     const [selectedChequeIds, setSelectedChequeIds] = useState<string[]>([]);
     const [depositDate, setDepositDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    const [bankAccountId, setBankAccountId] = useState<string>('');
+    const [bankAccounts, setBankAccounts] = useState<{ value: string, label: string }[]>([]);
+
+    useEffect(() => {
+        if(isOpen) {
+            getLookups().then(lookups => {
+                setBankAccounts(lookups.bankAccounts || []);
+                if (lookups.bankAccounts && lookups.bankAccounts.length > 0) {
+                    setBankAccountId(lookups.bankAccounts[0].value);
+                }
+            });
+        }
+    }, [isOpen]);
 
     const selectedTotal = useMemo(() => {
         return cheques
@@ -63,8 +77,12 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
             toast({ variant: 'destructive', title: 'No cheques selected', description: 'Please select at least one cheque to deposit.' });
             return;
         }
+        if (!bankAccountId) {
+            toast({ variant: 'destructive', title: 'No bank account selected', description: 'Please select a bank account to deposit into.' });
+            return;
+        }
         setIsSaving(true);
-        const result = await batchDepositCheques(selectedChequeIds, depositDate);
+        const result = await batchDepositCheques(selectedChequeIds, depositDate, bankAccountId);
         if (result.success) {
             toast({ title: 'Cheques Deposited', description: `${result.count} cheques have been marked as deposited.` });
             onDeposit();
@@ -91,15 +109,32 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="depositDate">Deposit Date</Label>
-                        <Input 
-                            id="depositDate" 
-                            type="date"
-                            value={depositDate}
-                            onChange={(e) => setDepositDate(e.target.value)}
-                            className="w-[180px]"
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="depositDate">Deposit Date</Label>
+                            <Input 
+                                id="depositDate" 
+                                type="date"
+                                value={depositDate}
+                                onChange={(e) => setDepositDate(e.target.value)}
+                                className="w-[180px]"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="bankAccount">Deposit to Bank Account</Label>
+                            <Select value={bankAccountId} onValueChange={setBankAccountId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a bank account" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {bankAccounts.map(account => (
+                                        <SelectItem key={account.value} value={account.value}>
+                                            {account.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <ScrollArea className="h-72 rounded-md border">
                         <Table>

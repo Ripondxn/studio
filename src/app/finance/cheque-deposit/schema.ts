@@ -15,6 +15,7 @@ export const chequeSchema = z.object({
   remarks: z.string().optional(),
   depositDate: z.string().optional(), // Date it was actually deposited
   clearanceDate: z.string().optional(), // Date it cleared or bounced
+  bankAccountId: z.string().optional(), // The bank account it was deposited into
 });
 
 export type Cheque = z.infer<typeof chequeSchema>;
