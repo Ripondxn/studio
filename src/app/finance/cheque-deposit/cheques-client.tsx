@@ -7,7 +7,7 @@ import { columns } from './columns';
 import { DataTable } from './data-table';
 import { AddChequeDialog } from './add-cheque-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Banknote, Clock, CheckCircle, Hourglass, FileText, FileSpreadsheet } from 'lucide-react';
+import { Banknote, Clock, CheckCircle, Hourglass, FileText, FileSpreadsheet, AlertTriangle } from 'lucide-react';
 import { type Cheque } from './schema';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -35,6 +35,8 @@ type Summary = {
     depositedTotal: number;
     clearedThisMonthCount: number;
     clearedThisMonthTotal: number;
+    overdueCount: number;
+    overdueTotal: number;
 }
 
 export function ChequesClient({ initialCheques, initialSummary }: { initialCheques: Cheque[], initialSummary: Summary }) {
@@ -80,7 +82,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
                     currency: 'USD',
                 }).format(value as number);
             }
-            if (col.accessorKey === 'chequeDate') {
+            if (col.accessorKey === 'chequeDate' && value) {
                 return format(new Date(value as string), 'PP');
             }
             return String(value ?? '');
@@ -137,7 +139,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
         </div>
       </div>
 
-       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Hand Cheques</CardTitle>
@@ -157,6 +159,16 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.dueThisWeekTotal)}</div>
             <p className="text-xs text-muted-foreground">{summary.dueThisWeekCount} cheques to be deposited</p>
           </CardContent>
+        </Card>
+        <Card className="border-destructive/50 text-destructive">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Overdue Cheques</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.overdueTotal)}</div>
+                <p className="text-xs text-destructive/80">{summary.overdueCount} cheques require immediate attention</p>
+            </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

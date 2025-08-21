@@ -10,7 +10,7 @@ import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Landlord } from '@/app/landlord/schema';
 import { type Contract as TenancyContract, type PaymentInstallment as TenancyPaymentInstallment } from '@/app/tenancy/contract/schema';
 import { type LeaseContract, type PaymentInstallment as LeasePaymentInstallment } from '@/app/lease/contract/schema';
-import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO, isBefore, startOfToday } from 'date-fns';
 
 const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
@@ -128,6 +128,7 @@ export async function getLookups() {
 export async function getSummary() {
     const cheques = await readCheques();
     const now = new Date();
+    const today = startOfToday();
     const startOfThisWeek = startOfWeek(now);
     const endOfThisWeek = endOfWeek(now);
     const startOfThisMonth = startOfMonth(now);
@@ -141,18 +142,27 @@ export async function getSummary() {
         depositedTotal: 0,
         clearedThisMonthCount: 0,
         clearedThisMonthTotal: 0,
+        overdueCount: 0,
+        overdueTotal: 0,
     };
 
     for (const cheque of cheques) {
+        const chequeDate = parseISO(cheque.chequeDate);
+
         if (cheque.status === 'In Hand') {
             summary.inHandCount++;
             summary.inHandTotal += cheque.amount;
 
-            const chequeDate = parseISO(cheque.chequeDate);
             if (isWithinInterval(chequeDate, { start: startOfThisWeek, end: endOfThisWeek })) {
                 summary.dueThisWeekCount++;
                 summary.dueThisWeekTotal += cheque.amount;
             }
+
+            if (isBefore(chequeDate, today)) {
+                summary.overdueCount++;
+                summary.overdueTotal += cheque.amount;
+            }
+
         } else if (cheque.status === 'Deposited') {
             summary.depositedCount++;
             summary.depositedTotal += cheque.amount;
