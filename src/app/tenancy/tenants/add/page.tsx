@@ -403,7 +403,7 @@ export default function TenantPage() {
                           <Input id="occupation" value={tenantData.occupation} onChange={(e) => handleInputChange('occupation', e.target.value)} disabled={!isEditing} />
                         </div>
                          <div>
-                            <Label htmlFor="contractNo">Contract No</Label>
+                            <Label htmlFor="contractNo">Tenancy Contract No</Label>
                             {contractData.id ? (
                               <Button asChild variant="link" className="p-0 h-auto font-normal block truncate">
                                 <Link href={`/tenancy/contract?id=${contractData.id}`}>{tenantData.contractNo}</Link>

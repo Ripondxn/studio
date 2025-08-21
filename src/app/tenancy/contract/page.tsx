@@ -556,7 +556,7 @@ export default function TenancyContractPage() {
                 <CardContent className="space-y-4 pt-6">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <Label htmlFor="contract-no">Contract No</Label>
+                            <Label htmlFor="contract-no">Tenancy Contract No</Label>
                             <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled/>
                         </div>
                         <div>
