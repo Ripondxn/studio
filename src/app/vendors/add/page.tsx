@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -90,9 +89,7 @@ export default function VendorPage() {
   const searchParams = useSearchParams();
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [activeTab, setActiveTab] = useState('vendor-info');
   
   const form = useForm<Vendor>({
     resolver: zodResolver(vendorSchema),
@@ -161,12 +158,6 @@ export default function VendorPage() {
     setAttachments(prev => prev.filter(item => item.id !== id));
   };
 
-  const setAllData = (data: any) => {
-    const fullVendorData = { ...initialVendorData, ...(data.vendorData || {}) };
-    form.reset(fullVendorData);
-    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
-  }
-
   const handleEditClick = () => {
     setIsEditing(true);
   }
@@ -217,7 +208,7 @@ export default function VendorPage() {
         router.push('/vendors');
      } else {
         form.reset();
-        setAttachments(initialAttachments);
+        setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
      }
   }
@@ -236,12 +227,14 @@ export default function VendorPage() {
     try {
       const result = await findVendorData(codeToFind);
       if (result.success && result.data) {
-        setAllData(result.data);
+        const fullVendorData = { ...initialVendorData, ...(result.data.vendorData || {}) };
+        form.reset(fullVendorData);
+        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
+        
         if (codeToFind !== 'new') {
             setIsNewRecord(false);
             setIsEditing(false);
         } else {
-             form.reset({ ...initialVendorData, ...result.data.vendorData });
             setIsNewRecord(true);
             setIsEditing(true);
         }
@@ -305,9 +298,9 @@ export default function VendorPage() {
                 )}
                 {isEditing && (
                 <>
-                    <Button type="submit" disabled={isSaving || (activeTab !== 'vendor-info' && activeTab !== 'bank-details' && activeTab !== 'agent-info')}>
+                    <Button type="submit" disabled={isSaving}>
                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    {isSaving ? 'Saving...' : 'Save'}
+                    {isSaving ? 'Saving...' : 'Save All'}
                     </Button>
                     <Button type="button" variant="ghost" onClick={handleCancelClick}>
                     <X className="mr-2 h-4 w-4" /> Cancel
@@ -320,7 +313,7 @@ export default function VendorPage() {
             </div>
         </div>
       
-      <Tabs defaultValue="vendor-info" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="vendor-info">
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
@@ -488,14 +481,6 @@ export default function VendorPage() {
                         />
                     </div>
                 </CardContent>
-                 {isEditing && (
-                    <CardFooter>
-                        <Button type="submit" disabled={isSaving || activeTab !== 'agent-info'}>
-                            {isSaving && activeTab === 'agent-info' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                            Save Agent Info
-                        </Button>
-                    </CardFooter>
-                 )}
             </Card>
         </TabsContent>
         <TabsContent value="attachments">
@@ -614,4 +599,3 @@ export default function VendorPage() {
     </div>
   );
 }
-
