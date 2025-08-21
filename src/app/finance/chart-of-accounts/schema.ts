@@ -2,8 +2,8 @@
 import { z } from 'zod';
 
 export const accountSchema = z.object({
-  code: z.string(),
-  name: z.string(),
+  code: z.string().min(1, 'Account code is required.'),
+  name: z.string().min(1, 'Account name is required.'),
   type: z.enum(['Asset', 'Liability', 'Equity', 'Revenue', 'Expense', 'Header']),
   status: z.enum(['Active', 'Inactive']),
   balance: z.number(),

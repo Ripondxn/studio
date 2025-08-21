@@ -1,11 +1,14 @@
 
-import { accounts } from './data';
+import { getAccounts } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { Button } from '@/components/ui/button';
 import { FileDown, Plus } from 'lucide-react';
+import { AddAccountDialog } from './add-account-dialog';
 
-export default function ChartOfAccountsPage() {
+export default async function ChartOfAccountsPage() {
+  const accounts = await getAccounts();
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -19,9 +22,7 @@ export default function ChartOfAccountsPage() {
             <Button variant="outline">
                 <FileDown className="mr-2 h-4 w-4" /> Import
             </Button>
-            <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add New Account
-            </Button>
+            <AddAccountDialog />
         </div>
       </div>
       <DataTable columns={columns} data={accounts} />
