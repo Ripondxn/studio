@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Loader2, Printer } from 'lucide-react';
+import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveInvoice } from './actions';
 import { invoiceSchema, invoiceItemSchema } from './schema';
 import { format } from 'date-fns';
@@ -251,6 +251,11 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
           </div>
 
           <DialogFooter className="mt-6">
+            <DialogClose asChild>
+                <Button type="button" variant="ghost">
+                    <X className="mr-2 h-4 w-4" /> Close
+                </Button>
+            </DialogClose>
             <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
             <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
