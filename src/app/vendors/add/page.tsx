@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -312,7 +313,6 @@ export default function VendorPage() {
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
-            <TabsTrigger value="agent-info">Agent Info</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="vendor-info">
@@ -428,73 +428,6 @@ export default function VendorPage() {
                         </FormItem>
                       )}
                     />
-                </CardContent>
-            </Card>
-        </TabsContent>
-         <TabsContent value="agent-info">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Agent Information</CardTitle>
-                    <CardDescription>Details of the agent associated with this vendor.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="agentCode"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentCode">Agent Code</Label>
-                           <FormControl><Input {...field} disabled /></FormControl>
-                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="agentName"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentName">Agent Name</Label>
-                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="agentMobile"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentMobile">Agent Mobile</Label>
-                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="agentEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentEmail">Agent Email</Label>
-                           <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name="agentCommission"
-                      render={({ field }) => (
-                        <FormItem>
-                           <Label htmlFor="agentCommission">Commission Amount</Label>
-                           <FormControl><Input {...field} type="number" disabled={!isEditing} /></FormControl>
-                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                </div>
                 </CardContent>
             </Card>
         </TabsContent>
