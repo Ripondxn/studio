@@ -5,6 +5,7 @@ import { DataTable } from './data-table';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { getAllVendors } from './actions';
+import { VendorContent } from './vendor-content';
 
 export default async function VendorsPage() {
   const vendors = await getAllVendors();
@@ -19,7 +20,7 @@ export default async function VendorsPage() {
           </Link>
         </Button>
       </div>
-      <DataTable columns={columns} data={vendors} />
+      <VendorContent vendors={vendors} />
     </div>
   );
 }

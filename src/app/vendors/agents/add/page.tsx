@@ -57,7 +57,7 @@ export default function AgentPage() {
   const searchParams = useSearchParams();
   
   const form = useForm<Agent>({
-    resolver: zodResolver(agentSchema.omit({ totalCommissionPaid: true, vendorName: true, vendorCode: true })),
+    resolver: zodResolver(agentSchema.omit({ id: true, totalCommissionPaid: true, vendorName: true, vendorCode: true })),
     defaultValues: initialAgentData,
   });
 

@@ -14,7 +14,7 @@ export default async function AgentsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
             <h1 className="text-3xl font-bold font-headline">Agents</h1>
-            <p className="text-muted-foreground">A list of all agents associated with your vendors.</p>
+            <p className="text-muted-foreground">A list of all commission-based agents.</p>
         </div>
         <Button asChild>
           <Link href="/vendors/agents/add">

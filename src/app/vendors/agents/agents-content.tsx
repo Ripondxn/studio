@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -11,12 +10,14 @@ import { columns } from './columns';
 import { Agent } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
+import { useRouter } from 'next/navigation';
 
 export function AgentContent({ agents }: { agents: Agent[] }) {
   const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('grid');
   const [filter, setFilter] = React.useState('');
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = React.useState(false);
   const [paymentDefaultValues, setPaymentDefaultValues] = React.useState<Partial<Omit<Payment, 'id'>> | undefined>();
+  const router = useRouter();
 
   const filteredAgents = React.useMemo(() => {
     if (!filter) {
@@ -44,6 +45,7 @@ export function AgentContent({ agents }: { agents: Agent[] }) {
   const handlePaymentAdded = () => {
     // This would ideally trigger a refresh of the agents data.
     // For now, we rely on page navigation/refresh.
+    router.refresh();
   }
 
   return (

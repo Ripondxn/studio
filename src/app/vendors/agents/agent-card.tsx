@@ -65,12 +65,6 @@ export function AgentCard({ agent }: AgentCardProps) {
                 <span className="font-medium truncate">{agent.email}</span>
             </div>
         )}
-        {agent.vendorName && (
-            <div className="flex items-center text-sm">
-                <Building className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span className="font-medium truncate">{agent.vendorName}</span>
-            </div>
-        )}
         <div className="text-sm pt-2">
             <p className="text-muted-foreground">Commission</p>
             <p className="font-semibold text-lg">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalPaid)} / {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(commissionRate)}</p>

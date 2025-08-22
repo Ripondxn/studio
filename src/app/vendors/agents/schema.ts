@@ -10,8 +10,8 @@ export const agentSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   commissionRate: z.number().optional(),
   totalCommissionPaid: z.number().optional(),
-  vendorName: z.string().optional(),
   vendorCode: z.string().optional(),
+  vendorName: z.string().optional(),
 });
 
 export type Agent = z.infer<typeof agentSchema>;
