@@ -138,5 +138,14 @@
     "balance": 10000,
     "isGroup": false,
     "parentCode": "5100"
+  },
+  {
+    "code": "5140",
+    "name": "Agent Commission",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5100"
   }
 ]

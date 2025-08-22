@@ -4,15 +4,16 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Edit, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, Edit, MoreHorizontal, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Agent } from './schema';
 import { EditAgentDialog } from './edit-agent-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 
-const ActionsCell = ({ row }: { row: { original: Agent } }) => {
+const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRecordPayment: (agent: Agent) => void }) => {
   const agent = row.original;
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -36,6 +37,10 @@ const ActionsCell = ({ row }: { row: { original: Agent } }) => {
               <Edit className="mr-2 h-4 w-4" />
               Edit Agent
             </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onRecordPayment(agent)} disabled={!agent.commission || agent.commission <= 0}>
+                <DollarSign className="mr-2 h-4 w-4" />
+                Record Payment
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -44,7 +49,7 @@ const ActionsCell = ({ row }: { row: { original: Agent } }) => {
 };
 
 
-export const columns: ColumnDef<Agent>[] = [
+export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agent>[] => [
   {
     accessorKey: 'code',
     header: 'Agent Code',
@@ -106,6 +111,6 @@ export const columns: ColumnDef<Agent>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => <ActionsCell row={row} />,
+    cell: ({ row }) => <ActionsCell row={row} onRecordPayment={onRecordPayment} />,
   },
 ];
