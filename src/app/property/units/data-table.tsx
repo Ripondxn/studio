@@ -14,6 +14,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { FileText, FileSpreadsheet } from 'lucide-react';
 
 import {
   Table,
@@ -66,6 +70,47 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const exportableColumns = columns.filter((col: any) => col.accessorKey && col.id !== 'select' && col.id !== 'actions');
+    
+    const head = [exportableColumns.map((col: any) => col.header)];
+
+    const body = table.getRowModel().rows.map(row => 
+        exportableColumns.map((col: any) => {
+            const value = row.original[col.accessorKey as keyof TData];
+            if (col.accessorKey === 'annualRent') {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value as number);
+            }
+            return String(value ?? '');
+        })
+    );
+
+    doc.text("Units List", 14, 16);
+    (doc as any).autoTable({
+        head: head,
+        body: body,
+        startY: 20,
+    });
+    doc.save('units-list.pdf');
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = table.getRowModel().rows.map(row => {
+        let obj: any = {};
+         columns.filter((col: any) => col.accessorKey && col.id !== 'select' && col.id !== 'actions').forEach((col: any) => {
+            const headerText = typeof col.header === 'string' ? col.header : col.accessorKey;
+            obj[headerText] = row.original[col.accessorKey as keyof TData];
+         })
+         return obj;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Units");
+    XLSX.writeFile(wb, "units-list.xlsx");
+  };
+
   return (
     <div>
       <div className="flex items-center py-4">
@@ -77,32 +122,40 @@ export function DataTable<TData, TValue>({
           }
           className="max-w-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns
+        <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                <FileText className="mr-2 h-4 w-4" /> Export PDF
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
+            </Button>
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                Columns
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                    return (
+                    <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                        }
+                    >
+                        {column.id}
+                    </DropdownMenuCheckboxItem>
+                    );
+                })}
+            </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
