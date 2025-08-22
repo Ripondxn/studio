@@ -9,6 +9,7 @@ import path from 'path';
 import { type BankAccount } from '@/app/finance/banking/schema';
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
+const equityTransactionsFilePath = path.join(process.cwd(), 'src/app/finance/equity/transactions.json');
 
 async function readAccounts(): Promise<BankAccount[]> {
     try {
@@ -24,6 +25,23 @@ async function readAccounts(): Promise<BankAccount[]> {
 
 async function writeAccounts(data: BankAccount[]) {
     await fs.writeFile(accountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+async function readEquityTransactions() {
+    try {
+        await fs.access(equityTransactionsFilePath);
+        const data = await fs.readFile(equityTransactionsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+async function writeEquityTransactions(data: any[]) {
+    await fs.writeFile(equityTransactionsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 
@@ -74,8 +92,14 @@ export async function recordEquityTransaction(data: z.infer<typeof equitySchema>
             await writeAccounts(allBankAccounts);
         }
         
-        // In a full accounting system, we would also create journal entries here to credit/debit the owner's equity account.
-        // For this app, we just adjust the cash/bank balance.
+        // Log the equity transaction to be reflected in the Chart of Accounts
+        const allEquityTransactions = await readEquityTransactions();
+        const newTransaction = {
+            id: `EQT-${Date.now()}`,
+            ...validation.data
+        };
+        allEquityTransactions.push(newTransaction);
+        await writeEquityTransactions(allEquityTransactions);
 
         revalidatePath('/finance/banking');
         revalidatePath('/finance/chart-of-accounts');

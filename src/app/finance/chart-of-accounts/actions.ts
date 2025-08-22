@@ -13,6 +13,7 @@ const accountsFilePath = path.join(process.cwd(), 'src/app/finance/chart-of-acco
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+const equityTransactionsFilePath = path.join(process.cwd(), 'src/app/finance/equity/transactions.json');
 
 
 async function readData(filePath: string) {
@@ -38,15 +39,17 @@ export async function getAccounts(): Promise<Account[]> {
     const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
     const pettyCash: { balance: number } = (await readData(pettyCashFilePath)) || { balance: 0 };
     const payments: Payment[] = await readData(paymentsFilePath);
+    const equityTransactions: any[] = await readData(equityTransactionsFilePath);
 
     // Create a map for easy access and modification
     const accountMap = new Map<string, Account>(accounts.map(acc => [acc.code, { ...acc, balance: acc.isGroup ? 0 : acc.balance, children: [] as Account[] }]));
 
     // 1. Reset all non-group account balances that are calculated dynamically
-    const dynamicAccountCodes = ['1110', '4100', '5110', '5120', '5130', '5140'];
+    const dynamicAccountCodes = ['1110', '4100', '5110', '5120', '5130', '5140', '3000'];
     dynamicAccountCodes.forEach(code => {
-        if(accountMap.has(code) && !accountMap.get(code)!.isGroup) {
-            accountMap.get(code)!.balance = 0;
+        const acc = accountMap.get(code);
+        if(acc && !acc.isGroup) {
+            acc.balance = 0;
         }
     });
 
@@ -77,7 +80,23 @@ export async function getAccounts(): Promise<Account[]> {
         }
     });
     
-    // Build tree structure for balance recalculation
+    // 4. Calculate Equity
+    // In a real system, this would be opening balance + profit/loss + contributions - withdrawals
+    // For now, let's use a base and adjust for transactions.
+    let totalEquity = 475000; // Base/opening equity from original JSON
+    equityTransactions.forEach(t => {
+        if (t.type === 'Contribution') {
+            totalEquity += t.amount;
+        } else if (t.type === 'Withdrawal') {
+            totalEquity -= t.amount;
+        }
+    });
+
+    if(accountMap.has('3000')) {
+      accountMap.get('3000')!.balance = totalEquity;
+    }
+
+    // 5. Build tree structure for balance recalculation
     const rootAccounts: Account[] = [];
     accountMap.forEach(acc => {
         if (acc.parentCode && accountMap.has(acc.parentCode)) {
@@ -88,7 +107,7 @@ export async function getAccounts(): Promise<Account[]> {
         }
     });
 
-    // 4. Recalculate parent balances from the bottom up
+    // 6. Recalculate parent balances from the bottom up
     const recalculateBalances = (account: Account): number => {
         if (!account.isGroup) {
             return account.balance;
