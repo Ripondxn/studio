@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getAllAgents } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -18,9 +17,9 @@ export default function AgentsPage() {
   const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>> | undefined>();
   const router = useRouter();
 
-  useState(() => {
+  useEffect(() => {
     getAllAgents().then(setAgents);
-  });
+  }, []);
 
   const refreshAgents = async () => {
     const updatedAgents = await getAllAgents();
