@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -29,20 +30,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { z } from 'zod';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit } from '@/app/tenancy/contract/actions';
 
 
-const invoiceAllocationSchema = z.object({
-  invoiceId: z.string(),
-  amount: z.number(),
-});
-
-const formSchema = paymentSchema.omit({ id: true }).extend({
-    invoiceAllocations: z.array(invoiceAllocationSchema).optional(),
-});
-
-type PaymentFormData = z.infer<typeof formSchema>;
+type PaymentFormData = z.infer<typeof paymentSchema>;
 
 
 type Lookups = {
@@ -86,7 +77,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     setValue,
     formState: { errors },
   } = useForm<PaymentFormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(paymentSchema.omit({ id: true })),
   });
 
   const paymentType = watch('type');
@@ -114,7 +105,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
         return true; // No allocation to validate
     }
     // Allocation is valid if the allocated amount is not more than the payment amount.
-    // A small tolerance is added for floating point inaccuracies.
     return totalAllocated <= (paymentAmount || 0) + 0.001;
   }, [partyType, customerInvoices, totalAllocated, paymentAmount]);
 

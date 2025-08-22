@@ -6,7 +6,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { paymentSchema, type Payment } from './schema';
+import { paymentSchema, type Payment, invoiceAllocationSchema } from './schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Landlord } from '@/app/landlord/schema';
 import { type Vendor } from '@/app/vendors/schema';
@@ -82,21 +82,13 @@ export async function getPayments() {
     return payments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
-const addPaymentFormSchema = paymentSchema.omit({ id: true }).extend({
-    invoiceAllocations: z.array(z.object({
-        invoiceId: z.string(),
-        amount: z.number(),
-    })).optional(),
-});
-
-
-export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
-    const validation = addPaymentFormSchema.safeParse(data);
+export async function addPayment(data: z.infer<typeof paymentSchema>) {
+    const validation = paymentSchema.safeParse(data);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
     }
     
-    const { invoiceAllocations, ...paymentData } = validation.data;
+    const paymentData = validation.data;
 
     try {
         // Adjust balances
@@ -147,8 +139,8 @@ export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
         allPayments.push(newPayment);
         await writePayments(allPayments);
 
-        if (paymentData.type === 'Receipt' && paymentData.partyType === 'Customer' && invoiceAllocations && invoiceAllocations.length > 0) {
-            const allocationsToApply = invoiceAllocations.filter(alloc => alloc.amount > 0);
+        if (paymentData.type === 'Receipt' && paymentData.partyType === 'Customer' && paymentData.invoiceAllocations && paymentData.invoiceAllocations.length > 0) {
+            const allocationsToApply = paymentData.invoiceAllocations.filter(alloc => alloc.amount > 0);
             if (allocationsToApply.length > 0) {
                  await applyPaymentToInvoices(allocationsToApply, paymentData.partyName);
             }

@@ -1,5 +1,11 @@
 
+
 import { z } from 'zod';
+
+export const invoiceAllocationSchema = z.object({
+  invoiceId: z.string(),
+  amount: z.number(),
+});
 
 export const paymentSchema = z.object({
   id: z.string(),
@@ -20,6 +26,7 @@ export const paymentSchema = z.object({
   remarks: z.string().optional(),
   status: z.enum(['Paid', 'Received', 'Cancelled']),
   agentCode: z.string().optional(),
+  invoiceAllocations: z.array(invoiceAllocationSchema).optional(),
 });
 
 export type Payment = z.infer<typeof paymentSchema>;
