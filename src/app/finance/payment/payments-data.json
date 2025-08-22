@@ -81,5 +81,19 @@
     "remarks": "",
     "status": "Paid",
     "id": "PAY-1755786523956"
+  },
+  {
+    "type": "Payment",
+    "date": "2025-08-22",
+    "partyType": "Vendor",
+    "partyName": "Md Ripon Ahmed",
+    "amount": 500,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "referenceNo": "cash transation",
+    "remarks": "Commission payment for agent Abdur Rahim (A001)",
+    "status": "Paid",
+    "agentCode": "A001",
+    "id": "PAY-1755836088206"
   }
 ]

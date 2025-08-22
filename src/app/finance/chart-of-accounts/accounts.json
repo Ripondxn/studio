@@ -141,7 +141,7 @@
   },
   {
     "code": "5140",
-    "name": "Agent Commission",
+    "name": "Agent Fee",
     "type": "Expense",
     "status": "Active",
     "balance": 0,
