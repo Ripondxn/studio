@@ -28,7 +28,6 @@ export const invoiceSchema = z.object({
   total: z.number(),
   amountPaid: z.number().optional().default(0),
   remainingBalance: z.number().optional(),
-  notes: z.string().optional(),
   status: z.enum(['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled']),
 });
 
