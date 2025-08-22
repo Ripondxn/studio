@@ -84,14 +84,13 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const paymentMethod = watch('paymentMethod');
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
+  const paymentAmount = watch("amount", 0);
+  const allocations = watch("invoiceAllocations");
 
   const { fields, replace, append, remove } = useFieldArray({
       control,
       name: "invoiceAllocations",
   });
-
-  const paymentAmount = watch("amount", 0);
-  const allocations = watch("invoiceAllocations");
   
   const totalAllocated = useMemo(() => {
     return allocations?.reduce((sum, current) => sum + (Number(current.amount) || 0), 0) || 0;
@@ -103,7 +102,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     if (partyType !== 'Customer' || !customerInvoices || customerInvoices.length === 0) {
         return true; 
     }
-    // Allow saving if not over-allocated. Use a small tolerance for floating point issues.
     return totalAllocated <= (paymentAmount || 0) + 0.001;
   }, [partyType, customerInvoices, totalAllocated, paymentAmount]);
 
@@ -212,7 +210,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
       return;
     }
 
-    if (remainingToAllocate > 0) {
+    if (remainingToAllocate > 0 && partyType === 'Customer') {
       if (!window.confirm(`You have not allocated ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingToAllocate)}. This will be saved as an on-account credit. Do you want to continue?`)) {
         return;
       }

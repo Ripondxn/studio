@@ -29,11 +29,15 @@ async function writeInvoices(data: Invoice[]) {
 
 export async function getInvoicesForCustomer(customerCode: string) {
     const allInvoices = await readInvoices();
-    return allInvoices.filter(inv => inv.customerCode === customerCode);
+    const customerInvoices = allInvoices.filter(inv => inv.customerCode === customerCode);
+    return customerInvoices.map(inv => ({
+        ...inv,
+        remainingBalance: inv.total - (inv.amountPaid || 0),
+    }));
 }
 
 export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string }) {
-    const validation = invoiceSchema.omit({id: true, amountPaid: true}).safeParse(data);
+    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(data);
 
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -109,7 +113,7 @@ export async function applyPaymentToInvoices(invoicePayments: { invoiceId: strin
                 allInvoices[index].amountPaid = (allInvoices[index].amountPaid || 0) + payment.amount;
                 const remainingBalance = allInvoices[index].total - allInvoices[index].amountPaid;
                 
-                if (remainingBalance <= 0.001) { // Using a small tolerance for floating point math
+                if (remainingBalance <= 0.001) {
                     allInvoices[index].status = 'Paid';
                 }
             }

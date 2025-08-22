@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign } from 'lucide-react';
@@ -78,6 +78,17 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
         fetchInvoices();
         router.refresh();
     }
+    
+    const financialSummary = useMemo(() => {
+        return invoices.reduce((acc, inv) => {
+            if (inv.status !== 'Cancelled') {
+                acc.totalBilled += inv.total;
+                acc.totalPaid += inv.amountPaid || 0;
+            }
+            return acc;
+        }, { totalBilled: 0, totalPaid: 0 });
+    }, [invoices]);
+
 
     return (
         <Card>
@@ -94,6 +105,20 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                         <Button variant="outline" onClick={handleCreateClick}>
                             <Plus className="mr-2 h-4 w-4" /> Create Invoice
                         </Button>
+                    </div>
+                </div>
+                 <div className="grid grid-cols-3 gap-4 text-center mt-4 border rounded-lg p-4">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Total Billed</p>
+                        <p className="text-xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalBilled)}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">Total Paid</p>
+                        <p className="text-xl font-bold text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalPaid)}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">Balance Due</p>
+                        <p className="text-xl font-bold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalBilled - financialSummary.totalPaid)}</p>
                     </div>
                 </div>
             </CardHeader>
