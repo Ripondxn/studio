@@ -85,7 +85,7 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
               <Edit className="mr-2 h-4 w-4" />
               Edit Agent
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onRecordPayment(agent)} disabled={!agent.commission || agent.commission <= 0 || agent.isCommissionPaid}>
+            <DropdownMenuItem onSelect={() => onRecordPayment(agent)} disabled={!agent.commission || agent.commission <= 0}>
                 <DollarSign className="mr-2 h-4 w-4" />
                 Record Payment
             </DropdownMenuItem>
