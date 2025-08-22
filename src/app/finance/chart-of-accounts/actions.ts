@@ -200,36 +200,72 @@ export async function deleteAccount(code: string) {
 }
 
 
-export async function getTransactionsForAccount(accountCode: string): Promise<Payment[]> {
-    const allPayments: Payment[] = await readData(paymentsFilePath);
+async function getChildAccountCodes(parentCode: string, allAccounts: Account[]): Promise<string[]> {
+    const children = allAccounts.filter(acc => acc.parentCode === parentCode);
+    let childCodes: string[] = children.map(c => c.code);
 
-    switch(accountCode) {
-        case '1110': // Cash and Bank
-             // Returns all transactions for simplicity. Could be refined.
-            return allPayments;
-        case '3000': { // Equity
-             const equityTransactions: any[] = await readData(equityTransactionsFilePath);
-             return equityTransactions.map(t => ({
-                id: t.id,
-                type: t.type === 'Contribution' ? 'Receipt' : 'Payment',
-                date: t.date,
-                partyType: 'Customer', // Simplified for display
-                partyName: 'Owner',
-                amount: t.amount,
-                paymentMethod: 'Cash', // Simplified
-                referenceNo: t.remarks || 'Equity Transaction',
-                status: t.type === 'Contribution' ? 'Received' : 'Paid',
-             }));
+    for (const child of children) {
+        if (child.isGroup) {
+            const grandChildCodes = await getChildAccountCodes(child.code, allAccounts);
+            childCodes = [...childCodes, ...grandChildCodes];
         }
-        case '4100': // Rental Income
-            return allPayments.filter(p => p.type === 'Receipt');
-        case '5110': // Maintenance & Repairs
-            return allPayments.filter(p => p.type === 'Payment' && p.partyType === 'Vendor' && !p.agentCode);
-        case '5140': // Agent Fee
-            return allPayments.filter(p => p.type === 'Payment' && !!p.agentCode);
-        default:
-            // For parent accounts or accounts without direct transaction logic yet
-            return [];
     }
+    return childCodes;
 }
 
+
+export async function getTransactionsForAccount(accountCode: string): Promise<Payment[]> {
+    const allAccounts: Account[] = await readData(accountsFilePath);
+    const allPayments: Payment[] = await readData(paymentsFilePath);
+
+    const targetAccount = allAccounts.find(acc => acc.code === accountCode);
+    if (!targetAccount) return [];
+    
+    let codesToFetch: string[] = [accountCode];
+    if (targetAccount.isGroup) {
+        const childCodes = await getChildAccountCodes(accountCode, allAccounts);
+        codesToFetch = [...codesToFetch, ...childCodes];
+    }
+    
+    let transactions: Payment[] = [];
+
+    for (const code of codesToFetch) {
+         switch(code) {
+            case '1110': // Cash and Bank
+                transactions.push(...allPayments);
+                break;
+            case '3000': { // Equity
+                 const equityTransactions: any[] = await readData(equityTransactionsFilePath);
+                 transactions.push(...equityTransactions.map(t => ({
+                    id: t.id,
+                    type: t.type === 'Contribution' ? 'Receipt' : 'Payment',
+                    date: t.date,
+                    partyType: 'Customer', // Simplified for display
+                    partyName: 'Owner',
+                    amount: t.amount,
+                    paymentMethod: 'Cash', // Simplified
+                    referenceNo: t.remarks || 'Equity Transaction',
+                    status: t.type === 'Contribution' ? 'Received' : 'Paid',
+                 })));
+                 break;
+            }
+            case '4100': // Rental Income
+                transactions.push(...allPayments.filter(p => p.type === 'Receipt'));
+                break;
+            case '5110': // Maintenance & Repairs
+                transactions.push(...allPayments.filter(p => p.type === 'Payment' && p.partyType === 'Vendor' && !p.agentCode));
+                break;
+            case '5140': // Agent Fee
+                transactions.push(...allPayments.filter(p => p.type === 'Payment' && !!p.agentCode));
+                break;
+            default:
+                // For other accounts, no specific transaction logic is defined yet.
+                break;
+        }
+    }
+
+    // Remove duplicates that might occur from parent-child relationships
+    const uniqueTransactions = Array.from(new Map(transactions.map(item => [item.id, item])).values());
+    
+    return uniqueTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}

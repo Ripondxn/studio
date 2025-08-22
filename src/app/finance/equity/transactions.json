@@ -14,5 +14,13 @@
     "date": "2025-08-22",
     "accountId": "acc_1",
     "remarks": "fund added"
+  },
+  {
+    "id": "EQT-1755839415394",
+    "type": "Withdrawal",
+    "amount": 50000,
+    "date": "2025-08-22",
+    "accountId": "acc_1",
+    "remarks": "withdaw fund by owner"
   }
 ]
