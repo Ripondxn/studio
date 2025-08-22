@@ -152,5 +152,38 @@
     "id": "ROOM-1755857384026",
     "rentAmount": 1000,
     "rentFrequency": "Monthly"
+  },
+  {
+    "roomCode": "R1",
+    "roomName": "",
+    "propertyCode": "MT-C22",
+    "floorCode": "",
+    "unitCode": "",
+    "roomType": "",
+    "rentAmount": 0,
+    "rentFrequency": "Monthly",
+    "id": "ROOM-1755862544133"
+  },
+  {
+    "roomCode": "R2",
+    "roomName": "",
+    "propertyCode": "MT-C22",
+    "floorCode": "",
+    "unitCode": "",
+    "roomType": "",
+    "rentAmount": 0,
+    "rentFrequency": "Monthly",
+    "id": "ROOM-1755862568185"
+  },
+  {
+    "roomCode": "R3",
+    "roomName": "",
+    "propertyCode": "MT-C22",
+    "floorCode": "",
+    "unitCode": "",
+    "roomType": "",
+    "rentAmount": 0,
+    "rentFrequency": "Monthly",
+    "id": "ROOM-1755862579158"
   }
 ]

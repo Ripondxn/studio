@@ -42,6 +42,7 @@ type ExpiryReportItem = {
     endDate: string;
     rent: number;
     status: string;
+    contractNo: string;
 }
 
 async function getExpiryReport(): Promise<ExpiryReportItem[]> {
@@ -60,7 +61,8 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
             tenant: contract.tenantName,
             endDate: contract.endDate,
             rent: contract.totalRent,
-            status: contract.daysRemaining <= 30 ? 'Renewal Due' : 'Notified'
+            status: contract.daysRemaining <= 30 ? 'Renewal Due' : 'Notified',
+            contractNo: contract.contractNo,
         }));
     return report;
 }
@@ -182,7 +184,7 @@ export default async function Dashboard() {
                 </TableHeader>
                 <TableBody>
                     {expiryReport.map((item) => (
-                        <TableRow key={`${item.unit}-${item.tenant}`}>
+                        <TableRow key={item.contractNo}>
                             <TableCell className="font-medium">{item.unit}</TableCell>
                             <TableCell>{item.tenant}</TableCell>
                             <TableCell>{item.endDate}</TableCell>
