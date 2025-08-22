@@ -5,6 +5,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { type Unit } from '@/app/property/units/schema';
+import { type Contract } from '@/app/tenancy/contract/schema';
 
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
@@ -149,7 +150,22 @@ async function readUnits(): Promise<Unit[]> {
 export async function getUnitsForProperty(propertyCode: string): Promise<{ success: boolean, data?: Unit[], error?: string }> {
     try {
         const allUnits = await readUnits();
-        const propertyUnits = allUnits.filter(u => u.propertyCode === propertyCode);
+        const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
+        const allContracts: Contract[] = JSON.parse(contractsData);
+
+        const occupiedUnitCodes = new Set(
+            allContracts
+                .filter(c => c.status === 'New' || c.status === 'Renew')
+                .map(c => c.unitCode)
+        );
+
+        const propertyUnits = allUnits
+            .filter(u => u.propertyCode === propertyCode)
+            .map(unit => ({
+                ...unit,
+                occupancyStatus: occupiedUnitCodes.has(unit.unitCode) ? 'Occupied' : 'Vacant',
+            }));
+            
         return { success: true, data: propertyUnits };
     } catch (error) {
         console.error('Failed to get units for property:', error);
@@ -172,4 +188,3 @@ export async function getPropertyLookups() {
         landlords: landlords.map((l: any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
     }
 }
-
