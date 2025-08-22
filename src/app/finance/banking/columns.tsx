@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Banknote, Edit, Landmark, MoreVertical, Trash2, Wallet } from 'lucide-react';
+import { ArrowUpDown, Banknote, Edit, Landmark, MoreVertical, Trash2, Wallet, History } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +13,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -157,8 +158,8 @@ const ActionsCell = ({ row, onAccountUpdate }: { row: { original: BankAccount },
                 <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4"/></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-                 <TransactionHistoryDialog account={account}>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <TransactionHistoryDialog account={account}>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="w-full justify-start">
                         <History className="mr-2 h-4 w-4"/> View Transactions
                     </DropdownMenuItem>
                 </TransactionHistoryDialog>
