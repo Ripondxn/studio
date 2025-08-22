@@ -109,3 +109,51 @@ export async function recordEquityTransaction(data: z.infer<typeof equitySchema>
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+export async function deleteEquityTransaction(transactionId: string) {
+    try {
+        const allEquityTransactions = await readEquityTransactions();
+        const transactionIndex = allEquityTransactions.findIndex(t => t.id === transactionId);
+
+        if (transactionIndex === -1) {
+            return { success: false, error: 'Equity transaction not found.' };
+        }
+
+        const transactionToDelete = allEquityTransactions[transactionIndex];
+        const { type, amount, accountId } = transactionToDelete;
+
+        // Reverse the financial impact
+        if (accountId === 'acc_3') { // Petty Cash
+            const pettyCash = await readPettyCash();
+            if (type === 'Contribution') {
+                pettyCash.balance -= amount;
+            } else { // Withdrawal
+                pettyCash.balance += amount;
+            }
+            await writePettyCash(pettyCash);
+        } else { // Bank Account
+            const allBankAccounts = await readAccounts();
+            const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === accountId);
+            
+            if (bankAccountIndex !== -1) {
+                if (type === 'Contribution') {
+                    allBankAccounts[bankAccountIndex].balance -= amount;
+                } else { // Withdrawal
+                    allBankAccounts[bankAccountIndex].balance += amount;
+                }
+                await writeAccounts(allBankAccounts);
+            }
+        }
+
+        // Remove the transaction from the log
+        const updatedTransactions = allEquityTransactions.filter(t => t.id !== transactionId);
+        await writeEquityTransactions(updatedTransactions);
+
+        revalidatePath('/finance/banking');
+        revalidatePath('/finance/chart-of-accounts');
+        return { success: true };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
