@@ -107,10 +107,10 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   });
   
   const totalAllocated = useMemo(() => {
-    return allocations?.reduce((sum, current) => sum + (current.amount || 0), 0) || 0;
+    return allocations?.reduce((sum, current) => sum + (Number(current.amount) || 0), 0) || 0;
   }, [allocations]);
 
-  const remainingToAllocate = (paymentAmount || 0) - totalAllocated;
+  const remainingToAllocate = useMemo(() => (paymentAmount || 0) - totalAllocated, [paymentAmount, totalAllocated]);
 
 
   useEffect(() => {
