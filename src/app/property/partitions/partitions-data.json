@@ -1,3 +1,4 @@
+
 [
   {
     "partitionCode": "P1",
@@ -9,16 +10,7 @@
     "monthlyRent": 400,
     "status": "Active",
     "id": "PART-1755712975871"
-  },
-  {
-    "partitionCode": "P1",
-    "partitionName": "Partition-1",
-    "propertyCode": "LT-C38-COPY-1755857384025",
-    "unitCode": "101",
-    "floorCode": "F-01",
-    "roomCode": "R1",
-    "monthlyRent": 400,
-    "status": "Active",
-    "id": "PART-1755857384026"
   }
 ]
+
+    

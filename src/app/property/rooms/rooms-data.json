@@ -1,3 +1,4 @@
+
 [
   {
     "roomCode": "R1",
@@ -78,83 +79,6 @@
   },
   {
     "roomCode": "R1",
-    "roomName": "Room-1",
-    "propertyCode": "LT-C38-COPY-1755857384025",
-    "floorCode": "F-01",
-    "unitCode": "101",
-    "roomType": "Master Bed",
-    "id": "ROOM-1755857384026",
-    "rentAmount": 1200,
-    "rentFrequency": "Monthly"
-  },
-  {
-    "roomCode": "R2",
-    "roomName": "Room-2",
-    "propertyCode": "LT-C38-COPY-1755857384025",
-    "floorCode": "F-01",
-    "unitCode": "101",
-    "roomType": "Master Bed",
-    "id": "ROOM-1755857384026",
-    "rentAmount": 1200,
-    "rentFrequency": "Monthly"
-  },
-  {
-    "roomCode": "R3",
-    "roomName": "Room-3",
-    "propertyCode": "LT-C38-COPY-1755857384025",
-    "floorCode": "F-01",
-    "unitCode": "101",
-    "roomType": "Standard",
-    "id": "ROOM-1755857384026",
-    "rentAmount": 1000,
-    "rentFrequency": "Monthly"
-  },
-  {
-    "roomCode": "R4",
-    "roomName": "Room-4",
-    "propertyCode": "LT-C38-COPY-1755857384025",
-    "floorCode": "F-01",
-    "unitCode": "101",
-    "roomType": "Standard",
-    "id": "ROOM-1755857384026",
-    "rentAmount": 1000,
-    "rentFrequency": "Monthly"
-  },
-  {
-    "roomCode": "R5",
-    "roomName": "Room-5",
-    "propertyCode": "LT-C38-COPY-1755857384025",
-    "floorCode": "F-01",
-    "unitCode": "101",
-    "roomType": "Standard",
-    "id": "ROOM-1755857384026",
-    "rentAmount": 1000,
-    "rentFrequency": "Monthly"
-  },
-  {
-    "roomCode": "R6",
-    "roomName": "Room-6",
-    "propertyCode": "LT-C38-COPY-1755857384025",
-    "floorCode": "F-01",
-    "unitCode": "101",
-    "roomType": "Standard",
-    "id": "ROOM-1755857384026",
-    "rentAmount": 1000,
-    "rentFrequency": "Monthly"
-  },
-  {
-    "roomCode": "R7",
-    "roomName": "Room-7",
-    "propertyCode": "LT-C38-COPY-1755857384025",
-    "floorCode": "F-01",
-    "unitCode": "101",
-    "roomType": "Standard",
-    "id": "ROOM-1755857384026",
-    "rentAmount": 1000,
-    "rentFrequency": "Monthly"
-  },
-  {
-    "roomCode": "R1",
     "roomName": "",
     "propertyCode": "MT-C22",
     "floorCode": "",
@@ -187,3 +111,5 @@
     "id": "ROOM-1755862579158"
   }
 ]
+
+    
