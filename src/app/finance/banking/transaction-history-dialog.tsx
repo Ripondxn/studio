@@ -49,7 +49,7 @@ export function TransactionHistoryDialog({ account }: { account: BankAccount }) 
             View Transactions
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-6xl">
         <DialogHeader>
           <DialogTitle>Transaction History: {account.accountName}</DialogTitle>
           <DialogDescription>
@@ -72,6 +72,10 @@ export function TransactionHistoryDialog({ account }: { account: BankAccount }) 
                   <TableHead>Date</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Party</TableHead>
+                  <TableHead>Property</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>Room</TableHead>
+                  <TableHead>Partition</TableHead>
                   <TableHead>Reference</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
@@ -86,6 +90,10 @@ export function TransactionHistoryDialog({ account }: { account: BankAccount }) 
                       </Badge>
                     </TableCell>
                     <TableCell>{tx.partyName}</TableCell>
+                    <TableCell>{tx.property || 'N/A'}</TableCell>
+                    <TableCell>{tx.unitCode || 'N/A'}</TableCell>
+                    <TableCell>{tx.roomCode || 'N/A'}</TableCell>
+                    <TableCell>{tx.partitionCode || 'N/A'}</TableCell>
                     <TableCell>{tx.referenceNo}</TableCell>
                     <TableCell className={cn("text-right font-medium", tx.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
                       {tx.type === 'Receipt' ? '+' : '-'}
@@ -101,5 +109,3 @@ export function TransactionHistoryDialog({ account }: { account: BankAccount }) 
     </Dialog>
   );
 }
-
-    
