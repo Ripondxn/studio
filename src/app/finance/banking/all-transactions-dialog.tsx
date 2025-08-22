@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -16,6 +16,16 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -24,10 +34,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, FileText, FileSpreadsheet } from 'lucide-react';
+import { Loader2, FileText, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { getAllTransactions } from './actions';
+import { deletePayment } from '../payment/actions';
 import { type Payment } from '../payment/schema';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -41,15 +53,36 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
   const [isOpen, setIsOpen] = useState(false);
   const [transactions, setTransactions] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchTransactions = useCallback(() => {
+    setIsLoading(true);
+    getAllTransactions()
+        .then(setTransactions)
+        .finally(() => setIsLoading(false));
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setIsLoading(true);
-      getAllTransactions()
-        .then(setTransactions)
-        .finally(() => setIsLoading(false));
+      fetchTransactions();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchTransactions]);
+
+  const handleDeletePayment = async () => {
+    if(!selectedTxId) return;
+    setIsDeleting(true);
+    const result = await deletePayment(selectedTxId);
+    if(result.success) {
+      toast({ title: 'Success', description: 'Transaction has been deleted.' });
+      fetchTransactions(); // Refresh the list
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to delete transaction.' });
+    }
+    setIsDeleting(false);
+    setSelectedTxId(null);
+  }
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -101,6 +134,20 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-6xl">
+        <AlertDialog open={!!selectedTxId} onOpenChange={(open) => !open && setSelectedTxId(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>This will permanently delete the transaction and reverse its financial impact. This action cannot be undone.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeletePayment} disabled={isDeleting}>
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
         <DialogHeader>
           <div className="flex justify-between items-center">
             <div>
@@ -137,6 +184,7 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
                   <TableHead>Partition</TableHead>
                   <TableHead>Reference</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -158,6 +206,11 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
                       {tx.type === 'Receipt' ? '+' : '-'}
                       {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
                     </TableCell>
+                     <TableCell className="text-right">
+                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTxId(tx.id)}>
+                            <Trash2 className="h-4 w-4" />
+                         </Button>
+                      </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

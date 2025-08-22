@@ -99,7 +99,8 @@ export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
     const { invoiceAllocations, ...paymentData } = validation.data;
 
     try {
-        if (paymentData.type === 'Payment') {
+        // Adjust balances
+        if (paymentData.type === 'Payment') { // Money going out
             if (paymentData.paymentMethod === 'Cash' && paymentData.paymentFrom === 'Petty Cash') {
                 const pettyCash = await readPettyCash();
                 if (pettyCash.balance < paymentData.amount) {
@@ -110,7 +111,6 @@ export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
             } else if (paymentData.bankAccountId) {
                 const allBankAccounts = await readBankAccounts();
                 const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
-
                 if (bankAccountIndex !== -1) {
                     if (allBankAccounts[bankAccountIndex].balance < paymentData.amount) {
                         return { success: false, error: 'Insufficient funds in the selected bank account.' };
@@ -119,6 +119,21 @@ export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
                     await writeBankAccounts(allBankAccounts);
                 } else {
                     return { success: false, error: 'Selected bank account not found for payment.' };
+                }
+            }
+        } else { // Receipt - Money coming in
+            if (paymentData.paymentMethod === 'Cash' && paymentData.paymentFrom === 'Petty Cash') {
+                 const pettyCash = await readPettyCash();
+                 pettyCash.balance += paymentData.amount;
+                 await writePettyCash(pettyCash);
+            } else if (paymentData.bankAccountId) {
+                 const allBankAccounts = await readBankAccounts();
+                 const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
+                 if (bankAccountIndex !== -1) {
+                    allBankAccounts[bankAccountIndex].balance += paymentData.amount;
+                    await writeBankAccounts(allBankAccounts);
+                } else {
+                    return { success: false, error: 'Selected bank account not found for receipt.' };
                 }
             }
         }
@@ -150,6 +165,62 @@ export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+export async function deletePayment(paymentId: string) {
+    try {
+        const allPayments = await readPayments();
+        const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+
+        if (paymentIndex === -1) {
+            return { success: false, error: 'Payment not found.' };
+        }
+
+        const paymentToDelete = allPayments[paymentIndex];
+        
+        // Reverse financial impact
+        if (paymentToDelete.type === 'Payment') { // If it was a payment, add money back
+            if (paymentToDelete.paymentMethod === 'Cash' && paymentToDelete.paymentFrom === 'Petty Cash') {
+                const pettyCash = await readPettyCash();
+                pettyCash.balance += paymentToDelete.amount;
+                await writePettyCash(pettyCash);
+            } else if (paymentToDelete.bankAccountId) {
+                const allBankAccounts = await readBankAccounts();
+                const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
+                if (accountIndex !== -1) {
+                    allBankAccounts[accountIndex].balance += paymentToDelete.amount;
+                    await writeBankAccounts(allBankAccounts);
+                }
+            }
+        } else { // If it was a receipt, subtract money
+             if (paymentToDelete.paymentMethod === 'Cash' && paymentToDelete.paymentFrom === 'Petty Cash') {
+                const pettyCash = await readPettyCash();
+                pettyCash.balance -= paymentToDelete.amount;
+                await writePettyCash(pettyCash);
+            } else if (paymentToDelete.bankAccountId) {
+                const allBankAccounts = await readBankAccounts();
+                const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
+                if (accountIndex !== -1) {
+                    allBankAccounts[accountIndex].balance -= paymentToDelete.amount;
+                    await writeBankAccounts(allBankAccounts);
+                }
+            }
+        }
+
+        const updatedPayments = allPayments.filter(p => p.id !== paymentId);
+        await writePayments(updatedPayments);
+
+        // Revalidate all relevant paths
+        revalidatePath('/finance/payment');
+        revalidatePath('/finance/banking');
+        revalidatePath('/finance/chart-of-accounts');
+        revalidatePath('/vendors/agents');
+
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
 
 export async function getLookups() {
     const tenants: {tenantData: Tenant}[] = await fs.readFile(tenantsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
