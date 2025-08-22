@@ -2,6 +2,7 @@
 
 import { UnitCard } from './unit-card';
 import type { Unit } from './schema';
+import { Home } from 'lucide-react';
 
 interface UnitGridProps {
   units: Unit[];
@@ -11,7 +12,8 @@ export function UnitGrid({ units }: UnitGridProps) {
   if (units.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
-        <p>No units found for this property.</p>
+        <Home className="mx-auto h-12 w-12" />
+        <p className="mt-4">No units found for this property.</p>
       </div>
     );
   }

@@ -198,5 +198,95 @@
     "unitType": "1BHK",
     "annualRent": 65000,
     "unitStatus": "Active"
+  },
+  {
+    "unitCode": "101",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 55000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314727-08990895645624737"
+  },
+  {
+    "unitCode": "102",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 75000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314727-09129321500943091"
+  },
+  {
+    "unitCode": "103",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 56000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314727-06844676289002969"
+  },
+  {
+    "unitCode": "104",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 95000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314727-011143652817480265"
+  },
+  {
+    "unitCode": "201",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 57000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314727-036975359035964983"
+  },
+  {
+    "unitCode": "202",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 76000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314727-029841542909688057"
+  },
+  {
+    "unitCode": "203",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 77000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314728-06921718884240984"
+  },
+  {
+    "unitCode": "204",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 98000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314728-05425688585736252"
+  },
+  {
+    "unitCode": "G01",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 80000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314728-09909676045207896"
+  },
+  {
+    "unitCode": "M01",
+    "propertyCode": "MT-C22",
+    "floor": "N/A",
+    "unitType": "Standard",
+    "annualRent": 65000,
+    "unitStatus": "Active",
+    "id": "UNIT-1755861314728-04879852587935636"
   }
 ]

@@ -5,6 +5,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import {
   Card,
   CardContent,
@@ -51,6 +54,7 @@ import {
   Users,
   LayoutGrid,
   List,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -101,6 +105,7 @@ import { UnitGrid } from '../units/unit-grid';
 import { FloorGrid } from '../floors/floor-grid';
 import { RoomGrid } from '../rooms/room-grid';
 import { PartitionGrid } from '../partitions/partition-grid';
+import { ImportUnitsDialog } from '../units/import-units-dialog';
 
 
 type Particular = {
@@ -526,6 +531,37 @@ export default function PropertyPage() {
   
   const pageTitle = isNewRecord ? 'Add New Property' : `Edit Property: ${initialData.name}`;
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Units List for ${propertyData.name}`, 14, 16);
+    (doc as any).autoTable({
+        head: [['Unit Code', 'Floor', 'Type', 'Annual Rent', 'Status']],
+        body: units.map(u => [
+            u.unitCode,
+            u.floor,
+            u.unitType,
+            new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(u.annualRent),
+            u.occupancyStatus
+        ]),
+        startY: 20,
+    });
+    doc.save(`units-${propertyData.code}.pdf`);
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = units.map(u => ({
+        'Unit Code': u.unitCode,
+        'Floor': u.floor,
+        'Type': u.unitType,
+        'Annual Rent': u.annualRent,
+        'Status': u.occupancyStatus
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Units");
+    XLSX.writeFile(wb, `units-${propertyData.code}.xlsx`);
+  };
 
   return (
     <div className="container mx-auto p-4 bg-background">
@@ -704,7 +740,10 @@ export default function PropertyPage() {
                                 <List className="h-5 w-5" />
                             </Button>
                         </div>
-                        <AddUnitDialog propertyCode={propertyData.code} onUnitAdded={() => handleFindClick(propertyData.code)} />
+                         <ImportUnitsDialog propertyCode={propertyData.code} onImportSuccess={() => fetchPropertySubData(propertyData.code)} />
+                         <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
+                         <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
+                        <AddUnitDialog propertyCode={propertyData.code} onUnitAdded={() => fetchPropertySubData(propertyData.code)} />
                     </div>
                 </div>
             </CardHeader>
