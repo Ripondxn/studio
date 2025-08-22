@@ -51,8 +51,6 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
     setIsDeleteDialogOpen(false);
   }
 
-  const hasCommission = (agent.commissionRate || 0) > 0;
-
   return (
     <>
        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -102,7 +100,7 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
                 <History className="mr-2 h-4 w-4" />
                 View History
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onRecordPayment(agent)} disabled={!hasCommission}>
+            <DropdownMenuItem onSelect={() => onRecordPayment(agent)}>
                 <DollarSign className="mr-2 h-4 w-4" />
                 Record Payment
             </DropdownMenuItem>
