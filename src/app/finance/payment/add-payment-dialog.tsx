@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,6 +102,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     if (partyType !== 'Customer' || !customerInvoices || customerInvoices.length === 0) {
         return true; 
     }
+    // Allow saving if not over-allocated
     return totalAllocated <= (paymentAmount || 0);
   }, [partyType, customerInvoices, totalAllocated, paymentAmount]);
 
@@ -152,7 +154,11 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
         reset(initialValues);
 
         if(customerInvoices){
-            replace(customerInvoices.map(inv => ({ invoiceId: inv.id, amount: 0 })));
+            const newAllocations = customerInvoices.map(inv => ({
+                invoiceId: inv.id,
+                amount: defaultValues?.invoiceAllocations?.find(a => a.invoiceId === inv.id)?.amount || 0
+            }));
+            replace(newAllocations);
         } else {
             replace([]);
         }
@@ -478,3 +484,4 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     </Dialog>
   );
 }
+
