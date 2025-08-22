@@ -72,23 +72,11 @@ export async function getPaymentsForAgent(agentCode: string): Promise<Payment[]>
     return agentPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
-
-const addAgentFormSchema = agentSchema.omit({
-  id: true,
-  code: true,
-  vendorCode: true,
-  vendorName: true,
-});
-
-export async function addAgent(data: z.infer<typeof addAgentFormSchema>) {
-    const validation = addAgentFormSchema.safeParse(data);
-    if (!validation.success) {
-        return { success: false, error: 'Invalid data format for adding agent.' };
-    }
-
-    try {
-        const allAgents = await readAgents();
-        
+export async function findAgentData(agentCode: string) {
+  try {
+    const allAgents = await readAgents();
+    
+    if (agentCode === 'new') {
         let maxAgentNum = 0;
         allAgents.forEach((a: any) => {
             const agentCodeMatch = a.code?.match(/^A(\d+)$/);
@@ -98,49 +86,51 @@ export async function addAgent(data: z.infer<typeof addAgentFormSchema>) {
             }
         });
         const newAgentCode = `A${(maxAgentNum + 1).toString().padStart(3, '0')}`;
-        
-        const newAgent: Agent = {
-            id: `AGENT-${Date.now()}`,
-            code: newAgentCode,
-            ...validation.data,
-        }
-
-        allAgents.push(newAgent);
-        await writeAgents(allAgents);
-        
-        revalidatePath('/vendors/agents');
-
-        return { success: true };
-    } catch (error) {
-        console.error('Failed to add agent:', error);
-        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+        return { success: true, data: { code: newAgentCode } };
     }
+
+    const agent = allAgents.find((a: any) => a.code === agentCode);
+
+    if (agent) {
+       return { success: true, data: agent };
+    } else {
+       return { success: false, error: "Not Found" };
+    }
+  } catch (error) {
+    console.error('Failed to find agent data:', error);
+    return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+  }
 }
 
-const updateAgentSchema = agentSchema.omit({ totalCommissionPaid: true });
-
-export async function updateAgentData(data: z.infer<typeof updateAgentSchema>) {
-    const validation = updateAgentSchema.safeParse(data);
+export async function saveAgentData(data: Agent, isNewRecord: boolean) {
+    const validation = agentSchema.safeParse(data);
     if (!validation.success) {
-        return { success: false, error: 'Invalid data format for agent update.' };
+        return { success: false, error: 'Invalid data format for agent.' };
     }
-
     try {
         const allAgents = await readAgents();
-        const agentIndex = allAgents.findIndex((a: any) => a.code === data.code);
 
-        if (agentIndex === -1) {
-            return { success: false, error: 'Agent not found.' };
+        if (isNewRecord) {
+             const newAgent: Agent = {
+                ...validation.data,
+                id: `AGENT-${Date.now()}`,
+            };
+            allAgents.push(newAgent);
+        } else {
+            const index = allAgents.findIndex(a => a.id === data.id);
+            if (index !== -1) {
+                allAgents[index] = { ...allAgents[index], ...validation.data };
+            } else {
+                return { success: false, error: 'Agent not found.' };
+            }
         }
-
-        allAgents[agentIndex] = { ...allAgents[agentIndex], ...validation.data };
         
         await writeAgents(allAgents);
         revalidatePath('/vendors/agents');
 
-        return { success: true, data: allAgents[agentIndex] };
+        return { success: true, data: validation.data };
     } catch (error) {
-        console.error('Failed to update agent data:', error);
+        console.error('Failed to save agent data:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }

@@ -8,7 +8,6 @@ import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Agent } from './schema';
-import { EditAgentDialog } from './edit-agent-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -32,7 +31,6 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
   const agent = row.original;
   const { toast } = useToast();
   const router = useRouter();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,12 +66,6 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-
-      <EditAgentDialog 
-        agent={agent}
-        isOpen={isEditDialogOpen}
-        setIsOpen={setIsEditDialogOpen}
-      />
       
       <TransactionHistoryDialog 
         agent={agent}
@@ -91,9 +83,10 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Agent
+            <DropdownMenuItem asChild>
+                <Link href={`/vendors/agents/add?code=${agent.code}`}>
+                    <Edit className="mr-2 h-4 w-4" /> Edit
+                </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setIsHistoryOpen(true)}>
                 <History className="mr-2 h-4 w-4" />
@@ -123,7 +116,7 @@ export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agen
         const agent = row.original;
         return (
              <Button variant="link" asChild className="p-0 h-auto font-normal">
-                <Link href={`/vendors/add?code=${agent.vendorCode}`}>{agent.code}</Link>
+                <Link href={`/vendors/agents/add?code=${agent.code}`}>{agent.code}</Link>
             </Button>
         )
     }
@@ -155,11 +148,11 @@ export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agen
     header: 'Associated Vendor',
     cell: ({ row }) => {
         const agent = row.original;
-        return (
+        return agent.vendorCode ? (
             <Button variant="link" asChild className="p-0 h-auto font-normal">
                 <Link href={`/vendors/add?code=${agent.vendorCode}`}>{agent.vendorName}</Link>
             </Button>
-        )
+        ) : <span className="text-muted-foreground">N/A</span>
     }
   },
   {
