@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAllAgents } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -9,22 +10,21 @@ import { Agent } from './schema';
 import { AddAgentDialog } from './add-agent-dialog';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
-import { useRouter } from 'next/navigation';
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>> | undefined>();
-  const router = useRouter();
 
-  useEffect(() => {
-    getAllAgents().then(setAgents);
-  }, []);
-
-  const refreshAgents = async () => {
+  const refreshAgents = useCallback(async () => {
     const updatedAgents = await getAllAgents();
     setAgents(updatedAgents);
-  }
+  }, []);
+
+  useEffect(() => {
+    refreshAgents();
+  }, [refreshAgents]);
+
 
   const handleRecordPayment = (agent: Agent) => {
     setPaymentDefaultValues({
@@ -33,6 +33,8 @@ export default function AgentsPage() {
       partyName: agent.vendorName,
       amount: agent.commission,
       remarks: `Commission payment for agent ${agent.name} (${agent.code})`,
+      agentCode: agent.code,
+      status: 'Paid',
     });
     setIsPaymentDialogOpen(true);
   };
@@ -48,7 +50,7 @@ export default function AgentsPage() {
             <h1 className="text-3xl font-bold font-headline">Agents</h1>
             <p className="text-muted-foreground">A list of all agents associated with your vendors.</p>
         </div>
-        <AddAgentDialog />
+        <AddAgentDialog onSuccess={refreshAgents}/>
       </div>
       <DataTable columns={columns(handleRecordPayment)} data={agents} />
        {isPaymentDialogOpen && (

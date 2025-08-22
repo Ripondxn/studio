@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -23,9 +24,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Plus } from 'lucide-react';
 
-import { addAgent, getAllVendors } from '../actions';
-import { Combobox } from '@/components/ui/combobox';
-import { type Vendor } from '../schema';
+import { addAgent } from '../actions';
 
 const formSchema = z.object({
   agentName: z.string().min(1, "Agent name is required."),
@@ -37,14 +36,12 @@ const formSchema = z.object({
 type AgentFormData = z.infer<typeof formSchema>;
 
 
-export function AddAgentDialog() {
+export function AddAgentDialog({onSuccess}: {onSuccess: () => void}) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
   
   const {
-    control,
     register,
     handleSubmit,
     reset,
@@ -67,7 +64,6 @@ export function AddAgentDialog() {
 
   const onSubmit = async (data: AgentFormData) => {
     setIsSaving(true);
-    // @ts-ignore
     const result = await addAgent(data);
 
     if (result.success) {
@@ -76,7 +72,7 @@ export function AddAgentDialog() {
         description: `Successfully added agent "${data.agentName}".`,
       });
       setIsOpen(false);
-      router.refresh();
+      onSuccess();
     } else {
       toast({
         variant: 'destructive',
@@ -99,7 +95,7 @@ export function AddAgentDialog() {
           <DialogHeader>
             <DialogTitle>Add New Agent</DialogTitle>
             <DialogDescription>
-              Assign a new agent to an existing vendor.
+              A new agent will be created and assigned to the next available vendor.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -119,7 +115,7 @@ export function AddAgentDialog() {
                {errors.agentEmail && <p className="text-destructive text-xs mt-1">{errors.agentEmail.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agentCommission">Agent Commission</Label>
+              <Label htmlFor="agentCommission">Agent Commission (Amount)</Label>
               <Input id="agentCommission" type="number" {...register('agentCommission')} />
               {errors.agentCommission && <p className="text-destructive text-xs mt-1">{errors.agentCommission.message}</p>}
             </div>

@@ -9,7 +9,12 @@
       "address": "Village : Rahut Hati , Post office : Hasnabad",
       "bankName": "ADDC",
       "accountNumber": "24460789",
-      "iban": "AE01254"
+      "iban": "AE01254",
+      "agentCode": "A001",
+      "agentName": "Abdur Rahim",
+      "agentMobile": "0545478654",
+      "agentEmail": "ripondxn@gmail.com",
+      "agentCommission": 500
     },
     "attachments": [
       {

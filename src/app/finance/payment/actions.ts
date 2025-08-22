@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -111,6 +112,8 @@ export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
         revalidatePath('/finance/banking'); // Revalidate banking to show new balance
         if(paymentData.partyType === 'Customer') {
              revalidatePath(`/tenancy/customer/add?code=${paymentData.partyName}`);
+        } else if (paymentData.partyType === 'Vendor') {
+             revalidatePath(`/vendors/agents`);
         }
         return { success: true, data: newPayment };
 

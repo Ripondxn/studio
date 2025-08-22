@@ -149,14 +149,11 @@ export async function updateAgentData(data: z.infer<typeof updateAgentSchema>) {
         }
 
         // Update only the agent fields
-        allVendors[vendorIndex].vendorData = {
-            ...allVendors[vendorIndex].vendorData,
-            agentCode: data.agentCode,
-            agentName: data.agentName,
-            agentMobile: data.agentMobile,
-            agentEmail: data.agentEmail,
-            agentCommission: data.agentCommission,
-        };
+        allVendors[vendorIndex].vendorData.agentCode = data.agentCode;
+        allVendors[vendorIndex].vendorData.agentName = data.agentName;
+        allVendors[vendorIndex].vendorData.agentMobile = data.agentMobile;
+        allVendors[vendorIndex].vendorData.agentEmail = data.agentEmail;
+        allVendors[vendorIndex].vendorData.agentCommission = data.agentCommission;
         
         await writeVendors(allVendors);
         revalidatePath('/vendors/agents');

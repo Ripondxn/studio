@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -143,7 +144,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const onSubmit = async (data: PaymentFormData) => {
     setIsSaving(true);
 
-    if (partyType === 'Customer' && (data.amount || 0) !== totalAllocated) {
+    if (partyType === 'Customer' && invoiceAllocations && invoiceAllocations.length > 0 && (data.amount || 0) !== totalAllocated) {
         toast({
             variant: 'destructive',
             title: 'Allocation Mismatch',

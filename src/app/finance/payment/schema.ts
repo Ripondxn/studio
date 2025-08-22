@@ -16,6 +16,7 @@ export const paymentSchema = z.object({
   property: z.string().optional(),
   remarks: z.string().optional(),
   status: z.enum(['Paid', 'Received', 'Cancelled']),
+  agentCode: z.string().optional(),
 });
 
 export type Payment = z.infer<typeof paymentSchema>;
