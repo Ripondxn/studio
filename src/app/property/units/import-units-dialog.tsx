@@ -30,7 +30,7 @@ interface ImportUnitsDialogProps {
   onImportSuccess: () => void;
 }
 
-const requiredHeaders = ['unitCode', 'floor', 'unitType', 'annualRent', 'unitStatus'];
+const requiredHeaders = ['unitCode', 'annualRent'];
 
 export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnitsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -82,7 +82,13 @@ export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnits
     
     setIsSaving(true);
 
-    const unitsToImport = parsedData.map(unit => ({...unit, propertyCode}));
+    const unitsToImport = parsedData.map(unit => ({
+        ...unit,
+        floor: unit.floor || 'N/A',
+        unitType: unit.unitType || 'Standard',
+        unitStatus: unit.unitStatus || 'Active',
+        propertyCode
+    }));
     
     const result = await importUnits(unitsToImport);
 
@@ -113,6 +119,8 @@ export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnits
     }
     setIsOpen(open);
   }
+  
+  const displayHeaders = ['unitCode', 'floor', 'unitType', 'annualRent', 'unitStatus'];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -126,7 +134,7 @@ export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnits
             <DialogTitle>Import Units from Excel</DialogTitle>
             <DialogDescription>
               Select an Excel file to bulk-add or update units for property {propertyCode}.
-              The file must contain columns: {requiredHeaders.join(', ')}.
+              The file must contain columns: unitCode, annualRent. Optional columns: floor, unitType, unitStatus.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -144,13 +152,13 @@ export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnits
                  <Table>
                     <TableHeader>
                         <TableRow>
-                            {requiredHeaders.map(h => <TableHead key={h}>{h}</TableHead>)}
+                            {displayHeaders.map(h => <TableHead key={h}>{h}</TableHead>)}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {parsedData.slice(0, 20).map((row: any, index) => (
                             <TableRow key={index}>
-                                {requiredHeaders.map(h => <TableCell key={h}>{String(row[h] ?? '')}</TableCell>)}
+                                {displayHeaders.map(h => <TableCell key={h}>{String(row[h] ?? '')}</TableCell>)}
                             </TableRow>
                         ))}
                     </TableBody>
@@ -179,4 +187,3 @@ export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnits
     </Dialog>
   );
 }
-
