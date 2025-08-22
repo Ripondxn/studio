@@ -22,7 +22,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-    const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>> | undefined>();
+    const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
 
     const fetchInvoices = useCallback(async () => {
@@ -131,25 +131,22 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                     <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPayment })} data={invoices} />
                 )}
                 
-                {isInvoiceDialogOpen && (
-                    <InvoiceDialog
-                        isOpen={isInvoiceDialogOpen}
-                        setIsOpen={setIsInvoiceDialogOpen}
-                        invoice={selectedInvoice}
-                        customer={{ code: customerCode, name: customerName }}
-                        onSuccess={handleSuccess}
-                        isViewMode={isViewMode}
-                    />
-                )}
-                {isPaymentDialogOpen && (
-                    <AddPaymentDialog
-                        isOpen={isPaymentDialogOpen}
-                        setIsOpen={setIsPaymentDialogOpen}
-                        defaultValues={paymentDefaultValues}
-                        customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')}
-                        onPaymentAdded={handleSuccess}
-                    />
-                )}
+                <InvoiceDialog
+                    isOpen={isInvoiceDialogOpen}
+                    setIsOpen={setIsInvoiceDialogOpen}
+                    invoice={selectedInvoice}
+                    customer={{ code: customerCode, name: customerName }}
+                    onSuccess={handleSuccess}
+                    isViewMode={isViewMode}
+                />
+
+                <AddPaymentDialog
+                    isOpen={isPaymentDialogOpen}
+                    setIsOpen={setIsPaymentDialogOpen}
+                    defaultValues={paymentDefaultValues}
+                    customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')}
+                    onPaymentAdded={handleSuccess}
+                />
             </CardContent>
         </Card>
     )
