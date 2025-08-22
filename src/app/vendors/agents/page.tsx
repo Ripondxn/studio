@@ -10,15 +10,21 @@ import { Agent } from './schema';
 import { AddAgentDialog } from './add-agent-dialog';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>> | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
 
   const refreshAgents = useCallback(async () => {
+    setIsLoading(true);
     const updatedAgents = await getAllAgents();
     setAgents(updatedAgents);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -50,7 +56,12 @@ export default function AgentsPage() {
             <h1 className="text-3xl font-bold font-headline">Agents</h1>
             <p className="text-muted-foreground">A list of all agents associated with your vendors.</p>
         </div>
-        <AddAgentDialog onSuccess={refreshAgents}/>
+        <div className="flex items-center gap-2">
+            <AddAgentDialog onSuccess={refreshAgents}/>
+            <Button variant="outline" size="icon" onClick={refreshAgents} disabled={isLoading}>
+                <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            </Button>
+        </div>
       </div>
       <DataTable columns={columns(handleRecordPayment)} data={agents} />
        {isPaymentDialogOpen && (
