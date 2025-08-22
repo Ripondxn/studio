@@ -219,3 +219,34 @@ export async function addAgent(data: z.infer<typeof addAgentSchema>) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }
+
+
+export async function deleteAgent(agentCode: string) {
+    if (!agentCode) {
+        return { success: false, error: 'Agent code is required.' };
+    }
+
+    try {
+        const allVendors = await getVendors();
+        const vendorIndex = allVendors.findIndex((v: any) => v.vendorData.agentCode === agentCode);
+
+        if (vendorIndex === -1) {
+            return { success: false, error: 'Agent not found.' };
+        }
+
+        // Clear agent-related fields
+        allVendors[vendorIndex].vendorData.agentCode = undefined;
+        allVendors[vendorIndex].vendorData.agentName = undefined;
+        allVendors[vendorIndex].vendorData.agentMobile = undefined;
+        allVendors[vendorIndex].vendorData.agentEmail = undefined;
+        allVendors[vendorIndex].vendorData.agentCommission = undefined;
+        
+        await writeVendors(allVendors);
+        revalidatePath('/vendors/agents');
+
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to delete agent:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
