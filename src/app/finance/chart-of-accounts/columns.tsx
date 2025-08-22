@@ -89,7 +89,7 @@ const ActionsCell = ({ row }: { row: { original: Account }}) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    {!account.isGroup && (
+                    {(!account.isGroup || account.code === '1110') && (
                         <TransactionHistoryDialog account={account}>
                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                              <Eye className="mr-2 h-4 w-4" /> View Transactions

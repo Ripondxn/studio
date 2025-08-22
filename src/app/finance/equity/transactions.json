@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "EQT-1755839098138",
+    "type": "Withdrawal",
+    "amount": 16000,
+    "date": "2025-08-22",
+    "accountId": "acc_1",
+    "remarks": "withdraw fund"
+  },
+  {
+    "id": "EQT-1755839170237",
+    "type": "Contribution",
+    "amount": 20000,
+    "date": "2025-08-22",
+    "accountId": "acc_1",
+    "remarks": "fund added"
+  }
+]
