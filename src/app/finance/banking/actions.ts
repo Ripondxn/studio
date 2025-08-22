@@ -32,7 +32,7 @@ async function writeAccounts(data: BankAccount[]) {
     await fs.writeFile(accountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-async function readPettyCash() {
+export async function readPettyCash() {
     try {
         await fs.access(pettyCashFilePath);
         const data = await fs.readFile(pettyCashFilePath, 'utf-8');
@@ -43,6 +43,10 @@ async function readPettyCash() {
         }
         throw error;
     }
+}
+
+export async function writePettyCash(data: { balance: number }) {
+    await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 
@@ -134,5 +138,3 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         return [];
     }
 }
-
-    

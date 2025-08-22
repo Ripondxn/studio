@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreVertical, Edit, Trash2, Banknote, Landmark, Loader2, Wallet, ArrowRightLeft } from 'lucide-react';
+import { Plus, MoreVertical, Edit, Trash2, Banknote, Landmark, Loader2, Wallet, ArrowRightLeft, Briefcase } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +40,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { bankAccountSchema, type BankAccount } from './schema';
 import { saveBankAccount, deleteBankAccount, getBankAccounts } from './actions';
 import { TransactionHistoryDialog } from './transaction-history-dialog';
+import { EquityDialog } from '../equity/equity-dialog';
 
 
 type BankAccountFormData = Omit<BankAccount, 'id'> & { id?: string };
@@ -223,9 +224,14 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
                 Manage bank accounts, reconciliations, and transactions.
             </p>
         </div>
-        <BankAccountDialog onSave={refreshAccounts}>
-            <Button><Plus className="mr-2 h-4 w-4"/>Add New Account</Button>
-        </BankAccountDialog>
+        <div className="flex items-center gap-2">
+            <EquityDialog bankAccounts={accounts} onTransaction={refreshAccounts}>
+                <Button variant="outline"><Briefcase className="mr-2 h-4 w-4"/> Equity</Button>
+            </EquityDialog>
+            <BankAccountDialog onSave={refreshAccounts}>
+                <Button><Plus className="mr-2 h-4 w-4"/>Add New Account</Button>
+            </BankAccountDialog>
+        </div>
       </div>
       
        <div className="mb-6">
@@ -251,5 +257,3 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
     </div>
   );
 }
-
-    
