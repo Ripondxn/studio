@@ -7,8 +7,11 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { roomSchema, type Room } from './schema';
 import { type Unit } from '@/app/property/units/schema';
+import { type Contract } from '@/app/tenancy/contract/schema';
 
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
+const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+
 
 async function readRooms(): Promise<Room[]> {
     try {
@@ -29,12 +32,25 @@ async function writeRooms(data: Room[]) {
 }
 
 export async function getRooms() {
-    return await readRooms();
+    const allRooms = await readRooms();
+    const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
+    const allContracts: Contract[] = JSON.parse(contractsData);
+
+    const occupiedRoomCodes = new Set(
+        allContracts
+            .filter(c => c.status === 'New' || c.status === 'Renew')
+            .map(c => c.roomCode)
+    );
+
+    return allRooms.map(room => ({
+        ...room,
+        occupancyStatus: occupiedRoomCodes.has(room.roomCode) ? 'Occupied' : 'Vacant',
+    }));
 }
 
 export async function getRoomsForProperty(propertyCode: string) {
     try {
-        const allRooms = await readRooms();
+        const allRooms = await getRooms();
         const propertyRooms = allRooms.filter(r => r.propertyCode === propertyCode);
         return { success: true, data: propertyRooms };
     } catch (error) {
@@ -42,7 +58,7 @@ export async function getRoomsForProperty(propertyCode: string) {
     }
 }
 
-const addRoomFormSchema = roomSchema.omit({ id: true });
+const addRoomFormSchema = roomSchema.omit({ id: true, occupancyStatus: true });
 
 export async function addRoom(data: z.infer<typeof addRoomFormSchema>) {
     const validation = addRoomFormSchema.safeParse(data);

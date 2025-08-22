@@ -29,6 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import { deleteRoom } from './actions';
 import { EditRoomDialog } from './edit-room-dialog';
 import { Room } from './schema';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const ActionsCell = ({ row }: { row: { original: Room } }) => {
     const room = row.original;
@@ -169,6 +171,15 @@ export const columns: ColumnDef<Room>[] = [
       }).format(amount);
 
       return <div className="text-right font-medium">{formatted} <span className="text-xs text-muted-foreground">{frequency ? `/${frequency.slice(0,2)}` : ''}</span></div>;
+    },
+  },
+  {
+    accessorKey: 'occupancyStatus',
+    header: 'Occupancy Status',
+    cell: ({ row }) => {
+      const status = row.original.occupancyStatus;
+      const variant = status === 'Occupied' ? 'destructive' : 'default';
+      return <Badge variant={variant} className={cn(status === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700', 'border-transparent')}>{status}</Badge>;
     },
   },
   {

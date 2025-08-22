@@ -3,11 +3,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building, Hash } from 'lucide-react';
+import { Building, Hash, UserCheck, UserX, Users } from 'lucide-react';
 import type { Floor } from './schema';
 import { EditFloorDialog } from './edit-floor-dialog';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface FloorCardProps {
   floor: Floor;
@@ -22,6 +24,11 @@ export function FloorCard({ floor }: FloorCardProps) {
     // In a real app with a state management library, this would be handled more gracefully.
     router.refresh();
   }
+  
+  const status = floor.occupancyStatus;
+  const variant = status === 'Vacant' ? 'default' : status === 'Partially Occupied' ? 'secondary' : 'destructive';
+  const color = status === 'Vacant' ? 'bg-green-500/20 text-green-700' : status === 'Partially Occupied' ? 'bg-yellow-500/20 text-yellow-700' : 'bg-red-500/20 text-red-700';
+  const Icon = status === 'Vacant' ? UserCheck : status === 'Partially Occupied' ? Users : UserX;
 
   return (
     <>
@@ -37,6 +44,10 @@ export function FloorCard({ floor }: FloorCardProps) {
               <CardDescription>{floor.floorCode}</CardDescription>
               <CardTitle>{floor.floorName}</CardTitle>
             </div>
+            <Badge variant={variant} className={cn('gap-1', color, 'border-transparent')}>
+                <Icon className="h-3 w-3" />
+                {status}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">

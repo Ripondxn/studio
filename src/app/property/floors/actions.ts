@@ -6,21 +6,35 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { floorSchema, type Floor } from './schema';
+import { type Unit } from '../units/schema';
+import { type Contract } from '@/app/tenancy/contract/schema';
 
 const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
+const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 
-async function readFloors(): Promise<Floor[]> {
+
+async function readData(filePath: string) {
     try {
-        await fs.access(floorsFilePath);
-        const data = await fs.readFile(floorsFilePath, 'utf-8');
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await writeFloors([]);
             return [];
         }
         throw error;
     }
+}
+
+async function readFloors(): Promise<Floor[]> {
+    return await readData(floorsFilePath);
+}
+async function readUnits(): Promise<Unit[]> {
+    return await readData(unitsFilePath);
+}
+async function readContracts(): Promise<Contract[]> {
+    return await readData(contractsFilePath);
 }
 
 async function writeFloors(data: Floor[]) {
@@ -35,7 +49,31 @@ export async function getFloorsForProperty(propertyCode: string) {
     try {
         const allFloors = await readFloors();
         const propertyFloors = allFloors.filter(f => f.propertyCode === propertyCode);
-        return { success: true, data: propertyFloors };
+
+        const allUnits = await readUnits();
+        const allContracts = await readContracts();
+        const occupiedUnitCodes = new Set(allContracts.filter(c => c.status === 'New' || c.status === 'Renew').map(c => c.unitCode));
+
+        const floorsWithOccupancy = propertyFloors.map(floor => {
+            const unitsOnFloor = allUnits.filter(u => u.propertyCode === propertyCode && u.floor === floor.floorCode);
+            const occupiedUnitsCount = unitsOnFloor.filter(u => occupiedUnitCodes.has(u.unitCode)).length;
+
+            let occupancyStatus: 'Fully Occupied' | 'Partially Occupied' | 'Vacant' = 'Vacant';
+            if (unitsOnFloor.length > 0) {
+                if (occupiedUnitsCount === unitsOnFloor.length) {
+                    occupancyStatus = 'Fully Occupied';
+                } else if (occupiedUnitsCount > 0) {
+                    occupancyStatus = 'Partially Occupied';
+                }
+            }
+            
+            return {
+                ...floor,
+                occupancyStatus
+            }
+        });
+        
+        return { success: true, data: floorsWithOccupancy };
     } catch (error) {
         return { success: false, error: (error as Error).message };
     }

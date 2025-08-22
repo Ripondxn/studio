@@ -30,6 +30,8 @@ import { useToast } from '@/hooks/use-toast';
 import { deleteFloor } from './actions';
 import { EditFloorDialog } from './edit-floor-dialog';
 import { Floor } from './schema';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const ActionsCell = ({ row }: { row: { original: Floor } }) => {
     const floor = row.original;
@@ -156,6 +158,17 @@ export const columns: ColumnDef<Floor>[] = [
     cell: ({ row }) => {
       const amount = row.getValue('noOfUnits') as number;
       return <div className="text-right font-medium">{amount}</div>;
+    },
+  },
+  {
+    accessorKey: 'occupancyStatus',
+    header: 'Occupancy Status',
+    cell: ({ row }) => {
+      const status = row.original.occupancyStatus;
+      const variant = status === 'Vacant' ? 'default' : status === 'Partially Occupied' ? 'secondary' : 'destructive';
+      const color = status === 'Vacant' ? 'bg-green-500/20 text-green-700' : status === 'Partially Occupied' ? 'bg-yellow-500/20 text-yellow-700' : 'bg-red-500/20 text-red-700';
+      
+      return <Badge variant={variant} className={cn(color, 'border-transparent')}>{status}</Badge>;
     },
   },
   {

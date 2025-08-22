@@ -9,11 +9,14 @@ import { partitionSchema, type Partition } from './schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Floor } from '@/app/property/floors/schema';
 import { type Room } from '@/app/property/rooms/schema';
+import { type Contract } from '@/app/tenancy/contract/schema';
 
 const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
+const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+
 
 async function readPartitions(): Promise<Partition[]> {
     try {
@@ -34,12 +37,25 @@ async function writePartitions(data: Partition[]) {
 }
 
 export async function getPartitions() {
-    return await readPartitions();
+    const allPartitions = await readPartitions();
+    const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
+    const allContracts: Contract[] = JSON.parse(contractsData);
+
+    const occupiedPartitionCodes = new Set(
+        allContracts
+            .filter(c => c.status === 'New' || c.status === 'Renew')
+            .map(c => c.partitionCode)
+    );
+
+    return allPartitions.map(partition => ({
+        ...partition,
+        occupancyStatus: occupiedPartitionCodes.has(partition.partitionCode) ? 'Occupied' : 'Vacant',
+    }));
 }
 
 export async function getPartitionsForProperty(propertyCode: string) {
     try {
-        const allPartitions = await readPartitions();
+        const allPartitions = await getPartitions();
         const propertyPartitions = allPartitions.filter(p => p.propertyCode === propertyCode);
         return { success: true, data: propertyPartitions };
     } catch (error) {
@@ -47,7 +63,7 @@ export async function getPartitionsForProperty(propertyCode: string) {
     }
 }
 
-const addPartitionFormSchema = partitionSchema.omit({ id: true });
+const addPartitionFormSchema = partitionSchema.omit({ id: true, occupancyStatus: true });
 
 export async function addPartition(data: z.infer<typeof addPartitionFormSchema>) {
     const validation = addPartitionFormSchema.safeParse(data);

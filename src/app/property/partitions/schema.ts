@@ -11,6 +11,7 @@ export const partitionSchema = z.object({
   roomCode: z.string().optional(),
   monthlyRent: z.number().min(0, "Monthly rent must be 0 or more."),
   status: z.enum(['Active', 'Inactive']),
+  occupancyStatus: z.enum(['Vacant', 'Occupied']).optional(),
 });
 
 export type Partition = z.infer<typeof partitionSchema>;

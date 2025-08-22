@@ -3,10 +3,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DoorClosed, Hash, Building, Tag } from 'lucide-react';
+import { DoorClosed, Hash, Building, Tag, UserX, UserCheck } from 'lucide-react';
 import type { Room } from './schema';
 import { EditRoomDialog } from './edit-room-dialog';
 import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface RoomCardProps {
   room: Room;
@@ -14,6 +16,11 @@ interface RoomCardProps {
 
 export function RoomCard({ room }: RoomCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const status = room.occupancyStatus;
+  const variant = status === 'Occupied' ? 'destructive' : 'default';
+  const color = status === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700';
+  const Icon = status === 'Occupied' ? UserX : UserCheck;
 
   return (
     <>
@@ -29,9 +36,10 @@ export function RoomCard({ room }: RoomCardProps) {
               <CardDescription>{room.roomCode}</CardDescription>
               <CardTitle>{room.roomName}</CardTitle>
             </div>
-             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <DoorClosed className="h-5 w-5 text-secondary-foreground" />
-            </div>
+             <Badge variant={variant} className={cn('gap-1', color, 'border-transparent')}>
+                <Icon className="h-3 w-3" />
+                {status}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">

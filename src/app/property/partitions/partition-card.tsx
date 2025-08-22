@@ -4,10 +4,11 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building, DoorOpen, Home, Tag } from 'lucide-react';
+import { Building, DoorOpen, Home, Tag, UserCheck, UserX } from 'lucide-react';
 import type { Partition } from './schema';
 import { EditPartitionDialog } from './edit-partition-dialog';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface PartitionCardProps {
   partition: Partition;
@@ -15,6 +16,10 @@ interface PartitionCardProps {
 
 export function PartitionCard({ partition }: PartitionCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const occupancyStatus = partition.occupancyStatus;
+  const occupancyVariant = occupancyStatus === 'Occupied' ? 'destructive' : 'default';
+  const occupancyColor = occupancyStatus === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700';
+  const OccupancyIcon = occupancyStatus === 'Occupied' ? UserX : UserCheck;
 
   return (
     <>
@@ -30,9 +35,15 @@ export function PartitionCard({ partition }: PartitionCardProps) {
               <CardDescription>{partition.partitionCode}</CardDescription>
               <CardTitle>{partition.partitionName}</CardTitle>
             </div>
-            <Badge variant={partition.status === 'Active' ? 'default' : 'secondary'} className={partition.status === 'Active' ? 'bg-green-500/20 text-green-700' : ''}>
-              {partition.status}
-            </Badge>
+             <div className="flex flex-col items-end gap-1">
+                <Badge variant={partition.status === 'Active' ? 'default' : 'secondary'} className={partition.status === 'Active' ? 'bg-green-500/20 text-green-700' : ''}>
+                {partition.status}
+                </Badge>
+                 <Badge variant={occupancyVariant} className={cn('gap-1', occupancyColor, 'border-transparent')}>
+                    <OccupancyIcon className="h-3 w-3" />
+                    {occupancyStatus}
+                </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">

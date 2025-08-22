@@ -30,6 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 import { deletePartition } from './actions';
 import { EditPartitionDialog } from './edit-partition-dialog';
 import { Partition } from './schema';
+import { cn } from '@/lib/utils';
 
 const ActionsCell = ({ row }: { row: { original: Partition } }) => {
     const partition = row.original;
@@ -178,6 +179,15 @@ export const columns: ColumnDef<Partition>[] = [
       const status = row.getValue('status') as string;
       const variant = status === 'Active' ? 'default' : 'secondary';
       return <Badge variant={variant} className={status === 'Active' ? 'bg-green-500/20 text-green-700 border-transparent' : ''}>{status}</Badge>;
+    },
+  },
+  {
+    accessorKey: 'occupancyStatus',
+    header: 'Occupancy Status',
+    cell: ({ row }) => {
+      const status = row.original.occupancyStatus;
+      const variant = status === 'Occupied' ? 'destructive' : 'default';
+      return <Badge variant={variant} className={cn(status === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700', 'border-transparent')}>{status}</Badge>;
     },
   },
   {
