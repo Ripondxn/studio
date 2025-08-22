@@ -39,11 +39,14 @@ export async function getAllAgents() {
     const vendors = await getVendors();
     const payments = await getPayments();
     
-    const paidAgentCodes = new Set(
-        payments
-            .filter(p => p.type === 'Payment' && p.agentCode)
-            .map(p => p.agentCode)
-    );
+    const commissionPaidMap = new Map<string, number>();
+
+    payments.forEach(p => {
+        if(p.type === 'Payment' && p.agentCode) {
+            const currentPaid = commissionPaidMap.get(p.agentCode) || 0;
+            commissionPaidMap.set(p.agentCode, currentPaid + p.amount);
+        }
+    });
 
     // Filter out vendors that have an agent and map to the agent details
     const agents = vendors
@@ -53,10 +56,10 @@ export async function getAllAgents() {
             name: v.vendorData.agentName,
             mobile: v.vendorData.agentMobile,
             email: v.vendorData.agentEmail,
-            commission: v.vendorData.agentCommission,
+            commissionRate: v.vendorData.agentCommission,
+            totalCommissionPaid: commissionPaidMap.get(v.vendorData.agentCode) || 0,
             vendorName: v.vendorData.name,
             vendorCode: v.vendorData.code,
-            isCommissionPaid: paidAgentCodes.has(v.vendorData.agentCode),
         }));
 
     return agents;

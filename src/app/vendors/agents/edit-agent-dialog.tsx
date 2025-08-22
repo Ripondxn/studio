@@ -60,7 +60,7 @@ export function EditAgentDialog({ agent, isOpen, setIsOpen }: EditAgentDialogPro
       agentName: agent.name,
       agentMobile: agent.mobile,
       agentEmail: agent.email,
-      agentCommission: agent.commission,
+      agentCommission: agent.commissionRate,
     },
   });
 
@@ -72,7 +72,7 @@ export function EditAgentDialog({ agent, isOpen, setIsOpen }: EditAgentDialogPro
         agentName: agent.name,
         agentMobile: agent.mobile,
         agentEmail: agent.email,
-        agentCommission: agent.commission,
+        agentCommission: agent.commissionRate,
       });
     }
   }, [agent, isOpen, reset]);
@@ -125,7 +125,7 @@ export function EditAgentDialog({ agent, isOpen, setIsOpen }: EditAgentDialogPro
                {errors.agentEmail && <p className="text-destructive text-xs mt-1">{errors.agentEmail.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agentCommission">Agent Commission</Label>
+              <Label htmlFor="agentCommission">Agent Commission Rate</Label>
               <Input id="agentCommission" type="number" {...register('agentCommission')} />
               {errors.agentCommission && <p className="text-destructive text-xs mt-1">{errors.agentCommission.message}</p>}
             </div>

@@ -37,7 +37,7 @@ export default function AgentsPage() {
       type: 'Payment',
       partyType: 'Vendor',
       partyName: agent.vendorName,
-      amount: agent.commission,
+      amount: agent.commissionRate,
       remarks: `Commission payment for agent ${agent.name} (${agent.code})`,
       agentCode: agent.code,
       status: 'Paid',

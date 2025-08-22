@@ -6,10 +6,10 @@ export const agentSchema = z.object({
   name: z.string(),
   mobile: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
-  commission: z.number().optional(),
+  commissionRate: z.number().optional(),
+  totalCommissionPaid: z.number().optional(),
   vendorName: z.string(),
   vendorCode: z.string(),
-  isCommissionPaid: z.boolean().optional(),
 });
 
 export type Agent = z.infer<typeof agentSchema>;
