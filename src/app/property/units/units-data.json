@@ -1,4 +1,3 @@
-
 [
   {
     "id": "UNIT-1755710073669",
@@ -95,6 +94,106 @@
     "unitCode": "M01",
     "unitName": "Unit M01",
     "propertyCode": "LT-C38",
+    "floor": "M",
+    "unitType": "1BHK",
+    "annualRent": 65000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "101",
+    "unitName": "Unit 101",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "F-01",
+    "unitType": "1BHK",
+    "annualRent": 55000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "102",
+    "unitName": "Unit 102",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "F-01",
+    "unitType": "2BHK",
+    "annualRent": 75000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "103",
+    "unitName": "Unit 103",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "F-01",
+    "unitType": "1BHK",
+    "annualRent": 56000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "104",
+    "unitName": "Unit 104",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "F-01",
+    "unitType": "3BHK",
+    "annualRent": 95000,
+    "unitStatus": "Inactive"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "201",
+    "unitName": "Unit 201",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "F-02",
+    "unitType": "1BHK",
+    "annualRent": 57000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "202",
+    "unitName": "Unit 202",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "F-02",
+    "unitType": "2BHK",
+    "annualRent": 76000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "203",
+    "unitName": "Unit 203",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "F-02",
+    "unitType": "2BHK",
+    "annualRent": 77000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "204",
+    "unitName": "Unit 204",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "F-02",
+    "unitType": "3BHK",
+    "annualRent": 98000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "G01",
+    "unitName": "Unit G01",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "floor": "G",
+    "unitType": "2BHK",
+    "annualRent": 80000,
+    "unitStatus": "Active"
+  },
+  {
+    "id": "UNIT-1755857384026",
+    "unitCode": "M01",
+    "unitName": "Unit M01",
+    "propertyCode": "LT-C38-COPY-1755857384025",
     "floor": "M",
     "unitType": "1BHK",
     "annualRent": 65000,

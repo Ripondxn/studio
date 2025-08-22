@@ -600,5 +600,607 @@
     "floorName": "Shop",
     "propertyCode": "LT-C38",
     "noOfUnits": 0
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "G",
+    "floorName": "Ground Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 2
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "M",
+    "floorName": "Mezzanine Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 2
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-01",
+    "floorName": "1st Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-02",
+    "floorName": "2nd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-03",
+    "floorName": "3rd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-04",
+    "floorName": "4th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-05",
+    "floorName": "5th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-06",
+    "floorName": "6th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-07",
+    "floorName": "7th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-08",
+    "floorName": "8th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-09",
+    "floorName": "9th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-10",
+    "floorName": "10th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-11",
+    "floorName": "11th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-12",
+    "floorName": "12th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-13",
+    "floorName": "13th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-14",
+    "floorName": "14th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-15",
+    "floorName": "15th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-16",
+    "floorName": "16th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-17",
+    "floorName": "17th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-18",
+    "floorName": "18th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-19",
+    "floorName": "19th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-20",
+    "floorName": "20th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-21",
+    "floorName": "21st Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-22",
+    "floorName": "22nd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-23",
+    "floorName": "23rd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-24",
+    "floorName": "24th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-25",
+    "floorName": "25th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-26",
+    "floorName": "26th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-27",
+    "floorName": "27th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-28",
+    "floorName": "28th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-29",
+    "floorName": "29th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-30",
+    "floorName": "30th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-31",
+    "floorName": "31st Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-32",
+    "floorName": "32nd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-33",
+    "floorName": "33rd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-34",
+    "floorName": "34th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-35",
+    "floorName": "35th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-36",
+    "floorName": "36th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-37",
+    "floorName": "37th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-38",
+    "floorName": "38th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-39",
+    "floorName": "39th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-40",
+    "floorName": "40th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-41",
+    "floorName": "41st Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-42",
+    "floorName": "42nd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-43",
+    "floorName": "43rd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-44",
+    "floorName": "44th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-45",
+    "floorName": "45th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-46",
+    "floorName": "46th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-47",
+    "floorName": "47th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-48",
+    "floorName": "48th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-49",
+    "floorName": "49th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-50",
+    "floorName": "50th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-51",
+    "floorName": "51st Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-52",
+    "floorName": "52nd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-53",
+    "floorName": "53rd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-54",
+    "floorName": "54th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-55",
+    "floorName": "55th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-56",
+    "floorName": "56th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-57",
+    "floorName": "57th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-58",
+    "floorName": "58th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-59",
+    "floorName": "59th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-60",
+    "floorName": "60th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-61",
+    "floorName": "61st Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-62",
+    "floorName": "62nd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-63",
+    "floorName": "63rd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-64",
+    "floorName": "64th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-65",
+    "floorName": "65th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-66",
+    "floorName": "66th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-67",
+    "floorName": "67th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-68",
+    "floorName": "68th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-69",
+    "floorName": "69th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-70",
+    "floorName": "70th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-71",
+    "floorName": "71st Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-72",
+    "floorName": "72nd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-73",
+    "floorName": "73rd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-74",
+    "floorName": "74th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-75",
+    "floorName": "75th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-76",
+    "floorName": "76th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-77",
+    "floorName": "77th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-78",
+    "floorName": "78th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-79",
+    "floorName": "79th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-80",
+    "floorName": "80th Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-81",
+    "floorName": "81st Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "F-82",
+    "floorName": "82nd Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 4
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "ROOF",
+    "floorName": "Roof Floor",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 0
+  },
+  {
+    "id": "FLR-1755857384026",
+    "floorCode": "SHOP",
+    "floorName": "Shop",
+    "propertyCode": "LT-C38-COPY-1755857384025",
+    "noOfUnits": 0
   }
 ]

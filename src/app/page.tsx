@@ -182,7 +182,7 @@ export default async function Dashboard() {
                 </TableHeader>
                 <TableBody>
                     {expiryReport.map((item) => (
-                        <TableRow key={item.unit}>
+                        <TableRow key={`${item.unit}-${item.tenant}`}>
                             <TableCell className="font-medium">{item.unit}</TableCell>
                             <TableCell>{item.tenant}</TableCell>
                             <TableCell>{item.endDate}</TableCell>
