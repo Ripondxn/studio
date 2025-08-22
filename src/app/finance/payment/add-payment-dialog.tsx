@@ -102,8 +102,8 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     if (partyType !== 'Customer' || !customerInvoices || customerInvoices.length === 0) {
         return true; 
     }
-    // Allow saving if not over-allocated
-    return totalAllocated <= (paymentAmount || 0);
+    // Allow saving if not over-allocated. Use a small tolerance for floating point issues.
+    return totalAllocated <= (paymentAmount || 0) + 0.001;
   }, [partyType, customerInvoices, totalAllocated, paymentAmount]);
 
 
@@ -484,4 +484,3 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     </Dialog>
   );
 }
-
