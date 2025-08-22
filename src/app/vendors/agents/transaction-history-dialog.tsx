@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { format } from 'date-fns';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { format, isBefore, isAfter, parseISO } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -39,6 +39,8 @@ import { type Agent } from './schema';
 import { type Payment } from '@/app/finance/payment/schema';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -59,6 +61,20 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const { toast } = useToast();
+  const [filters, setFilters] = useState({ fromDate: '', toDate: '' });
+
+  const handleFilterChange = (key: keyof typeof filters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+        if (filters.fromDate && isBefore(parseISO(tx.date), parseISO(filters.fromDate))) return false;
+        if (filters.toDate && isAfter(parseISO(tx.date), parseISO(filters.toDate))) return false;
+        return true;
+    });
+  }, [transactions, filters]);
+
 
   const fetchTransactions = useCallback(() => {
       setIsLoading(true);
@@ -92,7 +108,7 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
     doc.text(`Commission History: ${agent.name}`, 14, 16);
     
     const head = [['Date', 'Property', 'Unit', 'Room', 'Partition', 'Reference', 'Amount']];
-    const body = transactions.map(tx => [
+    const body = filteredTransactions.map(tx => [
         format(new Date(tx.date), 'PP'),
         tx.property || 'N/A',
         tx.unitCode || 'N/A',
@@ -112,7 +128,7 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
   };
 
   const handleExportExcel = () => {
-    const dataToExport = transactions.map(tx => ({
+    const dataToExport = filteredTransactions.map(tx => ({
         'Date': format(new Date(tx.date), 'PP'),
         'Property': tx.property || 'N/A',
         'Unit': tx.unitCode || 'N/A',
@@ -158,12 +174,24 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
             </div>
           </div>
         </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border-b">
+            <div>
+                <Label htmlFor="fromDate-agent">From Date</Label>
+                <Input id="fromDate-agent" type="date" value={filters.fromDate} onChange={e => handleFilterChange('fromDate', e.target.value)} />
+            </div>
+            <div>
+                <Label htmlFor="toDate-agent">To Date</Label>
+                <Input id="toDate-agent" type="date" value={filters.toDate} onChange={e => handleFilterChange('toDate', e.target.value)} />
+            </div>
+        </div>
+
+        <div className="max-h-[50vh] overflow-y-auto">
           {isLoading ? (
             <div className="flex h-40 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : transactions.length === 0 ? (
+          ) : filteredTransactions.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               No commission payments found for this agent.
             </div>
@@ -182,7 +210,7 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map(tx => (
+                {filteredTransactions.map(tx => (
                   <TableRow key={tx.id}>
                     <TableCell>{format(new Date(tx.date), 'PP')}</TableCell>
                     <TableCell>{tx.property || 'N/A'}</TableCell>

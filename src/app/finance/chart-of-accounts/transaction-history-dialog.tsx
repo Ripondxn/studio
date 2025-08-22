@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { useState, useEffect, useMemo } from 'react';
+import { format, parseISO, isBefore, isAfter } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -41,6 +41,9 @@ import { type Account } from './schema';
 import { type Payment } from '../payment/schema';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -57,6 +60,21 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const { toast } = useToast();
+  const [filters, setFilters] = useState({ fromDate: '', toDate: '', type: 'all', party: '' });
+
+  const handleFilterChange = (key: keyof typeof filters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+        if (filters.fromDate && isBefore(parseISO(tx.date), parseISO(filters.fromDate))) return false;
+        if (filters.toDate && isAfter(parseISO(tx.date), parseISO(filters.toDate))) return false;
+        if (filters.type !== 'all' && tx.type !== filters.type) return false;
+        if (filters.party && !tx.partyName.toLowerCase().includes(filters.party.toLowerCase())) return false;
+        return true;
+    });
+  }, [transactions, filters]);
 
   const fetchTransactions = () => {
       setIsLoading(true);
@@ -90,7 +108,7 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
     doc.text(`Transaction History: ${account.name} (${account.code})`, 14, 16);
     
     const head = [['Date', 'Type', 'Party', 'Property', 'Unit', 'Room', 'Partition', 'Reference', 'Amount']];
-    const body = transactions.map(tx => [
+    const body = filteredTransactions.map(tx => [
         format(new Date(tx.date), 'PP'),
         tx.type,
         tx.partyName,
@@ -112,7 +130,7 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
   };
 
   const handleExportExcel = () => {
-    const dataToExport = transactions.map(tx => ({
+    const dataToExport = filteredTransactions.map(tx => ({
         'Date': format(new Date(tx.date), 'PP'),
         'Type': tx.type,
         'Party': tx.partyName,
@@ -164,12 +182,39 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
             </div>
           </div>
         </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto">
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border-b">
+            <div>
+                <Label htmlFor="fromDate-coa">From Date</Label>
+                <Input id="fromDate-coa" type="date" value={filters.fromDate} onChange={e => handleFilterChange('fromDate', e.target.value)} />
+            </div>
+            <div>
+                <Label htmlFor="toDate-coa">To Date</Label>
+                <Input id="toDate-coa" type="date" value={filters.toDate} onChange={e => handleFilterChange('toDate', e.target.value)} />
+            </div>
+            <div>
+                <Label htmlFor="type-coa">Type</Label>
+                <Select value={filters.type} onValueChange={value => handleFilterChange('type', value)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="Receipt">Receipt</SelectItem>
+                        <SelectItem value="Payment">Payment</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div>
+                <Label htmlFor="party-coa">Party Name</Label>
+                <Input id="party-coa" placeholder="Filter by party..." value={filters.party} onChange={e => handleFilterChange('party', e.target.value)} />
+            </div>
+        </div>
+        
+        <div className="max-h-[50vh] overflow-y-auto">
           {isLoading ? (
             <div className="flex h-40 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : transactions.length === 0 ? (
+          ) : filteredTransactions.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               No transactions found for this account.
             </div>
@@ -190,7 +235,7 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map(tx => (
+                {filteredTransactions.map(tx => (
                   <TableRow key={tx.id}>
                     <TableCell>{format(new Date(tx.date), 'PP')}</TableCell>
                     <TableCell>
