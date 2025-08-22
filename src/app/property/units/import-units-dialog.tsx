@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -117,7 +118,7 @@ export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnits
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <FileUp className="mr-2 h-4 w-4" /> + Import
+          <FileUp className="mr-2 h-4 w-4" /> Import
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl">
