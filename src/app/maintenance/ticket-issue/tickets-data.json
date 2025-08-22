@@ -1,4 +1,3 @@
-
 [
   {
     "id": "TKT-001",
@@ -10,10 +9,10 @@
     "issueType": "Plumbing",
     "description": "Leaky faucet in the kitchen sink. It's been dripping for the past two days.",
     "priority": "High",
-    "status": "Open",
+    "status": "Completed",
     "assignedTo": "plumbing_team",
-    "resolutionDetails": "",
-    "completedDate": ""
+    "resolutionDetails": "done",
+    "completedDate": "2025-08-23"
   },
   {
     "id": "TKT-002",
@@ -30,7 +29,7 @@
     "resolutionDetails": "Electrician scheduled to visit on 2024-08-01.",
     "completedDate": ""
   },
-    {
+  {
     "id": "TKT-003",
     "ticketNo": "TKT-2024-003",
     "requestDate": "2024-07-25",

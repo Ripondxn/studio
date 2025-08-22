@@ -118,15 +118,8 @@ export async function getOccupancyInfoForProperty(propertyCode: string) {
         const contractsData = await fs.readFile(contractsFilePath, 'utf-8');
         const allContracts = JSON.parse(contractsData);
         
-        const property = (await findPropertyData(propertyCode)).data?.propertyData;
-        if (!property) {
-            return { success: false, error: "Property not found" };
-        }
-        
-        const propertyName = property.name;
-
         const occupancyInfo = allContracts
-            .filter((c: any) => c.property === propertyName)
+            .filter((c: any) => c.property === propertyCode)
             .map((c: any) => ({
                 unitCode: c.unitCode,
                 tenantName: c.tenantName,
@@ -179,3 +172,4 @@ export async function getPropertyLookups() {
         landlords: landlords.map((l: any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
     }
 }
+
