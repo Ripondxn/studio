@@ -31,6 +31,7 @@ import { Unit } from './schema';
 import { useToast } from '@/hooks/use-toast';
 import { deleteUnit } from './actions';
 import { EditUnitDialog } from './edit-unit-dialog';
+import { cn } from '@/lib/utils';
 
 const ActionsCell = ({ row }: { row: { original: Unit } }) => {
     const unit = row.original;
@@ -169,12 +170,12 @@ export const columns: ColumnDef<Unit>[] = [
     },
   },
   {
-    accessorKey: 'unitStatus',
-    header: 'Status',
+    accessorKey: 'occupancyStatus',
+    header: 'Occupancy Status',
     cell: ({ row }) => {
-      const status = row.getValue('unitStatus') as string;
-      const variant = status === 'Active' ? 'default' : 'secondary';
-      return <Badge variant={variant} className={status === 'Active' ? 'bg-green-500/20 text-green-700 border-transparent' : ''}>{status}</Badge>;
+      const status = row.getValue('occupancyStatus') as string;
+      const variant = status === 'Occupied' ? 'destructive' : 'default';
+      return <Badge variant={variant} className={cn(status === 'Vacant' ? 'bg-green-500/20 text-green-700 border-transparent' : 'bg-red-500/20 text-red-700 border-transparent')}>{status}</Badge>;
     },
   },
    {

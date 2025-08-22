@@ -8,6 +8,7 @@ import { BedDouble, Bath, Home, Tag } from 'lucide-react';
 import type { Unit } from './schema';
 import { EditUnitDialog } from './edit-unit-dialog';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface UnitCardProps {
   unit: Unit;
@@ -29,8 +30,8 @@ export function UnitCard({ unit }: UnitCardProps) {
               <CardDescription>{unit.unitType}</CardDescription>
               <CardTitle>{unit.unitCode}</CardTitle>
             </div>
-            <Badge variant={unit.unitStatus === 'Active' ? 'default' : 'secondary'} className={unit.unitStatus === 'Active' ? 'bg-green-500/20 text-green-700' : ''}>
-              {unit.unitStatus}
+            <Badge variant={unit.occupancyStatus === 'Vacant' ? 'default' : 'destructive'} className={cn(unit.occupancyStatus === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700', 'border-transparent')}>
+              {unit.occupancyStatus}
             </Badge>
           </div>
         </CardHeader>

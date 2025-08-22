@@ -7,8 +7,11 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { unitSchema, type Unit } from './schema';
+import { type Contract } from '@/app/tenancy/contract/schema';
 
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+
 
 async function readUnits(): Promise<Unit[]> {
     try {
@@ -29,10 +32,23 @@ async function writeUnits(data: Unit[]) {
 }
 
 export async function getUnits() {
-    return await readUnits();
+    const allUnits = await readUnits();
+    const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
+    const allContracts: Contract[] = JSON.parse(contractsData);
+
+    const occupiedUnitCodes = new Set(
+        allContracts
+            .filter(c => c.status === 'New' || c.status === 'Renew')
+            .map(c => c.unitCode)
+    );
+
+    return allUnits.map(unit => ({
+        ...unit,
+        occupancyStatus: occupiedUnitCodes.has(unit.unitCode) ? 'Occupied' : 'Vacant',
+    }));
 }
 
-const addUnitFormSchema = unitSchema.omit({ id: true });
+const addUnitFormSchema = unitSchema.omit({ id: true, occupancyStatus: true });
 
 export async function addUnit(data: z.infer<typeof addUnitFormSchema>) {
     const validation = addUnitFormSchema.safeParse(data);
