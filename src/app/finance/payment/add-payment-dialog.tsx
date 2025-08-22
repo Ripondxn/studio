@@ -76,7 +76,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     setValue,
     formState: { errors },
   } = useForm<PaymentFormData>({
-    resolver: zodResolver(paymentSchema.omit({ id: true })),
+    resolver: zodResolver(paymentSchema),
   });
 
   const paymentType = watch('type');
@@ -102,6 +102,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     if (partyType !== 'Customer' || !customerInvoices || customerInvoices.length === 0) {
         return true; 
     }
+    // Allow saving if amount is not fully allocated, but not over-allocated
     return totalAllocated <= (paymentAmount || 0) + 0.001;
   }, [partyType, customerInvoices, totalAllocated, paymentAmount]);
 
@@ -123,6 +124,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   }, [paymentAmount, partyType, customerInvoices, replace]);
 
   useEffect(() => {
+    // Only auto-allocate when the dialog is opened with a specific payment amount
     if (isOpen && defaultValues?.amount) {
       autoAllocate();
     }
@@ -205,7 +207,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
 
   const onSubmit = async (data: PaymentFormData) => {
-    if (remainingToAllocate < 0) {
+    if (!isAllocationValid) {
       toast({ variant: 'destructive', title: 'Error', description: 'Allocated amount cannot be more than the payment amount.'});
       return;
     }
