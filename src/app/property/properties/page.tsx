@@ -106,6 +106,8 @@ import { FloorGrid } from '../floors/floor-grid';
 import { RoomGrid } from '../rooms/room-grid';
 import { PartitionGrid } from '../partitions/partition-grid';
 import { ImportUnitsDialog } from '../units/import-units-dialog';
+import { ImportRoomsDialog } from '../rooms/import-rooms-dialog';
+import { ImportPartitionsDialog } from '../partitions/import-partitions-dialog';
 
 
 type Particular = {
@@ -531,7 +533,7 @@ export default function PropertyPage() {
   
   const pageTitle = isNewRecord ? 'Add New Property' : `Edit Property: ${initialData.name}`;
 
-  const handleExportPDF = () => {
+  const handleExportUnitsPDF = () => {
     const doc = new jsPDF();
     doc.text(`Units List for ${propertyData.name}`, 14, 16);
     (doc as any).autoTable({
@@ -548,7 +550,7 @@ export default function PropertyPage() {
     doc.save(`units-${propertyData.code}.pdf`);
   };
 
-  const handleExportExcel = () => {
+  const handleExportUnitsExcel = () => {
     const dataToExport = units.map(u => ({
         'Unit Code': u.unitCode,
         'Floor': u.floor,
@@ -562,6 +564,75 @@ export default function PropertyPage() {
     XLSX.utils.book_append_sheet(wb, ws, "Units");
     XLSX.writeFile(wb, `units-${propertyData.code}.xlsx`);
   };
+  
+  const handleExportRoomsPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Rooms List for ${propertyData.name}`, 14, 16);
+    (doc as any).autoTable({
+        head: [['Room Code', 'Floor', 'Unit', 'Type', 'Rent', 'Status']],
+        body: rooms.map(r => [
+            r.roomCode,
+            r.floorCode,
+            r.unitCode,
+            r.roomType,
+            new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(r.rentAmount || 0),
+            r.occupancyStatus
+        ]),
+        startY: 20,
+    });
+    doc.save(`rooms-${propertyData.code}.pdf`);
+  };
+
+  const handleExportRoomsExcel = () => {
+    const dataToExport = rooms.map(r => ({
+        'Room Code': r.roomCode,
+        'Floor': r.floorCode,
+        'Unit': r.unitCode,
+        'Type': r.roomType,
+        'Rent': r.rentAmount,
+        'Status': r.occupancyStatus
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Rooms");
+    XLSX.writeFile(wb, `rooms-${propertyData.code}.xlsx`);
+  };
+
+  const handleExportPartitionsPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Partitions List for ${propertyData.name}`, 14, 16);
+    (doc as any).autoTable({
+        head: [['Partition Code', 'Floor', 'Unit', 'Room', 'Rent', 'Status']],
+        body: partitions.map(p => [
+            p.partitionCode,
+            p.floorCode,
+            p.unitCode,
+            p.roomCode,
+            new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(p.monthlyRent || 0),
+            p.occupancyStatus
+        ]),
+        startY: 20,
+    });
+    doc.save(`partitions-${propertyData.code}.pdf`);
+  };
+
+  const handleExportPartitionsExcel = () => {
+    const dataToExport = partitions.map(p => ({
+        'Partition Code': p.partitionCode,
+        'Floor': p.floorCode,
+        'Unit': p.unitCode,
+        'Room': p.roomCode,
+        'Monthly Rent': p.monthlyRent,
+        'Status': p.occupancyStatus
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Partitions");
+    XLSX.writeFile(wb, `partitions-${propertyData.code}.xlsx`);
+  };
+
 
   return (
     <div className="container mx-auto p-4 bg-background">
@@ -741,8 +812,8 @@ export default function PropertyPage() {
                             </Button>
                         </div>
                          <ImportUnitsDialog propertyCode={propertyData.code} onImportSuccess={() => fetchPropertySubData(propertyData.code)} />
-                         <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
-                         <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
+                         <Button variant="outline" size="sm" onClick={handleExportUnitsPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
+                         <Button variant="outline" size="sm" onClick={handleExportUnitsExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
                         <AddUnitDialog propertyCode={propertyData.code} onUnitAdded={() => fetchPropertySubData(propertyData.code)} />
                     </div>
                 </div>
@@ -811,6 +882,9 @@ export default function PropertyPage() {
                                 <List className="h-5 w-5" />
                             </Button>
                         </div>
+                        <ImportRoomsDialog propertyCode={propertyData.code} onImportSuccess={() => fetchPropertySubData(propertyData.code)} />
+                        <Button variant="outline" size="sm" onClick={handleExportRoomsPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
+                        <Button variant="outline" size="sm" onClick={handleExportRoomsExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
                         <AddRoomDialog propertyCode={propertyData.code} onRoomAdded={() => fetchPropertySubData(propertyData.code)} />
                     </div>
                 </div>
@@ -845,6 +919,9 @@ export default function PropertyPage() {
                                 <List className="h-5 w-5" />
                             </Button>
                         </div>
+                        <ImportPartitionsDialog propertyCode={propertyData.code} onImportSuccess={() => fetchPropertySubData(propertyData.code)} />
+                        <Button variant="outline" size="sm" onClick={handleExportPartitionsPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
+                        <Button variant="outline" size="sm" onClick={handleExportPartitionsExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
                         <AddPartitionDialog propertyCode={propertyData.code} onPartitionAdded={() => fetchPropertySubData(propertyData.code)} />
                     </div>
                 </div>

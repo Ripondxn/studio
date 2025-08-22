@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -162,5 +163,57 @@ export async function getRoomLookups(propertyCode: string) {
     return {
         floors: floors.filter((f: any) => f.propertyCode === propertyCode).map((f:any) => ({ value: f.floorCode, label: f.floorName })),
         units: units.filter((u: any) => u.propertyCode === propertyCode).map((u:any) => ({ value: u.unitCode, label: u.unitCode })),
+    }
+}
+
+const importRoomSchema = roomSchema.omit({ id: true, occupancyStatus: true });
+const importRoomsSchema = z.array(importRoomSchema);
+
+export async function importRooms(roomsData: unknown) {
+    const validation = importRoomsSchema.safeParse(roomsData);
+    if (!validation.success) {
+        console.error("Import validation error:", validation.error.format());
+        return { success: false, error: 'Invalid data format for one or more rows.' };
+    }
+    
+    try {
+        const allRooms = await readRooms();
+        let updatedCount = 0;
+        let addedCount = 0;
+        let propertyCodeForRevalidation = '';
+
+        validation.data.forEach(importedRoom => {
+            if (importedRoom.propertyCode) {
+                 propertyCodeForRevalidation = importedRoom.propertyCode;
+            }
+
+            const existingRoomIndex = allRooms.findIndex(r => r.roomCode === importedRoom.roomCode && r.propertyCode === importedRoom.propertyCode);
+            
+            if (existingRoomIndex > -1) {
+                // Update existing room
+                allRooms[existingRoomIndex] = { ...allRooms[existingRoomIndex], ...importedRoom };
+                updatedCount++;
+            } else {
+                // Add new room
+                const newRoom: Room = {
+                    ...importedRoom,
+                    id: `ROOM-${Date.now()}-${Math.random()}`.replace('.', ''),
+                };
+                allRooms.push(newRoom);
+                addedCount++;
+            }
+        });
+
+        await writeRooms(allRooms);
+        
+        if (propertyCodeForRevalidation) {
+            revalidatePath(`/property/properties?code=${propertyCodeForRevalidation}`);
+        }
+        
+        return { success: true, added: addedCount, updated: updatedCount };
+
+    } catch (error) {
+        console.error("Error importing rooms:", error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred during import.' };
     }
 }

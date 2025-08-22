@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -179,5 +180,57 @@ export async function getPartitionLookups(propertyCode: string) {
         units: units.filter((u: any) => u.propertyCode === propertyCode).map((u:any) => ({ value: u.unitCode, label: u.unitCode })),
         floors: floors.filter((f: any) => f.propertyCode === propertyCode).map((f:any) => ({ value: f.floorCode, label: f.floorName })),
         rooms: rooms.filter((r: any) => r.propertyCode === propertyCode).map((r:any) => ({ value: r.roomCode, label: r.roomName })),
+    }
+}
+
+const importPartitionSchema = partitionSchema.omit({ id: true, occupancyStatus: true });
+const importPartitionsSchema = z.array(importPartitionSchema);
+
+export async function importPartitions(partitionsData: unknown) {
+    const validation = importPartitionsSchema.safeParse(partitionsData);
+    if (!validation.success) {
+        console.error("Import validation error:", validation.error.format());
+        return { success: false, error: 'Invalid data format for one or more rows.' };
+    }
+    
+    try {
+        const allPartitions = await readPartitions();
+        let updatedCount = 0;
+        let addedCount = 0;
+        let propertyCodeForRevalidation = '';
+
+        validation.data.forEach(importedPartition => {
+            if (importedPartition.propertyCode) {
+                 propertyCodeForRevalidation = importedPartition.propertyCode;
+            }
+
+            const existingPartitionIndex = allPartitions.findIndex(p => p.partitionCode === importedPartition.partitionCode && p.propertyCode === importedPartition.propertyCode);
+            
+            if (existingPartitionIndex > -1) {
+                // Update existing partition
+                allPartitions[existingPartitionIndex] = { ...allPartitions[existingPartitionIndex], ...importedPartition };
+                updatedCount++;
+            } else {
+                // Add new partition
+                const newPartition: Partition = {
+                    ...importedPartition,
+                    id: `PART-${Date.now()}-${Math.random()}`.replace('.', ''),
+                };
+                allPartitions.push(newPartition);
+                addedCount++;
+            }
+        });
+
+        await writePartitions(allPartitions);
+        
+        if (propertyCodeForRevalidation) {
+            revalidatePath(`/property/properties?code=${propertyCodeForRevalidation}`);
+        }
+        
+        return { success: true, added: addedCount, updated: updatedCount };
+
+    } catch (error) {
+        console.error("Error importing partitions:", error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred during import.' };
     }
 }
