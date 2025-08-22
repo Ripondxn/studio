@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -50,7 +50,7 @@ declare module 'jspdf' {
     }
 }
 
-export function TransactionHistoryDialog({ account }: { account: BankAccount }) {
+export function TransactionHistoryDialog({ account, children }: { account: BankAccount }) {
   const [isOpen, setIsOpen] = useState(false);
   const [transactions, setTransactions] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -133,10 +133,7 @@ export function TransactionHistoryDialog({ account }: { account: BankAccount }) 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-start">
-            <ArrowRightLeft className="mr-2 h-4 w-4"/>
-            View Transactions
-        </Button>
+        {children}
       </DialogTrigger>
       <DialogContent className="max-w-6xl">
         <AlertDialog open={!!selectedTxId} onOpenChange={(open) => !open && setSelectedTxId(null)}>
