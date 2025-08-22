@@ -3,6 +3,7 @@
 
 import { RoomCard } from './room-card';
 import type { Room } from './schema';
+import { DoorClosed } from 'lucide-react';
 
 interface RoomGridProps {
   rooms: Room[];
@@ -12,7 +13,8 @@ export function RoomGrid({ rooms }: RoomGridProps) {
   if (rooms.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
-        <p>No rooms found for this property.</p>
+        <DoorClosed className="mx-auto h-12 w-12" />
+        <p className="mt-4">No rooms found for this property.</p>
       </div>
     );
   }
