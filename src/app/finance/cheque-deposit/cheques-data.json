@@ -51,7 +51,7 @@
     "chequeDate": "2025-08-21",
     "amount": 131250,
     "bankName": "NBD",
-    "status": "Deposited",
+    "status": "Cleared",
     "type": "Outgoing",
     "partyName": "Emaar Properties",
     "property": "Lewa Tower",
@@ -59,6 +59,7 @@
     "remarks": "",
     "id": "CHQ-1755785927328",
     "depositDate": "2025-08-21",
-    "bankAccountId": "acc_1"
+    "bankAccountId": "acc_1",
+    "clearanceDate": "2025-08-22"
   }
 ]

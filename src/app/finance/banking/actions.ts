@@ -7,11 +7,13 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { bankAccountSchema, type BankAccount } from './schema';
 import { type Payment } from '../payment/schema';
+import { type Cheque } from '../cheque-deposit/schema';
 
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
+const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 
 
 async function readAccounts(): Promise<BankAccount[]> {
@@ -130,16 +132,49 @@ async function readAllPayments(): Promise<Payment[]> {
     }
 }
 
+async function readAllCheques(): Promise<Cheque[]> {
+    try {
+        const chequesData = await fs.readFile(chequesFilePath, 'utf-8');
+        return JSON.parse(chequesData);
+    } catch (error) {
+        console.error('Failed to read cheques file:', error);
+        return [];
+    }
+}
+
+
 export async function getAllTransactions(): Promise<Payment[]> {
     const payments = await readAllPayments();
-    return payments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const cheques = await readAllCheques();
+
+    const chequeTransactions: Payment[] = cheques
+        .filter(c => c.status === 'Cleared' && c.clearanceDate)
+        .map(c => ({
+            id: c.id,
+            type: c.type === 'Incoming' ? 'Receipt' : 'Payment',
+            date: c.clearanceDate!,
+            partyType: c.type === 'Incoming' ? 'Tenant' : 'Landlord',
+            partyName: c.partyName,
+            amount: c.amount,
+            paymentMethod: 'Cheque',
+            bankAccountId: c.bankAccountId,
+            referenceNo: c.chequeNo,
+            property: c.property,
+            status: c.type === 'Incoming' ? 'Received' : 'Paid',
+            contractNo: c.contractNo,
+            remarks: `Cleared cheque from ${c.bankName}`
+        }));
+    
+    const allTransactions = [...payments, ...chequeTransactions];
+
+    return allTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export async function getTransactionsForAccount(accountId: string): Promise<Payment[]> {
      try {
-        const allPayments: Payment[] = await readAllPayments();
+        const allTransactions = await getAllTransactions();
         
-        const accountPayments = allPayments.filter((p: Payment) => {
+        const accountPayments = allTransactions.filter((p: Payment) => {
              if (accountId === 'acc_3') {
                 return p.paymentMethod === 'Cash';
             }
