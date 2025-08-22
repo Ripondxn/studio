@@ -93,18 +93,18 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const paymentAmount = watch("amount", 0);
   const allocations = watch("invoiceAllocations");
   
-  const totalAllocated = useMemo(() => {
+  const totalAllocated = React.useMemo(() => {
     return allocations?.reduce((sum, current) => sum + (Number(current.amount) || 0), 0) || 0;
   }, [allocations]);
 
   const remainingToAllocate = useMemo(() => (paymentAmount || 0) - totalAllocated, [paymentAmount, totalAllocated]);
   
-  const isAllocationValid = useMemo(() => {
+  const isAllocationValid = React.useMemo(() => {
     if (partyType !== 'Customer' || !customerInvoices || customerInvoices.length === 0) {
         return true; 
     }
-    // Allocation is valid if the allocated amount is equal to the payment amount.
-    return Math.abs(totalAllocated - (paymentAmount || 0)) < 0.01;
+    // Allow saving if allocated amount is less than or equal to payment amount.
+    return totalAllocated <= (paymentAmount || 0);
   }, [partyType, customerInvoices, totalAllocated, paymentAmount]);
 
 
@@ -481,5 +481,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     </Dialog>
   );
 }
+
 
 
