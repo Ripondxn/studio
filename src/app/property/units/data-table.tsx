@@ -17,7 +17,7 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { FileText, FileSpreadsheet } from 'lucide-react';
+import { FileText, FileSpreadsheet, FileUp } from 'lucide-react';
 
 import {
   Table,
@@ -123,6 +123,9 @@ export function DataTable<TData, TValue>({
           className="max-w-sm"
         />
         <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm">
+                <FileUp className="mr-2 h-4 w-4" /> + Import
+            </Button>
             <Button variant="outline" size="sm" onClick={handleExportPDF}>
                 <FileText className="mr-2 h-4 w-4" /> Export PDF
             </Button>

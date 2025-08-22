@@ -29,5 +29,36 @@
     "particulars": [],
     "attachments": [],
     "propertyPhoto": null
+  },
+  {
+    "id": "PROP-1755859689160",
+    "propertyData": {
+      "code": "MT-C22",
+      "name": "Mahimat Tower",
+      "propertyType": "Building",
+      "bondType": "",
+      "landlordCode": "L-001",
+      "status": "Active",
+      "plotArea": "0",
+      "builtUpArea": "0",
+      "noOfFloors": "0",
+      "noOfUnits": "48",
+      "noOfParkings": "0",
+      "address1": "Village : Rahut Hati , Post office : Hasnabad",
+      "address2": "",
+      "emirates": "",
+      "country1": "",
+      "propertyPosition": "",
+      "accountant": "Accountant",
+      "salesMan": "SalesMan",
+      "location": "Location",
+      "towerType": "Rent",
+      "gps": "",
+      "propertyNo": "",
+      "assetManager": "Supervisor"
+    },
+    "particulars": [],
+    "attachments": [],
+    "propertyPhoto": null
   }
 ]
