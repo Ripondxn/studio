@@ -30,7 +30,7 @@ interface ImportUnitsDialogProps {
   onImportSuccess: () => void;
 }
 
-const requiredHeaders = ['unitCode', 'unitName', 'floor', 'unitType', 'annualRent', 'unitStatus'];
+const requiredHeaders = ['unitCode', 'floor', 'unitType', 'annualRent', 'unitStatus'];
 
 export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnitsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -84,7 +84,7 @@ export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnits
 
     const unitsToImport = parsedData.map(unit => ({...unit, propertyCode}));
     
-    const result = await importUnits(unitsToImport, propertyCode);
+    const result = await importUnits(unitsToImport);
 
     if (result.success) {
       toast({
@@ -179,3 +179,4 @@ export function ImportUnitsDialog({ propertyCode, onImportSuccess }: ImportUnits
     </Dialog>
   );
 }
+

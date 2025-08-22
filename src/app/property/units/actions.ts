@@ -159,7 +159,7 @@ export async function getUnitLookups(propertyCode: string) {
 const importUnitSchema = unitSchema.omit({ id: true, occupancyStatus: true });
 const importUnitsSchema = z.array(importUnitSchema);
 
-export async function importUnits(unitsData: unknown, propertyCode: string) {
+export async function importUnits(unitsData: unknown) {
     const validation = importUnitsSchema.safeParse(unitsData);
     if (!validation.success) {
         console.error("Import validation error:", validation.error.format());
@@ -170,12 +170,14 @@ export async function importUnits(unitsData: unknown, propertyCode: string) {
         const allUnits = await readUnits();
         let updatedCount = 0;
         let addedCount = 0;
+        let propertyCodeForRevalidation = '';
 
         validation.data.forEach(importedUnit => {
-            // Ensure the unit is for the correct property.
-            if(importedUnit.propertyCode !== propertyCode) return;
+            if (importedUnit.propertyCode) {
+                 propertyCodeForRevalidation = importedUnit.propertyCode;
+            }
 
-            const existingUnitIndex = allUnits.findIndex(u => u.unitCode === importedUnit.unitCode && u.propertyCode === propertyCode);
+            const existingUnitIndex = allUnits.findIndex(u => u.unitCode === importedUnit.unitCode && u.propertyCode === importedUnit.propertyCode);
             
             if (existingUnitIndex > -1) {
                 // Update existing unit
@@ -194,7 +196,10 @@ export async function importUnits(unitsData: unknown, propertyCode: string) {
 
         await writeUnits(allUnits);
         
-        revalidatePath(`/property/properties?code=${propertyCode}`);
+        if (propertyCodeForRevalidation) {
+            revalidatePath(`/property/properties?code=${propertyCodeForRevalidation}`);
+        }
+        
         return { success: true, added: addedCount, updated: updatedCount };
 
     } catch (error) {
@@ -202,3 +207,4 @@ export async function importUnits(unitsData: unknown, propertyCode: string) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred during import.' };
     }
 }
+
