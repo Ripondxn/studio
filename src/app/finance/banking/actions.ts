@@ -11,6 +11,7 @@ import { type Payment } from '../payment/schema';
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
 
 
 async function readAccounts(): Promise<BankAccount[]> {
@@ -31,18 +32,31 @@ async function writeAccounts(data: BankAccount[]) {
     await fs.writeFile(accountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-const pettyCashAccount: BankAccount = {
-    id: "acc_3",
-    accountName: "Petty Cash",
-    bankName: "Cash on Hand",
-    accountNumber: "N/A",
-    balance: 55000,
-    currency: "AED",
-};
+async function readPettyCash() {
+    try {
+        await fs.access(pettyCashFilePath);
+        const data = await fs.readFile(pettyCashFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return { balance: 55000 };
+        }
+        throw error;
+    }
+}
 
 
 export async function getBankAccounts() {
     const storedAccounts = await readAccounts();
+    const pettyCashData = await readPettyCash();
+    const pettyCashAccount: BankAccount = {
+        id: "acc_3",
+        accountName: "Petty Cash",
+        bankName: "Cash on Hand",
+        accountNumber: "N/A",
+        balance: pettyCashData.balance,
+        currency: "AED",
+    };
     return [pettyCashAccount, ...storedAccounts];
 }
 
@@ -82,7 +96,7 @@ export async function saveBankAccount(data: z.infer<typeof bankAccountSchema>, i
 }
 
 export async function deleteBankAccount(accountId: string) {
-     if (accountId === pettyCashAccount.id) {
+     if (accountId === 'acc_3') {
         return { success: false, error: 'The Petty Cash account cannot be deleted.' };
      }
      try {
@@ -108,7 +122,7 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         const allPayments: Payment[] = JSON.parse(paymentsData);
         
         const accountPayments = allPayments.filter((p: Payment) => {
-             if (accountId === pettyCashAccount.id) {
+             if (accountId === 'acc_3') {
                 return p.paymentMethod === 'Cash';
             }
             return p.bankAccountId === accountId

@@ -21,6 +21,7 @@ const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-d
 const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
 const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
+const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
 
 
 async function readPayments(): Promise<Payment[]> {
@@ -57,6 +58,24 @@ async function writeBankAccounts(data: BankAccount[]) {
     await fs.writeFile(bankAccountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+async function readPettyCash() {
+    try {
+        await fs.access(pettyCashFilePath);
+        const data = await fs.readFile(pettyCashFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            // Default petty cash if file doesn't exist
+            return { balance: 55000 };
+        }
+        throw error;
+    }
+}
+
+async function writePettyCash(data: { balance: number }) {
+    await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
 
 export async function getPayments() {
     const payments = await readPayments();
@@ -80,17 +99,27 @@ export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
     const { invoiceAllocations, ...paymentData } = validation.data;
 
     try {
-        // Adjust bank balance if it's an outgoing payment from a bank account
-        if (paymentData.type === 'Payment' && paymentData.bankAccountId) {
-            const allBankAccounts = await readBankAccounts();
-            const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
-
-            if (bankAccountIndex !== -1) {
-                if (allBankAccounts[bankAccountIndex].balance < paymentData.amount) {
-                    return { success: false, error: 'Insufficient funds in the selected bank account.' };
+        if (paymentData.type === 'Payment') {
+            if (paymentData.paymentMethod === 'Cash' && paymentData.paymentFrom === 'Petty Cash') {
+                const pettyCash = await readPettyCash();
+                if (pettyCash.balance < paymentData.amount) {
+                    return { success: false, error: 'Insufficient funds in Petty Cash.' };
                 }
-                allBankAccounts[bankAccountIndex].balance -= paymentData.amount;
-                await writeBankAccounts(allBankAccounts);
+                pettyCash.balance -= paymentData.amount;
+                await writePettyCash(pettyCash);
+            } else if (paymentData.bankAccountId) {
+                const allBankAccounts = await readBankAccounts();
+                const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
+
+                if (bankAccountIndex !== -1) {
+                    if (allBankAccounts[bankAccountIndex].balance < paymentData.amount) {
+                        return { success: false, error: 'Insufficient funds in the selected bank account.' };
+                    }
+                    allBankAccounts[bankAccountIndex].balance -= paymentData.amount;
+                    await writeBankAccounts(allBankAccounts);
+                } else {
+                    return { success: false, error: 'Selected bank account not found for payment.' };
+                }
             }
         }
         
