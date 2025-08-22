@@ -49,7 +49,14 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
     const contracts = await getAllContracts();
     const today = new Date();
 
-    const report = contracts
+    const uniqueContracts = new Map<string, Contract>();
+    contracts.forEach(contract => {
+        // If a contract number already exists, the newer one will overwrite the older one.
+        // You could also add logic here to decide which one to keep, e.g., the one with the latest end date.
+        uniqueContracts.set(contract.contractNo, contract);
+    });
+
+    const report = Array.from(uniqueContracts.values())
         .map(contract => {
             const daysRemaining = differenceInDays(parseISO(contract.endDate), today);
             return {
