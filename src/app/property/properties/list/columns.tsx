@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { deletePropertyData } from '../actions';
+import { Badge } from '@/components/ui/badge';
 
 import { Property } from './schema';
 
