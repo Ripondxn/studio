@@ -36,7 +36,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Copy,
   Save,
   FileText,
   Settings,

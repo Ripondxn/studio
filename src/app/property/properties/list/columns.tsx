@@ -4,11 +4,10 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, Paperclip, Link as LinkIcon, File, Copy } from 'lucide-react';
+import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, Paperclip, Link as LinkIcon, File } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -37,7 +36,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { deletePropertyData, duplicateProperty } from '../actions';
+import { deletePropertyData } from '../actions';
 
 import { Property } from './schema';
 
@@ -48,7 +47,6 @@ const ActionsCell = ({ row }: { row: any }) => {
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isDuplicating, setIsDuplicating] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -73,30 +71,6 @@ const ActionsCell = ({ row }: { row: any }) => {
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
-    }
-  };
-
-  const handleDuplicate = async () => {
-    setIsDuplicating(true);
-    try {
-      const result = await duplicateProperty(property.code);
-      if (result.success) {
-        toast({
-          title: 'Property Duplicated',
-          description: `Successfully duplicated "${property.name}". Redirecting to new property...`,
-        });
-        router.push(`/property/properties?code=${result.newPropertyCode}`);
-      } else {
-        throw new Error(result.error || 'An unknown error occurred during duplication.');
-      }
-    } catch (error) {
-       toast({
-        variant: 'destructive',
-        title: 'Error Duplicating Property',
-        description: (error as Error).message,
-      });
-    } finally {
-      setIsDuplicating(false);
     }
   };
 
@@ -139,14 +113,6 @@ const ActionsCell = ({ row }: { row: any }) => {
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </Link>
-            </DropdownMenuItem>
-             <DropdownMenuItem onSelect={handleDuplicate} disabled={isDuplicating}>
-                {isDuplicating ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Copy className="mr-2 h-4 w-4" />
-                )}
-                Duplicate
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
