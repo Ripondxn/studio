@@ -120,10 +120,24 @@ export async function deleteBankAccount(accountId: string) {
     }
 }
 
+async function readAllPayments(): Promise<Payment[]> {
+    try {
+        const paymentsData = await fs.readFile(paymentsFilePath, 'utf-8');
+        return JSON.parse(paymentsData);
+    } catch (error) {
+        console.error('Failed to read payments file:', error);
+        return [];
+    }
+}
+
+export async function getAllTransactions(): Promise<Payment[]> {
+    const payments = await readAllPayments();
+    return payments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
 export async function getTransactionsForAccount(accountId: string): Promise<Payment[]> {
      try {
-        const paymentsData = await fs.readFile(paymentsFilePath, 'utf-8');
-        const allPayments: Payment[] = JSON.parse(paymentsData);
+        const allPayments: Payment[] = await readAllPayments();
         
         const accountPayments = allPayments.filter((p: Payment) => {
              if (accountId === 'acc_3') {

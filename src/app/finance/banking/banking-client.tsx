@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreVertical, Edit, Trash2, Banknote, Landmark, Loader2, Wallet, ArrowRightLeft, Briefcase } from 'lucide-react';
+import { Plus, MoreVertical, Edit, Trash2, Banknote, Landmark, Loader2, Wallet, ArrowRightLeft, Briefcase, History, RefreshCw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -39,9 +39,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { bankAccountSchema, type BankAccount } from './schema';
 import { saveBankAccount, deleteBankAccount, getBankAccounts } from './actions';
-import { TransactionHistoryDialog } from './transaction-history-dialog';
+import { AllTransactionsDialog } from './all-transactions-dialog';
 import { EquityDialog } from '../equity/equity-dialog';
-
+import { DataTable } from './data-table';
+import { columns } from './columns';
+import { cn } from '@/lib/utils';
 
 type BankAccountFormData = Omit<BankAccount, 'id'> & { id?: string };
 
@@ -129,70 +131,9 @@ const BankAccountDialog = ({ account, onSave, children }: { account?: BankAccoun
     )
 }
 
-const BankAccountCard = ({ account, onEdit, onDelete }: { account: BankAccount, onEdit: () => void, onDelete: (id: string) => void }) => {
-    const [isDeleting, setIsDeleting] = useState(false);
-    const isPettyCash = account.id === 'acc_3';
-
-    return (
-        <Card className="flex flex-col">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-primary/10 text-primary">
-                       {isPettyCash ? <Wallet className="h-6 w-6" /> : <Landmark className="h-6 w-6" />}
-                    </div>
-                    <div>
-                        <CardTitle>{account.accountName}</CardTitle>
-                        <CardDescription>{account.bankName} - {account.accountNumber}</CardDescription>
-                    </div>
-                </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4"/></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <BankAccountDialog account={account} onSave={onEdit}>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={isPettyCash}>
-                                <Edit className="mr-2 h-4 w-4"/> Edit
-                            </DropdownMenuItem>
-                        </BankAccountDialog>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                 <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} disabled={isPettyCash}>
-                                    <Trash2 className="mr-2 h-4 w-4"/> Delete
-                                </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the "{account.accountName}" account.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => onDelete(account.id)} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                                        {isDeleting ? 'Deleting...' : 'Delete'}
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </CardHeader>
-            <CardContent className="flex-grow">
-                <p className="text-sm text-muted-foreground">Current Balance</p>
-                <p className="text-3xl font-bold">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: account.currency }).format(account.balance)}
-                </p>
-            </CardContent>
-            <CardFooter>
-                 <TransactionHistoryDialog account={account} />
-            </CardFooter>
-        </Card>
-    );
-};
-
-
 export function BankingClient({ initialAccounts }: { initialAccounts: BankAccount[] }) {
   const [accounts, setAccounts] = useState(initialAccounts);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const totalBalance = useMemo(() => {
@@ -201,17 +142,14 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
 
 
   const refreshAccounts = async () => {
-    const updatedAccounts = await getBankAccounts();
-    setAccounts(updatedAccounts);
-  }
-
-  const handleDeleteAccount = async (id: string) => {
-    const result = await deleteBankAccount(id);
-    if(result.success) {
-        toast({ title: 'Success', description: 'Bank account has been deleted.'});
-        refreshAccounts();
-    } else {
-         toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to delete account.' });
+    setIsLoading(true);
+    try {
+        const updatedAccounts = await getBankAccounts();
+        setAccounts(updatedAccounts);
+    } catch (e) {
+        toast({variant: 'destructive', title: 'Error', description: 'Failed to refresh accounts.'});
+    } finally {
+        setIsLoading(false);
     }
   }
 
@@ -225,12 +163,18 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
             </p>
         </div>
         <div className="flex items-center gap-2">
+            <AllTransactionsDialog>
+              <Button variant="outline"><History className="mr-2 h-4 w-4"/> + History</Button>
+            </AllTransactionsDialog>
             <EquityDialog bankAccounts={accounts} onTransaction={refreshAccounts}>
                 <Button variant="outline"><Briefcase className="mr-2 h-4 w-4"/> Equity</Button>
             </EquityDialog>
             <BankAccountDialog onSave={refreshAccounts}>
                 <Button><Plus className="mr-2 h-4 w-4"/>Add New Account</Button>
             </BankAccountDialog>
+            <Button variant="outline" size="icon" onClick={refreshAccounts} disabled={isLoading}>
+                <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            </Button>
         </div>
       </div>
       
@@ -249,11 +193,7 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {accounts.map(acc => (
-            <BankAccountCard key={acc.id} account={acc} onEdit={refreshAccounts} onDelete={handleDeleteAccount} />
-        ))}
-      </div>
+      <DataTable columns={columns({ onAccountUpdate: refreshAccounts })} data={accounts} />
     </div>
   );
 }
