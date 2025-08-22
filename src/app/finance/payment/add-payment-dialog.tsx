@@ -30,6 +30,8 @@ import { format } from 'date-fns';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { z } from 'zod';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit } from '@/app/tenancy/contract/actions';
+
 
 const invoiceAllocationSchema = z.object({
   invoiceId: z.string(),
@@ -49,6 +51,10 @@ type Lookups = {
     vendors: { value: string, label: string }[];
     customers: { value: string, label: string }[];
     bankAccounts: { value: string, label: string }[];
+    properties: {value: string, label: string}[];
+    units: {value: string, label: string}[];
+    rooms: {value: string, label: string}[];
+    partitions: {value: string, label: string}[];
 }
 
 interface AddPaymentDialogProps {
@@ -69,7 +75,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [], bankAccounts: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [] });
 
   const {
     register,
@@ -87,6 +93,8 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const partyType = watch('partyType');
   const paymentMethod = watch('paymentMethod');
   const paymentAmount = watch('amount');
+  const watchedProperty = watch('property');
+  const watchedUnit = watch('unitCode');
 
   const { fields, append, remove, replace } = useFieldArray({
       control,
@@ -99,8 +107,38 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
 
   useEffect(() => {
+    getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties })));
+    getLookups().then(data => setLookups(prev => ({...prev, ...data})));
+  }, [])
+
+   useEffect(() => {
+    const fetchUnits = async () => {
+        if (watchedProperty) {
+            const units = await getUnitsForProperty(watchedProperty);
+            setLookups(prev => ({...prev, units}));
+        } else {
+            setLookups(prev => ({...prev, units: []}));
+        }
+    }
+    fetchUnits();
+  }, [watchedProperty]);
+
+  useEffect(() => {
+    const fetchSubUnits = async () => {
+        if (watchedProperty && watchedUnit) {
+            const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
+            const partitions = await getPartitionsForUnit(watchedProperty, watchedUnit);
+            setLookups(prev => ({...prev, rooms, partitions}));
+        } else {
+            setLookups(prev => ({...prev, rooms: [], partitions: []}));
+        }
+    }
+    fetchSubUnits();
+  }, [watchedProperty, watchedUnit]);
+
+
+  useEffect(() => {
       if(isOpen) {
-        getLookups().then(setLookups);
         reset(defaultValues || {
             type: 'Receipt',
             date: format(new Date(), 'yyyy-MM-dd'),
@@ -301,7 +339,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         />
                     </div>
                  )}
-
                  <div className="space-y-2">
                     <Label htmlFor="bankAccountId">Bank Account</Label>
                     <Controller
@@ -319,6 +356,78 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         )}
                     />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border rounded-md">
+                     <div className="space-y-2 lg:col-span-1">
+                        <Label>Property</Label>
+                         <Controller
+                            name="property"
+                            control={control}
+                            render={({ field }) => (
+                                <Combobox
+                                    options={lookups.properties}
+                                    value={field.value || ''}
+                                    onSelect={(value) => {
+                                        field.onChange(value);
+                                        setValue('unitCode', '');
+                                        setValue('roomCode', '');
+                                        setValue('partitionCode', '');
+                                    }}
+                                    placeholder="Select Property"
+                                />
+                            )}
+                        />
+                    </div>
+                     <div className="space-y-2 lg:col-span-1">
+                        <Label>Unit</Label>
+                         <Controller
+                            name="unitCode"
+                            control={control}
+                            render={({ field }) => (
+                                <Combobox
+                                    options={lookups.units}
+                                    value={field.value || ''}
+                                    onSelect={field.onChange}
+                                    placeholder="Select Unit"
+                                    disabled={!watchedProperty}
+                                />
+                            )}
+                        />
+                    </div>
+                     <div className="space-y-2 lg:col-span-1">
+                        <Label>Room</Label>
+                         <Controller
+                            name="roomCode"
+                            control={control}
+                            render={({ field }) => (
+                                <Combobox
+                                    options={lookups.rooms}
+                                    value={field.value || ''}
+                                    onSelect={field.onChange}
+                                    placeholder="Select Room"
+                                    disabled={!watchedUnit}
+                                />
+                            )}
+                        />
+                    </div>
+                     <div className="space-y-2 lg:col-span-1">
+                        <Label>Partition</Label>
+                          <Controller
+                            name="partitionCode"
+                            control={control}
+                            render={({ field }) => (
+                                <Combobox
+                                    options={lookups.partitions}
+                                    value={field.value || ''}
+                                    onSelect={field.onChange}
+                                    placeholder="Select Partition"
+                                    disabled={!watchedUnit}
+                                />
+                            )}
+                        />
+                    </div>
+                </div>
+
                  <div className="space-y-2">
                     <Label htmlFor="referenceNo">Reference No.</Label>
                     <Input id="referenceNo" placeholder="Cheque No, Transaction ID, etc." {...register('referenceNo')} />

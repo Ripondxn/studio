@@ -159,12 +159,12 @@ export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agen
       const commissionRate = agent.commissionRate || 0;
       const totalPaid = agent.totalCommissionPaid || 0;
 
-      let status: 'Paid' | 'Unpaid' | 'Overpaid' | 'N/A' = 'N/A';
+      let status: 'Paid' | 'Unpaid' | 'N/A' = 'N/A';
       let badgeClass = '';
 
       if (commissionRate > 0) {
         if (totalPaid >= commissionRate) {
-            status = totalPaid > commissionRate ? 'Overpaid' : 'Paid';
+            status = 'Paid';
             badgeClass = 'bg-green-100 text-green-800';
         } else {
             status = 'Unpaid';
