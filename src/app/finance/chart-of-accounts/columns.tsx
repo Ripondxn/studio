@@ -3,7 +3,16 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Folder, File, Pencil, Trash2, Eye } from 'lucide-react';
-
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,11 +22,93 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
 import { Account } from './schema';
 import { TransactionHistoryDialog } from './transaction-history-dialog';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { deleteAccount } from './actions';
+import { useRouter } from 'next/navigation';
+import { EditAccountDialog } from './edit-account-dialog';
 
+
+const ActionsCell = ({ row }: { row: { original: Account }}) => {
+    const account = row.original;
+    const { toast } = useToast();
+    const router = useRouter();
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        const result = await deleteAccount(account.code);
+        if (result.success) {
+            toast({ title: "Success", description: "Account and its sub-accounts have been deleted." });
+            router.refresh();
+        } else {
+            toast({ variant: 'destructive', title: "Error", description: result.error });
+        }
+        setIsDeleting(false);
+        setIsDeleteDialogOpen(false);
+    }
+    
+    return (
+      <>
+        <EditAccountDialog
+          account={account}
+          isOpen={isEditDialogOpen}
+          setIsOpen={setIsEditDialogOpen}
+          onSuccess={() => router.refresh()}
+        />
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the account "{account.name}" and any sub-accounts.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                    {isDeleting ? "Deleting..." : "Delete"}
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+        <div className="text-right">
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    {!account.isGroup && (
+                        <TransactionHistoryDialog account={account}>
+                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                             <Eye className="mr-2 h-4 w-4" /> View Transactions
+                           </DropdownMenuItem>
+                        </TransactionHistoryDialog>
+                    )}
+                    <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+      </>
+    )
+}
 
 export const columns: ColumnDef<Account>[] = [
   {
@@ -110,21 +201,6 @@ export const columns: ColumnDef<Account>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      const account = row.original;
-      if (account.isGroup) {
-        return null; // No actions for group accounts
-      }
-      
-      return (
-        <div className="text-right">
-            <TransactionHistoryDialog account={account}>
-              <Button variant="ghost" size="icon">
-                  <Eye className="h-4 w-4" />
-              </Button>
-            </TransactionHistoryDialog>
-        </div>
-      );
-    },
+    cell: ActionsCell,
   },
 ];

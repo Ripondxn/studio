@@ -135,6 +135,52 @@ export async function addAccount(data: z.infer<typeof addAccountFormSchema>) {
     }
 }
 
+const updateAccountFormSchema = accountSchema.omit({ balance: true }).partial();
+export async function updateAccount(data: z.infer<typeof updateAccountFormSchema>) {
+    const validation = updateAccountFormSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: 'Invalid data format.' };
+    }
+
+    try {
+        const allAccounts = await readData(accountsFilePath);
+        const { code, ...dataToUpdate } = validation.data;
+
+        const accountIndex = allAccounts.findIndex((acc: Account) => acc.code === code);
+        if (accountIndex === -1) {
+            return { success: false, error: `Account with code "${code}" not found.` };
+        }
+        
+        allAccounts[accountIndex] = { ...allAccounts[accountIndex], ...dataToUpdate };
+
+        await writeAccounts(allAccounts);
+        
+        revalidatePath('/finance/chart-of-accounts');
+        return { success: true, data: allAccounts[accountIndex] };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function deleteAccount(code: string) {
+    try {
+        const allAccounts = await readData(accountsFilePath);
+        const updatedAccounts = allAccounts.filter((acc: Account) => acc.code !== code && acc.parentCode !== code);
+
+        if (allAccounts.length === updatedAccounts.length) {
+            return { success: false, error: 'Account not found or no changes made.' };
+        }
+
+        await writeAccounts(updatedAccounts);
+        revalidatePath('/finance/chart-of-accounts');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+
 export async function getTransactionsForAccount(accountCode: string): Promise<Payment[]> {
     const allPayments: Payment[] = await readData(paymentsFilePath);
 
