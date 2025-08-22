@@ -5,7 +5,7 @@ import { AppLayout } from '@/components/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Trust Famaous Real Estate',
+  title: 'Trust Famous Real Estate',
   description: 'Integrated Property Management Dashboard & Workflow Design',
 };
 
