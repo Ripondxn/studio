@@ -182,7 +182,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const onSubmit = async (data: PaymentFormData) => {
     setIsSaving(true);
 
-    if (partyType === 'Customer' && invoiceAllocations && invoiceAllocations.length > 0 && (data.amount || 0) !== totalAllocated) {
+    if (partyType === 'Customer' && invoiceAllocations && invoiceAllocations.length > 0 && Math.abs((data.amount || 0) - totalAllocated) > 0.001) {
         toast({
             variant: 'destructive',
             title: 'Allocation Mismatch',

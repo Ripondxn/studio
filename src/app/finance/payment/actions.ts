@@ -148,7 +148,10 @@ export async function addPayment(data: z.infer<typeof addPaymentFormSchema>) {
         await writePayments(allPayments);
 
         if (paymentData.type === 'Receipt' && paymentData.partyType === 'Customer' && invoiceAllocations && invoiceAllocations.length > 0) {
-            await applyPaymentToInvoices(invoiceAllocations, paymentData.partyName);
+            const allocationsToApply = invoiceAllocations.filter(alloc => alloc.amount > 0);
+            if (allocationsToApply.length > 0) {
+                 await applyPaymentToInvoices(allocationsToApply, paymentData.partyName);
+            }
         }
         
         revalidatePath('/finance/payment');

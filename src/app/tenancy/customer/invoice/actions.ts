@@ -107,7 +107,9 @@ export async function applyPaymentToInvoices(invoicePayments: { invoiceId: strin
             const index = allInvoices.findIndex(inv => inv.id === payment.invoiceId);
             if (index !== -1) {
                 allInvoices[index].amountPaid = (allInvoices[index].amountPaid || 0) + payment.amount;
-                if (allInvoices[index].amountPaid >= allInvoices[index].total) {
+                const remainingBalance = allInvoices[index].total - allInvoices[index].amountPaid;
+                
+                if (remainingBalance <= 0.001) { // Using a small tolerance for floating point math
                     allInvoices[index].status = 'Paid';
                 }
             }
