@@ -92,7 +92,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const paymentType = watch('type');
   const partyType = watch('partyType');
   const paymentMethod = watch('paymentMethod');
-  const paymentAmount = watch('amount');
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
 
@@ -101,8 +100,16 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
       name: "invoiceAllocations",
   });
 
-  const allocations = watch('invoiceAllocations');
-  const totalAllocated = allocations?.reduce((sum, current) => sum + (current.amount || 0), 0) || 0;
+  const paymentAmount = watch("amount");
+  const allocations = useWatch({
+    control,
+    name: "invoiceAllocations",
+  });
+  
+  const totalAllocated = React.useMemo(() => {
+    return allocations?.reduce((sum, current) => sum + (current.amount || 0), 0) || 0;
+  }, [allocations]);
+
   const remainingToAllocate = (paymentAmount || 0) - totalAllocated;
 
 
