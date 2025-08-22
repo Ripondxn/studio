@@ -4,19 +4,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, DollarSign } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { InvoiceDialog } from './invoice-dialog';
 import { getInvoicesForCustomer } from './actions';
 import { type Invoice } from './schema';
+import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
+import { type Payment } from '@/app/finance/payment/schema';
+import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 export function InvoiceList({ customerCode, customerName }: { customerCode: string, customerName: string }) {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+    const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>> | undefined>();
+    const router = useRouter();
 
     const fetchInvoices = useCallback(async () => {
         setIsLoading(true);
@@ -48,6 +55,29 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
         setIsViewMode(true);
         setIsInvoiceDialogOpen(true);
     }
+    
+    const handleRecordPayment = (invoice?: Invoice) => {
+        const openInvoices = invoice ? [invoice] : invoices.filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled');
+        
+        setPaymentDefaultValues({
+            type: 'Receipt',
+            partyType: 'Customer',
+            partyName: customerCode,
+            date: format(new Date(), 'yyyy-MM-dd'),
+            status: 'Received',
+            amount: invoice ? (invoice.remainingBalance) : undefined,
+            invoiceAllocations: openInvoices.map(i => ({
+                invoiceId: i.id,
+                amount: i.id === invoice?.id ? (invoice.remainingBalance || 0) : 0,
+            }))
+        });
+        setIsPaymentDialogOpen(true);
+    }
+
+    const handleSuccess = () => {
+        fetchInvoices();
+        router.refresh();
+    }
 
     return (
         <Card>
@@ -58,7 +88,10 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                         <CardDescription>Manage invoices for {customerName}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
-                        <Button onClick={handleCreateClick}>
+                        <Button onClick={() => handleRecordPayment()}>
+                            <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
+                        </Button>
+                        <Button variant="outline" onClick={handleCreateClick}>
                             <Plus className="mr-2 h-4 w-4" /> Create Invoice
                         </Button>
                     </div>
@@ -70,16 +103,26 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : (
-                    <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick })} data={invoices} />
+                    <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPayment })} data={invoices} />
                 )}
+                
                 {isInvoiceDialogOpen && (
                     <InvoiceDialog
                         isOpen={isInvoiceDialogOpen}
                         setIsOpen={setIsInvoiceDialogOpen}
                         invoice={selectedInvoice}
                         customer={{ code: customerCode, name: customerName }}
-                        onSuccess={fetchInvoices}
+                        onSuccess={handleSuccess}
                         isViewMode={isViewMode}
+                    />
+                )}
+                {isPaymentDialogOpen && (
+                    <AddPaymentDialog
+                        isOpen={isPaymentDialogOpen}
+                        setIsOpen={setIsPaymentDialogOpen}
+                        defaultValues={paymentDefaultValues}
+                        customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')}
+                        onPaymentAdded={handleSuccess}
                     />
                 )}
             </CardContent>
