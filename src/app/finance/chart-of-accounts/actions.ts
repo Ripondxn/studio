@@ -207,6 +207,20 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
         case '1110': // Cash and Bank
              // Returns all transactions for simplicity. Could be refined.
             return allPayments;
+        case '3000': { // Equity
+             const equityTransactions: any[] = await readData(equityTransactionsFilePath);
+             return equityTransactions.map(t => ({
+                id: t.id,
+                type: t.type === 'Contribution' ? 'Receipt' : 'Payment',
+                date: t.date,
+                partyType: 'Customer', // Simplified for display
+                partyName: 'Owner',
+                amount: t.amount,
+                paymentMethod: 'Cash', // Simplified
+                referenceNo: t.remarks || 'Equity Transaction',
+                status: t.type === 'Contribution' ? 'Received' : 'Paid',
+             }));
+        }
         case '4100': // Rental Income
             return allPayments.filter(p => p.type === 'Receipt');
         case '5110': // Maintenance & Repairs
@@ -218,3 +232,4 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
             return [];
     }
 }
+
