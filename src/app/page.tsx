@@ -119,6 +119,7 @@ export default async function Dashboard() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
+            <Button asChild><Link href="/lease/contract"><Plus className="mr-2 h-4 w-4"/> New Lease Contract</Link></Button>
             <Button asChild><Link href="/tenancy/contract"><Plus className="mr-2 h-4 w-4"/> Generate New Contract</Link></Button>
             <Button asChild variant="outline"><Link href="/finance/due-payments"><Receipt className="mr-2 h-4 w-4"/> Record Payment</Link></Button>
             <SendRenewalDialogWrapper expiringContracts={expiryReport} />
