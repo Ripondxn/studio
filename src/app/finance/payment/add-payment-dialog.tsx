@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -113,8 +113,10 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     if (partyType !== 'Customer' || !customerInvoices || customerInvoices.length === 0) {
         return true; // No allocation to validate
     }
-    return Math.abs(remainingToAllocate) < 0.01;
-  }, [partyType, customerInvoices, remainingToAllocate]);
+    // Allocation is valid if the allocated amount is not more than the payment amount.
+    // A small tolerance is added for floating point inaccuracies.
+    return totalAllocated <= (paymentAmount || 0) + 0.001;
+  }, [partyType, customerInvoices, totalAllocated, paymentAmount]);
 
 
   useEffect(() => {
@@ -150,7 +152,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
   useEffect(() => {
       if(isOpen) {
-        reset(defaultValues || {
+        const initialValues = defaultValues || {
             type: 'Receipt',
             date: format(new Date(), 'yyyy-MM-dd'),
             partyType: 'Tenant',
@@ -160,7 +162,9 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
             paymentFrom: 'Petty Cash',
             status: 'Received',
             invoiceAllocations: [],
-        });
+        };
+        reset(initialValues);
+
         if(customerInvoices){
             replace(customerInvoices.map(inv => ({ invoiceId: inv.id, amount: 0 })));
         } else {
