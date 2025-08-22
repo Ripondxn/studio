@@ -50,10 +50,13 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
     const today = new Date();
 
     const report = contracts
-        .map(contract => ({
-        ...contract,
-        daysRemaining: differenceInDays(parseISO(contract.endDate), today),
-        }))
+        .map(contract => {
+            const daysRemaining = differenceInDays(parseISO(contract.endDate), today);
+            return {
+                ...contract,
+                daysRemaining,
+            };
+        })
         .filter(contract => contract.daysRemaining >= 0 && contract.daysRemaining <= 90)
         .sort((a, b) => a.daysRemaining - b.daysRemaining)
         .map(contract => ({
@@ -64,6 +67,7 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
             status: contract.daysRemaining <= 30 ? 'Renewal Due' : 'Notified',
             contractNo: contract.contractNo,
         }));
+
     return report;
 }
 
