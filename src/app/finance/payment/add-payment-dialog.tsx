@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -94,13 +93,13 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const paymentAmount = watch("amount", 0);
   const allocations = watch("invoiceAllocations");
   
-  const totalAllocated = useMemo(() => {
+  const totalAllocated = React.useMemo(() => {
     return allocations?.reduce((sum, current) => sum + (Number(current.amount) || 0), 0) || 0;
   }, [allocations]);
 
-  const remainingToAllocate = useMemo(() => (paymentAmount || 0) - totalAllocated, [paymentAmount, totalAllocated]);
+  const remainingToAllocate = React.useMemo(() => (paymentAmount || 0) - totalAllocated, [paymentAmount, totalAllocated]);
 
-  const isAllocationValid = useMemo(() => {
+  const isAllocationValid = React.useMemo(() => {
     if (partyType !== 'Customer' || !customerInvoices || customerInvoices.length === 0) {
         return true; // No allocation to validate
     }
@@ -482,3 +481,4 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     </Dialog>
   );
 }
+
