@@ -6,10 +6,30 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { type Unit } from '@/app/property/units/schema';
 import { type Contract } from '@/app/tenancy/contract/schema';
+import { type Floor } from '../floors/schema';
+import { type Room } from '../rooms/schema';
+import { type Partition } from '../partitions/schema';
 
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
+const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
+const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
+
+
+async function readData(filePath: string) {
+    try {
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
 
 
 async function getProperties() {
@@ -186,5 +206,73 @@ export async function getPropertyLookups() {
     const landlords = await readLandlords();
     return {
         landlords: landlords.map((l: any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
+    }
+}
+
+export async function duplicateProperty(sourcePropertyCode: string) {
+    try {
+        const allProperties = await getProperties();
+        const allFloors = await readData(floorsFilePath);
+        const allUnits = await readData(unitsFilePath);
+        const allRooms = await readData(roomsFilePath);
+        const allPartitions = await readData(partitionsFilePath);
+
+        const sourceProperty = allProperties.find((p: any) => (p.propertyData?.code || p.code) === sourcePropertyCode);
+        if (!sourceProperty) {
+            return { success: false, error: "Source property not found." };
+        }
+
+        const newPropertyCode = `${sourcePropertyCode}-COPY-${Date.now()}`;
+        const newProperty = JSON.parse(JSON.stringify(sourceProperty)); // Deep copy
+        
+        newProperty.id = `PROP-${Date.now()}`;
+        if (newProperty.propertyData) {
+            newProperty.propertyData.code = newPropertyCode;
+            newProperty.propertyData.name = `${newProperty.propertyData.name} (Copy)`;
+        } else {
+            newProperty.code = newPropertyCode;
+            newProperty.name = `${newProperty.name} (Copy)`;
+        }
+        allProperties.push(newProperty);
+
+        // Floors
+        const sourceFloors = allFloors.filter((f: Floor) => f.propertyCode === sourcePropertyCode);
+        for (const floor of sourceFloors) {
+            const newFloor = {...floor, id: `FLR-${Date.now()}`, propertyCode: newPropertyCode };
+            allFloors.push(newFloor);
+        }
+
+        // Units
+        const sourceUnits = allUnits.filter((u: Unit) => u.propertyCode === sourcePropertyCode);
+        for (const unit of sourceUnits) {
+            const newUnit = {...unit, id: `UNIT-${Date.now()}`, propertyCode: newPropertyCode };
+            allUnits.push(newUnit);
+        }
+
+        // Rooms
+        const sourceRooms = allRooms.filter((r: Room) => r.propertyCode === sourcePropertyCode);
+        for (const room of sourceRooms) {
+            const newRoom = {...room, id: `ROOM-${Date.now()}`, propertyCode: newPropertyCode };
+            allRooms.push(newRoom);
+        }
+
+        // Partitions
+        const sourcePartitions = allPartitions.filter((p: Partition) => p.propertyCode === sourcePropertyCode);
+        for (const partition of sourcePartitions) {
+            const newPartition = {...partition, id: `PART-${Date.now()}`, propertyCode: newPropertyCode };
+            allPartitions.push(newPartition);
+        }
+
+        await writeProperties(allProperties);
+        await fs.writeFile(floorsFilePath, JSON.stringify(allFloors, null, 2), 'utf-8');
+        await fs.writeFile(unitsFilePath, JSON.stringify(allUnits, null, 2), 'utf-8');
+        await fs.writeFile(roomsFilePath, JSON.stringify(allRooms, null, 2), 'utf-8');
+        await fs.writeFile(partitionsFilePath, JSON.stringify(allPartitions, null, 2), 'utf-8');
+        
+        return { success: true, newPropertyCode: newPropertyCode };
+
+    } catch (error) {
+        console.error('Failed to duplicate property:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }
