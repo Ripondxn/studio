@@ -30,7 +30,7 @@ import {
 import Link from 'next/link';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { getUnits } from '@/app/property/units/actions';
-import { getSummary as getPdcChequeSummary } from '@/app/finance/pdc-cheque/actions';
+import { getSummary as getPdcChequeSummary } from '@/app/finance/cheque-deposit/actions';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
@@ -233,7 +233,7 @@ export default async function Dashboard() {
                 </TableHeader>
                 <TableBody>
                     {vacantUnits.map((item) => (
-                        <TableRow key={item.unitCode}>
+                        <TableRow key={`${item.propertyCode}-${item.unitCode}`}>
                             <TableCell className="font-medium">{item.unitCode}</TableCell>
                             <TableCell>{item.unitType}</TableCell>
                             <TableCell>{item.floor}</TableCell>
