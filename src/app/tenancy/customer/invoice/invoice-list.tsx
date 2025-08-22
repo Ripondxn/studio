@@ -21,6 +21,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+    const [paymentDialogDefaults, setPaymentDialogDefaults] = useState<Partial<Omit<Payment, 'id'>> | undefined>();
 
     const fetchInvoices = useCallback(async () => {
         setIsLoading(true);
@@ -54,26 +55,29 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
     }
 
     const handleRecordPaymentClick = (invoice?: Invoice) => {
-        setSelectedInvoice(invoice || null);
+        if (invoice) {
+             setPaymentDialogDefaults({
+                type: 'Receipt',
+                partyType: 'Customer',
+                partyName: invoice.customerName,
+                amount: invoice.remainingBalance,
+                referenceNo: invoice.invoiceNo,
+                invoiceAllocations: [{ invoiceId: invoice.id, amount: invoice.remainingBalance || 0 }],
+                remarks: `Payment for Invoice #${invoice.invoiceNo}`
+            });
+        } else {
+             setPaymentDialogDefaults({
+                type: 'Receipt',
+                partyType: 'Customer',
+                partyName: customerName,
+            });
+        }
         setIsPaymentDialogOpen(true);
     }
 
     const handlePaymentSuccess = () => {
         fetchInvoices();
     }
-    
-    const paymentDefaultValues: Partial<Omit<Payment, 'id'>> | undefined = selectedInvoice ? {
-        type: 'Receipt',
-        partyType: 'Customer',
-        partyName: selectedInvoice.customerName,
-        amount: selectedInvoice.remainingBalance,
-        referenceNo: selectedInvoice.invoiceNo,
-        remarks: `Payment for Invoice #${selectedInvoice.invoiceNo}`
-    } : {
-        type: 'Receipt',
-        partyType: 'Customer',
-        partyName: customerName,
-    };
 
     return (
         <Card>
@@ -111,7 +115,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                     <AddPaymentDialog
                         isOpen={isPaymentDialogOpen}
                         setIsOpen={setIsPaymentDialogOpen}
-                        defaultValues={paymentDefaultValues}
+                        defaultValues={paymentDialogDefaults}
                         onPaymentAdded={handlePaymentSuccess}
                         customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')}
                         customerCode={customerCode}
