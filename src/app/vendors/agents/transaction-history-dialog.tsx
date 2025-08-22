@@ -3,6 +3,9 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -18,11 +22,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText, FileSpreadsheet } from 'lucide-react';
 import { getPaymentsForAgent } from './actions';
 import { type Agent } from './schema';
 import { type Payment } from '@/app/finance/payment/schema';
 import { cn } from '@/lib/utils';
+
+// Extend jsPDF type to include autoTable from the plugin
+declare module 'jspdf' {
+    interface jsPDF {
+      autoTable: (options: any) => jsPDF;
+    }
+}
 
 interface TransactionHistoryDialogProps {
   agent: Agent;
@@ -43,14 +54,62 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
     }
   }, [isOpen, agent.code]);
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Commission History: ${agent.name}`, 14, 16);
+    
+    const head = [['Date', 'Property', 'Unit', 'Room', 'Partition', 'Reference', 'Amount']];
+    const body = transactions.map(tx => [
+        format(new Date(tx.date), 'PP'),
+        tx.property || 'N/A',
+        tx.unitCode || 'N/A',
+        tx.roomCode || 'N/A',
+        tx.partitionCode || 'N/A',
+        tx.referenceNo,
+        `-${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}`
+    ]);
+
+    (doc as any).autoTable({
+        head: head,
+        body: body,
+        startY: 22,
+    });
+
+    doc.save(`commission-history-${agent.code}.pdf`);
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = transactions.map(tx => ({
+        'Date': format(new Date(tx.date), 'PP'),
+        'Property': tx.property || 'N/A',
+        'Unit': tx.unitCode || 'N/A',
+        'Room': tx.roomCode || 'N/A',
+        'Partition': tx.partitionCode || 'N/A',
+        'Reference': tx.referenceNo,
+        'Amount': -tx.amount,
+    }));
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Commission History");
+    XLSX.writeFile(wb, `commission-history-${agent.code}.xlsx`);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Commission History: {agent.name}</DialogTitle>
-          <DialogDescription>
-            Showing all recorded commission payments for this agent.
-          </DialogDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <DialogTitle>Commission History: {agent.name}</DialogTitle>
+              <DialogDescription>
+                Showing all recorded commission payments for this agent.
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
+                <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
+            </div>
+          </div>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto">
           {isLoading ? (
@@ -96,4 +155,3 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
     </Dialog>
   );
 }
-

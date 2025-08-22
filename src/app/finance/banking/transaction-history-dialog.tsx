@@ -3,6 +3,9 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import {
   Dialog,
   DialogContent,
@@ -21,11 +24,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowRightLeft } from 'lucide-react';
+import { Loader2, ArrowRightLeft, FileText, FileSpreadsheet } from 'lucide-react';
 import { getTransactionsForAccount } from './actions';
 import { type BankAccount } from './schema';
 import { type Payment } from '../payment/schema';
 import { cn } from '@/lib/utils';
+
+// Extend jsPDF type to include autoTable from the plugin
+declare module 'jspdf' {
+    interface jsPDF {
+      autoTable: (options: any) => jsPDF;
+    }
+}
 
 export function TransactionHistoryDialog({ account }: { account: BankAccount }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,6 +50,51 @@ export function TransactionHistoryDialog({ account }: { account: BankAccount }) 
         .finally(() => setIsLoading(false));
     }
   }, [isOpen, account.id]);
+  
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Transaction History: ${account.accountName}`, 14, 16);
+    
+    const head = [['Date', 'Type', 'Party', 'Property', 'Unit', 'Room', 'Partition', 'Reference', 'Amount']];
+    const body = transactions.map(tx => [
+        format(new Date(tx.date), 'PP'),
+        tx.type,
+        tx.partyName,
+        tx.property || 'N/A',
+        tx.unitCode || 'N/A',
+        tx.roomCode || 'N/A',
+        tx.partitionCode || 'N/A',
+        tx.referenceNo,
+        `${tx.type === 'Receipt' ? '+' : '-'}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}`
+    ]);
+
+    (doc as any).autoTable({
+        head: head,
+        body: body,
+        startY: 22,
+    });
+
+    doc.save(`transactions-${account.id}.pdf`);
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = transactions.map(tx => ({
+        'Date': format(new Date(tx.date), 'PP'),
+        'Type': tx.type,
+        'Party': tx.partyName,
+        'Property': tx.property || 'N/A',
+        'Unit': tx.unitCode || 'N/A',
+        'Room': tx.roomCode || 'N/A',
+        'Partition': tx.partitionCode || 'N/A',
+        'Reference': tx.referenceNo,
+        'Amount': (tx.type === 'Receipt' ? 1 : -1) * tx.amount,
+    }));
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+    XLSX.writeFile(wb, `transactions-${account.id}.xlsx`);
+  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -51,10 +106,18 @@ export function TransactionHistoryDialog({ account }: { account: BankAccount }) 
       </DialogTrigger>
       <DialogContent className="max-w-6xl">
         <DialogHeader>
-          <DialogTitle>Transaction History: {account.accountName}</DialogTitle>
-          <DialogDescription>
-            Showing all recorded transactions for this account.
-          </DialogDescription>
+           <div className="flex justify-between items-center">
+            <div>
+                <DialogTitle>Transaction History: {account.accountName}</DialogTitle>
+                <DialogDescription>
+                    Showing all recorded transactions for this account.
+                </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
+                <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
+            </div>
+          </div>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto">
           {isLoading ? (
