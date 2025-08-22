@@ -1,6 +1,6 @@
 [
   {
-    "invoiceNo": "INV-1755847569763",
+    "invoiceNo": "INV-1755850233482",
     "customerCode": "C001",
     "customerName": "General Customer",
     "property": "",
@@ -11,21 +11,21 @@
     "dueDate": "2025-08-22",
     "items": [
       {
-        "id": "item-1755847569763",
+        "id": "item-1755850233483",
         "description": "Consulting Services",
         "quantity": 1,
-        "unitPrice": 980,
+        "unitPrice": 1320,
         "total": 0
       }
     ],
-    "subTotal": 980,
+    "subTotal": 1320,
     "taxType": "exclusive",
     "taxRate": 5,
-    "tax": 49,
-    "total": 1029,
-    "notes": "General Invoice",
-    "status": "Sent",
-    "id": "INV-1755847595151",
+    "tax": 66,
+    "total": 1386,
+    "notes": "",
+    "status": "Draft",
+    "id": "INV-1755850226871",
     "amountPaid": 0
   }
 ]

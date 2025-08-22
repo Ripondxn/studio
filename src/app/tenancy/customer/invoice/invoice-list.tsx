@@ -70,6 +70,9 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                 type: 'Receipt',
                 partyType: 'Customer',
                 partyName: customerName,
+                invoiceAllocations: invoices
+                    .filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')
+                    .map(i => ({ invoiceId: i.id, amount: 0 }))
             });
         }
         setIsPaymentDialogOpen(true);
@@ -103,14 +106,16 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                 ) : (
                     <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPaymentClick })} data={invoices} />
                 )}
-                <InvoiceDialog
-                    isOpen={isInvoiceDialogOpen}
-                    setIsOpen={setIsInvoiceDialogOpen}
-                    invoice={selectedInvoice}
-                    customer={{ code: customerCode, name: customerName }}
-                    onSuccess={fetchInvoices}
-                    isViewMode={isViewMode}
-                />
+                {isInvoiceDialogOpen && (
+                    <InvoiceDialog
+                        isOpen={isInvoiceDialogOpen}
+                        setIsOpen={setIsInvoiceDialogOpen}
+                        invoice={selectedInvoice}
+                        customer={{ code: customerCode, name: customerName }}
+                        onSuccess={fetchInvoices}
+                        isViewMode={isViewMode}
+                    />
+                )}
                 {isPaymentDialogOpen && (
                     <AddPaymentDialog
                         isOpen={isPaymentDialogOpen}

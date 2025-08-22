@@ -229,7 +229,7 @@ export async function getLookups() {
         tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
         landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
         vendors: vendors.map(v => ({ value: v.vendorData.name, label: v.vendorData.name })),
-        customers: customers.map(c => ({ value: c.customerData.name, label: c.customerData.name })),
+        customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
         bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`}))
     }
 }
