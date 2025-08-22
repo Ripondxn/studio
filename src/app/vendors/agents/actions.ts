@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -63,4 +64,12 @@ export async function getAllAgents() {
         }));
 
     return agents;
+}
+
+export async function getPaymentsForAgent(agentCode: string): Promise<Payment[]> {
+    const allPayments = await getPayments();
+    const agentPayments = allPayments.filter(
+        (p) => p.agentCode === agentCode && p.type === 'Payment'
+    );
+    return agentPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }

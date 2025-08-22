@@ -4,13 +4,13 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Edit, MoreHorizontal, DollarSign, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Edit, MoreHorizontal, DollarSign, Trash2, History } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Agent } from './schema';
 import { EditAgentDialog } from './edit-agent-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,7 @@ import { deleteAgent } from '../actions';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { TransactionHistoryDialog } from './transaction-history-dialog';
 
 
 const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRecordPayment: (agent: Agent) => void }) => {
@@ -33,6 +34,7 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
   const { toast } = useToast();
   const router = useRouter();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -75,6 +77,13 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}
       />
+      
+      <TransactionHistoryDialog 
+        agent={agent}
+        isOpen={isHistoryOpen}
+        setIsOpen={setIsHistoryOpen}
+      />
+
       <div className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -84,9 +93,14 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit Agent
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setIsHistoryOpen(true)}>
+                <History className="mr-2 h-4 w-4" />
+                View History
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onRecordPayment(agent)} disabled={!hasCommission}>
                 <DollarSign className="mr-2 h-4 w-4" />
