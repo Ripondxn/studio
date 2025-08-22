@@ -714,7 +714,7 @@ export default function PropertyPage() {
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : unitsViewMode === 'list' ? (
-                    <UnitsDataTable columns={unitColumns} data={units} />
+                    <UnitsDataTable columns={unitColumns} data={units} propertyCode={propertyData.code} />
                 ) : (
                     <UnitGrid units={units} />
                 )}

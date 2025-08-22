@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -35,16 +36,19 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ImportUnitsDialog } from './import-units-dialog';
 
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  propertyCode: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  propertyCode,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -123,9 +127,7 @@ export function DataTable<TData, TValue>({
           className="max-w-sm"
         />
         <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm">
-                <FileUp className="mr-2 h-4 w-4" /> + Import
-            </Button>
+            <ImportUnitsDialog propertyCode={propertyCode} onImportSuccess={() => { /* Consider a refresh action here */}}/>
             <Button variant="outline" size="sm" onClick={handleExportPDF}>
                 <FileText className="mr-2 h-4 w-4" /> Export PDF
             </Button>

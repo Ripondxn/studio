@@ -154,3 +154,51 @@ export async function getUnitLookups(propertyCode: string) {
         floors: floors.filter((f: any) => f.propertyCode === propertyCode).map((f:any) => ({ value: f.floorCode, label: f.floorName })),
     }
 }
+
+
+const importUnitSchema = unitSchema.omit({ id: true, occupancyStatus: true });
+const importUnitsSchema = z.array(importUnitSchema);
+
+export async function importUnits(unitsData: unknown, propertyCode: string) {
+    const validation = importUnitsSchema.safeParse(unitsData);
+    if (!validation.success) {
+        console.error("Import validation error:", validation.error.format());
+        return { success: false, error: 'Invalid data format for one or more rows.' };
+    }
+    
+    try {
+        const allUnits = await readUnits();
+        let updatedCount = 0;
+        let addedCount = 0;
+
+        validation.data.forEach(importedUnit => {
+            // Ensure the unit is for the correct property.
+            if(importedUnit.propertyCode !== propertyCode) return;
+
+            const existingUnitIndex = allUnits.findIndex(u => u.unitCode === importedUnit.unitCode && u.propertyCode === propertyCode);
+            
+            if (existingUnitIndex > -1) {
+                // Update existing unit
+                allUnits[existingUnitIndex] = { ...allUnits[existingUnitIndex], ...importedUnit };
+                updatedCount++;
+            } else {
+                // Add new unit
+                const newUnit: Unit = {
+                    ...importedUnit,
+                    id: `UNIT-${Date.now()}-${Math.random()}`.replace('.', ''),
+                };
+                allUnits.push(newUnit);
+                addedCount++;
+            }
+        });
+
+        await writeUnits(allUnits);
+        
+        revalidatePath(`/property/properties?code=${propertyCode}`);
+        return { success: true, added: addedCount, updated: updatedCount };
+
+    } catch (error) {
+        console.error("Error importing units:", error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred during import.' };
+    }
+}
