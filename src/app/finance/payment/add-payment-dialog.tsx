@@ -95,22 +95,26 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, replace } = useFieldArray({
       control,
       name: "invoiceAllocations",
   });
 
-  const paymentAmount = watch("amount");
-  const allocations = useWatch({
-    control,
-    name: "invoiceAllocations",
-  });
+  const paymentAmount = watch("amount", 0);
+  const allocations = watch("invoiceAllocations");
   
   const totalAllocated = useMemo(() => {
     return allocations?.reduce((sum, current) => sum + (Number(current.amount) || 0), 0) || 0;
   }, [allocations]);
 
   const remainingToAllocate = useMemo(() => (paymentAmount || 0) - totalAllocated, [paymentAmount, totalAllocated]);
+
+  const isAllocationValid = useMemo(() => {
+    if (partyType !== 'Customer' || !customerInvoices || customerInvoices.length === 0) {
+        return true; // No allocation to validate
+    }
+    return Math.abs(remainingToAllocate) < 0.01;
+  }, [partyType, customerInvoices, remainingToAllocate]);
 
 
   useEffect(() => {
@@ -188,17 +192,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
   const onSubmit = async (data: PaymentFormData) => {
     setIsSaving(true);
-
-    if (partyType === 'Customer' && invoiceAllocations && invoiceAllocations.length > 0 && Math.abs((data.amount || 0) - totalAllocated) > 0.001) {
-        toast({
-            variant: 'destructive',
-            title: 'Allocation Mismatch',
-            description: 'The total amount allocated to invoices must match the payment amount.',
-        });
-        setIsSaving(false);
-        return;
-    }
-
     const result = await addPayment(data);
 
     if (result.success) {
@@ -485,7 +478,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                 <DialogClose asChild>
                     <Button type="button" variant="outline" onClick={() => reset()}>Cancel</Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSaving}>
+                <Button type="submit" disabled={isSaving || !isAllocationValid}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Record Payment
                 </Button>
