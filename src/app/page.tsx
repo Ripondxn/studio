@@ -51,9 +51,11 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
 
     const uniqueContracts = new Map<string, Contract>();
     contracts.forEach(contract => {
-        // If a contract number already exists, the newer one will overwrite the older one.
-        // You could also add logic here to decide which one to keep, e.g., the one with the latest end date.
+      // Prioritize keeping the contract with the latest end date if duplicates are found
+      const existing = uniqueContracts.get(contract.contractNo);
+      if (!existing || new Date(contract.endDate) > new Date(existing.endDate)) {
         uniqueContracts.set(contract.contractNo, contract);
+      }
     });
 
     const report = Array.from(uniqueContracts.values())
