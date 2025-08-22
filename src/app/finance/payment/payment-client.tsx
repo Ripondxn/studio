@@ -8,7 +8,7 @@ import { columns } from './columns';
 import { DataTable } from './data-table';
 import { AddPaymentDialog } from './add-payment-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowDownLeft, ArrowUpRight, RefreshCw } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, RefreshCw, Plus } from 'lucide-react';
 import { type Payment } from './schema';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,6 +22,7 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
   const [payments, setPayments] = useState(initialPayments);
   const [summary, setSummary] = useState(initialSummary);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const searchParams = useSearchParams();
   const accountIdFilter = searchParams.get('accountId');
 
@@ -63,7 +64,11 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
             </p>
         </div>
         <div className="flex items-center gap-2">
-            <AddPaymentDialog onPaymentAdded={refreshData} />
+            <AddPaymentDialog isOpen={isPaymentDialogOpen} setIsOpen={setIsPaymentDialogOpen} onPaymentAdded={refreshData}>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Add Payment
+              </Button>
+            </AddPaymentDialog>
             <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
                 <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
