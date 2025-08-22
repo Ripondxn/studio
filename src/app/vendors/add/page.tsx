@@ -62,7 +62,7 @@ type Attachment = {
   isLink: boolean;
 };
 
-const initialVendorData: Omit<Vendor, 'agentCode' | 'agentName' | 'agentMobile' | 'agentEmail' | 'agentCommission'> = {
+const initialVendorData: Vendor = {
     code: '',
     name: '',
     mobile: '',
@@ -462,9 +462,9 @@ export default function VendorPage() {
                                                     disabled={!isEditing}
                                                 />
                                             ) : (
-                                                <Input
-                                                    type="file"
-                                                    className="text-sm w-full"
+                                                <Input 
+                                                    type="file" 
+                                                    className="text-sm w-full" 
                                                     ref={(el) => (fileInputRefs.current[index] = el)}
                                                     onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
                                                     disabled={!isEditing}

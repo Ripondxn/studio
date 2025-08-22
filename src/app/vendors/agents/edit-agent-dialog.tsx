@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,17 +23,10 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-import { type Agent } from './schema';
-import { updateAgentData } from '../actions';
+import { type Agent, agentSchema } from './schema';
+import { updateAgentData } from '../agents/actions';
 
-const formSchema = z.object({
-  vendorCode: z.string(),
-  agentCode: z.string().optional(),
-  agentName: z.string().optional(),
-  agentMobile: z.string().optional(),
-  agentEmail: z.string().email().optional().or(z.literal('')),
-  agentCommission: z.coerce.number().optional(),
-});
+const formSchema = agentSchema.omit({ totalCommissionPaid: true });
 
 type AgentFormData = z.infer<typeof formSchema>;
 
@@ -54,26 +48,11 @@ export function EditAgentDialog({ agent, isOpen, setIsOpen }: EditAgentDialogPro
     formState: { errors, isDirty },
   } = useForm<AgentFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      vendorCode: agent.vendorCode,
-      agentCode: agent.code,
-      agentName: agent.name,
-      agentMobile: agent.mobile,
-      agentEmail: agent.email,
-      agentCommission: agent.commissionRate,
-    },
   });
 
   useEffect(() => {
     if (isOpen) {
-      reset({
-        vendorCode: agent.vendorCode,
-        agentCode: agent.code,
-        agentName: agent.name,
-        agentMobile: agent.mobile,
-        agentEmail: agent.email,
-        agentCommission: agent.commissionRate,
-      });
+      reset(agent);
     }
   }, [agent, isOpen, reset]);
 
@@ -84,7 +63,7 @@ export function EditAgentDialog({ agent, isOpen, setIsOpen }: EditAgentDialogPro
     if (result.success) {
       toast({
         title: 'Agent Updated',
-        description: `Successfully updated agent "${data.agentName}".`,
+        description: `Successfully updated agent "${data.name}".`,
       });
       setIsOpen(false);
       router.refresh();
@@ -110,24 +89,24 @@ export function EditAgentDialog({ agent, isOpen, setIsOpen }: EditAgentDialogPro
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="agentName">Agent Name</Label>
-              <Input id="agentName" {...register('agentName')} />
-              {errors.agentName && <p className="text-destructive text-xs mt-1">{errors.agentName.message}</p>}
+              <Label htmlFor="name">Agent Name</Label>
+              <Input id="name" {...register('name')} />
+              {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agentMobile">Agent Mobile</Label>
-              <Input id="agentMobile" {...register('agentMobile')} />
-               {errors.agentMobile && <p className="text-destructive text-xs mt-1">{errors.agentMobile.message}</p>}
+              <Label htmlFor="mobile">Agent Mobile</Label>
+              <Input id="mobile" {...register('mobile')} />
+               {errors.mobile && <p className="text-destructive text-xs mt-1">{errors.mobile.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agentEmail">Agent Email</Label>
-              <Input id="agentEmail" type="email" {...register('agentEmail')} />
-               {errors.agentEmail && <p className="text-destructive text-xs mt-1">{errors.agentEmail.message}</p>}
+              <Label htmlFor="email">Agent Email</Label>
+              <Input id="email" type="email" {...register('email')} />
+               {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agentCommission">Agent Commission Rate</Label>
-              <Input id="agentCommission" type="number" {...register('agentCommission')} />
-              {errors.agentCommission && <p className="text-destructive text-xs mt-1">{errors.agentCommission.message}</p>}
+              <Label htmlFor="commissionRate">Default Commission Rate</Label>
+              <Input id="commissionRate" type="number" {...register('commissionRate')} />
+              {errors.commissionRate && <p className="text-destructive text-xs mt-1">{errors.commissionRate.message}</p>}
             </div>
           </div>
           <DialogFooter>

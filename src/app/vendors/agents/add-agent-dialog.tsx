@@ -24,13 +24,15 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Plus } from 'lucide-react';
 
-import { addAgent } from '../actions';
+import { addAgent } from '../agents/actions';
+import { agentSchema } from './schema';
 
-const formSchema = z.object({
-  agentName: z.string().min(1, "Agent name is required."),
-  agentMobile: z.string().optional(),
-  agentEmail: z.string().email().optional().or(z.literal('')),
-  agentCommission: z.coerce.number().optional(),
+const formSchema = agentSchema.omit({ 
+    id: true, 
+    code: true, 
+    vendorCode: true,
+    vendorName: true,
+    totalCommissionPaid: true
 });
 
 type AgentFormData = z.infer<typeof formSchema>;
@@ -49,10 +51,10 @@ export function AddAgentDialog({onSuccess}: {onSuccess: () => void}) {
   } = useForm<AgentFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      agentName: '',
-      agentMobile: '',
-      agentEmail: '',
-      agentCommission: 0,
+      name: '',
+      mobile: '',
+      email: '',
+      commissionRate: 0,
     }
   });
   
@@ -69,7 +71,7 @@ export function AddAgentDialog({onSuccess}: {onSuccess: () => void}) {
     if (result.success) {
       toast({
         title: 'Agent Added',
-        description: `Successfully added agent "${data.agentName}".`,
+        description: `Successfully added agent "${data.name}".`,
       });
       setIsOpen(false);
       onSuccess();
@@ -95,29 +97,29 @@ export function AddAgentDialog({onSuccess}: {onSuccess: () => void}) {
           <DialogHeader>
             <DialogTitle>Add New Agent</DialogTitle>
             <DialogDescription>
-              A new agent will be created and assigned to the next available vendor.
+              Create a new independent agent profile.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="agentName">Agent Name</Label>
-              <Input id="agentName" {...register('agentName')} />
-              {errors.agentName && <p className="text-destructive text-xs mt-1">{errors.agentName.message}</p>}
+              <Label htmlFor="name">Agent Name</Label>
+              <Input id="name" {...register('name')} />
+              {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agentMobile">Agent Mobile</Label>
-              <Input id="agentMobile" {...register('agentMobile')} />
-               {errors.agentMobile && <p className="text-destructive text-xs mt-1">{errors.agentMobile.message}</p>}
+              <Label htmlFor="mobile">Agent Mobile</Label>
+              <Input id="mobile" {...register('mobile')} />
+               {errors.mobile && <p className="text-destructive text-xs mt-1">{errors.mobile.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agentEmail">Agent Email</Label>
-              <Input id="agentEmail" type="email" {...register('agentEmail')} />
-               {errors.agentEmail && <p className="text-destructive text-xs mt-1">{errors.agentEmail.message}</p>}
+              <Label htmlFor="email">Agent Email</Label>
+              <Input id="email" type="email" {...register('email')} />
+               {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agentCommission">Agent Commission (Amount)</Label>
-              <Input id="agentCommission" type="number" {...register('agentCommission')} />
-              {errors.agentCommission && <p className="text-destructive text-xs mt-1">{errors.agentCommission.message}</p>}
+              <Label htmlFor="commissionRate">Default Commission (Amount)</Label>
+              <Input id="commissionRate" type="number" {...register('commissionRate')} />
+              {errors.commissionRate && <p className="text-destructive text-xs mt-1">{errors.commissionRate.message}</p>}
             </div>
           </div>
           <DialogFooter>

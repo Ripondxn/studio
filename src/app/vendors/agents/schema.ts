@@ -1,15 +1,17 @@
 
+
 import { z } from 'zod';
 
 export const agentSchema = z.object({
+  id: z.string(),
   code: z.string(),
   name: z.string(),
   mobile: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   commissionRate: z.number().optional(),
   totalCommissionPaid: z.number().optional(),
-  vendorName: z.string(),
-  vendorCode: z.string(),
+  vendorName: z.string().optional(),
+  vendorCode: z.string().optional(),
 });
 
 export type Agent = z.infer<typeof agentSchema>;
