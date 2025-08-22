@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -61,7 +60,6 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                 partyType: 'Customer',
                 partyName: invoice.customerName,
                 amount: invoice.remainingBalance,
-                referenceNo: invoice.invoiceNo,
                 invoiceAllocations: [{ invoiceId: invoice.id, amount: invoice.remainingBalance || 0 }],
                 remarks: `Payment for Invoice #${invoice.invoiceNo}`
             });

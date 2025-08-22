@@ -6,7 +6,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { paymentSchema, type Payment, invoiceAllocationSchema } from './schema';
+import { paymentSchema, type Payment } from './schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Landlord } from '@/app/landlord/schema';
 import { type Vendor } from '@/app/vendors/schema';
