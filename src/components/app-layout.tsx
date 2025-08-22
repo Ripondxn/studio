@@ -148,7 +148,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 className="flex items-center gap-2 text-lg font-semibold md:text-base"
                 >
                 <Building2 className="h-6 w-6 text-primary" />
-                <span className="font-headline">PropVue</span>
+                <span className="font-headline">Trust Famaous Real Estate</span>
                 </Link>
                 {navLinks.map((link, index) => {
                     if (link.subItems) {

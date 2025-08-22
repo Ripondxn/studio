@@ -1,10 +1,11 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { AppLayout } from '@/components/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Atlas PM',
+  title: 'Trust Famaous Real Estate',
   description: 'Integrated Property Management Dashboard & Workflow Design',
 };
 

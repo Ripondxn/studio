@@ -81,7 +81,7 @@ export default function LoginPage() {
             <div className="mx-auto mb-4">
                 <Building2 className="h-12 w-12 text-primary" />
             </div>
-          <CardTitle className="font-headline text-3xl">Atlas PM</CardTitle>
+          <CardTitle className="font-headline text-3xl">Trust Famaous Real Estate</CardTitle>
           <CardDescription>
             Sign in to your account to continue
           </CardDescription>
