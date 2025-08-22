@@ -245,3 +245,32 @@ export async function batchDepositCheques(chequeIds: string[], depositDate: stri
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+export async function returnCheque(chequeIds: string[]) {
+    try {
+        const allCheques = await readCheques();
+        let updatedCount = 0;
+        
+        const updatedCheques = allCheques.map(cheque => {
+            if (chequeIds.includes(cheque.id) && cheque.status === 'In Hand') {
+                updatedCount++;
+                return {
+                    ...cheque,
+                    status: 'Returned' as const,
+                };
+            }
+            return cheque;
+        });
+
+        if (updatedCount === 0) {
+            return { success: false, error: "No valid 'In Hand' cheques were selected to return." };
+        }
+
+        await writeCheques(updatedCheques);
+        revalidatePath('/finance/cheque-deposit');
+        return { success: true, count: updatedCount };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
