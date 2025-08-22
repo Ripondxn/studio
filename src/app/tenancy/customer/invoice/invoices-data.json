@@ -1,34 +1,4 @@
-
 [
-  {
-    "invoiceNo": "INV-1755850233482",
-    "customerCode": "C001",
-    "customerName": "General Customer",
-    "property": "",
-    "unitCode": "",
-    "roomCode": "",
-    "partitionCode": "",
-    "invoiceDate": "2025-08-22",
-    "dueDate": "2025-08-22",
-    "items": [
-      {
-        "id": "item-1755850233483",
-        "description": "Consulting Services",
-        "quantity": 1,
-        "unitPrice": 1320,
-        "total": 0
-      }
-    ],
-    "subTotal": 1320,
-    "taxType": "exclusive",
-    "taxRate": 5,
-    "tax": 66,
-    "total": 1386,
-    "notes": "",
-    "status": "Draft",
-    "id": "INV-1755850226871",
-    "amountPaid": 0
-  },
   {
     "invoiceNo": "INV-1755850854980",
     "customerCode": "C002",
@@ -56,6 +26,35 @@
     "notes": "",
     "status": "Draft",
     "id": "INV-1755850847475",
+    "amountPaid": 0
+  },
+  {
+    "invoiceNo": "INV-1755853051213",
+    "customerCode": "C001",
+    "customerName": "General Customer",
+    "property": "",
+    "unitCode": "",
+    "roomCode": "",
+    "partitionCode": "",
+    "invoiceDate": "2025-08-22",
+    "dueDate": "2025-08-22",
+    "items": [
+      {
+        "id": "item-1755853051213",
+        "description": "monthly rent",
+        "quantity": 1,
+        "unitPrice": 1200,
+        "total": 0
+      }
+    ],
+    "subTotal": 1200,
+    "taxType": "inclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 1200,
+    "notes": "",
+    "status": "Sent",
+    "id": "INV-1755853030320",
     "amountPaid": 0
   }
 ]
