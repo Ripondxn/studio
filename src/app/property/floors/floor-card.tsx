@@ -3,13 +3,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building, Hash, UserCheck, UserX, Users } from 'lucide-react';
+import { Building, Hash, UserCheck, UserX, Users, FilePlus2 } from 'lucide-react';
 import type { Floor } from './schema';
 import { EditFloorDialog } from './edit-floor-dialog';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface FloorCardProps {
   floor: Floor;
@@ -20,8 +21,6 @@ export function FloorCard({ floor }: FloorCardProps) {
   const router = useRouter();
 
   const handleFloorUpdated = () => {
-    // This is a bit of a hack to force a refresh.
-    // In a real app with a state management library, this would be handled more gracefully.
     router.refresh();
   }
   
@@ -62,9 +61,14 @@ export function FloorCard({ floor }: FloorCardProps) {
             </span>
           </div>
         </CardContent>
-        <CardFooter>
-          <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
-              Edit Floor
+        <CardFooter className="gap-2">
+          <Button asChild className="w-full" variant="outline">
+            <Link href={`/tenancy/contract?propertyCode=${floor.propertyCode}`}>
+              <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
+            </Link>
+          </Button>
+          <Button variant="secondary" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
+              Edit
           </Button>
         </CardFooter>
       </Card>

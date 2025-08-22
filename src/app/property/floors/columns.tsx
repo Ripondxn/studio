@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, FilePlus2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -96,10 +97,17 @@ const ActionsCell = ({ row }: { row: { original: Floor } }) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                            <Link href={`/tenancy/contract?propertyCode=${floor.propertyCode}`}>
+                                <FilePlus2 className="mr-2 h-4 w-4" />
+                                Create Tenancy
+                            </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete

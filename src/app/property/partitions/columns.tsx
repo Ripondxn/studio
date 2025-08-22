@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, FilePlus2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -31,6 +32,7 @@ import { deletePartition } from './actions';
 import { EditPartitionDialog } from './edit-partition-dialog';
 import { Partition } from './schema';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const ActionsCell = ({ row }: { row: { original: Partition } }) => {
     const partition = row.original;
@@ -39,6 +41,7 @@ const ActionsCell = ({ row }: { row: { original: Partition } }) => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const isVacant = partition.occupancyStatus === 'Vacant';
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -95,10 +98,19 @@ const ActionsCell = ({ row }: { row: { original: Partition } }) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        {isVacant && (
+                            <DropdownMenuItem asChild>
+                               <Link href={`/tenancy/contract?propertyCode=${partition.propertyCode}&unitCode=${partition.unitCode}&partitionCode=${partition.partitionCode}`}>
+                                    <FilePlus2 className="mr-2 h-4 w-4" />
+                                    Create Tenancy
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
                         </DropdownMenuItem>
+                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete

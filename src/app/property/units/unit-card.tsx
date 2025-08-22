@@ -4,11 +4,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BedDouble, Bath, Home, Tag } from 'lucide-react';
+import { BedDouble, Bath, Home, Tag, FilePlus2 } from 'lucide-react';
 import type { Unit } from './schema';
 import { EditUnitDialog } from './edit-unit-dialog';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface UnitCardProps {
   unit: Unit;
@@ -52,7 +53,14 @@ export function UnitCard({ unit }: UnitCardProps) {
             </span>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="gap-2">
+          {unit.occupancyStatus === 'Vacant' && (
+             <Button asChild className="w-full">
+                <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
+                    <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
+                </Link>
+             </Button>
+          )}
           <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
               Edit Unit
           </Button>

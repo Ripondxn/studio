@@ -2,7 +2,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, FilePlus2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -15,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -32,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { deleteUnit } from './actions';
 import { EditUnitDialog } from './edit-unit-dialog';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const ActionsCell = ({ row }: { row: { original: Unit } }) => {
     const unit = row.original;
@@ -40,6 +42,7 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const isVacant = unit.occupancyStatus === 'Vacant';
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -97,10 +100,19 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    {isVacant && (
+                        <DropdownMenuItem asChild>
+                            <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
+                                <FilePlus2 className="mr-2 h-4 w-4" />
+                                Create Tenancy
+                            </Link>
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                         className="text-destructive"
                         onSelect={() => setIsDeleteDialogOpen(true)}

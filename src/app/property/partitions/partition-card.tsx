@@ -4,11 +4,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building, DoorOpen, Home, Tag, UserCheck, UserX } from 'lucide-react';
+import { Building, DoorOpen, Home, Tag, UserCheck, UserX, FilePlus2 } from 'lucide-react';
 import type { Partition } from './schema';
 import { EditPartitionDialog } from './edit-partition-dialog';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface PartitionCardProps {
   partition: Partition;
@@ -71,7 +72,14 @@ export function PartitionCard({ partition }: PartitionCardProps) {
             </span>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="gap-2">
+           {partition.occupancyStatus === 'Vacant' && (
+              <Button asChild className="w-full">
+                <Link href={`/tenancy/contract?propertyCode=${partition.propertyCode}&unitCode=${partition.unitCode}&partitionCode=${partition.partitionCode}`}>
+                    <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
+                </Link>
+              </Button>
+            )}
           <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
               Edit Partition
           </Button>

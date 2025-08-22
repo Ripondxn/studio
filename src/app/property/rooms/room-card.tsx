@@ -3,12 +3,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DoorClosed, Hash, Building, Tag, UserX, UserCheck } from 'lucide-react';
+import { DoorClosed, Hash, Building, Tag, UserX, UserCheck, FilePlus2 } from 'lucide-react';
 import type { Room } from './schema';
 import { EditRoomDialog } from './edit-room-dialog';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface RoomCardProps {
   room: Room;
@@ -68,7 +69,14 @@ export function RoomCard({ room }: RoomCardProps) {
             </div>
           )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="gap-2">
+           {room.occupancyStatus === 'Vacant' && (
+              <Button asChild className="w-full">
+                <Link href={`/tenancy/contract?propertyCode=${room.propertyCode}&unitCode=${room.unitCode}&roomCode=${room.roomCode}`}>
+                    <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
+                </Link>
+              </Button>
+            )}
           <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
               Edit Room
           </Button>
