@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -26,12 +25,13 @@ import {
   Receipt,
   AlertTriangle,
   Users,
+  Mail,
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { getUnits } from '@/app/property/units/actions';
 import { getSummary as getPdcChequeSummary } from '@/app/finance/cheque-deposit/actions';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, differenceInMonths } from 'date-fns';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
 import { Unit } from '@/app/property/units/schema';
@@ -50,6 +50,8 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
     const today = new Date();
 
     const uniqueContracts = new Map<string, Contract>();
+
+    // Prioritize contracts with the latest end date for each unit
     contracts.forEach(contract => {
         const existing = uniqueContracts.get(contract.unitCode);
         if (!existing || new Date(contract.endDate) > new Date(existing.endDate)) {
@@ -61,20 +63,17 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
         .map(contract => {
             const daysRemaining = differenceInDays(parseISO(contract.endDate), today);
             return {
-                ...contract,
+                unit: contract.unitCode,
+                tenant: contract.tenantName,
+                endDate: contract.endDate,
+                rent: contract.totalRent,
+                status: daysRemaining <= 30 ? 'Renewal Due' : 'Notified',
+                contractNo: contract.contractNo,
                 daysRemaining,
             };
         })
         .filter(contract => contract.daysRemaining >= 0 && contract.daysRemaining <= 90)
-        .sort((a, b) => a.daysRemaining - b.daysRemaining)
-        .map(contract => ({
-            unit: contract.unitCode,
-            tenant: contract.tenantName,
-            endDate: contract.endDate,
-            rent: contract.totalRent,
-            status: contract.daysRemaining <= 30 ? 'Renewal Due' : 'Notified',
-            contractNo: contract.contractNo,
-        }));
+        .sort((a, b) => a.daysRemaining - b.daysRemaining);
 
     return report;
 }
@@ -96,10 +95,38 @@ async function getVacantUnits() {
     return vacantUnits;
 }
 
+async function getRentRollSummary() {
+    const contracts = await getAllContracts();
+    const activeContracts = contracts.filter(c => c.status === 'New' || c.status === 'Renew');
+
+    const totalMonthlyRent = activeContracts.reduce((sum, contract) => {
+        const startDate = parseISO(contract.startDate);
+        const endDate = parseISO(contract.endDate);
+        let durationInMonths = differenceInMonths(endDate, startDate);
+
+        // Handle cases where the contract is less than a month long as 1 month
+        if (durationInMonths === 0) {
+            durationInMonths = 1;
+        }
+
+        if (durationInMonths > 0) {
+            return sum + (contract.totalRent / durationInMonths);
+        }
+        
+        return sum;
+    }, 0);
+    
+    return {
+        monthlyRentRoll: totalMonthlyRent
+    };
+}
+
+
 export default async function Dashboard() {
   const expiryReport = await getExpiryReport();
   const vacantUnits = await getVacantUnits();
   const chequeSummary = await getPdcChequeSummary();
+  const rentRollSummary = await getRentRollSummary();
   const expiringSoonCount = expiryReport.filter(c => (differenceInDays(parseISO(c.endDate), new Date()) <= 30)).length;
 
   const kpiData = [
@@ -113,16 +140,16 @@ export default async function Dashboard() {
     },
     {
       title: 'Total Monthly Rent Roll',
-      value: '$2,150,000',
-      change: '-0.5%',
-      changeType: 'decrease' as const,
+      value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rentRollSummary.monthlyRentRoll),
+      change: 'from active contracts',
+      changeType: 'increase' as const,
       icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />,
-      href: '#', // Placeholder link
+      href: '/tenancy/contracts',
     },
     {
       title: 'Contracts Expiring (30d)',
       value: expiringSoonCount,
-      change: `+${expiryReport.length} total in 90d`,
+      change: `${expiryReport.length} total in 90d`,
       changeType: 'increase' as const,
       icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
       href: '/tenancy/contracts',
@@ -158,15 +185,10 @@ export default async function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{kpi.value}</div>
-              <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-destructive' : 'text-emerald-600'}`}>
+              <p className={`text-xs text-muted-foreground`}>
                 {kpi.change}
               </p>
             </CardContent>
-             <CardFooter>
-                 <Button asChild variant="outline" size="sm" className="w-full">
-                    <Link href={kpi.href}>View Details</Link>
-                </Button>
-            </CardFooter>
           </Card>
         ))}
       </div>
