@@ -1,1 +1,31 @@
-[]
+[
+  {
+    "invoiceNo": "INV-1755847569763",
+    "customerCode": "C001",
+    "customerName": "General Customer",
+    "property": "",
+    "unitCode": "",
+    "roomCode": "",
+    "partitionCode": "",
+    "invoiceDate": "2025-08-22",
+    "dueDate": "2025-08-22",
+    "items": [
+      {
+        "id": "item-1755847569763",
+        "description": "Consulting Services",
+        "quantity": 1,
+        "unitPrice": 980,
+        "total": 0
+      }
+    ],
+    "subTotal": 980,
+    "taxType": "exclusive",
+    "taxRate": 5,
+    "tax": 49,
+    "total": 1029,
+    "notes": "General Invoice",
+    "status": "Sent",
+    "id": "INV-1755847595151",
+    "amountPaid": 0
+  }
+]

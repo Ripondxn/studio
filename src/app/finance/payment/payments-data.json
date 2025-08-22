@@ -133,5 +133,31 @@
     "remarks": "Payment for installment TC-1755761192274-2",
     "status": "Received",
     "id": "PAY-1755846756912"
+  },
+  {
+    "id": "PAY-1755847223130-OUT",
+    "type": "Payment",
+    "date": "2025-08-22",
+    "partyType": "Vendor",
+    "partyName": "Transfer to Petty Cash",
+    "amount": 81000,
+    "paymentMethod": "Bank Transfer",
+    "bankAccountId": "acc_1",
+    "referenceNo": "TRF-1755847223130",
+    "remarks": "Fund Transfer",
+    "status": "Paid"
+  },
+  {
+    "id": "PAY-1755847223130-IN",
+    "type": "Receipt",
+    "date": "2025-08-22",
+    "partyType": "Customer",
+    "partyName": "Transfer from Main Operations Account",
+    "amount": 81000,
+    "paymentMethod": "Cash",
+    "bankAccountId": "acc_3",
+    "referenceNo": "TRF-1755847223130",
+    "remarks": "Fund Transfer",
+    "status": "Received"
   }
 ]
