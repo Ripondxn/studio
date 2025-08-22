@@ -105,7 +105,7 @@ export function SendRenewalDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-            <Button variant="outline"><Mail className="mr-2 h-4 w-4"/> Send Renewal Email</Button>
+            <Button variant="outline"><Mail className="mr-2 h-4 w-4"/> Send Renewals</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-2xl">
             <DialogHeader>

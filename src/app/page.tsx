@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -19,13 +20,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   TrendingUp,
-  TrendingDown,
   FileClock,
   Home,
   Plus,
-  Mail,
   Receipt,
   AlertTriangle,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
@@ -51,11 +51,10 @@ async function getExpiryReport(): Promise<ExpiryReportItem[]> {
 
     const uniqueContracts = new Map<string, Contract>();
     contracts.forEach(contract => {
-      // Prioritize keeping the contract with the latest end date if duplicates are found
-      const existing = uniqueContracts.get(contract.contractNo);
-      if (!existing || new Date(contract.endDate) > new Date(existing.endDate)) {
-        uniqueContracts.set(contract.contractNo, contract);
-      }
+        const existing = uniqueContracts.get(contract.unitCode);
+        if (!existing || new Date(contract.endDate) > new Date(existing.endDate)) {
+            uniqueContracts.set(contract.unitCode, contract);
+        }
     });
 
     const report = Array.from(uniqueContracts.values())
@@ -101,12 +100,13 @@ export default async function Dashboard() {
   const expiryReport = await getExpiryReport();
   const vacantUnits = await getVacantUnits();
   const chequeSummary = await getPdcChequeSummary();
+  const expiringSoonCount = expiryReport.filter(c => (differenceInDays(parseISO(c.endDate), new Date()) <= 30)).length;
 
   const kpiData = [
     {
-      title: 'Vacancy Rate',
-      value: '12.5%',
-      change: '+1.2%',
+      title: 'Vacant Units',
+      value: vacantUnits.length,
+      change: '+2 from last month',
       changeType: 'increase' as const,
       icon: <Home className="h-6 w-6 text-muted-foreground" />,
       href: '/property/units/vacant',
@@ -121,11 +121,19 @@ export default async function Dashboard() {
     },
     {
       title: 'Contracts Expiring (30d)',
-      value: expiryReport.filter(c => (differenceInDays(parseISO(c.endDate), new Date()) <= 30)).length.toString(),
-      change: `+${expiryReport.length}`,
+      value: expiringSoonCount,
+      change: `+${expiryReport.length} total in 90d`,
       changeType: 'increase' as const,
       icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
       href: '/tenancy/contracts',
+    },
+    {
+        title: 'Overdue Cheques',
+        value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(chequeSummary.overdueTotal),
+        change: `${chequeSummary.overdueCount} cheques`,
+        changeType: 'increase' as const,
+        icon: <AlertTriangle className="h-6 w-6 text-muted-foreground" />,
+        href: '/finance/pdc-cheque',
     },
   ];
 
@@ -134,9 +142,8 @@ export default async function Dashboard() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
-            <Button asChild><Link href="/lease/contract"><Plus className="mr-2 h-4 w-4"/> New Lease Contract</Link></Button>
-            <Button asChild><Link href="/tenancy/contract"><Plus className="mr-2 h-4 w-4"/> New Tenancy Contract</Link></Button>
-            <Button asChild variant="outline"><Link href="/finance/due-payments"><Receipt className="mr-2 h-4 w-4"/> Record Payment</Link></Button>
+            <Button asChild><Link href="/lease/contract"><Plus className="mr-2 h-4 w-4"/> New Lease</Link></Button>
+            <Button asChild><Link href="/tenancy/contract"><Plus className="mr-2 h-4 w-4"/> New Tenancy</Link></Button>
             <SendRenewalDialogWrapper expiringContracts={expiryReport} />
         </div>
       </div>
@@ -144,39 +151,28 @@ export default async function Dashboard() {
       {/* Key Metrics Overview */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {kpiData.map((kpi) => (
-          <Link href={kpi.href} key={kpi.title}>
-            <Card className="hover:bg-muted/50 transition-colors">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                {kpi.icon}
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{kpi.value}</div>
-                <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-destructive' : 'text-emerald-600'}`}>
-                  {kpi.change} from last month
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+          <Card key={kpi.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+              {kpi.icon}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpi.value}</div>
+              <p className={`text-xs ${kpi.changeType === 'increase' ? 'text-destructive' : 'text-emerald-600'}`}>
+                {kpi.change}
+              </p>
+            </CardContent>
+             <CardFooter>
+                 <Button asChild variant="outline" size="sm" className="w-full">
+                    <Link href={kpi.href}>View Details</Link>
+                </Button>
+            </CardFooter>
+          </Card>
         ))}
-         <Link href="/finance/pdc-cheque">
-            <Card className="hover:bg-muted/50 transition-colors">
-                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Overdue Cheques</CardTitle>
-                    <AlertTriangle className="h-6 w-6 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold text-destructive">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(chequeSummary.overdueTotal)}</div>
-                    <p className="text-xs text-destructive">
-                       {chequeSummary.overdueCount} cheques require attention
-                    </p>
-                </CardContent>
-            </Card>
-        </Link>
       </div>
 
       {/* Interactive Summary Widgets */}
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Contract Expiry Report (Next 90 Days)</CardTitle>
@@ -196,7 +192,7 @@ export default async function Dashboard() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {expiryReport.map((item) => (
+                    {expiryReport.slice(0, 5).map((item) => (
                         <TableRow key={item.contractNo}>
                             <TableCell className="font-medium">{item.unit}</TableCell>
                             <TableCell>{item.tenant}</TableCell>
@@ -209,16 +205,13 @@ export default async function Dashboard() {
                     ))}
                 </TableBody>
              </Table>
-             <Button asChild variant="link" className="w-full mt-2">
-                <Link href="/tenancy/contracts">View All Expiring Contracts</Link>
-             </Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Unit Vacant List</CardTitle>
+            <CardTitle>Vacant Units</CardTitle>
             <CardDescription>
-              Currently available units across all properties.
+              A selection of currently available units.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -232,7 +225,7 @@ export default async function Dashboard() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {vacantUnits.map((item) => (
+                    {vacantUnits.slice(0,5).map((item) => (
                         <TableRow key={`${item.propertyCode}-${item.unitCode}`}>
                             <TableCell className="font-medium">{item.unitCode}</TableCell>
                             <TableCell>{item.unitType}</TableCell>
@@ -242,9 +235,6 @@ export default async function Dashboard() {
                     ))}
                 </TableBody>
              </Table>
-             <Button asChild variant="link" className="w-full mt-2">
-                <Link href="/property/units/vacant">View All Vacant Units</Link>
-             </Button>
           </CardContent>
         </Card>
       </div>
