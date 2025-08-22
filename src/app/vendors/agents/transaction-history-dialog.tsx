@@ -45,7 +45,7 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Commission History: {agent.name}</DialogTitle>
           <DialogDescription>
@@ -67,6 +67,9 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Property</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>Room</TableHead>
+                  <TableHead>Partition</TableHead>
                   <TableHead>Reference</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
@@ -76,6 +79,9 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
                   <TableRow key={tx.id}>
                     <TableCell>{format(new Date(tx.date), 'PP')}</TableCell>
                     <TableCell>{tx.property || 'N/A'}</TableCell>
+                    <TableCell>{tx.unitCode || 'N/A'}</TableCell>
+                    <TableCell>{tx.roomCode || 'N/A'}</TableCell>
+                    <TableCell>{tx.partitionCode || 'N/A'}</TableCell>
                     <TableCell>{tx.referenceNo}</TableCell>
                     <TableCell className={cn("text-right font-medium", 'text-red-600')}>
                       -{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
@@ -90,3 +96,4 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
     </Dialog>
   );
 }
+

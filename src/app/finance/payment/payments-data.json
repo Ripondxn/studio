@@ -127,5 +127,23 @@
     "status": "Paid",
     "agentCode": "A001",
     "id": "PAY-1755840824829"
+  },
+  {
+    "type": "Payment",
+    "date": "2025-08-23",
+    "partyType": "Landlord",
+    "partyName": "Emaar Properties",
+    "amount": 1300,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "referenceNo": "",
+    "property": "LT-C38",
+    "unitCode": "102",
+    "roomCode": "",
+    "partitionCode": "",
+    "remarks": "Commission payment for agent Abdur Rahim (A001)",
+    "status": "Paid",
+    "agentCode": "A001",
+    "id": "PAY-1755841266108"
   }
 ]
