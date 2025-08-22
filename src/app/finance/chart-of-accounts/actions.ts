@@ -36,7 +36,7 @@ async function writeAccounts(data: Account[]) {
 export async function getAccounts(): Promise<Account[]> {
     const accounts: Account[] = await readData(accountsFilePath);
     const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
-    const pettyCash: { balance: number } = await readData(pettyCashFilePath) || { balance: 0 };
+    const pettyCash: { balance: number } = (await readData(pettyCashFilePath)) || { balance: 0 };
     const payments: Payment[] = await readData(paymentsFilePath);
 
     // Create a map for easy access and modification
@@ -132,5 +132,24 @@ export async function addAccount(data: z.infer<typeof addAccountFormSchema>) {
 
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function getTransactionsForAccount(accountCode: string): Promise<Payment[]> {
+    const allPayments: Payment[] = await readData(paymentsFilePath);
+
+    switch(accountCode) {
+        case '1110': // Cash and Bank
+             // Returns all transactions for simplicity. Could be refined.
+            return allPayments;
+        case '4100': // Rental Income
+            return allPayments.filter(p => p.type === 'Receipt');
+        case '5110': // Maintenance & Repairs
+            return allPayments.filter(p => p.type === 'Payment' && p.partyType === 'Vendor' && !p.agentCode);
+        case '5140': // Agent Fee
+            return allPayments.filter(p => p.type === 'Payment' && !!p.agentCode);
+        default:
+            // For parent accounts or accounts without direct transaction logic yet
+            return [];
     }
 }

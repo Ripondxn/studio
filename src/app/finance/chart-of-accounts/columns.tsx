@@ -2,7 +2,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Folder, File, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Folder, File, Pencil, Trash2, Eye } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { Account } from './schema';
+import { TransactionHistoryDialog } from './transaction-history-dialog';
 
 
 export const columns: ColumnDef<Account>[] = [
@@ -110,27 +111,18 @@ export const columns: ColumnDef<Account>[] = [
   {
     id: 'actions',
     cell: ({ row }) => {
+      const account = row.original;
+      if (account.isGroup) {
+        return null; // No actions for group accounts
+      }
+      
       return (
         <div className="text-right">
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu>
+            <TransactionHistoryDialog account={account}>
+              <Button variant="ghost" size="icon">
+                  <Eye className="h-4 w-4" />
+              </Button>
+            </TransactionHistoryDialog>
         </div>
       );
     },
