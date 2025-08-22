@@ -10,6 +10,7 @@ import { type BankAccount } from '../banking/schema';
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
+const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
 
 
 async function readBankAccounts(): Promise<BankAccount[]> {
@@ -20,6 +21,19 @@ async function readBankAccounts(): Promise<BankAccount[]> {
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
             return [];
+        }
+        throw error;
+    }
+}
+
+async function readPettyCash() {
+    try {
+        await fs.access(pettyCashFilePath);
+        const data = await fs.readFile(pettyCashFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return { balance: 0 };
         }
         throw error;
     }
@@ -47,13 +61,15 @@ async function writeAccounts(data: Account[]) {
 export async function getAccounts() {
     const accounts = await readAccounts();
     const bankAccounts = await readBankAccounts();
+    const pettyCash = await readPettyCash();
 
     const totalBankBalance = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalCashAndBank = totalBankBalance + (pettyCash.balance || 0);
     
     // Find the 'Cash and Bank' account and update its balance
     const cashAndBankAccount = accounts.find(acc => acc.code === '1110');
     if (cashAndBankAccount) {
-        cashAndBankAccount.balance = totalBankBalance;
+        cashAndBankAccount.balance = totalCashAndBank;
     }
     
     // Recalculate parent balances
