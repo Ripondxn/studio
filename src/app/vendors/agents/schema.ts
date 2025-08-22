@@ -9,6 +9,7 @@ export const agentSchema = z.object({
   commission: z.number().optional(),
   vendorName: z.string(),
   vendorCode: z.string(),
+  isCommissionPaid: z.boolean().optional(),
 });
 
 export type Agent = z.infer<typeof agentSchema>;

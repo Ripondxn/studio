@@ -24,6 +24,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { deleteAgent } from '../actions';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 
 
 const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRecordPayment: (agent: Agent) => void }) => {
@@ -84,7 +85,7 @@ const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRec
               <Edit className="mr-2 h-4 w-4" />
               Edit Agent
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onRecordPayment(agent)} disabled={!agent.commission || agent.commission <= 0}>
+            <DropdownMenuItem onSelect={() => onRecordPayment(agent)} disabled={!agent.commission || agent.commission <= 0 || agent.isCommissionPaid}>
                 <DollarSign className="mr-2 h-4 w-4" />
                 Record Payment
             </DropdownMenuItem>
@@ -151,13 +152,19 @@ export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agen
     accessorKey: 'commission',
     header: () => <div className="text-right">Commission</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('commission') || '0');
+      const agent = row.original;
+      const amount = parseFloat(agent.commission?.toString() || '0');
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
       }).format(amount);
 
-      return <div className="text-right font-medium">{amount > 0 ? formatted : 'N/A'}</div>;
+      return (
+        <div className="text-right font-medium flex flex-col items-end">
+            <span>{amount > 0 ? formatted : 'N/A'}</span>
+            {agent.isCommissionPaid && <Badge variant="secondary" className="mt-1 bg-green-100 text-green-800">Paid</Badge>}
+        </div>
+      );
     },
   },
   {
