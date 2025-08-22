@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -106,7 +106,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     name: "invoiceAllocations",
   });
   
-  const totalAllocated = React.useMemo(() => {
+  const totalAllocated = useMemo(() => {
     return allocations?.reduce((sum, current) => sum + (current.amount || 0), 0) || 0;
   }, [allocations]);
 
