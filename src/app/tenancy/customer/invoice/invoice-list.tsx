@@ -54,6 +54,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
     }
 
     const handleRecordPaymentClick = (invoice?: Invoice) => {
+        const unpaidInvoices = invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled');
         if (invoice) {
              setPaymentDialogDefaults({
                 type: 'Receipt',
@@ -68,9 +69,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                 type: 'Receipt',
                 partyType: 'Customer',
                 partyName: customerName,
-                invoiceAllocations: invoices
-                    .filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')
-                    .map(i => ({ invoiceId: i.id, amount: 0 }))
+                invoiceAllocations: unpaidInvoices.map(i => ({ invoiceId: i.id, amount: 0 }))
             });
         }
         setIsPaymentDialogOpen(true);

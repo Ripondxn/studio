@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Trash2 } from 'lucide-react';
 import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema, type Payment } from './schema';
@@ -29,6 +29,7 @@ import { format } from 'date-fns';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit } from '@/app/tenancy/contract/actions';
+import { cn } from '@/lib/utils';
 
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
@@ -84,7 +85,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
 
-  const { fields, replace } = useFieldArray({
+  const { fields, replace, append, remove } = useFieldArray({
       control,
       name: "invoiceAllocations",
   });
@@ -105,6 +106,29 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     // Allow saving if not over-allocated. Use a small tolerance for floating point issues.
     return totalAllocated <= (paymentAmount || 0) + 0.001;
   }, [partyType, customerInvoices, totalAllocated, paymentAmount]);
+
+
+  const autoAllocate = useCallback(() => {
+    if (partyType !== 'Customer' || !customerInvoices) return;
+
+    let amountToAllocate = paymentAmount || 0;
+    const newAllocations = customerInvoices.map(invoice => {
+        const balance = invoice.remainingBalance || 0;
+        const canApply = Math.min(amountToAllocate, balance);
+        amountToAllocate -= canApply;
+        return {
+            invoiceId: invoice.id,
+            amount: canApply
+        };
+    });
+    replace(newAllocations);
+  }, [paymentAmount, partyType, customerInvoices, replace]);
+
+  useEffect(() => {
+    if (isOpen && defaultValues?.amount) {
+      autoAllocate();
+    }
+  }, [isOpen, defaultValues, autoAllocate]);
 
 
   useEffect(() => {
@@ -154,16 +178,12 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
         reset(initialValues);
 
         if(customerInvoices){
-            const newAllocations = customerInvoices.map(inv => ({
-                invoiceId: inv.id,
-                amount: defaultValues?.invoiceAllocations?.find(a => a.invoiceId === inv.id)?.amount || 0
-            }));
-            replace(newAllocations);
+            autoAllocate();
         } else {
             replace([]);
         }
       }
-  }, [isOpen, reset, defaultValues, customerInvoices, replace]);
+  }, [isOpen, reset, defaultValues, customerInvoices, replace, autoAllocate]);
 
   useEffect(() => {
     if(!defaultValues) {
@@ -187,6 +207,17 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
 
   const onSubmit = async (data: PaymentFormData) => {
+    if (remainingToAllocate < 0) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Allocated amount cannot be more than the payment amount.'});
+      return;
+    }
+
+    if (remainingToAllocate > 0) {
+      if (!window.confirm(`You have not allocated ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingToAllocate)}. This will be saved as an on-account credit. Do you want to continue?`)) {
+        return;
+      }
+    }
+
     setIsSaving(true);
     const result = await addPayment(data);
 
@@ -209,9 +240,12 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {!children && <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Payment</Button></DialogTrigger>}
-      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-2xl">
+      {children ? (
+        <DialogTrigger asChild>{children}</DialogTrigger>
+      ) : (
+         <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Payment</Button></DialogTrigger>
+      )}
+      <DialogContent className="sm:max-w-4xl">
         <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
             <DialogTitle>Record a New Payment</DialogTitle>
@@ -435,10 +469,10 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
                 {partyType === 'Customer' && customerInvoices && customerInvoices.length > 0 && (
                     <div className="space-y-2 pt-4 border-t">
-                        <Label className="text-lg font-semibold">Apply Payment to Invoices</Label>
-                        <div className="grid grid-cols-2 gap-4 text-sm font-medium">
-                            <div className="p-2 border rounded-md">Total Payment: <span className="font-bold text-blue-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(paymentAmount || 0)}</span></div>
-                            <div className="p-2 border rounded-md">Remaining to Allocate: <span className="font-bold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingToAllocate)}</span></div>
+                        <h5 className="font-semibold">Apply Payment to Invoices</h5>
+                        <div className="grid grid-cols-2 gap-4 text-sm font-medium p-4 bg-muted/50 rounded-lg">
+                            <div >Total Payment: <span className="font-bold text-blue-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(paymentAmount || 0)}</span></div>
+                            <div className={cn(remainingToAllocate < 0 && 'text-destructive')}>Remaining to Allocate: <span className="font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingToAllocate)}</span></div>
                         </div>
                         <Table>
                             <TableHeader>
