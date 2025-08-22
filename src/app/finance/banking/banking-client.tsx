@@ -41,6 +41,7 @@ import { bankAccountSchema, type BankAccount } from './schema';
 import { saveBankAccount, deleteBankAccount, getBankAccounts } from './actions';
 import { AllTransactionsDialog } from './all-transactions-dialog';
 import { EquityDialog } from '../equity/equity-dialog';
+import { FundTransferDialog } from './fund-transfer-dialog';
 import { DataTable } from './data-table';
 import { columns } from './columns';
 import { cn } from '@/lib/utils';
@@ -166,6 +167,9 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
             <AllTransactionsDialog>
               <Button variant="outline"><History className="mr-2 h-4 w-4"/> + History</Button>
             </AllTransactionsDialog>
+            <FundTransferDialog bankAccounts={accounts} onTransaction={refreshAccounts}>
+                <Button variant="outline"><ArrowRightLeft className="mr-2 h-4 w-4"/> Fund Transfer</Button>
+            </FundTransferDialog>
             <EquityDialog bankAccounts={accounts} onTransaction={refreshAccounts}>
                 <Button variant="outline"><Briefcase className="mr-2 h-4 w-4"/> Equity</Button>
             </EquityDialog>
