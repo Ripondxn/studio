@@ -177,3 +177,32 @@ export async function getSummary() {
     
     return summary;
 }
+
+export async function returnPdcCheque(chequeIds: string[]) {
+    try {
+        const allCheques = await readPdcCheques();
+        let updatedCount = 0;
+        
+        const updatedCheques = allCheques.map(cheque => {
+            if (chequeIds.includes(cheque.id) && cheque.status === 'In Hand') {
+                updatedCount++;
+                return {
+                    ...cheque,
+                    status: 'Returned' as const,
+                };
+            }
+            return cheque;
+        });
+
+        if (updatedCount === 0) {
+            return { success: false, error: "No valid 'In Hand' cheques were selected to return." };
+        }
+
+        await writePdcCheques(updatedCheques);
+        revalidatePath('/finance/pdc-cheque');
+        return { success: true, count: updatedCount };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}

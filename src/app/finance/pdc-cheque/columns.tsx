@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Pencil, Banknote, Trash2, CheckCircle, XCircle, Hourglass, Calendar, Library, Landmark, Building2, User } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Pencil, Banknote, Trash2, CheckCircle, XCircle, Hourglass, Calendar, Library, Landmark, Building2, User, CornerUpLeft } from 'lucide-react';
 import { format, isBefore, startOfToday, parseISO } from 'date-fns';
 
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +57,7 @@ const statusConfig: {
   'Cleared': { variant: 'outline', icon: <CheckCircle className="h-3 w-3" />, className: 'bg-green-500/20 text-green-700 border-transparent hover:bg-green-500/30' },
   'Bounced': { variant: 'destructive', icon: <XCircle className="h-3 w-3" /> },
   'Cancelled': { variant: 'destructive', icon: <XCircle className="h-3 w-3" />, className: 'bg-gray-500/20 text-gray-700 border-transparent hover:bg-gray-500/30' },
+  'Returned': { variant: 'destructive', icon: <CornerUpLeft className="h-3 w-3" />, className: 'bg-orange-500/20 text-orange-700 border-transparent hover:bg-orange-500/30' },
 };
 
 

@@ -89,6 +89,7 @@ export function DataTable<TData, TValue>({
                 <SelectItem value="Cleared">Cleared</SelectItem>
                 <SelectItem value="Bounced">Bounced</SelectItem>
                 <SelectItem value="Cancelled">Cancelled</SelectItem>
+                <SelectItem value="Returned">Returned</SelectItem>
             </SelectContent>
         </Select>
         <DropdownMenu>

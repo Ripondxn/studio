@@ -6,8 +6,9 @@ import { getPdcCheques, getSummary } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { AddChequeDialog } from './add-cheque-dialog';
+import { ReturnChequeDialog } from './return-cheque-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Banknote, Clock, CheckCircle, Hourglass, FileText, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { Banknote, Clock, CheckCircle, Hourglass, FileText, FileSpreadsheet, AlertTriangle, CornerUpLeft } from 'lucide-react';
 import { type PdcCheque } from './schema';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -132,6 +133,7 @@ export function PdcChequesClient({ initialCheques, initialSummary }: { initialCh
             <Button variant="outline" size="sm" onClick={handleExportExcel}>
                 <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
             </Button>
+            <ReturnChequeDialog cheques={cheques.filter(c => c.status === 'In Hand')} onReturn={refreshData} />
             <AddChequeDialog onChequeAdded={refreshData} />
             <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
                 <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
