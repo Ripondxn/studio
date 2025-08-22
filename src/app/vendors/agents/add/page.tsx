@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,9 +36,13 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveAgentData, findAgentData, deleteAgent } from '../actions';
+import { saveAgentData, findAgentData, deleteAgent, getPaymentsForAgent } from '../actions';
 import { agentSchema, type Agent } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DataTable } from '@/app/finance/payment/data-table';
+import { columns as paymentColumns } from '@/app/finance/payment/columns';
+import { type Payment } from '@/app/finance/payment/schema';
 
 const initialAgentData: Agent = {
     id: '',
@@ -52,6 +57,9 @@ export default function AgentPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -60,6 +68,18 @@ export default function AgentPage() {
     resolver: zodResolver(agentSchema.omit({ id: true, totalCommissionPaid: true, vendorName: true, vendorCode: true })),
     defaultValues: initialAgentData,
   });
+  
+  const agentCode = form.watch('code');
+  
+  useEffect(() => {
+    if (agentCode && !isNewRecord) {
+      setIsLoadingHistory(true);
+      getPaymentsForAgent(agentCode)
+        .then(setPaymentHistory)
+        .finally(() => setIsLoadingHistory(false));
+    }
+  }, [agentCode, isNewRecord]);
+
 
   const handleFindClick = async (code: string) => {
     try {
@@ -91,9 +111,9 @@ export default function AgentPage() {
   };
 
   useEffect(() => {
-    const agentCode = searchParams.get('code');
-    if (agentCode) {
-      handleFindClick(agentCode);
+    const agentCodeParam = searchParams.get('code');
+    if (agentCodeParam) {
+      handleFindClick(agentCodeParam);
     } else {
         setIsNewRecord(true);
         setIsEditing(true); 
@@ -226,78 +246,103 @@ export default function AgentPage() {
                 </Button>
             </div>
         </div>
-        <Card>
-            <CardHeader>
-            <CardTitle>Agent Information</CardTitle>
-            <CardDescription>Fill in the details of the agent.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <FormField
-                    control={form.control}
-                    name="code"
-                    render={({ field }) => (
-                    <FormItem>
-                        <Label htmlFor="code">Code</Label>
-                        <div className="flex items-end gap-2">
-                            <FormControl>
-                                <Input {...field} disabled />
-                            </FormControl>
-                            <Button type="button" variant="outline" size="icon" onClick={() => router.push('/vendors/agents/add')} disabled={!isNewRecord}>
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                    <FormItem>
-                        <Label htmlFor="name">Name</Label>
-                        <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="mobile"
-                    render={({ field }) => (
-                    <FormItem>
-                        <Label htmlFor="mobile">Mobile No</Label>
-                        <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                    <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                    <FormItem>
-                        <Label htmlFor="email">Email</Label>
-                        <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="commissionRate"
-                    render={({ field }) => (
-                    <FormItem>
-                        <Label htmlFor="commissionRate">Default Commission (Amount)</Label>
-                        <FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!isEditing} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-            </div>
-            </CardContent>
-        </Card>
+         <Tabs defaultValue="agent-info">
+            <TabsList>
+                <TabsTrigger value="agent-info">Agent Information</TabsTrigger>
+                <TabsTrigger value="commission" disabled={isNewRecord}>Commission History</TabsTrigger>
+            </TabsList>
+            <TabsContent value="agent-info">
+                 <Card>
+                    <CardHeader>
+                    <CardTitle>Agent Information</CardTitle>
+                    <CardDescription>Fill in the details of the agent.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FormField
+                            control={form.control}
+                            name="code"
+                            render={({ field }) => (
+                            <FormItem>
+                                <Label htmlFor="code">Code</Label>
+                                <div className="flex items-end gap-2">
+                                    <FormControl>
+                                        <Input {...field} disabled />
+                                    </FormControl>
+                                    <Button type="button" variant="outline" size="icon" onClick={() => router.push('/vendors/agents/add')} disabled={!isNewRecord}>
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                            <FormItem>
+                                <Label htmlFor="name">Name</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="mobile"
+                            render={({ field }) => (
+                            <FormItem>
+                                <Label htmlFor="mobile">Mobile No</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                            <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                            <FormItem>
+                                <Label htmlFor="email">Email</Label>
+                                <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="commissionRate"
+                            render={({ field }) => (
+                            <FormItem>
+                                <Label htmlFor="commissionRate">Default Commission (Amount)</Label>
+                                <FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="commission">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Commission Payment History</CardTitle>
+                        <CardDescription>A record of all commission payments made to this agent.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoadingHistory ? (
+                             <div className="flex justify-center items-center h-40">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : (
+                             <DataTable columns={paymentColumns} data={paymentHistory} />
+                        )}
+                    </CardContent>
+                 </Card>
+            </TabsContent>
+        </Tabs>
       </form>
     </Form>
     </div>

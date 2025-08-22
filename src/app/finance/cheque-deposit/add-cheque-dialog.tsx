@@ -145,7 +145,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" /> Payment
+          <Plus className="mr-2 h-4 w-4" /> Cheque
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
