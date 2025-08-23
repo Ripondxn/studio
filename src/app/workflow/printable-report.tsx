@@ -17,7 +17,6 @@ import { type Status } from './types';
 import { Building2 } from 'lucide-react';
 
 interface PrintableReportProps {
-  refToPrint: React.Ref<HTMLDivElement>;
   transactions: Payment[];
   filters: {
     status: Status | 'ALL';

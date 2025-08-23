@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import * as React from 'react';
 import {
   File,
@@ -282,6 +282,7 @@ export default function WorkflowPage() {
   const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date }>({});
 
   const router = useRouter();
+  const printableRef = useRef<HTMLDivElement>(null);
 
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [currentActionInfo, setCurrentActionInfo] = useState<{
@@ -477,14 +478,19 @@ export default function WorkflowPage() {
   };
 
   const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      const reportHtml = document.getElementById('printable-report')?.innerHTML;
-      if (reportHtml) {
-        printWindow.document.write(reportHtml);
-        printWindow.document.close();
-        printWindow.print();
-      }
+    const printContent = printableRef.current?.innerHTML;
+    if (printContent) {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write('<html><head><title>Print Report</title>');
+            printWindow.document.write('<link rel="stylesheet" href="/path/to/your/tailwind.css">'); // You might need to adjust path
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            // A timeout might be needed to allow styles to load in some browsers
+            setTimeout(() => printWindow.print(), 500);
+        }
     }
   }
   
@@ -672,7 +678,7 @@ export default function WorkflowPage() {
       </Card>
       <div style={{ display: 'none' }}>
         <PrintableReport 
-          refToPrint={React.createRef<HTMLDivElement>()} 
+          ref={printableRef}
           transactions={filteredTransactions} 
           filters={{status: statusFilter, user: userFilter, from: dateFilter.from, to: dateFilter.to}} 
         />
