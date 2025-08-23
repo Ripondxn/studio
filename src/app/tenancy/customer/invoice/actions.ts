@@ -113,8 +113,10 @@ export async function applyPaymentToInvoices(invoicePayments: { invoiceId: strin
                 allInvoices[index].amountPaid = (allInvoices[index].amountPaid || 0) + payment.amount;
                 const remainingBalance = allInvoices[index].total - allInvoices[index].amountPaid;
                 
-                if (remainingBalance <= 0.001) {
+                if (remainingBalance <= 0.001) { // Use a small epsilon for float comparison
                     allInvoices[index].status = 'Paid';
+                } else if (allInvoices[index].status === 'Draft' || allInvoices[index].status === 'Overdue') {
+                    allInvoices[index].status = 'Sent'; // Or 'Partially Paid' if you add that status
                 }
             }
         }

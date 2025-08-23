@@ -80,6 +80,12 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   } = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
   });
+  
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "invoiceAllocations"
+  });
+
 
   const paymentType = watch('type');
   const partyType = watch('partyType');
@@ -89,6 +95,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
   const paymentFrom = watch('paymentFrom');
+  const watchedAllocations = watch('invoiceAllocations');
 
   const [invoicesForCustomer, setInvoicesForCustomer] = useState<Invoice[]>(customerInvoices);
   
@@ -100,17 +107,39 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   }, []);
 
   useEffect(() => {
+    if (watchedAllocations) {
+        const totalAllocated = watchedAllocations.reduce((sum, current) => sum + (current.amount || 0), 0);
+        setValue('amount', totalAllocated);
+    }
+  }, [watchedAllocations, setValue]);
+
+  useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties })));
     getLookups().then(data => setLookups(prev => ({...prev, ...data})));
   }, [])
   
    useEffect(() => {
      if(partyType === 'Customer' && partyName) {
-        getInvoicesForCustomer(partyName).then(setInvoicesForCustomer);
+        getInvoicesForCustomer(partyName).then(data => {
+            setInvoicesForCustomer(data);
+            const defaultAllocs = defaultValues?.invoiceAllocations || [];
+            const currentAllocs = watch('invoiceAllocations') || [];
+
+            // If we have default allocations, set them.
+            if(defaultAllocs.length > 0) {
+                 setValue('invoiceAllocations', defaultAllocs);
+            } else if (currentAllocs.length === 0) {
+                // Otherwise, populate with all open invoices for this customer
+                setValue('invoiceAllocations', data
+                    .filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled')
+                    .map(inv => ({ invoiceId: inv.id, amount: 0}))
+                );
+            }
+        });
      } else {
         setInvoicesForCustomer([]);
      }
-   }, [partyType, partyName]);
+   }, [partyType, partyName, defaultValues, setValue, watch]);
    
    useEffect(() => {
     if (partyType && partyName && referenceType) {
@@ -272,7 +301,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         <div className="space-y-2"><Label>Payment Date *</Label><Controller name="date" control={control} render={({ field }) => ( <Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')} initialFocus /></PopoverContent></Popover>)} /></div>
                         <div className="space-y-2"><Label>Party Type *</Label><Controller name="partyType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select party type"/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Landlord">Landlord</SelectItem><SelectItem value="Vendor">Vendor</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></div>
                         <div className="space-y-2"><Label>Party Name *</Label><Controller name="partyName" control={control} render={({ field }) => (<Combobox options={partyOptions} value={field.value || ''} onSelect={field.onChange} placeholder="Select party"/>)} /></div>
-                        <div className="space-y-2"><Label>Amount *</Label><Input type="number" placeholder="0.00" {...register('amount', { valueAsNumber: true })}/></div>
+                        <div className="space-y-2"><Label>Amount *</Label><Input type="number" placeholder="0.00" {...register('amount', { valueAsNumber: true })} disabled={partyType === 'Customer'}/></div>
                         <div className="space-y-2"><Label>Payment Method *</Label><Controller name="paymentMethod" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select payment method"/></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></div>
                     </CardContent>
                 </Card>
@@ -367,26 +396,33 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {invoicesForCustomer.map((invoice, index) => (
-                            <TableRow key={invoice.id}>
-                              <TableCell>{invoice.invoiceNo}</TableCell>
-                              <TableCell>{format(new Date(invoice.dueDate), 'PP')}</TableCell>
-                              <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</TableCell>
-                              <TableCell className="text-right">
-                                 <Controller
-                                  control={control}
-                                  name={`invoiceAllocations.${index}.amount`}
-                                  defaultValue={defaultValues?.invoiceAllocations?.find(i => i.invoiceId === invoice.id)?.amount || 0}
-                                  render={({ field }) => (
-                                    <>
-                                      <Input type="hidden" {...register(`invoiceAllocations.${index}.invoiceId`)} value={invoice.id} />
-                                      <Input type="number" {...field} className="text-right" onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
-                                    </>
-                                  )}
-                                />
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {invoicesForCustomer.map((invoice, index) => {
+                            const fieldIndex = fields.findIndex(f => f.invoiceId === invoice.id);
+                            if (fieldIndex === -1) return null; // Should not happen if logic is correct
+                            return (
+                                <TableRow key={invoice.id}>
+                                  <TableCell>{invoice.invoiceNo}</TableCell>
+                                  <TableCell>{format(new Date(invoice.dueDate), 'PP')}</TableCell>
+                                  <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Controller
+                                      control={control}
+                                      name={`invoiceAllocations.${fieldIndex}.amount`}
+                                      defaultValue={0}
+                                      render={({ field }) => (
+                                        <Input
+                                          type="number"
+                                          {...field}
+                                          className="text-right"
+                                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                                          max={invoice.remainingBalance}
+                                        />
+                                      )}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              )
+                          })}
                         </TableBody>
                       </Table>
                     </CardContent>

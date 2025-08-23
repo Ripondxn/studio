@@ -65,10 +65,10 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
             partyName: customerCode,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
-            amount: invoice ? (invoice.remainingBalance) : undefined,
+            amount: invoice ? (invoice.remainingBalance || 0) : 0,
             invoiceAllocations: openInvoices.map(i => ({
                 invoiceId: i.id,
-                amount: i.id === invoice?.id ? (invoice.remainingBalance || 0) : 0,
+                amount: i.id === invoice?.id ? (i.remainingBalance || 0) : 0,
             }))
         });
         setIsPaymentDialogOpen(true);
@@ -144,7 +144,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
                     isOpen={isPaymentDialogOpen}
                     setIsOpen={setIsPaymentDialogOpen}
                     defaultValues={paymentDefaultValues}
-                    customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled')}
+                    customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled' && (i.remainingBalance || 0) > 0)}
                     onPaymentAdded={handleSuccess}
                 />
             </CardContent>
