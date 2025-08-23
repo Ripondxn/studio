@@ -73,7 +73,7 @@ import { type Role, type Status } from './types';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useRouter } from 'next/navigation';
-import { getPayments } from '@/app/finance/payment/actions';
+import { getPayments, getPartyNameLookups } from '@/app/finance/payment/actions';
 import { type Payment, type ApprovalHistory } from '@/app/finance/payment/schema';
 import { cn } from '@/lib/utils';
 import { PrintableReport } from './printable-report';
@@ -280,6 +280,7 @@ export default function WorkflowPage() {
   const [statusFilter, setStatusFilter] = useState<Status | 'ALL'>('ALL');
   const [userFilter, setUserFilter] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date }>({});
+  const [partyNameLookups, setPartyNameLookups] = useState<Record<string, string>>({});
 
   const router = useRouter();
   const printableRef = useRef<HTMLDivElement>(null);
@@ -291,10 +292,17 @@ export default function WorkflowPage() {
   } | null>(null);
 
   useEffect(() => {
-    getPayments().then(data => {
-        setTransactions(data);
+    async function fetchData() {
+        setIsLoading(true);
+        const [payments, lookups] = await Promise.all([
+            getPayments(),
+            getPartyNameLookups()
+        ]);
+        setTransactions(payments);
+        setPartyNameLookups(lookups);
         setIsLoading(false);
-    });
+    }
+    fetchData();
     
     const storedProfile = sessionStorage.getItem('userProfile');
     if (storedProfile) {
@@ -615,7 +623,7 @@ export default function WorkflowPage() {
                         <TableRow key={t.id}>
                         <TableCell className="font-mono text-xs">{t.id}</TableCell>
                         <TableCell>{t.type}</TableCell>
-                        <TableCell>{t.partyName}</TableCell>
+                        <TableCell>{partyNameLookups[t.partyName] || t.partyName}</TableCell>
                         <TableCell>{t.property || '-'}</TableCell>
                         <TableCell>{t.unitCode || '-'}</TableCell>
                         <TableCell>{t.roomCode || '-'}</TableCell>

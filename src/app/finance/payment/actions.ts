@@ -219,6 +219,31 @@ export async function getLookups() {
     }
 }
 
+export async function getPartyNameLookups(): Promise<Record<string, string>> {
+    const tenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
+    const landlords: {landlordData: Landlord}[] = await readData(landlordsFilePath);
+    const vendors: {vendorData: Vendor}[] = await readData(vendorsFilePath);
+    const customers: {customerData: Customer}[] = await readData(customersFilePath);
+
+    const lookups: Record<string, string> = {};
+
+    tenants.forEach(t => {
+        if(t.tenantData.code) lookups[t.tenantData.code] = t.tenantData.name;
+    });
+    landlords.forEach(l => {
+        if(l.landlordData.code) lookups[l.landlordData.code] = l.landlordData.name;
+    });
+    vendors.forEach(v => {
+        if(v.vendorData.code) lookups[v.vendorData.code] = v.vendorData.name;
+    });
+    customers.forEach(c => {
+        if(c.customerData.code) lookups[c.customerData.code] = c.customerData.name;
+    });
+
+    return lookups;
+}
+
+
 export async function getSummary() {
     const payments = await readPayments();
     const now = new Date();
