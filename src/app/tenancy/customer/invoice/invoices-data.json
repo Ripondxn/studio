@@ -24,9 +24,9 @@
     "tax": 0,
     "total": 3000,
     "notes": "",
-    "status": "Draft",
+    "status": "Sent",
     "id": "INV-1755850847475",
-    "amountPaid": 1400
+    "amountPaid": 2200
   },
   {
     "invoiceNo": "INV-1755853051213",

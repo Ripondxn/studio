@@ -1,43 +1,33 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { InvoiceDialog } from './invoice-dialog';
-import { getInvoicesForCustomer } from './actions';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
-import { useRouter } from 'next/navigation';
 
-export function InvoiceList({ customerCode, customerName }: { customerCode: string, customerName: string }) {
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+interface InvoiceListProps {
+    customerCode: string;
+    customerName: string;
+    invoices: Invoice[];
+    isLoading: boolean;
+    onRefresh: () => void;
+}
+
+export function InvoiceList({ customerCode, customerName, invoices, isLoading, onRefresh }: InvoiceListProps) {
     const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
-    const router = useRouter();
-
-    const fetchInvoices = useCallback(async () => {
-        setIsLoading(true);
-        const data = await getInvoicesForCustomer(customerCode);
-        setInvoices(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
-        setIsLoading(false);
-    }, [customerCode]);
-
-    useEffect(() => {
-        if (customerCode) {
-            fetchInvoices();
-        }
-    }, [customerCode, fetchInvoices]);
-
+    
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
@@ -75,8 +65,7 @@ export function InvoiceList({ customerCode, customerName }: { customerCode: stri
     }
 
     const handleSuccess = () => {
-        fetchInvoices();
-        router.refresh();
+        onRefresh();
     }
     
     const financialSummary = useMemo(() => {

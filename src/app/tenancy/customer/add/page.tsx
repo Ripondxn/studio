@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -49,6 +49,9 @@ import { useToast } from '@/hooks/use-toast';
 import { saveCustomerData, findCustomerData, deleteCustomerData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
+import { getInvoicesForCustomer } from '../invoice/actions';
+import { type Invoice } from '../invoice/schema';
+
 
 type Attachment = {
   id: number;
@@ -82,6 +85,16 @@ export default function CustomerAddPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  
+  const fetchInvoices = useCallback(async (customerCode: string) => {
+    if (!customerCode) return;
+    setIsLoadingInvoices(true);
+    const data = await getInvoicesForCustomer(customerCode);
+    setInvoices(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
+    setIsLoadingInvoices(false);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -93,6 +106,50 @@ export default function CustomerAddPage() {
     };
   }, [attachments]);
 
+  const handleFindClick = useCallback(async (code?: string) => {
+    const codeToFind = code || customerData.code;
+    if (!codeToFind) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter a Customer Code to find.',
+      });
+      return;
+    }
+    setIsFinding(true);
+    try {
+      const result = await findCustomerData(codeToFind);
+      if (result.success && result.data) {
+        setAllData(result.data);
+        if (codeToFind !== 'new') {
+            setInitialAllData(result.data);
+            setIsNewRecord(false);
+            setIsEditing(false);
+            fetchInvoices(result.data.customerData.code);
+        } else {
+            setInitialAllData({ customerData: { ...initialCustomerData, code: result.data.customerData.code } });
+            setIsNewRecord(true);
+            setIsEditing(true);
+        }
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Not Found',
+          description: `No record found for Customer Code: ${codeToFind}. You can create a new one.`,
+        });
+        handleFindClick('new');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: (error as Error).message || 'Failed to find customer data.',
+      });
+    } finally {
+      setIsFinding(false);
+    }
+  }, [customerData.code, fetchInvoices, toast]);
+
   useEffect(() => {
     const customerCode = searchParams.get('code');
     if (customerCode) {
@@ -103,7 +160,7 @@ export default function CustomerAddPage() {
         setIsEditing(true); 
         handleFindClick('new');
     }
-  }, [searchParams]);
+  }, [searchParams, handleFindClick]);
 
   const handleInputChange = (field: keyof typeof customerData, value: string | number) => {
     setCustomerData(prev => ({ ...prev, [field]: value }));
@@ -223,49 +280,6 @@ export default function CustomerAddPage() {
      }
   }
 
-  const handleFindClick = async (code?: string) => {
-    const codeToFind = code || customerData.code;
-    if (!codeToFind) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter a Customer Code to find.',
-      });
-      return;
-    }
-    setIsFinding(true);
-    try {
-      const result = await findCustomerData(codeToFind);
-      if (result.success && result.data) {
-        setAllData(result.data);
-        if (codeToFind !== 'new') {
-            setInitialAllData(result.data);
-            setIsNewRecord(false);
-            setIsEditing(false);
-        } else {
-            setInitialAllData({ customerData: { ...initialCustomerData, code: result.data.customerData.code } });
-            setIsNewRecord(true);
-            setIsEditing(true);
-        }
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Not Found',
-          description: `No record found for Customer Code: ${codeToFind}. You can create a new one.`,
-        });
-        handleFindClick('new');
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: (error as Error).message || 'Failed to find customer data.',
-      });
-    } finally {
-      setIsFinding(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!customerData.code) return;
     try {
@@ -362,7 +376,13 @@ export default function CustomerAddPage() {
             </Card>
         </TabsContent>
         <TabsContent value="invoices">
-            <InvoiceList customerCode={customerData.code} customerName={customerData.name} />
+            <InvoiceList 
+                customerCode={customerData.code} 
+                customerName={customerData.name} 
+                invoices={invoices}
+                isLoading={isLoadingInvoices}
+                onRefresh={() => fetchInvoices(customerData.code)}
+            />
         </TabsContent>
         <TabsContent value="attachments">
             <Card>
@@ -478,4 +498,3 @@ export default function CustomerAddPage() {
     </div>
   );
 }
-
