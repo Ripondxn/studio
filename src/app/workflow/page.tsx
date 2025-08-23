@@ -166,7 +166,7 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
 };
 
 const TransactionDetailsDialog = ({ transaction }: { transaction: Payment }) => {
-    const statusInfo = statusConfig[transaction.currentStatus!] || statusConfig.DRAFT;
+    const statusInfo = transaction.currentStatus ? statusConfig[transaction.currentStatus] : statusConfig.DRAFT;
     return (
         <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -698,7 +698,8 @@ export default function WorkflowPage() {
         <PrintableReport 
           ref={printableRef}
           transactions={filteredTransactions} 
-          filters={{status: statusFilter, user: userFilter, from: dateFilter.from, to: dateFilter.to}} 
+          filters={{status: statusFilter, user: userFilter, from: dateFilter.from, to: dateFilter.to}}
+          partyNameLookups={partyNameLookups}
         />
       </div>
     </div>

@@ -4,7 +4,6 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { type Payment } from '@/app/finance/payment/schema';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -23,19 +22,12 @@ interface PrintableReportProps {
     user: string;
     from?: Date;
     to?: Date;
-  }
+  },
+  partyNameLookups: Record<string, string>;
 }
 
-const statusLabelMap: { [key in Status]: string } = {
-  DRAFT: 'Draft',
-  PENDING_ADMIN_APPROVAL: 'Pending Admin',
-  PENDING_SUPER_ADMIN_APPROVAL: 'Pending Super Admin',
-  POSTED: 'Posted',
-  REJECTED: 'Rejected',
-};
-
 export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportProps>(
-  ({ transactions, filters }, ref) => {
+  ({ transactions, filters, partyNameLookups }, ref) => {
     
     const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
 
@@ -90,7 +82,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                                 <TableCell className="border border-gray-300">{format(new Date(t.date), 'PP')}</TableCell>
                                 <TableCell className="font-mono text-xs border border-gray-300">{t.id}</TableCell>
                                 <TableCell className="border border-gray-300">{t.type}</TableCell>
-                                <TableCell className="border border-gray-300">{t.partyName}</TableCell>
+                                <TableCell className="border border-gray-300">{partyNameLookups[t.partyName] || t.partyName}</TableCell>
                                 <TableCell className="border border-gray-300">{t.property || '-'}</TableCell>
                                 <TableCell className="border border-gray-300">{t.unitCode || '-'}</TableCell>
                                 <TableCell className="border border-gray-300">{t.roomCode || '-'}</TableCell>
