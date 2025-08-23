@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -279,8 +280,52 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                 <Card>
                     <CardHeader><CardTitle>Payment Source</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                        <Controller name="paymentFrom" control={control} render={({ field }) => (<RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6"><div className="flex items-center space-x-2"><RadioGroupItem value="Bank" id="bank" /><Label htmlFor="bank">Bank</Label></div><div className="flex items-center space-x-2"><RadioGroupItem value="Petty Cash" id="petty-cash" /><Label htmlFor="petty-cash">Petty Cash</Label></div></RadioGroup>)} />
-                        {paymentFrom === 'Bank' && <div className="space-y-2"><Label>Bank Account</Label><Controller name="bankAccountId" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select bank account"/></SelectTrigger><SelectContent>{lookups.bankAccounts.map(acc => <SelectItem key={acc.value} value={acc.value}>{acc.label}</SelectItem>)}</SelectContent></Select>)} /></div>}
+                        <Controller
+                            name="paymentFrom"
+                            control={control}
+                            render={({ field }) => (
+                                <RadioGroup
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                className="flex space-x-6"
+                                disabled={paymentType === 'Receipt'}
+                                >
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="Bank" id="bank" />
+                                    <Label htmlFor="bank">Bank</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="Petty Cash" id="petty-cash" />
+                                    <Label htmlFor="petty-cash">Petty Cash</Label>
+                                </div>
+                                </RadioGroup>
+                            )}
+                        />
+                        {paymentFrom === 'Bank' && (
+                            <div className="space-y-2">
+                                <Label>Bank Account</Label>
+                                <Controller
+                                    name="bankAccountId"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value}
+                                            disabled={paymentType === 'Receipt'}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select bank account"/>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {lookups.bankAccounts.map(acc => (
+                                                    <SelectItem key={acc.value} value={acc.value}>{acc.label}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
