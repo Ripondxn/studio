@@ -64,7 +64,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                     </div>
                     <div className="text-right text-xs">
                         <p><span className="font-semibold">Report Date:</span> {format(new Date(), 'PP')}</p>
-                        <p><span className="font-semibold">Status:</span> {filters.status}</p>
+                        {filters.status !== 'ALL' && <p><span className="font-semibold">Status:</span> {filters.status}</p>}
                         {filters.user && <p><span className="font-semibold">User:</span> {filters.user}</p>}
                         {filters.from && <p><span className="font-semibold">From:</span> {format(filters.from, 'PP')}</p>}
                         {filters.to && <p><span className="font-semibold">To:</span> {format(filters.to, 'PP')}</p>}
@@ -82,8 +82,6 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                             <TableHead className="border border-gray-300">Unit</TableHead>
                             <TableHead className="border border-gray-300">Room</TableHead>
                             <TableHead className="border border-gray-300">Reference</TableHead>
-                            <TableHead className="border border-gray-300">Created By</TableHead>
-                            <TableHead className="border border-gray-300">Status</TableHead>
                             <TableHead className="text-right border border-gray-300">Amount</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -98,10 +96,6 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                                 <TableCell className="border border-gray-300">{t.unitCode || '-'}</TableCell>
                                 <TableCell className="border border-gray-300">{t.roomCode || '-'}</TableCell>
                                 <TableCell className="border border-gray-300">{t.referenceNo || '-'}</TableCell>
-                                <TableCell className="border border-gray-300">{t.createdByUser}</TableCell>
-                                <TableCell className="border border-gray-300">
-                                  <Badge variant="outline">{t.currentStatus ? statusLabelMap[t.currentStatus] : 'N/A'}</Badge>
-                                </TableCell>
                                 <TableCell className="text-right font-medium border border-gray-300">
                                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(t.amount)}
                                 </TableCell>
@@ -111,7 +105,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                 </Table>
 
                 <div className="flex justify-end mt-4">
-                    <div className="w-full max-w-xs space-y-2 text-sm">
+                    <div className="w-full max-w-xs space-y-2 mt-4">
                         <div className="flex justify-between border-t-2 border-gray-800 pt-2 mt-2">
                             <span className="font-bold text-gray-800 text-base">Total Amount:</span>
                             <span className="font-bold text-gray-800 text-base">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalAmount)}</span>
