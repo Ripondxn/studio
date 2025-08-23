@@ -44,8 +44,9 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
         <style type="text/css" media="print">
           {`
             @page { size: A4; margin: 1.5cm; }
-            body { -webkit-print-color-adjust: exact; color-adjust: exact; }
+            body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
             .printable-area { display: flex; flex-direction: column; justify-content: space-between; min-height: 24cm; }
+            .printable-table th, .printable-table td { border: 1px solid #e5e7eb; }
           `}
         </style>
         <div className="printable-area">
@@ -69,7 +70,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                     </div>
                 </header>
                 
-                <Table>
+                <Table className="printable-table">
                     <TableHeader>
                         <TableRow className="bg-gray-100">
                             <TableHead className="border border-gray-300">Date</TableHead>
