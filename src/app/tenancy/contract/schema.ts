@@ -29,6 +29,7 @@ export const contractSchema = z.object({
   totalRent: z.number().min(0, "Total rent must be a positive number."),
   paymentMode: z.enum(['cash', 'cheque', 'bank-transfer']),
   status: z.enum(['New', 'Renew', 'Cancel']).optional(),
+  renewalCount: z.number().optional().default(0),
   terminationDate: z.string().optional(),
   terminationReason: z.string().optional(),
   finalSettlementAmount: z.number().optional(),

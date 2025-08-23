@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -272,8 +273,16 @@ export const columns: ColumnDef<Contract>[] = [
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-        const status = row.getValue('status') as string;
-        return <Badge variant={statusVariantMap[status] || 'default'} className="capitalize">{status}</Badge>;
+        const contract = row.original;
+        const status = contract.status || 'New';
+        const renewalCount = contract.renewalCount || 0;
+        let statusText = status;
+
+        if (status === 'Renew' && renewalCount > 0) {
+            statusText = `Renew (x${renewalCount})`;
+        }
+        
+        return <Badge variant={statusVariantMap[status] || 'default'} className="capitalize">{statusText}</Badge>;
     }
   },
   {
