@@ -14,6 +14,10 @@ import { type Customer } from '@/app/tenancy/customer/schema';
 import { type BankAccount } from '@/app/finance/banking/schema';
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 import { applyPaymentToInvoices } from '@/app/tenancy/customer/invoice/actions';
+import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema';
+import { type LeaseContract } from '@/app/lease/contract/schema';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
@@ -22,55 +26,41 @@ const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.j
 const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
+const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
+const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
 
-async function readPayments(): Promise<Payment[]> {
+async function readData(filePath: string) {
     try {
-        await fs.access(paymentsFilePath);
-        const data = await fs.readFile(paymentsFilePath, 'utf-8');
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await writePayments([]);
             return [];
         }
         throw error;
     }
 }
 
+async function readPayments(): Promise<Payment[]> {
+    return await readData(paymentsFilePath);
+}
 async function writePayments(data: Payment[]) {
     await fs.writeFile(paymentsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 async function readBankAccounts(): Promise<BankAccount[]> {
-    try {
-        const data = await fs.readFile(bankAccountsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
-    }
+    return await readData(bankAccountsFilePath);
 }
-
 async function writeBankAccounts(data: BankAccount[]) {
     await fs.writeFile(bankAccountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 async function readPettyCash() {
-    try {
-        await fs.access(pettyCashFilePath);
-        const data = await fs.readFile(pettyCashFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return { balance: 55000 };
-        }
-        throw error;
-    }
+    return await readData(pettyCashFilePath);
 }
-
 async function writePettyCash(data: { balance: number }) {
     await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
@@ -216,16 +206,15 @@ export async function deletePayment(paymentId: string) {
 
 
 export async function getLookups() {
-    const tenants: {tenantData: Tenant}[] = await fs.readFile(tenantsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const landlords: {landlordData: Landlord}[] = await fs.readFile(landlordsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const vendors: {vendorData: Vendor}[] = await fs.readFile(vendorsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const customers: {customerData: Customer}[] = await fs.readFile(customersFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const bankAccounts: BankAccount[] = await fs.readFile(bankAccountsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-
+    const tenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
+    const landlords: {landlordData: Landlord}[] = await readData(landlordsFilePath);
+    const vendors: {vendorData: Vendor}[] = await readData(vendorsFilePath);
+    const customers: {customerData: Customer}[] = await readData(customersFilePath);
+    const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
 
     return {
-        tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
-        landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
+        tenants: tenants.map(t => ({ value: t.tenantData.code, label: t.tenantData.name })),
+        landlords: landlords.map(l => ({ value: l.landlordData.code, label: l.landlordData.name })),
         vendors: vendors.map(v => ({ value: v.vendorData.name, label: v.vendorData.name })),
         customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
         bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`}))
@@ -255,4 +244,30 @@ export async function getSummary() {
     }
     
     return summary;
+}
+
+export async function getReferences(partyType: string, partyCode: string, referenceType: string) {
+    if (!partyType || !partyCode || !referenceType) return [];
+
+    switch(referenceType) {
+        case 'Tenancy Contract': {
+            if (partyType !== 'Tenant') return [];
+            const contracts: TenancyContract[] = await readData(tenancyContractsFilePath);
+            return contracts.filter(c => c.tenantCode === partyCode).map(c => ({ value: c.contractNo, label: `${c.contractNo} (${c.property})`, amount: c.totalRent }));
+        }
+        case 'Lease Contract': {
+            if (partyType !== 'Landlord') return [];
+            const contracts: LeaseContract[] = await readData(leaseContractsFilePath);
+            return contracts.filter(c => c.landlordCode === partyCode).map(c => ({ value: c.contractNo, label: `${c.contractNo} (${c.property})`, amount: c.totalRentWithVat || c.totalRent }));
+        }
+        case 'Invoice': {
+            if (partyType !== 'Customer') return [];
+            const invoices: Invoice[] = await readData(invoicesFilePath);
+            return invoices
+                .filter(i => i.customerCode === partyCode && i.status !== 'Paid' && i.status !== 'Cancelled')
+                .map(i => ({ value: i.invoiceNo, label: `${i.invoiceNo} - Bal: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(i.total - (i.amountPaid || 0))}`, amount: i.total - (i.amountPaid || 0) }));
+        }
+        default:
+            return [];
+    }
 }

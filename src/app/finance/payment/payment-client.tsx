@@ -50,7 +50,7 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
       return payments;
     }
     return payments.filter(p => {
-        if (p.paymentMethod === 'Cash' && p.paymentFrom === 'Petty Cash' && accountIdFilter === 'acc_3') {
+        if (p.paymentFrom === 'Petty Cash' && accountIdFilter === 'acc_3') {
             return true;
         }
         return p.bankAccountId === accountIdFilter
@@ -67,7 +67,7 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
             </p>
         </div>
         <div className="flex items-center gap-2">
-            <AddPaymentDialog isOpen={isPaymentDialogOpen} setIsOpen={setIsPaymentDialogOpen} onPaymentAdded={refreshData}>
+            <AddPaymentDialog onPaymentAdded={refreshData}>
               <Button>
                 <Receipt className="mr-2 h-4 w-4" /> Record New Payment
               </Button>

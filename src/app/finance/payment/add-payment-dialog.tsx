@@ -20,7 +20,7 @@ import { Plus, Loader2, CreditCard, Building2, FileText, Calendar as CalendarIco
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema, type Payment } from './schema';
-import { addPayment, getLookups } from './actions';
+import { addPayment, getLookups, getReferences } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -47,6 +47,7 @@ type Lookups = {
     units: {value: string, label: string}[];
     rooms: {value: string, label: string}[];
     partitions: {value: string, label: string}[];
+    references: {value: string, label: string, amount?: number}[];
 }
 
 interface AddPaymentDialogProps {
@@ -65,7 +66,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [], references: [] });
 
   const {
     register,
@@ -81,11 +82,12 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
   const paymentType = watch('type');
   const partyType = watch('partyType');
+  const partyName = watch('partyName');
+  const referenceType = watch('referenceType');
   const paymentMethod = watch('paymentMethod');
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
   const paymentFrom = watch('paymentFrom');
-  const partyName = watch('partyName');
 
   const [invoicesForCustomer, setInvoicesForCustomer] = useState<Invoice[]>(customerInvoices);
 
@@ -101,6 +103,16 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
         setInvoicesForCustomer([]);
      }
    }, [partyType, partyName]);
+   
+   useEffect(() => {
+    if (partyType && partyName && referenceType) {
+        getReferences(partyType, partyName, referenceType).then(data => {
+            setLookups(prev => ({...prev, references: data}));
+        });
+    } else {
+        setLookups(prev => ({...prev, references: []}));
+    }
+   }, [partyType, partyName, referenceType]);
 
 
    useEffect(() => {
@@ -156,6 +168,8 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
             setValue('status', 'Paid');
         }
         setValue('partyName', '');
+        setValue('referenceType', '');
+        setValue('referenceNo', '');
     }
   }, [paymentType, setValue, defaultValues]);
   
@@ -199,6 +213,17 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
       paymentFrom: 'Bank',
       status: 'Received',
     });
+  }
+
+  const handleReferenceSelect = (value: string) => {
+    setValue('referenceNo', value);
+    const selectedRef = lookups.references.find(r => r.value === value);
+    if(selectedRef) {
+        if(selectedRef.amount) {
+            setValue('amount', selectedRef.amount);
+        }
+        setValue('description', `Payment for ${referenceType}: ${selectedRef.label}`);
+    }
   }
 
   return (
@@ -256,7 +281,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div className="space-y-2"><Label>Reference Type</Label><Controller name="referenceType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select reference type" /></SelectTrigger><SelectContent><SelectItem value="Invoice">Invoice</SelectItem><SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem><SelectItem value="Lease Contract">Lease Contract</SelectItem><SelectItem value="Utility Bill">Utility Bill</SelectItem><SelectItem value="Maintenance Bill">Maintenance Bill</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select>)} /></div>
-                           <div className="space-y-2"><Label>Reference Number</Label><Input placeholder="Enter reference number" {...register('referenceNo')} /></div>
+                           <div className="space-y-2"><Label>Reference Number</Label><Controller name="referenceNo" control={control} render={({ field }) => (<Combobox options={lookups.references} value={field.value || ''} onSelect={handleReferenceSelect} placeholder="Enter reference number" />)} /></div>
                         </div>
                         <div className="space-y-2"><Label>Description</Label><Textarea placeholder="Additional notes or description" rows={3} {...register('description')} /></div>
                     </CardContent>

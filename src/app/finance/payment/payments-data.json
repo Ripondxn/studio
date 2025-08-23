@@ -159,5 +159,20 @@
     "referenceNo": "TRF-1755847223130",
     "remarks": "Fund Transfer",
     "status": "Received"
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-23",
+    "partyType": "Tenant",
+    "partyName": "Monju Begum",
+    "amount": 590,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "referenceType": "Tenancy Contract",
+    "referenceNo": "TC-1755761192274-3",
+    "description": "gdgdgfdg",
+    "status": "Received",
+    "invoiceAllocations": [],
+    "id": "PAY-1755938670536"
   }
 ]
