@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2, CreditCard, Building2, FileText, Calendar as CalendarIcon, X } from 'lucide-react';
+import { Plus, Loader2, CreditCard, Building2, FileText, Calendar as CalendarIcon, X, Receipt } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema, type Payment } from './schema';
@@ -30,6 +30,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
 
@@ -51,9 +53,10 @@ interface AddPaymentDialogProps {
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
   defaultValues?: Partial<PaymentFormData>;
+  customerInvoices?: Invoice[];
 }
 
-export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpen, setIsOpen: setExternalOpen, defaultValues }: AddPaymentDialogProps) {
+export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpen, setIsOpen: setExternalOpen, defaultValues, customerInvoices = [] }: AddPaymentDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = externalOpen ?? internalOpen;
   const setIsOpen = setExternalOpen ?? setInternalOpen;
@@ -80,11 +83,23 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
   const paymentFrom = watch('paymentFrom');
+  const partyName = watch('partyName');
+
+  const [invoicesForCustomer, setInvoicesForCustomer] = useState<Invoice[]>(customerInvoices);
 
   useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties })));
     getLookups().then(data => setLookups(prev => ({...prev, ...data})));
   }, [])
+  
+   useEffect(() => {
+     if(partyType === 'Customer' && partyName) {
+        getInvoicesForCustomer(partyName).then(setInvoicesForCustomer);
+     } else {
+        setInvoicesForCustomer([]);
+     }
+   }, [partyType, partyName]);
+
 
    useEffect(() => {
     const fetchUnits = async () => {
@@ -123,6 +138,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
             paymentMethod: 'Cash',
             paymentFrom: 'Bank',
             status: 'Received',
+            invoiceAllocations: [],
         };
         reset(initialValues);
       }
@@ -243,6 +259,50 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         <div className="space-y-2"><Label>Description</Label><Textarea placeholder="Additional notes or description" rows={3} {...register('description')} /></div>
                     </CardContent>
                 </Card>
+
+                 {paymentType === 'Receipt' && partyType === 'Customer' && invoicesForCustomer.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Invoice Allocations</CardTitle>
+                      <CardDescription>Allocate this payment to open invoices.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Invoice #</TableHead>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead className="text-right">Balance Due</TableHead>
+                            <TableHead className="text-right">Allocation</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {invoicesForCustomer.map((invoice, index) => (
+                            <TableRow key={invoice.id}>
+                              <TableCell>{invoice.invoiceNo}</TableCell>
+                              <TableCell>{format(new Date(invoice.dueDate), 'PP')}</TableCell>
+                              <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</TableCell>
+                              <TableCell className="text-right">
+                                 <Controller
+                                  control={control}
+                                  name={`invoiceAllocations.${index}.amount`}
+                                  defaultValue={defaultValues?.invoiceAllocations?.find(i => i.invoiceId === invoice.id)?.amount || 0}
+                                  render={({ field }) => (
+                                    <>
+                                      <Input type="hidden" {...register(`invoiceAllocations.${index}.invoiceId`)} value={invoice.id} />
+                                      <Input type="number" {...field} className="text-right" onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                                    </>
+                                  )}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
+
             </div>
             <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleReset}><X className="mr-2 h-4 w-4"/>Clear</Button>
