@@ -1,3 +1,4 @@
+
 import { promises as fs } from 'fs';
 import path from 'path';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -8,6 +9,7 @@ import { getAllTenants } from '@/app/tenancy/tenants/actions';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { Unit } from '@/app/property/units/schema';
 import { DashboardClient } from './dashboard-client';
+import { type LeaseContract } from '@/app/lease/contract/schema';
 
 async function getExpiryReport() {
     const contracts = await getAllContracts();
@@ -54,6 +56,11 @@ async function getDashboardData() {
     );
     const allProperties = JSON.parse(propertiesData.toString());
 
+    const leaseContractsData = await fs.readFile(
+      path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json'), 'utf-8'
+    ).catch(() => '[]');
+    const allLeaseContracts: LeaseContract[] = JSON.parse(leaseContractsData);
+
     // KPI: Vacant Units
     const activeContractUnitCodes = new Set(
         contracts
@@ -65,9 +72,15 @@ async function getDashboardData() {
     ).length;
     const totalUnits = allUnits.length;
     
-    // KPI: Contracts Expiring
+    // KPI: Tenancy Contracts Expiring
     const today = new Date();
     const expiringSoonCount = contracts.filter(contract => {
+        const daysRemaining = differenceInDays(parseISO(contract.endDate), today);
+        return daysRemaining >= 0 && daysRemaining <= 30;
+    }).length;
+
+    // KPI: Lease Contracts Expiring
+    const leaseExpiringSoonCount = allLeaseContracts.filter(contract => {
         const daysRemaining = differenceInDays(parseISO(contract.endDate), today);
         return daysRemaining >= 0 && daysRemaining <= 30;
     }).length;
@@ -76,6 +89,7 @@ async function getDashboardData() {
         vacantUnitsCount,
         totalUnits,
         expiringSoonCount,
+        leaseExpiringSoonCount,
         chequeSummary,
         totalTenants: tenants.length,
         totalProperties: allProperties.length,

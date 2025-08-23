@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -67,6 +68,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     vacantUnitsCount,
     totalUnits,
     expiringSoonCount,
+    leaseExpiringSoonCount,
     chequeSummary,
     totalTenants,
     totalProperties,
@@ -95,11 +97,18 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       href: '/property/units/vacant',
     },
     {
-      title: 'Contracts Expiring (30d)',
+      title: 'Tenancy Expiring (30d)',
       value: expiringSoonCount,
-      change: 'View all contracts',
+      change: 'View tenancy contracts',
       icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
       href: '/tenancy/contracts',
+    },
+     {
+      title: 'Lease Expiring (30d)',
+      value: leaseExpiringSoonCount,
+      change: 'View lease contracts',
+      icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
+      href: '/lease/contracts',
     },
   ];
 
@@ -114,7 +123,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       </div>
       
       {/* Key Metrics Overview */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         {kpiData.map((kpi) => (
           <Card key={kpi.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -135,7 +144,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       <div className="grid gap-6 md:grid-cols-2">
            <Card>
               <CardHeader>
-                <CardTitle>Contract Expiry Report (Next 30 Days)</CardTitle>
+                <CardTitle>Tenancy Expiry Report (Next 30 Days)</CardTitle>
                 <CardDescription>
                   Contracts that are due for renewal soon.
                 </CardDescription>
