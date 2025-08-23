@@ -172,7 +172,6 @@ export async function getAllTransactions(): Promise<Payment[]> {
             referenceNo: c.chequeNo,
             property: c.property,
             status: c.type === 'Incoming' ? 'Received' : 'Paid',
-            contractNo: c.contractNo,
             remarks: `Cleared cheque from ${c.bankName}`
         }));
     
@@ -273,6 +272,7 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
             referenceNo,
             remarks,
             status: 'Paid',
+            currentStatus: 'POSTED',
         };
 
         // Receipt to destination
@@ -288,12 +288,14 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
             referenceNo,
             remarks,
             status: 'Received',
+            currentStatus: 'POSTED',
         };
         
         allPayments.push(paymentRecord, receiptRecord);
         await writePayments(allPayments);
 
         revalidatePath('/finance/banking');
+        revalidatePath('/workflow');
         return { success: true };
 
     } catch (error) {

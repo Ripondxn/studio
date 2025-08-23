@@ -16,7 +16,7 @@
     "createdByUser": "Tanvir Ahmed",
     "invoiceAllocations": [],
     "id": "PAY-1755953187490",
-    "currentStatus": "DRAFT",
+    "currentStatus": "POSTED",
     "approvalHistory": [
       {
         "action": "Created Transaction",
@@ -24,7 +24,54 @@
         "actorRole": "User",
         "timestamp": "2025-08-23T12:46:27.490Z",
         "comments": "Initial Draft"
+      },
+      {
+        "action": "Submitted for Approval",
+        "actorId": "admin@admin.com",
+        "actorRole": "User",
+        "timestamp": "2025-08-23T13:00:00.352Z",
+        "comments": ""
+      },
+      {
+        "action": "Approved by Admin",
+        "actorId": "ripondxn@gmail.com",
+        "actorRole": "Admin",
+        "timestamp": "2025-08-23T13:01:14.050Z",
+        "comments": ""
+      },
+      {
+        "action": "Final Approval & Posted",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-23T13:03:12.227Z",
+        "comments": ""
       }
     ]
+  },
+  {
+    "id": "PAY-1755954522858-OUT",
+    "type": "Payment",
+    "date": "2025-08-23",
+    "partyType": "Vendor",
+    "partyName": "Transfer to Main Operations Account",
+    "amount": 18500,
+    "paymentMethod": "Cash",
+    "bankAccountId": "acc_3",
+    "referenceNo": "TRF-1755954522858",
+    "remarks": "",
+    "status": "Paid"
+  },
+  {
+    "id": "PAY-1755954522858-IN",
+    "type": "Receipt",
+    "date": "2025-08-23",
+    "partyType": "Customer",
+    "partyName": "Transfer from Petty Cash",
+    "amount": 18500,
+    "paymentMethod": "Bank Transfer",
+    "bankAccountId": "acc_1",
+    "referenceNo": "TRF-1755954522858",
+    "remarks": "",
+    "status": "Received"
   }
 ]
