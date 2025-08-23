@@ -64,7 +64,6 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                     </div>
                     <div className="text-right text-xs">
                         <p><span className="font-semibold">Report Date:</span> {format(new Date(), 'PP')}</p>
-                        {filters.status !== 'ALL' && <p><span className="font-semibold">Status:</span> {filters.status}</p>}
                         {filters.user && <p><span className="font-semibold">User:</span> {filters.user}</p>}
                         {filters.from && <p><span className="font-semibold">From:</span> {format(filters.from, 'PP')}</p>}
                         {filters.to && <p><span className="font-semibold">To:</span> {format(filters.to, 'PP')}</p>}
@@ -104,7 +103,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                     </TableBody>
                 </Table>
 
-                <div className="flex justify-end mt-4">
+                <div className="flex justify-end mt-8">
                     <div className="w-full max-w-xs space-y-2 mt-4">
                         <div className="flex justify-between border-t-2 border-gray-800 pt-2 mt-2">
                             <span className="font-bold text-gray-800 text-base">Total Amount:</span>
