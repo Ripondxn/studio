@@ -5,25 +5,11 @@ import { type Unit } from '../schema';
 import { type Contract } from '@/app/tenancy/contract/schema';
 import { DataTable } from './data-table';
 import { columns } from './columns';
+import { getUnits } from '../actions';
 
 async function getVacantUnits(): Promise<Unit[]> {
-    const unitsData = await fs.readFile(path.join(process.cwd(), 'src/app/property/units/units-data.json'), 'utf-8');
-    const allUnits: Unit[] = JSON.parse(unitsData);
-
-    const contractsData = await fs.readFile(path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json'), 'utf-8');
-    const allContracts: Contract[] = JSON.parse(contractsData);
-
-    const activeContractUnitCodes = new Set(
-        allContracts
-            .filter(c => c.status === 'New' || c.status === 'Renew')
-            .map(c => c.unitCode)
-    );
-
-    const vacantUnits = allUnits.filter(unit => 
-        unit.unitStatus === 'Active' && !activeContractUnitCodes.has(unit.unitCode)
-    );
-
-    return vacantUnits;
+    const allUnits = await getUnits();
+    return allUnits.filter(unit => unit.occupancyStatus === 'Vacant');
 }
 
 export default async function VacantUnitsPage() {
@@ -43,3 +29,4 @@ export default async function VacantUnitsPage() {
     </div>
   );
 }
+
