@@ -29,7 +29,7 @@
     "amountPaid": 0
   },
   {
-    "invoiceNo": "INV-1755957315377",
+    "invoiceNo": "INV-1755958518020",
     "customerCode": "C002",
     "customerName": "Md Ripon Ahmed",
     "property": "",
@@ -40,20 +40,20 @@
     "dueDate": "2025-08-23",
     "items": [
       {
-        "id": "item-1755957315377",
+        "id": "item-1755958518020",
         "description": "Consulting Services",
         "quantity": 1,
-        "unitPrice": 3500,
+        "unitPrice": 4500,
         "total": 0
       }
     ],
-    "subTotal": 3500,
+    "subTotal": 4500,
     "taxType": "inclusive",
     "taxRate": 0,
     "tax": 0,
-    "total": 3500,
-    "status": "Paid",
-    "id": "INV-1755957299799",
-    "amountPaid": 3500
+    "total": 4500,
+    "status": "Sent",
+    "id": "INV-1755958498210",
+    "amountPaid": 0
   }
 ]
