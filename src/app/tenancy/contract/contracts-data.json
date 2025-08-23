@@ -16,7 +16,7 @@
     "endDate": "2025-09-19",
     "totalRent": 55000,
     "paymentMode": "cash",
-    "status": "Cancel",
+    "status": "Renew",
     "terminationDate": "2025-08-23",
     "terminationReason": "ssdsdfsd",
     "finalSettlementAmount": 2000,
@@ -94,60 +94,6 @@
         "status": "paid",
         "chequeNo": "65879978",
         "bankName": "NBD"
-      }
-    ],
-    "terms": "",
-    "tawtheeqRegistrationNo": "",
-    "tawtheeqStatus": "Not Registered",
-    "tawtheeqRegistrationDate": ""
-  },
-  {
-    "id": "CON-1755943604863",
-    "contractNo": "TC-1755943179174",
-    "contractDate": "2025-08-24",
-    "property": "LT-C38",
-    "unitCode": "101",
-    "roomCode": "",
-    "partitionCode": "",
-    "tenantCode": "T003",
-    "tenantName": "Tanvir Ahmed",
-    "mobile": "0509231340",
-    "email": "tanvir@admin.com",
-    "address": "1 Hazza ' Bin Zayed The First Street",
-    "startDate": "2025-08-25",
-    "endDate": "2025-09-22",
-    "totalRent": 55000,
-    "paymentMode": "cash",
-    "status": "New",
-    "terminationDate": "",
-    "rentBasedOn": "Monthly",
-    "paymentFrequency": "Yearly",
-    "numberOfPayments": 3,
-    "gracePeriod": 0,
-    "paymentSchedule": [
-      {
-        "installment": 1,
-        "dueDate": "2025-08-25",
-        "amount": 18500,
-        "status": "unpaid",
-        "chequeNo": "",
-        "bankName": ""
-      },
-      {
-        "installment": 2,
-        "dueDate": "2026-08-25",
-        "amount": 18250,
-        "status": "unpaid",
-        "chequeNo": "",
-        "bankName": ""
-      },
-      {
-        "installment": 3,
-        "dueDate": "2027-08-25",
-        "amount": 18250,
-        "status": "unpaid",
-        "chequeNo": "",
-        "bankName": ""
       }
     ],
     "terms": "",
