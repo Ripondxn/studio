@@ -82,6 +82,9 @@ import { type Payment, type ApprovalHistory } from '@/app/finance/payment/schema
 import { cn } from '@/lib/utils';
 import { PrintableReport } from './printable-report';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { approveTransaction, rejectTransaction, submitTransaction, addCommentToTransaction } from './actions';
+
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -220,9 +223,10 @@ type ActionDialogProps = {
   setIsOpen: (open: boolean) => void;
   onConfirm: (comment: string) => void;
   actionType: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
+  isProcessing: boolean;
 }
 
-const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType }: ActionDialogProps) => {
+const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType, isProcessing }: ActionDialogProps) => {
     const [comment, setComment] = useState('');
 
     const titleMap = {
@@ -241,7 +245,6 @@ const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType }: ActionDialog
 
     const handleConfirm = () => {
         onConfirm(comment);
-        setIsOpen(false);
         setComment('');
     }
 
@@ -263,9 +266,10 @@ const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType }: ActionDialog
                 </div>
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <Button variant="outline" disabled={isProcessing}>Cancel</Button>
                     </DialogClose>
-                    <Button onClick={handleConfirm}>
+                    <Button onClick={handleConfirm} disabled={isProcessing}>
+                        {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                         {actionType === 'REJECT' ? 'Confirm Rejection' : 'Confirm'}
                     </Button>
                 </DialogFooter>
@@ -293,6 +297,7 @@ type ColumnId = keyof typeof defaultColumnVisibility;
 export default function WorkflowPage() {
   const [transactions, setTransactions] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isActionProcessing, setIsActionProcessing] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole['role']>('User');
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   
@@ -304,6 +309,7 @@ export default function WorkflowPage() {
 
   const router = useRouter();
   const printableRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [currentActionInfo, setCurrentActionInfo] = useState<{
@@ -311,17 +317,18 @@ export default function WorkflowPage() {
     action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
   } | null>(null);
 
+  const fetchData = async () => {
+    setIsLoading(true);
+    const [payments, lookups] = await Promise.all([
+        getPayments(),
+        getPartyNameLookups()
+    ]);
+    setTransactions(payments);
+    setPartyNameLookups(lookups);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    async function fetchData() {
-        setIsLoading(true);
-        const [payments, lookups] = await Promise.all([
-            getPayments(),
-            getPartyNameLookups()
-        ]);
-        setTransactions(payments);
-        setPartyNameLookups(lookups);
-        setIsLoading(false);
-    }
     fetchData();
     
     const storedProfile = sessionStorage.getItem('userProfile');
@@ -335,67 +342,44 @@ export default function WorkflowPage() {
   }, [router]);
 
 
-  const handleAction = (
+  const handleAction = async (
     transactionId: string,
     action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT',
     comment: string
   ) => {
-    setTransactions((prev) =>
-      prev.map((t) => {
-        if (t.id !== transactionId) return t;
+    setIsActionProcessing(true);
+    let result;
 
-        let newStatus: Status = t.currentStatus || 'DRAFT';
-        let historyAction = '';
-        
-        switch (action) {
-          case 'SUBMIT':
-            if(t.currentStatus === 'DRAFT' || t.currentStatus === 'REJECTED'){
-              newStatus = 'PENDING_ADMIN_APPROVAL';
-              historyAction = 'Submitted for Approval';
-            }
-            break;
-          case 'APPROVE':
-            if (t.currentStatus === 'PENDING_ADMIN_APPROVAL' && currentUserRole === 'Admin') {
-              newStatus = 'PENDING_SUPER_ADMIN_APPROVAL';
-              historyAction = 'Approved by Admin';
-            } else if (t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL' && currentUserRole === 'Super Admin') {
-              newStatus = 'POSTED';
-              historyAction = 'Final Approval & Posted';
-            }
-            break;
-          case 'REJECT':
-             if (t.currentStatus === 'PENDING_ADMIN_APPROVAL' && currentUserRole === 'Admin') {
-                newStatus = 'REJECTED';
-                historyAction = 'Rejected by Admin';
-            } else if (t.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL' && currentUserRole === 'Super Admin') {
-                newStatus = 'REJECTED';
-                historyAction = 'Rejected by Super Admin';
-            }
-            break;
-          case 'ADD_COMMENT':
-            historyAction = 'Comment Added';
-            break;
-        }
+    const params = {
+      transactionId,
+      actorId: currentUserEmail,
+      actorRole: currentUserRole,
+      comment
+    };
 
-        if(historyAction){
-           return {
-            ...t,
-            currentStatus: newStatus,
-            approvalHistory: [
-              ...(t.approvalHistory || []),
-              {
-                action: historyAction,
-                actorId: currentUserEmail,
-                actorRole: currentUserRole,
-                timestamp: new Date().toISOString(),
-                comments: comment,
-              },
-            ],
-          };
-        }
-        return t;
-      })
-    );
+    switch (action) {
+      case 'SUBMIT':
+        result = await submitTransaction(params);
+        break;
+      case 'APPROVE':
+        result = await approveTransaction(params);
+        break;
+      case 'REJECT':
+        result = await rejectTransaction(params);
+        break;
+      case 'ADD_COMMENT':
+        result = await addCommentToTransaction(params);
+        break;
+    }
+
+    if (result.success) {
+      toast({ title: 'Success', description: `Action "${action}" performed successfully.` });
+      await fetchData(); // Re-fetch data to get the latest state from server
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: result.error });
+    }
+    setIsActionProcessing(false);
+    setIsActionDialogOpen(false);
   };
   
   const openActionDialog = (transactionId: string, action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT') => {
@@ -535,6 +519,7 @@ export default function WorkflowPage() {
             setIsOpen={setIsActionDialogOpen}
             actionType={currentActionInfo.action}
             onConfirm={confirmAction}
+            isProcessing={isActionProcessing}
         />
      )}
       <Card>
@@ -726,7 +711,7 @@ export default function WorkflowPage() {
                     ))
                     ) : (
                     <TableRow>
-                        <TableCell colSpan={12} className="h-24 text-center">
+                        <TableCell colSpan={Object.values(columnVisibility).filter(v => v).length + 1} className="h-24 text-center">
                         No transactions match the current filter.
                         </TableCell>
                     </TableRow>
