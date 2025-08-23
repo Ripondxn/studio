@@ -73,5 +73,67 @@
     "referenceNo": "TRF-1755954522858",
     "remarks": "",
     "status": "Received"
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-23",
+    "partyType": "Customer",
+    "partyName": "C002",
+    "amount": 1300,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "referenceType": "Invoice",
+    "referenceNo": "INV-1755958518020",
+    "description": "Payment for Invoice: INV-1755958518020 - Bal: $4,500.00",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "invoiceAllocations": [
+      {
+        "invoiceId": "INV-1755958498210",
+        "amount": 1300
+      }
+    ],
+    "id": "PAY-1755959196454",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-23T14:26:36.455Z",
+        "comments": "Initial Draft"
+      }
+    ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-23",
+    "partyType": "Customer",
+    "partyName": "C002",
+    "amount": 2200,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "referenceType": "Invoice",
+    "referenceNo": "INV-1755958518020",
+    "description": "Payment for Invoice: INV-1755958518020 - Bal: $3,200.00",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "invoiceAllocations": [
+      {
+        "invoiceId": "INV-1755958498210",
+        "amount": 2200
+      }
+    ],
+    "id": "PAY-1755959283023",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-23T14:28:03.023Z",
+        "comments": "Initial Draft"
+      }
+    ]
   }
 ]

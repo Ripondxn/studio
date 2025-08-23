@@ -15,7 +15,7 @@ export function InvoiceView({ invoice }: { invoice: Invoice }) {
                         <Building2 className="h-8 w-8" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Your Company Name</h1>
+                        <h1 className="text-3xl font-bold text-gray-800">Trust Famous Real Estate</h1>
                         <p className="text-sm text-gray-500">123 Business Rd, Suite 100, City, State 12345</p>
                         <p className="text-sm text-gray-500">contact@yourcompany.com</p>
                     </div>
@@ -75,9 +75,17 @@ export function InvoiceView({ invoice }: { invoice: Invoice }) {
                         <span className="text-gray-600">Tax ({invoice.tax > 0 && invoice.subTotal > 0 ? (invoice.tax/invoice.subTotal * 100).toFixed(0) : 0}%):</span>
                         <span className="font-medium text-gray-800">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.tax)}</span>
                     </div>
+                     <div className="flex justify-between">
+                        <span className="text-gray-600">Total:</span>
+                        <span className="font-medium text-gray-800">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-gray-600">Amount Paid:</span>
+                        <span className="font-medium text-gray-800">-{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.amountPaid || 0)}</span>
+                    </div>
                      <div className="flex justify-between border-t pt-2 mt-2">
-                        <span className="font-bold text-gray-800 text-base">Amount Due:</span>
-                        <span className="font-bold text-gray-800 text-base">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}</span>
+                        <span className="font-bold text-gray-800 text-base">Balance Due:</span>
+                        <span className="font-bold text-gray-800 text-base">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</span>
                     </div>
                 </div>
             </div>
