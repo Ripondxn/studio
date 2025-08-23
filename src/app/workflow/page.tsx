@@ -12,7 +12,7 @@ import {
   X,
   History,
   Send,
-  Calendar,
+  Calendar as CalendarIcon,
   DollarSign,
   Info,
   FileText,
@@ -20,6 +20,7 @@ import {
   MessageSquare,
   PlusCircle,
   Loader2,
+  Printer
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -66,13 +67,16 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { type Role, type Status } from './types';
-import { format } from 'date-fns';
+import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useRouter } from 'next/navigation';
 import { getPayments } from '@/app/finance/payment/actions';
 import { type Payment, type ApprovalHistory } from '@/app/finance/payment/schema';
-
+import { cn } from '@/lib/utils';
+import { PrintableReport } from './printable-report';
+import { Input } from '@/components/ui/input';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -196,7 +200,7 @@ const TransactionDetailsDialog = ({ transaction }: { transaction: Payment }) => 
                         <span>{transaction.createdByUser}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Date Created:</span>
                         <span>{format(new Date(transaction.date), 'PP')}</span>
                     </div>
@@ -271,7 +275,11 @@ export default function WorkflowPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole['role']>('User');
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+  
   const [statusFilter, setStatusFilter] = useState<Status | 'ALL'>('ALL');
+  const [userFilter, setUserFilter] = useState<string>('');
+  const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date }>({});
+
   const router = useRouter();
 
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
@@ -373,11 +381,19 @@ export default function WorkflowPage() {
 
 
   const filteredTransactions = useMemo(() => {
-    if (statusFilter === 'ALL') {
-      return transactions;
-    }
-    return transactions.filter(t => t.currentStatus === statusFilter);
-  }, [transactions, statusFilter]);
+    return transactions.filter(t => {
+        if (statusFilter !== 'ALL' && t.currentStatus !== statusFilter) return false;
+        if (userFilter && t.createdByUser?.toLowerCase() !== userFilter.toLowerCase()) return false;
+        if (dateFilter.from && isBefore(parseISO(t.date), dateFilter.from)) return false;
+        if (dateFilter.to && isAfter(parseISO(t.date), dateFilter.to)) return false;
+        return true;
+    });
+  }, [transactions, statusFilter, userFilter, dateFilter]);
+  
+  const uniqueUsers = useMemo(() => {
+    const users = new Set(transactions.map(t => t.createdByUser).filter(Boolean));
+    return Array.from(users);
+  }, [transactions]);
 
 
   const getActionButtons = (transaction: Payment) => {
@@ -426,10 +442,10 @@ export default function WorkflowPage() {
     
     const head = [['Transaction ID', 'Type', 'Amount', 'Created By', 'Submission Date', 'Status']];
     const body = filteredTransactions.map(t => [
-        t.id,
+        t.id!,
         t.type,
         `$${t.amount.toLocaleString()}`,
-        t.createdByUser,
+        t.createdByUser || 'N/A',
         format(new Date(t.date), 'PP'),
         t.currentStatus ? statusConfig[t.currentStatus].label : 'Unknown'
     ]);
@@ -458,6 +474,18 @@ export default function WorkflowPage() {
     XLSX.utils.book_append_sheet(wb, ws, "Document Flow");
     XLSX.writeFile(wb, "document-flow-report.xlsx");
   };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      const reportHtml = document.getElementById('printable-report')?.innerHTML;
+      if (reportHtml) {
+        printWindow.document.write(reportHtml);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
+  }
   
 
   return (
@@ -482,36 +510,66 @@ export default function WorkflowPage() {
                         workflow.
                     </CardDescription>
                 </div>
-                 <div className="flex items-center gap-4">
-                    <div className="w-[180px]">
-                        <Label>Filter by Status</Label>
-                        <Select
-                            value={statusFilter}
-                            onValueChange={(value: Status | 'ALL') => setStatusFilter(value)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Filter by status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="ALL">All Statuses</SelectItem>
-                                {Object.keys(statusConfig).map(status => (
-                                    <SelectItem key={status} value={status}>
-                                        {statusConfig[status as Status].label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="flex gap-2 border-l pl-4">
-                        <Button variant="outline" size="sm" onClick={handleExportPDF}>
-                            <FileText className="mr-2 h-4 w-4" /> Export PDF
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={handleExportExcel}>
-                            <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
-                        </Button>
-                    </div>
+                 <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print Report</Button>
+                    <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
+                    <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
                 </div>
             </div>
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 mt-4 border-t">
+                <div>
+                    <Label>Filter by Status</Label>
+                    <Select value={statusFilter} onValueChange={(value: Status | 'ALL') => setStatusFilter(value)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL">All Statuses</SelectItem>
+                            {Object.keys(statusConfig).map(status => (
+                                <SelectItem key={status} value={status}>
+                                    {statusConfig[status as Status].label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div>
+                    <Label>Filter by User</Label>
+                     <Select value={userFilter} onValueChange={setUserFilter}>
+                        <SelectTrigger><SelectValue placeholder="All Users" /></SelectTrigger>
+                        <SelectContent>
+                             <SelectItem value="">All Users</SelectItem>
+                            {uniqueUsers.map(user => (
+                                <SelectItem key={user} value={user}>
+                                    {user}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div>
+                    <Label>From Date</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateFilter.from ? format(dateFilter.from, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0"><Input type="date" onChange={e => setDateFilter(p => ({...p, from: new Date(e.target.value)}))} /></PopoverContent>
+                    </Popover>
+                </div>
+                <div>
+                    <Label>To Date</Label>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateFilter.to ? format(dateFilter.to, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0"><Input type="date" onChange={e => setDateFilter(p => ({...p, to: new Date(e.target.value)}))} /></PopoverContent>
+                    </Popover>
+                </div>
+             </div>
         </CardHeader>
         <CardContent>
             <div className="mb-4">
@@ -611,6 +669,13 @@ export default function WorkflowPage() {
             )}
         </CardContent>
       </Card>
+      <div style={{ display: 'none' }}>
+        <PrintableReport 
+          refToPrint={React.createRef<HTMLDivElement>()} 
+          transactions={filteredTransactions} 
+          filters={{status: statusFilter, user: userFilter, from: dateFilter.from, to: dateFilter.to}} 
+        />
+      </div>
     </div>
   );
 }
