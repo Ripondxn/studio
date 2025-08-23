@@ -97,6 +97,30 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
              if (contractExists) {
                 return { success: false, error: `Contract with number "${data.contractNo}" already exists.`};
              }
+
+            // Check for active contracts on the same unit/room/partition
+            const activeContractExists = allContracts.some(c => {
+                if (c.status !== 'New' && c.status !== 'Renew') return false;
+                
+                // If it's a partition-based rental
+                if(data.partitionCode && c.partitionCode === data.partitionCode && c.property === data.property && c.unitCode === data.unitCode) {
+                    return true;
+                }
+                // If it's a room-based rental (and not a partition)
+                if(data.roomCode && !data.partitionCode && c.roomCode === data.roomCode && c.property === data.property && c.unitCode === data.unitCode) {
+                    return true;
+                }
+                // If it's a whole unit rental (no room or partition)
+                if(!data.roomCode && !data.partitionCode && c.unitCode === data.unitCode && c.property === data.property) {
+                    return true;
+                }
+                return false;
+            });
+
+            if (activeContractExists) {
+                return { success: false, error: 'This rental space is already occupied by an active contract.' };
+            }
+
              const newContract: Contract = {
                 ...validation.data,
                 id: `CON-${Date.now()}`,
@@ -290,4 +314,5 @@ export async function getUnitDetails(unitCode: string) {
         }
     };
 }
+
 
