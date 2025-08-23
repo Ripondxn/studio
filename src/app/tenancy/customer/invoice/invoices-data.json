@@ -1,34 +1,5 @@
 [
   {
-    "invoiceNo": "INV-1755850854980",
-    "customerCode": "C002",
-    "customerName": "Md Ripon Ahmed",
-    "property": "",
-    "unitCode": "",
-    "roomCode": "",
-    "partitionCode": "",
-    "invoiceDate": "2025-08-22",
-    "dueDate": "2025-08-22",
-    "items": [
-      {
-        "id": "item-1755850854980",
-        "description": "monthly rent",
-        "quantity": 1,
-        "unitPrice": 3000,
-        "total": 0
-      }
-    ],
-    "subTotal": 3000,
-    "taxType": "inclusive",
-    "taxRate": 0,
-    "tax": 0,
-    "total": 3000,
-    "notes": "",
-    "status": "Sent",
-    "id": "INV-1755850847475",
-    "amountPaid": 2200
-  },
-  {
     "invoiceNo": "INV-1755853051213",
     "customerCode": "C001",
     "customerName": "General Customer",
@@ -56,5 +27,33 @@
     "status": "Sent",
     "id": "INV-1755853030320",
     "amountPaid": 0
+  },
+  {
+    "invoiceNo": "INV-1755957315377",
+    "customerCode": "C002",
+    "customerName": "Md Ripon Ahmed",
+    "property": "",
+    "unitCode": "",
+    "roomCode": "",
+    "partitionCode": "",
+    "invoiceDate": "2025-08-23",
+    "dueDate": "2025-08-23",
+    "items": [
+      {
+        "id": "item-1755957315377",
+        "description": "Consulting Services",
+        "quantity": 1,
+        "unitPrice": 3500,
+        "total": 0
+      }
+    ],
+    "subTotal": 3500,
+    "taxType": "inclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 3500,
+    "status": "Paid",
+    "id": "INV-1755957299799",
+    "amountPaid": 3500
   }
 ]

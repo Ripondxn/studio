@@ -12,7 +12,7 @@ import { type Landlord } from '@/app/landlord/schema';
 import { type Vendor } from '@/app/vendors/schema';
 import { type Customer } from '@/app/tenancy/customer/schema';
 import { type BankAccount } from '@/app/finance/banking/schema';
-import { startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { startOfMonth, endOfMonth, isWithinInterval, parseISO, isBefore } from 'date-fns';
 import { applyPaymentToInvoices } from '@/app/tenancy/customer/invoice/actions';
 import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema';
 import { type LeaseContract } from '@/app/lease/contract/schema';
@@ -63,6 +63,12 @@ async function readPettyCash() {
 }
 async function writePettyCash(data: { balance: number }) {
     await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+async function readInvoices(): Promise<Invoice[]> {
+    return await readData(invoicesFilePath);
+}
+async function writeInvoices(data: Invoice[]) {
+    await fs.writeFile(invoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 
@@ -138,6 +144,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
         revalidatePath('/finance/chart-of-accounts');
         revalidatePath('/vendors/agents');
         revalidatePath('/workflow');
+        revalidatePath(`/tenancy/customer/add?code=${newPayment.partyName}`);
         return { success: true, data: newPayment };
 
     } catch (error) {
@@ -154,7 +161,7 @@ export async function deletePayment(paymentId: string) {
             return { success: false, error: 'Payment not found.' };
         }
         
-        // Only reverse financial impact if the payment was posted.
+        // Reverse financial impact if the payment was posted.
         if(paymentToDelete.currentStatus === 'POSTED') {
             if (paymentToDelete.type === 'Payment') { // If it was a payment, add money back
                 if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
@@ -184,6 +191,25 @@ export async function deletePayment(paymentId: string) {
                 }
             }
         }
+        
+        // Reverse invoice allocations
+        if (paymentToDelete.type === 'Receipt' && paymentToDelete.invoiceAllocations && paymentToDelete.invoiceAllocations.length > 0) {
+            const allInvoices = await readInvoices();
+            
+            paymentToDelete.invoiceAllocations.forEach(allocation => {
+                const invoiceIndex = allInvoices.findIndex(inv => inv.id === allocation.invoiceId);
+                if (invoiceIndex !== -1) {
+                    allInvoices[invoiceIndex].amountPaid = (allInvoices[invoiceIndex].amountPaid || 0) - allocation.amount;
+                    
+                    // Revert status if it was paid
+                    if (allInvoices[invoiceIndex].status === 'Paid') {
+                        const dueDate = parseISO(allInvoices[invoiceIndex].dueDate);
+                        allInvoices[invoiceIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
+                    }
+                }
+            });
+            await writeInvoices(allInvoices);
+        }
 
 
         const updatedPayments = allPayments.filter(p => p.id !== paymentId);
@@ -194,6 +220,7 @@ export async function deletePayment(paymentId: string) {
         revalidatePath('/finance/chart-of-accounts');
         revalidatePath('/vendors/agents');
         revalidatePath('/workflow');
+        revalidatePath(`/tenancy/customer/add?code=${paymentToDelete.partyName}`);
 
 
         return { success: true };
@@ -234,7 +261,7 @@ export async function getPartyNameLookups(): Promise<Record<string, string>> {
         if(l.landlordData.code) lookups[l.landlordData.code] = l.landlordData.name;
     });
     vendors.forEach(v => {
-        if(v.vendorData.code) lookups[v.vendorData.code] = v.vendorData.name;
+        if(v.vendorData.code) lookups[v.vendorData.name] = v.vendorData.name;
     });
     customers.forEach(c => {
         if(c.customerData.code) lookups[c.customerData.code] = c.customerData.name;
