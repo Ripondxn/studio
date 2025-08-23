@@ -129,6 +129,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/maintenance/ticket-issue', label: 'Ticket Issue' },
         ]
     },
+    {
+        label: 'Workflow',
+        href: '/workflow',
+        icon: <LineChart />,
+    },
     { 
         label: 'Settings', 
         icon: <Settings />,
