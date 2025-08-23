@@ -9,8 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { getPaymentsForCustomer } from './actions';
+import { getInvoicesForCustomer } from './invoice/actions';
 import { deletePayment } from '@/app/finance/payment/actions';
 import { type Payment } from '@/app/finance/payment/schema';
+import { type Invoice } from './invoice/schema';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -34,23 +36,28 @@ interface PaymentReceiptListProps {
 
 export function PaymentReceiptList({ customerCode, customerName, onRefresh }: PaymentReceiptListProps) {
     const [payments, setPayments] = useState<Payment[]>([]);
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
     const { toast } = useToast();
     const printRef = useRef<HTMLDivElement>(null);
 
-    const fetchPayments = useCallback(async () => {
+    const fetchPaymentData = useCallback(async () => {
         if (!customerCode) return;
         setIsLoading(true);
-        const data = await getPaymentsForCustomer(customerCode);
-        setPayments(data);
+        const [paymentsData, invoicesData] = await Promise.all([
+            getPaymentsForCustomer(customerCode),
+            getInvoicesForCustomer(customerCode),
+        ]);
+        setPayments(paymentsData);
+        setInvoices(invoicesData);
         setIsLoading(false);
     }, [customerCode]);
 
     useEffect(() => {
-        fetchPayments();
-    }, [fetchPayments]);
+        fetchPaymentData();
+    }, [fetchPaymentData]);
 
     const handleDelete = async () => {
         if (!selectedPaymentId) return;
@@ -58,7 +65,7 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
         const result = await deletePayment(selectedPaymentId);
         if (result.success) {
             toast({ title: 'Payment Deleted' });
-            fetchPayments();
+            fetchPaymentData();
             onRefresh(); // To refresh parent components like invoice list
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error });
@@ -163,7 +170,12 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
                 )}
             </CardContent>
              <div className="hidden">
-                <PrintablePaymentHistory ref={printRef} payments={payments} customerName={customerName} />
+                <PrintablePaymentHistory 
+                    ref={printRef} 
+                    payments={payments} 
+                    invoices={invoices}
+                    customerName={customerName} 
+                />
             </div>
         </Card>
     )
