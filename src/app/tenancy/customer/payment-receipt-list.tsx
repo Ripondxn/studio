@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Printer } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -22,6 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { MoreHorizontal, Edit } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PrintablePaymentHistory } from './printable-payment-history';
 
 interface PaymentReceiptListProps {
     customerCode: string;
@@ -35,6 +38,7 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
     const [isDeleting, setIsDeleting] = useState(false);
     const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
     const { toast } = useToast();
+    const printRef = useRef<HTMLDivElement>(null);
 
     const fetchPayments = useCallback(async () => {
         if (!customerCode) return;
@@ -63,6 +67,26 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
         setSelectedPaymentId(null);
     }
     
+     const handlePrint = () => {
+        const printContent = printRef.current;
+        if (printContent) {
+            const printWindow = window.open('', '', 'height=800,width=800');
+            if (printWindow) {
+                printWindow.document.write('<html><head><title>Print Payment History</title>');
+                const tailwindStyles = Array.from(document.styleSheets).find(s => s.href?.includes('tailwind'))?.href;
+                if(tailwindStyles) {
+                    printWindow.document.write(`<link rel="stylesheet" href="${tailwindStyles}">`);
+                }
+                printWindow.document.write('<style>body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; } @page { size: A4; margin: 1cm; }</style>');
+                printWindow.document.write('</head><body class="bg-white">');
+                printWindow.document.write(printContent.innerHTML);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                setTimeout(() => printWindow.print(), 500);
+            }
+        }
+    }
+
     return (
         <Card>
             <AlertDialog open={!!selectedPaymentId} onOpenChange={(open) => !open && setSelectedPaymentId(null)}>
@@ -80,8 +104,13 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
                 </AlertDialogContent>
             </AlertDialog>
             <CardHeader>
-                <CardTitle>Payment Receipts</CardTitle>
-                <CardDescription>A history of all payments received from {customerName}.</CardDescription>
+                 <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Payment Receipts</CardTitle>
+                        <CardDescription>A history of all payments received from {customerName}.</CardDescription>
+                    </div>
+                     <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4 w-4"/> Print</Button>
+                </div>
             </CardHeader>
             <CardContent>
                  {isLoading ? (
@@ -112,9 +141,19 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
                                         <TableCell><Badge variant="outline">{payment.paymentMethod}</Badge></TableCell>
                                         <TableCell className="text-right font-medium text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payment.amount)}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedPaymentId(payment.id!)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem onSelect={() => toast({title: "Coming Soon", description: "Edit functionality will be available in a future update."})}>
+                                                        <Edit className="mr-2 h-4 w-4" /> Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive" onSelect={() => setSelectedPaymentId(payment.id!)}>
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -123,6 +162,9 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
                     </Table>
                 )}
             </CardContent>
+             <div className="hidden">
+                <PrintablePaymentHistory ref={printRef} payments={payments} customerName={customerName} />
+            </div>
         </Card>
     )
 }
