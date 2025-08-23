@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -42,6 +43,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveCustomerData, findCustomerData, deleteCustomerData } from '../actions';
@@ -467,6 +469,7 @@ export default function CustomerAddPage() {
          <AlertDialog>
             <AlertDialogTrigger asChild>
             <Button
+                type="button"
                 variant="destructive"
                 disabled={isNewRecord || isEditing}
             >
@@ -496,3 +499,4 @@ export default function CustomerAddPage() {
     </div>
   );
 }
+
