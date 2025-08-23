@@ -534,10 +534,10 @@ export default function WorkflowPage() {
                 </div>
                 <div>
                     <Label>Filter by User</Label>
-                     <Select value={userFilter} onValueChange={setUserFilter}>
+                     <Select value={userFilter} onValueChange={(value) => setUserFilter(value === 'ALL' ? '' : value)}>
                         <SelectTrigger><SelectValue placeholder="All Users" /></SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">All Users</SelectItem>
+                             <SelectItem value="ALL">All Users</SelectItem>
                             {uniqueUsers.map(user => (
                                 <SelectItem key={user} value={user}>
                                     {user}
