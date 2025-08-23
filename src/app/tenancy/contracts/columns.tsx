@@ -6,7 +6,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format, differenceInDays, formatDistanceToNowStrict } from 'date-fns';
+import { format, differenceInDays, formatDistanceToNowStrict, isFuture } from 'date-fns';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -119,6 +119,34 @@ const ActionsCell = ({ row }: { row: { original: Contract } }) => {
   );
 };
 
+const DaysPassedCell = ({ row }: { row: { original: Contract } }) => {
+    const { startDate } = row.original;
+    const [passed, setPassed] = useState<{ text: string, className: string }>({ text: '', className: '' });
+
+    useEffect(() => {
+        try {
+            const start = new Date(startDate);
+            if (isFuture(start)) {
+                setPassed({ text: 'Starts soon', className: 'text-blue-600' });
+                return;
+            }
+            const now = new Date();
+            const days = differenceInDays(now, start);
+            
+            setPassed({ 
+                text: `${days} days`,
+                className: ''
+            });
+
+        } catch (e) {
+            setPassed({text: 'Invalid date', className: 'text-muted-foreground'});
+        }
+    }, [startDate]);
+
+    return <span className={cn('font-medium', passed.className)}>{passed.text}</span>;
+}
+
+
 const RemainingDaysCell = ({ row }: { row: { original: Contract } }) => {
     const { endDate } = row.original;
     const [remaining, setRemaining] = useState<{ text: string, className: string }>({ text: '', className: '' });
@@ -217,6 +245,11 @@ export const columns: ColumnDef<Contract>[] = [
     accessorKey: 'endDate',
     header: 'Contract End...',
      cell: ({ row }) => format(new Date(row.getValue('endDate')), 'PP'),
+  },
+  {
+    id: 'daysPassed',
+    header: 'Days Passed',
+    cell: DaysPassedCell,
   },
   {
     id: 'remainingDays',
