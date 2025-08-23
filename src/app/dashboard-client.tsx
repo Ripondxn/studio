@@ -35,7 +35,7 @@ import { differenceInDays, parseISO } from 'date-fns';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { Unit } from '@/app/property/units/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
-import { DashboardChart } from '@/components/dashboard-chart';
+import { type Cheque } from '@/app/finance/cheque-deposit/schema';
 
 
 type DashboardClientProps = {
@@ -47,22 +47,11 @@ type DashboardClientProps = {
 export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialVacantUnits }: DashboardClientProps) {
   const [expiringCurrentPage, setExpiringCurrentPage] = useState(1);
   const [vacantCurrentPage, setVacantCurrentPage] = useState(1);
+  const [landlordPaymentsPage, setLandlordPaymentsPage] = useState(1);
+
   const expiringItemsPerPage = 10;
   const vacantItemsPerPage = 5;
-
-  // Pagination for expiring contracts
-  const expiringTotalPages = Math.ceil(initialExpiringContracts.length / expiringItemsPerPage);
-  const paginatedExpiringContracts = initialExpiringContracts.slice(
-    (expiringCurrentPage - 1) * expiringItemsPerPage,
-    expiringCurrentPage * expiringItemsPerPage
-  );
-
-  // Pagination for vacant units
-  const vacantTotalPages = Math.ceil(initialVacantUnits.length / vacantItemsPerPage);
-  const paginatedVacantUnits = initialVacantUnits.slice(
-    (vacantCurrentPage - 1) * vacantItemsPerPage,
-    vacantCurrentPage * vacantItemsPerPage
-  );
+  const landlordPaymentsItemsPerPage = 5;
 
   if (!initialDashboardData) {
     return <div>Loading...</div>;
@@ -77,8 +66,29 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     totalTenants,
     totalProperties,
     totalLandlords,
-    landlordPaymentsChartData,
+    upcomingLandlordPayments,
   } = initialDashboardData;
+  
+  // Pagination for expiring contracts
+  const expiringTotalPages = Math.ceil(initialExpiringContracts.length / expiringItemsPerPage);
+  const paginatedExpiringContracts = initialExpiringContracts.slice(
+    (expiringCurrentPage - 1) * expiringItemsPerPage,
+    expiringCurrentPage * expiringItemsPerPage
+  );
+
+  // Pagination for vacant units
+  const vacantTotalPages = Math.ceil(initialVacantUnits.length / vacantItemsPerPage);
+  const paginatedVacantUnits = initialVacantUnits.slice(
+    (vacantCurrentPage - 1) * vacantItemsPerPage,
+    vacantCurrentPage * vacantItemsPerPage
+  );
+  
+  // Pagination for upcoming landlord payments
+  const landlordPaymentsTotalPages = Math.ceil(upcomingLandlordPayments.length / landlordPaymentsItemsPerPage);
+  const paginatedLandlordPayments = upcomingLandlordPayments.slice(
+    (landlordPaymentsPage - 1) * landlordPaymentsItemsPerPage,
+    landlordPaymentsPage * landlordPaymentsItemsPerPage
+  );
 
   const kpiData = [
      {
@@ -268,17 +278,54 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                         Upcoming Payments to Landlords
                     </CardTitle>
                     <CardDescription>
-                        A summary of outgoing PDC cheque amounts for the next few months.
+                        A list of upcoming post-dated cheques to be paid out.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <DashboardChart
-                        type="bar"
-                        data={landlordPaymentsChartData}
-                        dataKey="month"
-                        valueKey="total"
-                      />
+                     <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Landlord</TableHead>
+                                <TableHead>Cheque No.</TableHead>
+                                <TableHead>Due Date</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedLandlordPayments.map((cheque: Cheque) => (
+                                <TableRow key={cheque.id}>
+                                    <TableCell>{cheque.partyName}</TableCell>
+                                    <TableCell>{cheque.chequeNo}</TableCell>
+                                    <TableCell>{parseISO(cheque.chequeDate).toLocaleDateString()}</TableCell>
+                                    <TableCell className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cheque.amount)}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
                 </CardContent>
+                 <CardFooter className="flex justify-end items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLandlordPaymentsPage(prev => Math.max(prev - 1, 1))}
+                        disabled={landlordPaymentsPage === 1}
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                        Page {landlordPaymentsPage} of {landlordPaymentsTotalPages}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLandlordPaymentsPage(prev => Math.min(prev + 1, landlordPaymentsTotalPages))}
+                        disabled={landlordPaymentsPage === landlordPaymentsTotalPages}
+                    >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </CardFooter>
             </Card>
         </div>
     </div>

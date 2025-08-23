@@ -1,7 +1,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { differenceInDays, parseISO, format, getMonth, getYear } from 'date-fns';
+import { differenceInDays, parseISO, format, getMonth, getYear, isFuture } from 'date-fns';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { getUnits } from '@/app/property/units/actions';
 import { getSummary as getPdcChequeSummary } from '@/app/finance/pdc-cheque/actions';
@@ -95,21 +95,9 @@ async function getDashboardData() {
     }).length;
 
     // Data for Landlord Payments Chart
-    const upcomingPaymentsToLandlords = allCheques
+    const upcomingLandlordPayments = allCheques
       .filter(c => c.type === 'Outgoing' && c.status !== 'Cleared' && c.status !== 'Cancelled' && isFuture(parseISO(c.chequeDate)))
-      .reduce((acc, cheque) => {
-        const month = format(parseISO(cheque.chequeDate), 'MMM');
-        acc[month] = (acc[month] || 0) + cheque.amount;
-        return acc;
-      }, {} as Record<string, number>);
-
-    const landlordPaymentsChartData = Object.entries(upcomingPaymentsToLandlords)
-        .map(([month, total]) => ({ month, total: total }))
-        .sort((a,b) => {
-            const monthA = new Date(`${a.month} 1, 2024`).getMonth();
-            const monthB = new Date(`${b.month} 1, 2024`).getMonth();
-            return monthA - monthB;
-        });
+      .sort((a, b) => new Date(a.chequeDate).getTime() - new Date(b.chequeDate).getTime());
 
 
     return {
@@ -121,7 +109,7 @@ async function getDashboardData() {
         totalTenants: tenants.length,
         totalProperties: allProperties.length,
         totalLandlords: allLandlords.length,
-        landlordPaymentsChartData,
+        upcomingLandlordPayments,
     };
 }
 
