@@ -161,7 +161,7 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
 };
 
 const TransactionDetailsDialog = ({ transaction }: { transaction: Payment }) => {
-    const statusInfo = statusConfig[transaction.currentStatus!];
+    const statusInfo = statusConfig[transaction.currentStatus!] || statusConfig.DRAFT;
     return (
         <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -431,7 +431,7 @@ export default function WorkflowPage() {
         `$${t.amount.toLocaleString()}`,
         t.createdByUser,
         format(new Date(t.date), 'PP'),
-        statusConfig[t.currentStatus!].label
+        t.currentStatus ? statusConfig[t.currentStatus].label : 'Unknown'
     ]);
     
     (doc as any).autoTable({
@@ -450,7 +450,7 @@ export default function WorkflowPage() {
         'Amount': t.amount,
         'Created By': t.createdByUser,
         'Submission Date': format(new Date(t.date), 'PP'),
-        'Status': statusConfig[t.currentStatus!].label
+        'Status': t.currentStatus ? statusConfig[t.currentStatus].label : 'Unknown'
     }));
 
     const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -553,9 +553,13 @@ export default function WorkflowPage() {
                             {format(new Date(t.date), 'PP')}
                         </TableCell>
                         <TableCell>
-                            <Badge variant={statusConfig[t.currentStatus!].color}>
-                            {statusConfig[t.currentStatus!].label}
-                            </Badge>
+                            {t.currentStatus && statusConfig[t.currentStatus] ? (
+                                <Badge variant={statusConfig[t.currentStatus].color}>
+                                    {statusConfig[t.currentStatus].label}
+                                </Badge>
+                            ) : (
+                                <Badge variant="secondary">Unknown</Badge>
+                            )}
                         </TableCell>
                         <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-2">

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -95,11 +96,47 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
               },
             ],
         };
+        
+        if (newPayment.type === 'Receipt' && newPayment.invoiceAllocations && newPayment.invoiceAllocations.length > 0) {
+            await applyPaymentToInvoices(newPayment.invoiceAllocations, newPayment.partyName);
+        }
+
+        if (newPayment.type === 'Payment') {
+            if (newPayment.paymentFrom === 'Petty Cash') {
+                const pettyCash = await readPettyCash();
+                pettyCash.balance -= newPayment.amount;
+                await writePettyCash(pettyCash);
+            } else if (newPayment.bankAccountId) {
+                const allBankAccounts = await readBankAccounts();
+                const accountIndex = allBankAccounts.findIndex(acc => acc.id === newPayment.bankAccountId);
+                if (accountIndex !== -1) {
+                    allBankAccounts[accountIndex].balance -= newPayment.amount;
+                    await writeBankAccounts(allBankAccounts);
+                }
+            }
+        } else { // Receipt
+            if (newPayment.paymentFrom === 'Petty Cash') {
+                const pettyCash = await readPettyCash();
+                pettyCash.balance += newPayment.amount;
+                await writePettyCash(pettyCash);
+            } else if (newPayment.bankAccountId) {
+                const allBankAccounts = await readBankAccounts();
+                const accountIndex = allBankAccounts.findIndex(acc => acc.id === newPayment.bankAccountId);
+                if (accountIndex !== -1) {
+                    allBankAccounts[accountIndex].balance += newPayment.amount;
+                    await writeBankAccounts(allBankAccounts);
+                }
+            }
+        }
+
 
         allPayments.push(newPayment);
         await writePayments(allPayments);
         
         revalidatePath('/finance/payment');
+        revalidatePath('/finance/banking');
+        revalidatePath('/finance/chart-of-accounts');
+        revalidatePath('/vendors/agents');
         revalidatePath('/workflow');
         return { success: true, data: newPayment };
 
