@@ -61,6 +61,12 @@ async function getDashboardData() {
     ).catch(() => '[]');
     const allLeaseContracts: LeaseContract[] = JSON.parse(leaseContractsData);
 
+    const landlordsData = await fs.readFile(
+      path.join(process.cwd(), 'src/app/landlord/landlords-data.json'), 'utf-8'
+    ).catch(() => '[]');
+    const allLandlords = JSON.parse(landlordsData);
+
+
     // KPI: Vacant Units
     const activeContractUnitCodes = new Set(
         contracts
@@ -93,6 +99,7 @@ async function getDashboardData() {
         chequeSummary,
         totalTenants: tenants.length,
         totalProperties: allProperties.length,
+        totalLandlords: allLandlords.length,
     };
 }
 

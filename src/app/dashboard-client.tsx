@@ -27,6 +27,7 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  UserSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -72,6 +73,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     chequeSummary,
     totalTenants,
     totalProperties,
+    totalLandlords,
   } = initialDashboardData;
 
   const kpiData = [
@@ -88,6 +90,13 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       change: 'currently active tenants',
       icon: <Users className="h-6 w-6 text-muted-foreground" />,
       href: '/tenancy/tenants',
+    },
+    {
+      title: 'Total Landlords',
+      value: totalLandlords,
+      change: 'View all landlords',
+      icon: <UserSquare className="h-6 w-6 text-muted-foreground" />,
+      href: '/landlord',
     },
     {
       title: 'Vacant Units',
@@ -123,7 +132,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       </div>
       
       {/* Key Metrics Overview */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-6">
         {kpiData.map((kpi) => (
           <Card key={kpi.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
