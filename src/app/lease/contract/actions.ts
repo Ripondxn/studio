@@ -102,7 +102,8 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
         
         await writeContracts(allContracts);
         
-        await createChequesFromLeaseContract(savedContract);
+        // This is no longer needed as we will read directly from lease contracts
+        // await createChequesFromLeaseContract(savedContract);
 
         revalidatePath('/lease/contracts');
         revalidatePath('/finance/pdc-cheque');

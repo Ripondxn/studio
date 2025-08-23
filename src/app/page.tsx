@@ -1,4 +1,5 @@
 
+
 import { promises as fs } from 'fs';
 import path from 'path';
 import { differenceInDays, parseISO, format, getMonth, getYear, isFuture } from 'date-fns';
@@ -67,8 +68,7 @@ async function getDashboardData() {
     ).catch(() => '[]');
     const allLandlords = JSON.parse(landlordsData);
     
-    const chequesData = await fs.readFile(path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json'), 'utf-8').catch(() => '[]');
-    const allCheques: Cheque[] = JSON.parse(chequesData);
+    const landlordMap = new Map(allLandlords.map((l: any) => [l.landlordData.code, l.landlordData.name]));
 
     // KPI: Vacant Units
     const activeContractUnitCodes = new Set(
@@ -94,9 +94,21 @@ async function getDashboardData() {
         return daysRemaining >= 0 && daysRemaining <= 30;
     }).length;
 
-    // Data for Landlord Payments Chart
-    const upcomingLandlordPayments = allCheques
-      .filter(c => c.type === 'Outgoing' && c.status !== 'Cleared' && c.status !== 'Cancelled' && isFuture(parseISO(c.chequeDate)))
+    // Data for Landlord Payments
+    const upcomingLandlordPayments = allLeaseContracts
+      .filter(c => c.paymentMode === 'cheque' && c.paymentSchedule)
+      .flatMap(c => c.paymentSchedule
+        .filter(p => p.status !== 'paid' && isFuture(parseISO(p.dueDate)))
+        .map(p => ({
+          id: `${c.id}-${p.installment}`,
+          partyName: landlordMap.get(c.landlordCode) || c.landlordCode,
+          chequeNo: p.chequeNo || `INST-${p.installment}`,
+          chequeDate: p.dueDate,
+          amount: p.amount,
+          type: 'Outgoing',
+          status: 'In Hand' // Simplified status for dashboard view
+        } as Cheque)) // Use Cheque type for structure compatibility
+      )
       .sort((a, b) => new Date(a.chequeDate).getTime() - new Date(b.chequeDate).getTime());
 
 

@@ -20,14 +20,16 @@
       {
         "installment": 1,
         "dueDate": "2025-08-21",
-        "amount": 131250,
-        "status": "unpaid"
+        "amount": 23322200031250,
+        "status": "unpaid",
+        "chequeNo": "23445"
       },
       {
         "installment": 2,
         "dueDate": "2025-11-21",
-        "amount": 131250,
-        "status": "unpaid"
+        "amount": 3453,
+        "status": "unpaid",
+        "chequeNo": "57754"
       }
     ],
     "terms": "",
