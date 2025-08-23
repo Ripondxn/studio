@@ -4,8 +4,11 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
+import { type Payment } from '@/app/finance/payment/schema';
 
 const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
+const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+
 
 async function getCustomers() {
     try {
@@ -122,5 +125,29 @@ export async function deleteCustomerData(customerCode: string) {
     } catch (error) {
         console.error('Failed to delete customer data:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+async function readPayments(): Promise<Payment[]> {
+    try {
+        const paymentsData = await fs.readFile(paymentsFilePath, 'utf-8');
+        return JSON.parse(paymentsData);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        console.error('Failed to read payments file:', error);
+        return [];
+    }
+}
+
+export async function getPaymentsForCustomer(customerCode: string): Promise<Payment[]> {
+    try {
+        const allPayments = await readPayments();
+        const customerPayments = allPayments.filter(p => p.partyName === customerCode && p.type === 'Receipt');
+        return customerPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } catch (error) {
+        console.error('Failed to get payments for customer:', error);
+        return [];
     }
 }

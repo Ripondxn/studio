@@ -51,6 +51,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '../invoice/actions';
 import { type Invoice } from '../invoice/schema';
+import { PaymentReceiptList } from '../payment-receipt-list';
 
 
 type Attachment = {
@@ -336,6 +337,7 @@ export default function CustomerAddPage() {
         <TabsList>
             <TabsTrigger value="info">Customer Information</TabsTrigger>
             <TabsTrigger value="invoices" disabled={isNewRecord}>Invoices</TabsTrigger>
+            <TabsTrigger value="payment-receipts" disabled={isNewRecord}>Payment Receipts</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="info">
@@ -382,6 +384,15 @@ export default function CustomerAddPage() {
                 invoices={invoices}
                 isLoading={isLoadingInvoices}
                 onRefresh={() => fetchInvoices(customerData.code)}
+            />
+        </TabsContent>
+        <TabsContent value="payment-receipts">
+           <PaymentReceiptList
+                customerCode={customerData.code} 
+                customerName={customerData.name} 
+                onRefresh={() => {
+                  fetchInvoices(customerData.code);
+                }}
             />
         </TabsContent>
         <TabsContent value="attachments">
