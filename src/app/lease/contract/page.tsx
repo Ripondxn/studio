@@ -489,6 +489,10 @@ export default function LeaseContractPage() {
                 <Label htmlFor="grace-period">Grace Period (days)</Label>
                 <Input id="grace-period" type="number" placeholder="0" value={contract.gracePeriod || ''} onChange={e => handleNumberInputChange('gracePeriod', e.target.value)} disabled={!isEditing}/>
             </div>
+             <div>
+                <Label htmlFor="terminationDate">Termination Date</Label>
+                <Input id="terminationDate" type="date" value={contract.terminationDate || ''} onChange={(e) => handleInputChange('terminationDate', e.target.value)} disabled={!isEditing || contract.status !== 'Cancel'}/>
+            </div>
           </div>
           <Separator />
           <div>
