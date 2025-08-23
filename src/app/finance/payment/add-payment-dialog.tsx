@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2, CreditCard, Building2, FileText, Calendar as CalendarIcon, X, Receipt } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema, type Payment } from './schema';
 import { addPayment, getLookups } from './actions';

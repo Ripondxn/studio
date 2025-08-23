@@ -12,6 +12,7 @@ import { ArrowDownLeft, ArrowUpRight, RefreshCw, Plus, Receipt } from 'lucide-re
 import { type Payment } from './schema';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 type Summary = {
     totalReceivedThisMonth: number;
@@ -25,6 +26,7 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const searchParams = useSearchParams();
   const accountIdFilter = searchParams.get('accountId');
+  const router = useRouter();
 
   const refreshData = async () => {
     setIsLoading(true);
@@ -35,6 +37,7 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
     setPayments(paymentsResult);
     setSummary(summaryResult);
     setIsLoading(false);
+    router.refresh();
   }
 
   useEffect(() => {
