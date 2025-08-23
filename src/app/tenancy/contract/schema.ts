@@ -30,6 +30,8 @@ export const contractSchema = z.object({
   paymentMode: z.enum(['cash', 'cheque', 'bank-transfer']),
   status: z.enum(['New', 'Renew', 'Cancel']).optional(),
   terminationDate: z.string().optional(),
+  terminationReason: z.string().optional(),
+  finalSettlementAmount: z.number().optional(),
   rentBasedOn: z.enum(['Monthly', 'Daily']).optional(),
   paymentFrequency: z.enum(['Monthly', 'Quarterly', 'Half-Yearly', 'Yearly', 'Custom']).optional(),
   numberOfPayments: z.number().optional(),

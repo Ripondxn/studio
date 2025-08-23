@@ -39,6 +39,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { addMonths, format as formatDate } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import { type Tenant } from '../tenants/schema';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const initialContractState: Contract = {
     id: '',
@@ -164,8 +165,8 @@ export default function TenancyContractPage() {
     setContract(prev => ({...prev, [field]: value}));
   }
   
-  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'gracePeriod', value: string) => {
-    setContract(prev => ({...prev, [field]: parseInt(value, 10) || 0 }));
+  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount', value: string) => {
+    setContract(prev => ({...prev, [field]: parseFloat(value) || 0 }));
   }
 
   const handlePropertySelect = async (propertyCode: string) => {
@@ -494,276 +495,314 @@ export default function TenancyContractPage() {
             </Button>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-            <Card>
-                 <CardHeader>
-                    <CardTitle>Contract & Property</CardTitle>
-                    <CardDescription>
-                        Details of the tenancy agreement and the rented property.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-6">
-                      <div className="grid grid-cols-2 gap-4">
+      <Tabs defaultValue="details">
+        <TabsList>
+            <TabsTrigger value="details">Contract Details</TabsTrigger>
+            <TabsTrigger value="schedule">Payment Schedule</TabsTrigger>
+            <TabsTrigger value="termination" disabled={isNewRecord}>Termination</TabsTrigger>
+        </TabsList>
+        <TabsContent value="details">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Contract & Property</CardTitle>
+                            <CardDescription>
+                                Details of the tenancy agreement and the rented property.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4 pt-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="contract-no">Tenancy Contract No</Label>
+                                    <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled/>
+                                </div>
+                                <div>
+                                    <Label htmlFor="contract-date">Date</Label>
+                                    <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="property">Property</Label>
+                                    <Combobox
+                                        options={lookups.properties}
+                                        value={contract.property || ''}
+                                        onSelect={handlePropertySelect}
+                                        placeholder="Select Property"
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="unit-code">Unit Code</Label>
+                                    <Combobox
+                                        options={lookups.units}
+                                        value={contract.unitCode}
+                                        onSelect={handleUnitSelect}
+                                        placeholder="Select a Unit"
+                                        disabled={!isEditing || !contract.property}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="room-code">Room</Label>
+                                    <Combobox
+                                        options={lookups.rooms}
+                                        value={contract.roomCode || ''}
+                                        onSelect={(value) => handleInputChange('roomCode', value)}
+                                        placeholder="Select a Room"
+                                        disabled={!isEditing || !contract.unitCode}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="partition-code">Partition</Label>
+                                    <Combobox
+                                        options={lookups.partitions}
+                                        value={contract.partitionCode || ''}
+                                        onSelect={handlePartitionSelect}
+                                        placeholder="Select Partition"
+                                        disabled={!isEditing || !contract.unitCode || lookups.partitions.length === 0}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="start-date">Start Date</Label>
+                                    <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                                <div>
+                                    <Label htmlFor="end-date">End Date</Label>
+                                    <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="rent-amount">Total Rent</Label>
+                                    <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                                <div>
+                                    <Label htmlFor="payment-mode">Payment Mode</Label>
+                                    <Select value={contract.paymentMode} onValueChange={(value: 'cash' | 'cheque' | 'bank-transfer') => handleInputChange('paymentMode', value)} disabled={!isEditing}>
+                                        <SelectTrigger id="payment-mode">
+                                            <SelectValue placeholder="Select mode"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="cash">Cash</SelectItem>
+                                            <SelectItem value="cheque">Cheque</SelectItem>
+                                            <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="status">Status</Label>
+                                    <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
+                                        <SelectTrigger id="status">
+                                            <SelectValue/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="New">New</SelectItem>
+                                            <SelectItem value="Renew">Renew</SelectItem>
+                                            <SelectItem value="Cancel">Cancel</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label htmlFor="grace-period">Grace Period (days)</Label>
+                                    <Input id="grace-period" type="number" placeholder="0" value={contract.gracePeriod || ''} onChange={e => handleNumberInputChange('gracePeriod', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Tawtheeq Registration</CardTitle>
+                            <CardDescription>Manage Tawtheeq registration details for this contract.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <Label htmlFor="tawtheeq-status">Status</Label>
+                                    <Select value={contract.tawtheeqStatus} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!isEditing}>
+                                        <SelectTrigger id="tawtheeq-status"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Not Registered">Not Registered</SelectItem>
+                                            <SelectItem value="Under Process">Under Process</SelectItem>
+                                            <SelectItem value="Registered">Registered</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label htmlFor="tawtheeq-reg-no">Registration No</Label>
+                                    <Input id="tawtheeq-reg-no" value={contract.tawtheeqRegistrationNo || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationNo', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                                <div>
+                                    <Label htmlFor="tawtheeq-reg-date">Registration Date</Label>
+                                    <Input id="tawtheeq-reg-date" type="date" value={contract.tawtheeqRegistrationDate || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationDate', e.target.value)} disabled={!isEditing}/>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Card className="lg:col-span-1">
+                    <CardHeader>
+                        <CardTitle>Tenant Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-6">
                         <div>
-                            <Label htmlFor="contract-no">Tenancy Contract No</Label>
-                            <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled/>
-                        </div>
-                        <div>
-                            <Label htmlFor="contract-date">Date</Label>
-                            <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
-                        </div>
-                    </div>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="property">Property</Label>
+                            <Label htmlFor="tenant-name">Tenant Name</Label>
                             <Combobox
-                                options={lookups.properties}
-                                value={contract.property || ''}
-                                onSelect={handlePropertySelect}
-                                placeholder="Select Property"
+                                options={lookups.tenants}
+                                value={contract.tenantCode || ''}
+                                onSelect={handleTenantSelect}
+                                placeholder="Select a Tenant"
                                 disabled={!isEditing}
                             />
                         </div>
                         <div>
-                            <Label htmlFor="unit-code">Unit Code</Label>
-                            <Combobox
-                                options={lookups.units}
-                                value={contract.unitCode}
-                                onSelect={handleUnitSelect}
-                                placeholder="Select a Unit"
-                                disabled={!isEditing || !contract.property}
-                            />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="room-code">Room</Label>
-                            <Combobox
-                                options={lookups.rooms}
-                                value={contract.roomCode || ''}
-                                onSelect={(value) => handleInputChange('roomCode', value)}
-                                placeholder="Select a Room"
-                                disabled={!isEditing || !contract.unitCode}
-                            />
+                            <Label htmlFor="tenant-code">Tenant Code</Label>
+                            <Input id="tenant-code" value={contract.tenantCode || ''} disabled />
                         </div>
                         <div>
-                            <Label htmlFor="partition-code">Partition</Label>
-                            <Combobox
-                                options={lookups.partitions}
-                                value={contract.partitionCode || ''}
-                                onSelect={handlePartitionSelect}
-                                placeholder="Select Partition"
-                                disabled={!isEditing || !contract.unitCode || lookups.partitions.length === 0}
-                            />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="start-date">Start Date</Label>
-                            <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
+                            <Label htmlFor="tenant-mobile">Tenant Mobile</Label>
+                            <Input id="tenant-mobile" value={contract.mobile || ''} disabled />
                         </div>
                         <div>
-                            <Label htmlFor="end-date">End Date</Label>
-                            <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="rent-amount">Total Rent</Label>
-                            <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
+                            <Label htmlFor="tenant-email">Tenant Email</Label>
+                            <Input id="tenant-email" value={contract.email || ''} disabled />
                         </div>
                         <div>
-                            <Label htmlFor="payment-mode">Payment Mode</Label>
-                            <Select value={contract.paymentMode} onValueChange={(value: 'cash' | 'cheque' | 'bank-transfer') => handleInputChange('paymentMode', value)} disabled={!isEditing}>
-                                <SelectTrigger id="payment-mode">
-                                    <SelectValue placeholder="Select mode"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="cash">Cash</SelectItem>
-                                    <SelectItem value="cheque">Cheque</SelectItem>
-                                    <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Label htmlFor="tenant-address">Tenant Address</Label>
+                            <Input id="tenant-address" value={contract.address || ''} disabled />
                         </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="status">Status</Label>
-                            <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
-                                <SelectTrigger id="status">
-                                    <SelectValue/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="New">New</SelectItem>
-                                    <SelectItem value="Renew">Renew</SelectItem>
-                                    <SelectItem value="Cancel">Cancel</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                         <div>
-                            <Label htmlFor="grace-period">Grace Period (days)</Label>
-                            <Input id="grace-period" type="number" placeholder="0" value={contract.gracePeriod || ''} onChange={e => handleNumberInputChange('gracePeriod', e.target.value)} disabled={!isEditing}/>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </div>
+        </TabsContent>
+        <TabsContent value="schedule">
              <Card>
                 <CardHeader>
-                    <CardTitle>Tawtheeq Registration</CardTitle>
-                    <CardDescription>Manage Tawtheeq registration details for this contract.</CardDescription>
+                    <CardTitle>Payment Schedule</CardTitle>
+                    <CardDescription>
+                        Review or define the payment installments for this contract.
+                    </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4 p-4 border rounded-md bg-muted/50">
                         <div>
-                            <Label htmlFor="tawtheeq-status">Status</Label>
-                            <Select value={contract.tawtheeqStatus} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!isEditing}>
-                                <SelectTrigger id="tawtheeq-status"><SelectValue /></SelectTrigger>
+                            <Label htmlFor="payment-frequency">Payment Frequency</Label>
+                            <Select value={contract.paymentFrequency || 'Monthly'} onValueChange={(value) => handleInputChange('paymentFrequency', value)} disabled={!isEditing}>
+                                <SelectTrigger id="payment-frequency"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Not Registered">Not Registered</SelectItem>
-                                    <SelectItem value="Under Process">Under Process</SelectItem>
-                                    <SelectItem value="Registered">Registered</SelectItem>
+                                    <SelectItem value="Monthly">Monthly</SelectItem>
+                                    <SelectItem value="Quarterly">Quarterly</SelectItem>
+                                    <SelectItem value="Half-Yearly">Half-Yearly</SelectItem>
+                                    <SelectItem value="Yearly">Yearly</SelectItem>
+                                    <SelectItem value="Custom">Custom</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="tawtheeq-reg-no">Registration No</Label>
-                            <Input id="tawtheeq-reg-no" value={contract.tawtheeqRegistrationNo || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationNo', e.target.value)} disabled={!isEditing}/>
+                            <Label htmlFor="number-of-payments">Number of Payments</Label>
+                            <Input id="number-of-payments" type="number" value={contract.numberOfPayments || 1} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!isEditing} />
                         </div>
-                        <div>
-                            <Label htmlFor="tawtheeq-reg-date">Registration Date</Label>
-                            <Input id="tawtheeq-reg-date" type="date" value={contract.tawtheeqRegistrationDate || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationDate', e.target.value)} disabled={!isEditing}/>
+                        <div className="flex items-end">
+                            <Button onClick={handleGenerateSchedule} disabled={!isEditing} className="w-full">
+                                <RefreshCw className="mr-2 h-4 w-4"/>
+                                Generate Schedule
+                            </Button>
                         </div>
+                    </div>
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Installment</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Bank Name</TableHead>
+                        <TableHead>Cheque No.</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {contract.paymentSchedule.map((item, index) => (
+                    <TableRow key={index}>
+                        <TableCell>{item.installment}</TableCell>
+                        <TableCell>
+                        <Input type="date" value={item.dueDate} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!isEditing}/>
+                        </TableCell>
+                        <TableCell>
+                        <Input placeholder="Bank Name" value={item.bankName || ''} onChange={(e) => handleScheduleChange(index, 'bankName', e.target.value)} disabled={!isEditing}/>
+                        </TableCell>
+                        <TableCell>
+                        <Input placeholder="Cheque number" value={item.chequeNo || ''} onChange={(e) => handleScheduleChange(index, 'chequeNo', e.target.value)} disabled={!isEditing}/>
+                        </TableCell>
+                        <TableCell>
+                        <Input type="number" placeholder="Amount" value={item.amount} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!isEditing}/>
+                        </TableCell>
+                        <TableCell>
+                        <Select value={item.status} onValueChange={(value: 'paid' | 'unpaid') => handleScheduleChange(index, 'status', value)} disabled={!isEditing}>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="unpaid">Unpaid</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        </TableCell>
+                        <TableCell>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeInstallment(index)} disabled={!isEditing}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                    </TableBody>
+                </Table>
+                <Button variant="outline" size="sm" className="mt-4" onClick={addInstallment} disabled={!isEditing}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Installment
+                </Button>
+
+                    <Separator className="my-6"/>
+                    <div>
+                        <Label htmlFor="terms">Terms & Conditions</Label>
+                        <Textarea id="terms" rows={5} placeholder="Enter contract terms and conditions..." value={contract.terms || ''} onChange={e => handleInputChange('terms', e.target.value)} disabled={!isEditing}/>
                     </div>
                 </CardContent>
             </Card>
-        </div>
-         <Card className="lg:col-span-1">
-            <CardHeader>
-                <CardTitle>Tenant Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-                <div>
-                    <Label htmlFor="tenant-name">Tenant Name</Label>
-                    <Combobox
-                        options={lookups.tenants}
-                        value={contract.tenantCode || ''}
-                        onSelect={handleTenantSelect}
-                        placeholder="Select a Tenant"
-                        disabled={!isEditing}
-                    />
-                </div>
-                <div>
-                    <Label htmlFor="tenant-code">Tenant Code</Label>
-                    <Input id="tenant-code" value={contract.tenantCode || ''} disabled />
-                </div>
-                <div>
-                    <Label htmlFor="tenant-mobile">Tenant Mobile</Label>
-                    <Input id="tenant-mobile" value={contract.mobile || ''} disabled />
-                </div>
-                <div>
-                    <Label htmlFor="tenant-email">Tenant Email</Label>
-                    <Input id="tenant-email" value={contract.email || ''} disabled />
-                </div>
-                <div>
-                    <Label htmlFor="tenant-address">Tenant Address</Label>
-                    <Input id="tenant-address" value={contract.address || ''} disabled />
-                </div>
-            </CardContent>
-        </Card>
-      </div>
-      <Card className="mt-6">
-        <CardHeader>
-            <CardTitle>Payment Schedule</CardTitle>
-            <CardDescription>
-                Review or define the payment installments for this contract.
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4 p-4 border rounded-md bg-muted/50">
-                  <div>
-                    <Label htmlFor="payment-frequency">Payment Frequency</Label>
-                    <Select value={contract.paymentFrequency || 'Monthly'} onValueChange={(value) => handleInputChange('paymentFrequency', value)} disabled={!isEditing}>
-                        <SelectTrigger id="payment-frequency"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Monthly">Monthly</SelectItem>
-                            <SelectItem value="Quarterly">Quarterly</SelectItem>
-                            <SelectItem value="Half-Yearly">Half-Yearly</SelectItem>
-                            <SelectItem value="Yearly">Yearly</SelectItem>
-                            <SelectItem value="Custom">Custom</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                  <div>
-                    <Label htmlFor="number-of-payments">Number of Payments</Label>
-                    <Input id="number-of-payments" type="number" value={contract.numberOfPayments || 1} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!isEditing} />
-                </div>
-                <div className="flex items-end">
-                    <Button onClick={handleGenerateSchedule} disabled={!isEditing} className="w-full">
-                        <RefreshCw className="mr-2 h-4 w-4"/>
-                        Generate Schedule
-                    </Button>
-                </div>
-            </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Installment</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Bank Name</TableHead>
-                <TableHead>Cheque No.</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contract.paymentSchedule.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>{item.installment}</TableCell>
-                <TableCell>
-                  <Input type="date" value={item.dueDate} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!isEditing}/>
-                </TableCell>
-                <TableCell>
-                  <Input placeholder="Bank Name" value={item.bankName || ''} onChange={(e) => handleScheduleChange(index, 'bankName', e.target.value)} disabled={!isEditing}/>
-                </TableCell>
-                <TableCell>
-                  <Input placeholder="Cheque number" value={item.chequeNo || ''} onChange={(e) => handleScheduleChange(index, 'chequeNo', e.target.value)} disabled={!isEditing}/>
-                </TableCell>
-                <TableCell>
-                  <Input type="number" placeholder="Amount" value={item.amount} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!isEditing}/>
-                </TableCell>
-                <TableCell>
-                  <Select value={item.status} onValueChange={(value: 'paid' | 'unpaid') => handleScheduleChange(index, 'status', value)} disabled={!isEditing}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="unpaid">Unpaid</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeInstallment(index)} disabled={!isEditing}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Button variant="outline" size="sm" className="mt-4" onClick={addInstallment} disabled={!isEditing}>
-            <Plus className="mr-2 h-4 w-4" /> Add Installment
-          </Button>
-
-            <Separator className="my-6"/>
-              <div>
-                <Label htmlFor="terms">Terms & Conditions</Label>
-                <Textarea id="terms" rows={5} placeholder="Enter contract terms and conditions..." value={contract.terms || ''} onChange={e => handleInputChange('terms', e.target.value)} disabled={!isEditing}/>
-              </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+         <TabsContent value="termination">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Contract Termination</CardTitle>
+                    <CardDescription>Record the termination details for this contract.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <Label>Termination Date</Label>
+                            <Input type="date" value={contract.terminationDate || ''} onChange={(e) => handleInputChange('terminationDate', e.target.value)} disabled={!isEditing}/>
+                        </div>
+                        <div>
+                            <Label>Final Settlement Amount</Label>
+                            <Input type="number" placeholder="0.00" value={contract.finalSettlementAmount || ''} onChange={(e) => handleNumberInputChange('finalSettlementAmount', e.target.value)} disabled={!isEditing}/>
+                        </div>
+                    </div>
+                    <div>
+                        <Label>Reason for Termination</Label>
+                        <Textarea placeholder="e.g., Early exit, mutual agreement..." value={contract.terminationReason || ''} onChange={(e) => handleInputChange('terminationReason', e.target.value)} disabled={!isEditing}/>
+                    </div>
+                    <p className="text-sm text-muted-foreground pt-4">
+                       Note: To terminate, please set the contract status to "Cancel" in the details tab and provide a termination date above, then save the contract.
+                    </p>
+                </CardContent>
+            </Card>
+         </TabsContent>
+      </Tabs>
     </div>
   );
 }
