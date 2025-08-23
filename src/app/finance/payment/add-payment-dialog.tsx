@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -47,7 +48,7 @@ type Lookups = {
     units: {value: string, label: string}[];
     rooms: {value: string, label: string}[];
     partitions: {value: string, label: string}[];
-    references: {value: string, label: string, amount?: number}[];
+    references: {value: string, label: string, amount?: number, propertyCode?: string, unitCode?: string, roomCode?: string, partitionCode?: string}[];
 }
 
 interface AddPaymentDialogProps {
@@ -218,11 +219,22 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const handleReferenceSelect = (value: string) => {
     setValue('referenceNo', value);
     const selectedRef = lookups.references.find(r => r.value === value);
-    if(selectedRef) {
-        if(selectedRef.amount) {
+    if (selectedRef) {
+        if (selectedRef.amount) {
             setValue('amount', selectedRef.amount);
         }
         setValue('description', `Payment for ${referenceType}: ${selectedRef.label}`);
+
+        // Auto-fill property details if available
+        if (selectedRef.propertyCode) {
+            setValue('property', selectedRef.propertyCode);
+            // Wait for units to be fetched before setting them
+            setTimeout(() => {
+                if(selectedRef.unitCode) setValue('unitCode', selectedRef.unitCode);
+                if(selectedRef.roomCode) setValue('roomCode', selectedRef.roomCode);
+                if(selectedRef.partitionCode) setValue('partitionCode', selectedRef.partitionCode);
+            }, 200);
+        }
     }
   }
 

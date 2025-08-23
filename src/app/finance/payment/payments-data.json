@@ -174,5 +174,29 @@
     "status": "Received",
     "invoiceAllocations": [],
     "id": "PAY-1755938670536"
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-23",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 55000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "property": "LT-C38",
+    "unitCode": "102",
+    "roomCode": "",
+    "partitionCode": "",
+    "referenceType": "Tenancy Contract",
+    "referenceNo": "TC-1755718766747",
+    "description": "Payment for Tenancy Contract: TC-1755718766747 (LT-C38)",
+    "status": "Received",
+    "invoiceAllocations": [
+      {
+        "invoiceId": "INV-1755850847475",
+        "amount": 0
+      }
+    ],
+    "id": "PAY-1755939422374"
   }
 ]

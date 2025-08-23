@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -23,7 +24,6 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
   const [payments, setPayments] = useState(initialPayments);
   const [summary, setSummary] = useState(initialSummary);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const searchParams = useSearchParams();
   const accountIdFilter = searchParams.get('accountId');
   const router = useRouter();

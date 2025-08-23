@@ -15,7 +15,7 @@ export const paymentSchema = z.object({
   partyName: z.string().min(1, "Party name is required."),
   amount: z.number().min(0.01, "Amount must be greater than 0."),
   paymentMethod: z.enum(['Cash', 'Cheque', 'Bank Transfer', 'Card']),
-  paymentFrom: z.enum(['Bank', 'Petty Cash']).optional(),
+  paymentFrom: z.enum(['Bank', 'Petty Cash']).default('Bank'),
   bankAccountId: z.string().optional(),
   property: z.string().optional(),
   unitCode: z.string().optional(),

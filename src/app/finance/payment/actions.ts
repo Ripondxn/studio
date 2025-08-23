@@ -89,6 +89,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
                 }
                 pettyCash.balance -= paymentData.amount;
                 await writePettyCash(pettyCash);
+                paymentData.bankAccountId = 'acc_3'; // Link payment to petty cash
             } else if (paymentData.bankAccountId) {
                 const allBankAccounts = await readBankAccounts();
                 const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
@@ -107,6 +108,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
                  const pettyCash = await readPettyCash();
                  pettyCash.balance += paymentData.amount;
                  await writePettyCash(pettyCash);
+                 paymentData.bankAccountId = 'acc_3'; // Link receipt to petty cash
             } else if (paymentData.bankAccountId) {
                  const allBankAccounts = await readBankAccounts();
                  const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
@@ -138,6 +140,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
         revalidatePath('/finance/payment');
         revalidatePath('/finance/due-payments');
         revalidatePath('/finance/banking');
+        revalidatePath('/finance/chart-of-accounts');
         if(paymentData.partyType === 'Customer') {
              revalidatePath(`/tenancy/customer/add?code=${paymentData.partyName}`);
         } else if (paymentData.partyType === 'Vendor') {
@@ -163,7 +166,7 @@ export async function deletePayment(paymentId: string) {
         
         // Reverse financial impact
         if (paymentToDelete.type === 'Payment') { // If it was a payment, add money back
-            if (paymentToDelete.paymentFrom === 'Petty Cash') {
+            if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
                 const pettyCash = await readPettyCash();
                 pettyCash.balance += paymentToDelete.amount;
                 await writePettyCash(pettyCash);
@@ -176,7 +179,7 @@ export async function deletePayment(paymentId: string) {
                 }
             }
         } else { // If it was a receipt, subtract money
-             if (paymentToDelete.paymentFrom === 'Petty Cash') {
+             if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
                 const pettyCash = await readPettyCash();
                 pettyCash.balance -= paymentToDelete.amount;
                 await writePettyCash(pettyCash);
@@ -248,24 +251,71 @@ export async function getSummary() {
 
 export async function getReferences(partyType: string, partyCode: string, referenceType: string) {
     if (!partyType || !partyCode || !referenceType) return [];
+    
+    const allPayments: Payment[] = await readPayments();
+    const paidInstallmentIds = new Set(allPayments.filter(p => p.status !== 'Cancelled').map(p => p.referenceNo));
 
     switch(referenceType) {
         case 'Tenancy Contract': {
             if (partyType !== 'Tenant') return [];
             const contracts: TenancyContract[] = await readData(tenancyContractsFilePath);
-            return contracts.filter(c => c.tenantCode === partyCode).map(c => ({ value: c.contractNo, label: `${c.contractNo} (${c.property})`, amount: c.totalRent }));
+            const tenantContracts = contracts.filter(c => c.tenantCode === partyCode);
+            let installments = [];
+            for (const contract of tenantContracts) {
+                for (const installment of contract.paymentSchedule) {
+                    const installmentId = `${contract.contractNo}-${installment.installment}`;
+                    if (!paidInstallmentIds.has(installmentId)) {
+                        installments.push({
+                            value: installmentId,
+                            label: `${contract.contractNo} (Installment ${installment.installment}) - ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(installment.amount)}`,
+                            amount: installment.amount,
+                            propertyCode: contract.property,
+                            unitCode: contract.unitCode,
+                            roomCode: contract.roomCode,
+                            partitionCode: contract.partitionCode,
+                        });
+                    }
+                }
+            }
+            return installments;
         }
         case 'Lease Contract': {
             if (partyType !== 'Landlord') return [];
             const contracts: LeaseContract[] = await readData(leaseContractsFilePath);
-            return contracts.filter(c => c.landlordCode === partyCode).map(c => ({ value: c.contractNo, label: `${c.contractNo} (${c.property})`, amount: c.totalRentWithVat || c.totalRent }));
+            const landlordContracts = contracts.filter(c => c.landlordCode === partyCode);
+            let installments = [];
+             for (const contract of landlordContracts) {
+                for (const installment of contract.paymentSchedule) {
+                    const installmentId = `${contract.contractNo}-${installment.installment}`;
+                    if (!paidInstallmentIds.has(installmentId)) {
+                         installments.push({
+                            value: installmentId,
+                            label: `${contract.contractNo} (Installment ${installment.installment}) - ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(installment.amount)}`,
+                            amount: installment.amount,
+                            propertyCode: contract.property,
+                        });
+                    }
+                }
+            }
+            return installments;
         }
         case 'Invoice': {
             if (partyType !== 'Customer') return [];
             const invoices: Invoice[] = await readData(invoicesFilePath);
             return invoices
                 .filter(i => i.customerCode === partyCode && i.status !== 'Paid' && i.status !== 'Cancelled')
-                .map(i => ({ value: i.invoiceNo, label: `${i.invoiceNo} - Bal: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(i.total - (i.amountPaid || 0))}`, amount: i.total - (i.amountPaid || 0) }));
+                .map(i => {
+                    const remainingBalance = i.total - (i.amountPaid || 0);
+                    return {
+                        value: i.invoiceNo,
+                        label: `${i.invoiceNo} - Bal: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingBalance)}`,
+                        amount: remainingBalance,
+                        propertyCode: i.property,
+                        unitCode: i.unitCode,
+                        roomCode: i.roomCode,
+                        partitionCode: i.partitionCode,
+                    };
+                });
         }
         default:
             return [];
