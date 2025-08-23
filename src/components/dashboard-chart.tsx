@@ -7,18 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/
 interface DashboardChartProps {
   data: any[];
   type: 'bar' | 'pie';
+  dataKey: string;
+  valueKey: string;
 }
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--muted))'];
 
-export function DashboardChart({ data, type }: DashboardChartProps) {
+export function DashboardChart({ data, type, dataKey, valueKey }: DashboardChartProps) {
   if (type === 'bar') {
     return (
       <div className="h-[300px] w-full">
         <ResponsiveContainer>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
+            <XAxis dataKey={dataKey} />
             <YAxis tickFormatter={(value) => `$${value/1000}k`} />
             <Tooltip
               cursor={{ fill: 'hsl(var(--muted))' }}
@@ -28,7 +30,7 @@ export function DashboardChart({ data, type }: DashboardChartProps) {
                   borderRadius: 'var(--radius)',
               }}
             />
-            <Bar dataKey="totalRent" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            <Bar dataKey={valueKey} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -42,8 +44,8 @@ export function DashboardChart({ data, type }: DashboardChartProps) {
             <PieChart>
             <Pie
                 data={data}
-                dataKey="value"
-                nameKey="status"
+                dataKey={valueKey}
+                nameKey={dataKey}
                 cx="50%"
                 cy="50%"
                 outerRadius={100}

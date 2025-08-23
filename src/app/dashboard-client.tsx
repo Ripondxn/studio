@@ -28,12 +28,14 @@ import {
   ChevronLeft,
   ChevronRight,
   UserSquare,
+  ArrowUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { Unit } from '@/app/property/units/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
+import { DashboardChart } from '@/components/dashboard-chart';
 
 
 type DashboardClientProps = {
@@ -74,6 +76,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     totalTenants,
     totalProperties,
     totalLandlords,
+    landlordPaymentsChartData,
   } = initialDashboardData;
 
   const kpiData = [
@@ -254,6 +257,27 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                         <ChevronRight className="h-4 w-4" />
                     </Button>
               </CardFooter>
+            </Card>
+        </div>
+        <div className="grid gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ArrowUp className="h-5 w-5 text-red-500" />
+                        Upcoming Payments to Landlords
+                    </CardTitle>
+                    <CardDescription>
+                        A summary of outgoing PDC cheque amounts for the next few months.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <DashboardChart
+                        type="bar"
+                        data={landlordPaymentsChartData}
+                        dataKey="month"
+                        valueKey="total"
+                      />
+                </CardContent>
             </Card>
         </div>
     </div>

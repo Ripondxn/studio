@@ -1,7 +1,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, format, getMonth, getYear } from 'date-fns';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { getUnits } from '@/app/property/units/actions';
 import { getSummary as getPdcChequeSummary } from '@/app/finance/pdc-cheque/actions';
@@ -10,6 +10,7 @@ import { Contract } from '@/app/tenancy/contract/schema';
 import { Unit } from '@/app/property/units/schema';
 import { DashboardClient } from './dashboard-client';
 import { type LeaseContract } from '@/app/lease/contract/schema';
+import { type Cheque } from '@/app/finance/cheque-deposit/schema';
 
 async function getExpiryReport() {
     const contracts = await getAllContracts();
@@ -65,7 +66,9 @@ async function getDashboardData() {
       path.join(process.cwd(), 'src/app/landlord/landlords-data.json'), 'utf-8'
     ).catch(() => '[]');
     const allLandlords = JSON.parse(landlordsData);
-
+    
+    const chequesData = await fs.readFile(path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json'), 'utf-8').catch(() => '[]');
+    const allCheques: Cheque[] = JSON.parse(chequesData);
 
     // KPI: Vacant Units
     const activeContractUnitCodes = new Set(
@@ -91,6 +94,24 @@ async function getDashboardData() {
         return daysRemaining >= 0 && daysRemaining <= 30;
     }).length;
 
+    // Data for Landlord Payments Chart
+    const upcomingPaymentsToLandlords = allCheques
+      .filter(c => c.type === 'Outgoing' && c.status !== 'Cleared' && c.status !== 'Cancelled' && isFuture(parseISO(c.chequeDate)))
+      .reduce((acc, cheque) => {
+        const month = format(parseISO(cheque.chequeDate), 'MMM');
+        acc[month] = (acc[month] || 0) + cheque.amount;
+        return acc;
+      }, {} as Record<string, number>);
+
+    const landlordPaymentsChartData = Object.entries(upcomingPaymentsToLandlords)
+        .map(([month, total]) => ({ month, total: total }))
+        .sort((a,b) => {
+            const monthA = new Date(`${a.month} 1, 2024`).getMonth();
+            const monthB = new Date(`${b.month} 1, 2024`).getMonth();
+            return monthA - monthB;
+        });
+
+
     return {
         vacantUnitsCount,
         totalUnits,
@@ -100,6 +121,7 @@ async function getDashboardData() {
         totalTenants: tenants.length,
         totalProperties: allProperties.length,
         totalLandlords: allLandlords.length,
+        landlordPaymentsChartData,
     };
 }
 
