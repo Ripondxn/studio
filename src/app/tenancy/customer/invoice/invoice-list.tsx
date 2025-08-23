@@ -12,6 +12,7 @@ import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 interface InvoiceListProps {
     customerCode: string;
@@ -27,6 +28,7 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
+    const router = useRouter();
     
     const handleCreateClick = () => {
         setSelectedInvoice(null);
