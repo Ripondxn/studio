@@ -597,10 +597,7 @@ export default function WorkflowPage() {
                     <TableRow>
                     <TableHead>Transaction ID</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Tenant</TableHead>
-                    <TableHead>Landlord</TableHead>
-                    <TableHead>Vendor</TableHead>
-                    <TableHead>Customer</TableHead>
+                    <TableHead>Party Name</TableHead>
                     <TableHead>Property</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Room</TableHead>
@@ -618,10 +615,7 @@ export default function WorkflowPage() {
                         <TableRow key={t.id}>
                         <TableCell className="font-mono text-xs">{t.id}</TableCell>
                         <TableCell>{t.type}</TableCell>
-                        <TableCell>{t.partyType === 'Tenant' ? t.partyName : '-'}</TableCell>
-                        <TableCell>{t.partyType === 'Landlord' ? t.partyName : '-'}</TableCell>
-                        <TableCell>{t.partyType === 'Vendor' ? t.partyName : '-'}</TableCell>
-                        <TableCell>{t.partyType === 'Customer' ? t.partyName : '-'}</TableCell>
+                        <TableCell>{t.partyName}</TableCell>
                         <TableCell>{t.property || '-'}</TableCell>
                         <TableCell>{t.unitCode || '-'}</TableCell>
                         <TableCell>{t.roomCode || '-'}</TableCell>
@@ -682,7 +676,7 @@ export default function WorkflowPage() {
                     ))
                     ) : (
                     <TableRow>
-                        <TableCell colSpan={15} className="h-24 text-center">
+                        <TableCell colSpan={12} className="h-24 text-center">
                         No transactions match the current filter.
                         </TableCell>
                     </TableRow>
@@ -692,7 +686,7 @@ export default function WorkflowPage() {
             )}
         </CardContent>
       </Card>
-      <div style={{ display: 'none' }}>
+       <div style={{ display: 'none' }}>
         <PrintableReport 
           ref={printableRef}
           transactions={filteredTransactions} 

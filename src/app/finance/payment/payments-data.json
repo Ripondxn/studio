@@ -7,23 +7,22 @@
     "amount": 18500,
     "paymentMethod": "Cash",
     "paymentFrom": "Bank",
-    "bankAccountId": "acc_1",
     "property": "LT-C38",
     "unitCode": "101",
     "referenceType": "Tenancy Contract",
     "referenceNo": "TC-1755943179174-1",
     "description": "Payment for Tenancy Contract: TC-1755943179174 (Installment 1) - $18,500.00",
     "status": "Received",
-    "createdByUser": "Ripon Ahmed",
+    "createdByUser": "Super Admin",
     "invoiceAllocations": [],
-    "id": "PAY-1755947318927",
+    "id": "PAY-1755951105531",
     "currentStatus": "DRAFT",
     "approvalHistory": [
       {
         "action": "Created Transaction",
-        "actorId": "Ripon Ahmed",
+        "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-08-23T11:08:38.927Z",
+        "timestamp": "2025-08-23T12:11:45.531Z",
         "comments": "Initial Draft"
       }
     ]
