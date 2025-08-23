@@ -47,20 +47,21 @@ type DashboardClientProps = {
 export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialVacantUnits }: DashboardClientProps) {
   const [expiringCurrentPage, setExpiringCurrentPage] = useState(1);
   const [vacantCurrentPage, setVacantCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const expiringItemsPerPage = 10;
+  const vacantItemsPerPage = 5;
 
   // Pagination for expiring contracts
-  const expiringTotalPages = Math.ceil(initialExpiringContracts.length / itemsPerPage);
+  const expiringTotalPages = Math.ceil(initialExpiringContracts.length / expiringItemsPerPage);
   const paginatedExpiringContracts = initialExpiringContracts.slice(
-    (expiringCurrentPage - 1) * itemsPerPage,
-    expiringCurrentPage * itemsPerPage
+    (expiringCurrentPage - 1) * expiringItemsPerPage,
+    expiringCurrentPage * expiringItemsPerPage
   );
 
   // Pagination for vacant units
-  const vacantTotalPages = Math.ceil(initialVacantUnits.length / itemsPerPage);
+  const vacantTotalPages = Math.ceil(initialVacantUnits.length / vacantItemsPerPage);
   const paginatedVacantUnits = initialVacantUnits.slice(
-    (vacantCurrentPage - 1) * itemsPerPage,
-    vacantCurrentPage * itemsPerPage
+    (vacantCurrentPage - 1) * vacantItemsPerPage,
+    vacantCurrentPage * vacantItemsPerPage
   );
 
   if (!initialDashboardData) {
