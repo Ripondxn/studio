@@ -597,6 +597,11 @@ export default function WorkflowPage() {
                     <TableRow>
                     <TableHead>Transaction ID</TableHead>
                     <TableHead>Type</TableHead>
+                    <TableHead>Party Name</TableHead>
+                    <TableHead>Property</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Room</TableHead>
+                    <TableHead>Reference</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Created By</TableHead>
                     <TableHead>Date</TableHead>
@@ -610,6 +615,11 @@ export default function WorkflowPage() {
                         <TableRow key={t.id}>
                         <TableCell className="font-mono text-xs">{t.id}</TableCell>
                         <TableCell>{t.type}</TableCell>
+                        <TableCell>{t.partyName}</TableCell>
+                        <TableCell>{t.property || '-'}</TableCell>
+                        <TableCell>{t.unitCode || '-'}</TableCell>
+                        <TableCell>{t.roomCode || '-'}</TableCell>
+                        <TableCell>{t.referenceNo || '-'}</TableCell>
                         <TableCell className="font-medium">
                             ${t.amount.toLocaleString()}
                         </TableCell>
@@ -666,7 +676,7 @@ export default function WorkflowPage() {
                     ))
                     ) : (
                     <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
+                        <TableCell colSpan={12} className="h-24 text-center">
                         No transactions match the current filter.
                         </TableCell>
                     </TableRow>
