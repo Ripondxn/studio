@@ -8,8 +8,6 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { leaseContractSchema, type LeaseContract } from './schema';
 import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema';
-import { addPdcCheque } from '@/app/finance/pdc-cheque/actions';
-
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
@@ -36,32 +34,6 @@ async function writeContracts(data: LeaseContract[]) {
     await fs.writeFile(contractsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-async function createChequesFromLeaseContract(contract: LeaseContract) {
-    if (contract.paymentMode !== 'cheque' || !contract.paymentSchedule) {
-        return;
-    }
-
-    const landlords = await readLandlords();
-    const landlord = landlords.find((l: any) => l.landlordData.code === contract.landlordCode);
-    const landlordName = landlord ? landlord.landlordData.name : 'Unknown Landlord';
-
-    for (const installment of contract.paymentSchedule) {
-        if (installment.chequeNo) {
-            await addPdcCheque({
-                chequeNo: installment.chequeNo,
-                chequeDate: installment.dueDate,
-                amount: installment.amount,
-                bankName: installment.bankName || '',
-                status: 'In Hand',
-                type: 'Outgoing',
-                partyName: landlordName,
-                property: contract.property,
-                contractNo: contract.contractNo,
-                remarks: `Installment ${installment.installment}`,
-            });
-        }
-    }
-}
 
 export async function getAllLeaseContracts() {
     return await readContracts();
@@ -101,13 +73,11 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
         }
         
         await writeContracts(allContracts);
-        
-        // This is no longer needed as we will read directly from lease contracts
-        // await createChequesFromLeaseContract(savedContract);
 
         revalidatePath('/lease/contracts');
         revalidatePath('/finance/pdc-cheque');
         revalidatePath(`/lease/contract?id=${data.id}`);
+        revalidatePath('/'); // Revalidate dashboard
         return { success: true, data: savedContract };
 
     } catch (error) {

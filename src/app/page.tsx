@@ -96,7 +96,7 @@ async function getDashboardData() {
 
     // Data for Landlord Payments
     const upcomingLandlordPayments = allLeaseContracts
-      .filter(c => c.paymentMode === 'cheque' && c.paymentSchedule)
+      .filter(c => c.paymentSchedule)
       .flatMap(c => c.paymentSchedule
         .filter(p => p.status !== 'paid' && isFuture(parseISO(p.dueDate)))
         .map(p => ({
