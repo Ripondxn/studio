@@ -8,7 +8,7 @@ import { columns } from './columns';
 import { DataTable } from './data-table';
 import { AddPaymentDialog } from './add-payment-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowDownLeft, ArrowUpRight, RefreshCw, Plus } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, RefreshCw, Plus, Receipt } from 'lucide-react';
 import { type Payment } from './schema';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -58,7 +58,7 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <div>
-            <h1 className="text-3xl font-bold font-headline">Payments</h1>
+            <h1 className="text-3xl font-bold font-headline">Payments & Receipts</h1>
             <p className="text-muted-foreground">
                 Record and manage all incoming and outgoing payments.
             </p>
@@ -66,7 +66,7 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
         <div className="flex items-center gap-2">
             <AddPaymentDialog isOpen={isPaymentDialogOpen} setIsOpen={setIsPaymentDialogOpen} onPaymentAdded={refreshData}>
               <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add Payment
+                <Receipt className="mr-2 h-4 w-4" /> Record New Payment
               </Button>
             </AddPaymentDialog>
             <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>

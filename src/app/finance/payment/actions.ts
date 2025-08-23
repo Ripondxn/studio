@@ -65,7 +65,6 @@ async function readPettyCash() {
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            // Default petty cash if file doesn't exist
             return { balance: 55000 };
         }
         throw error;
@@ -93,7 +92,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
     try {
         // Adjust balances
         if (paymentData.type === 'Payment') { // Money going out
-            if (paymentData.paymentMethod === 'Cash' && paymentData.paymentFrom === 'Petty Cash') {
+            if (paymentData.paymentFrom === 'Petty Cash') {
                 const pettyCash = await readPettyCash();
                 if (pettyCash.balance < paymentData.amount) {
                     return { success: false, error: 'Insufficient funds in Petty Cash.' };
@@ -114,7 +113,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
                 }
             }
         } else { // Receipt - Money coming in
-            if (paymentData.paymentMethod === 'Cash' && paymentData.paymentFrom === 'Petty Cash') {
+            if (paymentData.paymentFrom === 'Petty Cash') {
                  const pettyCash = await readPettyCash();
                  pettyCash.balance += paymentData.amount;
                  await writePettyCash(pettyCash);
@@ -148,7 +147,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
         
         revalidatePath('/finance/payment');
         revalidatePath('/finance/due-payments');
-        revalidatePath('/finance/banking'); // Revalidate banking to show new balance
+        revalidatePath('/finance/banking');
         if(paymentData.partyType === 'Customer') {
              revalidatePath(`/tenancy/customer/add?code=${paymentData.partyName}`);
         } else if (paymentData.partyType === 'Vendor') {
@@ -174,7 +173,7 @@ export async function deletePayment(paymentId: string) {
         
         // Reverse financial impact
         if (paymentToDelete.type === 'Payment') { // If it was a payment, add money back
-            if (paymentToDelete.paymentMethod === 'Cash' && paymentToDelete.paymentFrom === 'Petty Cash') {
+            if (paymentToDelete.paymentFrom === 'Petty Cash') {
                 const pettyCash = await readPettyCash();
                 pettyCash.balance += paymentToDelete.amount;
                 await writePettyCash(pettyCash);
@@ -187,7 +186,7 @@ export async function deletePayment(paymentId: string) {
                 }
             }
         } else { // If it was a receipt, subtract money
-             if (paymentToDelete.paymentMethod === 'Cash' && paymentToDelete.paymentFrom === 'Petty Cash') {
+             if (paymentToDelete.paymentFrom === 'Petty Cash') {
                 const pettyCash = await readPettyCash();
                 pettyCash.balance -= paymentToDelete.amount;
                 await writePettyCash(pettyCash);
@@ -204,7 +203,6 @@ export async function deletePayment(paymentId: string) {
         const updatedPayments = allPayments.filter(p => p.id !== paymentId);
         await writePayments(updatedPayments);
 
-        // Revalidate all relevant paths
         revalidatePath('/finance/payment');
         revalidatePath('/finance/banking');
         revalidatePath('/finance/chart-of-accounts');
