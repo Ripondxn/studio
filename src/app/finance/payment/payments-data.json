@@ -234,5 +234,24 @@
     "invoiceAllocations": [],
     "bankAccountId": "acc_3",
     "id": "PAY-1755944081234"
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-25",
+    "partyType": "Tenant",
+    "partyName": "T003",
+    "amount": 18250,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "bankAccountId": "acc_1",
+    "property": "LT-C38",
+    "unitCode": "101",
+    "referenceType": "Tenancy Contract",
+    "referenceNo": "TC-1755943179174-2",
+    "description": "Payment for Tenancy Contract: TC-1755943179174 (Installment 2) - $18,250.00",
+    "status": "Received",
+    "createdByUser": "Ripon Ahmed",
+    "invoiceAllocations": [],
+    "id": "PAY-1755945249754"
   }
 ]
