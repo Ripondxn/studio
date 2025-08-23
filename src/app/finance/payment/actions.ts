@@ -1,3 +1,4 @@
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -78,72 +79,28 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
     const paymentData = validation.data;
 
     try {
-        // Adjust balances
-        if (paymentData.type === 'Payment') { // Money going out
-            if (paymentData.paymentFrom === 'Petty Cash') {
-                const pettyCash = await readPettyCash();
-                if (pettyCash.balance < paymentData.amount) {
-                    return { success: false, error: 'Insufficient funds in Petty Cash.' };
-                }
-                pettyCash.balance -= paymentData.amount;
-                await writePettyCash(pettyCash);
-                paymentData.bankAccountId = 'acc_3'; // Link payment to petty cash
-            } else if (paymentData.bankAccountId) {
-                const allBankAccounts = await readBankAccounts();
-                const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
-                if (bankAccountIndex !== -1) {
-                    if (allBankAccounts[bankAccountIndex].balance < paymentData.amount) {
-                        return { success: false, error: 'Insufficient funds in the selected bank account.' };
-                    }
-                    allBankAccounts[bankAccountIndex].balance -= paymentData.amount;
-                    await writeBankAccounts(allBankAccounts);
-                } else {
-                    return { success: false, error: 'Selected bank account not found for payment.' };
-                }
-            }
-        } else { // Receipt - Money coming in
-            if (paymentData.paymentFrom === 'Petty Cash') {
-                 const pettyCash = await readPettyCash();
-                 pettyCash.balance += paymentData.amount;
-                 await writePettyCash(pettyCash);
-                 paymentData.bankAccountId = 'acc_3'; // Link receipt to petty cash
-            } else if (paymentData.bankAccountId) {
-                 const allBankAccounts = await readBankAccounts();
-                 const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === paymentData.bankAccountId);
-                 if (bankAccountIndex !== -1) {
-                    allBankAccounts[bankAccountIndex].balance += paymentData.amount;
-                    await writeBankAccounts(allBankAccounts);
-                } else {
-                    return { success: false, error: 'Selected bank account not found for receipt.' };
-                }
-            }
-        }
-        
         const allPayments = await readPayments();
+        
         const newPayment: Payment = {
             ...paymentData,
             id: `PAY-${Date.now()}`,
+            currentStatus: 'DRAFT',
+            approvalHistory: [
+              {
+                action: 'Created Transaction',
+                actorId: paymentData.createdByUser || 'System',
+                actorRole: 'User', // Placeholder, ideally get user's role
+                timestamp: new Date().toISOString(),
+                comments: 'Initial Draft',
+              },
+            ],
         };
 
         allPayments.push(newPayment);
         await writePayments(allPayments);
-
-        if (paymentData.type === 'Receipt' && paymentData.partyType === 'Customer' && paymentData.invoiceAllocations && paymentData.invoiceAllocations.length > 0) {
-            const allocationsToApply = paymentData.invoiceAllocations.filter(alloc => alloc.amount > 0);
-            if (allocationsToApply.length > 0) {
-                 await applyPaymentToInvoices(allocationsToApply, paymentData.partyName);
-            }
-        }
         
         revalidatePath('/finance/payment');
-        revalidatePath('/finance/due-payments');
-        revalidatePath('/finance/banking');
-        revalidatePath('/finance/chart-of-accounts');
-        if(paymentData.partyType === 'Customer') {
-             revalidatePath(`/tenancy/customer/add?code=${paymentData.partyName}`);
-        } else if (paymentData.partyType === 'Vendor') {
-             revalidatePath(`/vendors/agents`);
-        }
+        revalidatePath('/workflow');
         return { success: true, data: newPayment };
 
     } catch (error) {
@@ -154,42 +111,43 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
 export async function deletePayment(paymentId: string) {
     try {
         const allPayments = await readPayments();
-        const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+        const paymentToDelete = allPayments.find(p => p.id === paymentId);
 
-        if (paymentIndex === -1) {
+        if (!paymentToDelete) {
             return { success: false, error: 'Payment not found.' };
         }
-
-        const paymentToDelete = allPayments[paymentIndex];
         
-        // Reverse financial impact
-        if (paymentToDelete.type === 'Payment') { // If it was a payment, add money back
-            if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
-                const pettyCash = await readPettyCash();
-                pettyCash.balance += paymentToDelete.amount;
-                await writePettyCash(pettyCash);
-            } else if (paymentToDelete.bankAccountId) {
-                const allBankAccounts = await readBankAccounts();
-                const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
-                if (accountIndex !== -1) {
-                    allBankAccounts[accountIndex].balance += paymentToDelete.amount;
-                    await writeBankAccounts(allBankAccounts);
+        // Only reverse financial impact if the payment was posted.
+        if(paymentToDelete.currentStatus === 'POSTED') {
+            if (paymentToDelete.type === 'Payment') { // If it was a payment, add money back
+                if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
+                    const pettyCash = await readPettyCash();
+                    pettyCash.balance += paymentToDelete.amount;
+                    await writePettyCash(pettyCash);
+                } else if (paymentToDelete.bankAccountId) {
+                    const allBankAccounts = await readBankAccounts();
+                    const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
+                    if (accountIndex !== -1) {
+                        allBankAccounts[accountIndex].balance += paymentToDelete.amount;
+                        await writeBankAccounts(allBankAccounts);
+                    }
                 }
-            }
-        } else { // If it was a receipt, subtract money
-             if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
-                const pettyCash = await readPettyCash();
-                pettyCash.balance -= paymentToDelete.amount;
-                await writePettyCash(pettyCash);
-            } else if (paymentToDelete.bankAccountId) {
-                const allBankAccounts = await readBankAccounts();
-                const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
-                if (accountIndex !== -1) {
-                    allBankAccounts[accountIndex].balance -= paymentToDelete.amount;
-                    await writeBankAccounts(allBankAccounts);
+            } else { // If it was a receipt, subtract money
+                 if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
+                    const pettyCash = await readPettyCash();
+                    pettyCash.balance -= paymentToDelete.amount;
+                    await writePettyCash(pettyCash);
+                } else if (paymentToDelete.bankAccountId) {
+                    const allBankAccounts = await readBankAccounts();
+                    const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
+                    if (accountIndex !== -1) {
+                        allBankAccounts[accountIndex].balance -= paymentToDelete.amount;
+                        await writeBankAccounts(allBankAccounts);
+                    }
                 }
             }
         }
+
 
         const updatedPayments = allPayments.filter(p => p.id !== paymentId);
         await writePayments(updatedPayments);
@@ -198,6 +156,8 @@ export async function deletePayment(paymentId: string) {
         revalidatePath('/finance/banking');
         revalidatePath('/finance/chart-of-accounts');
         revalidatePath('/vendors/agents');
+        revalidatePath('/workflow');
+
 
         return { success: true };
     } catch (error) {
@@ -234,6 +194,8 @@ export async function getSummary() {
     };
 
     for (const payment of payments) {
+        if(payment.currentStatus !== 'POSTED') continue; // Only count posted transactions
+
         const paymentDate = parseISO(payment.date);
         if (isWithinInterval(paymentDate, { start: startOfThisMonth, end: endOfThisMonth })) {
             if (payment.type === 'Receipt') {

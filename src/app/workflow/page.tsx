@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -20,6 +19,7 @@ import {
   FileSpreadsheet,
   MessageSquare,
   PlusCircle,
+  Loader2,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -66,11 +66,12 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { type Transaction, type Role, type Status, type ApprovalHistory } from './types';
-import { transactions as initialTransactions } from './data';
+import { type Role, type Status } from './types';
 import { format } from 'date-fns';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useRouter } from 'next/navigation';
+import { getPayments } from '@/app/finance/payment/actions';
+import { type Payment, type ApprovalHistory } from '@/app/finance/payment/schema';
 
 
 // Extend jsPDF type to include autoTable from the plugin
@@ -130,7 +131,7 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
             <li key={index} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  {roleIcons[item.actorRole]}
+                  {roleIcons[item.actorRole as Role]}
                 </div>
                 {index < history.length - 1 && (
                   <div className="w-px flex-grow bg-border" />
@@ -159,8 +160,8 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
   );
 };
 
-const TransactionDetailsDialog = ({ transaction }: { transaction: Transaction }) => {
-    const statusInfo = statusConfig[transaction.currentStatus];
+const TransactionDetailsDialog = ({ transaction }: { transaction: Payment }) => {
+    const statusInfo = statusConfig[transaction.currentStatus!];
     return (
         <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -192,17 +193,12 @@ const TransactionDetailsDialog = ({ transaction }: { transaction: Transaction })
                      <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Created By:</span>
-                        <span>{transaction.createdByUser.name}</span>
+                        <span>{transaction.createdByUser}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">Date Created:</span>
-                        <span>{format(new Date(transaction.dateCreated), 'PP')}</span>
-                    </div>
-                     <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">Date Submitted:</span>
-                        <span>{format(new Date(transaction.submittedForApprovalDate), 'PP')}</span>
+                        <span>{format(new Date(transaction.date), 'PP')}</span>
                     </div>
                 </div>
             </div>
@@ -271,7 +267,8 @@ const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType }: ActionDialog
 
 
 export default function WorkflowPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole['role']>('User');
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<Status | 'ALL'>('ALL');
@@ -283,8 +280,12 @@ export default function WorkflowPage() {
     action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
   } | null>(null);
 
-
   useEffect(() => {
+    getPayments().then(data => {
+        setTransactions(data);
+        setIsLoading(false);
+    });
+    
     const storedProfile = sessionStorage.getItem('userProfile');
     if (storedProfile) {
       const profile = JSON.parse(storedProfile);
@@ -305,7 +306,7 @@ export default function WorkflowPage() {
       prev.map((t) => {
         if (t.id !== transactionId) return t;
 
-        let newStatus: Status = t.currentStatus;
+        let newStatus: Status = t.currentStatus || 'DRAFT';
         let historyAction = '';
         
         switch (action) {
@@ -343,7 +344,7 @@ export default function WorkflowPage() {
             ...t,
             currentStatus: newStatus,
             approvalHistory: [
-              ...t.approvalHistory,
+              ...(t.approvalHistory || []),
               {
                 action: historyAction,
                 actorId: currentUserEmail,
@@ -355,7 +356,6 @@ export default function WorkflowPage() {
           };
         }
         return t;
-
       })
     );
   };
@@ -373,22 +373,19 @@ export default function WorkflowPage() {
 
 
   const filteredTransactions = useMemo(() => {
-    let roleFiltered = transactions;
-
     if (statusFilter === 'ALL') {
-      return roleFiltered;
+      return transactions;
     }
-    return roleFiltered.filter(t => t.currentStatus === statusFilter);
-
+    return transactions.filter(t => t.currentStatus === statusFilter);
   }, [transactions, statusFilter]);
 
 
-  const getActionButtons = (transaction: Transaction) => {
+  const getActionButtons = (transaction: Payment) => {
     const canSubmitRoles: Role[] = ['User', 'Property Manager', 'Accountant', 'Admin', 'Super Admin'];
 
     if (canSubmitRoles.includes(currentUserRole) && (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED')) {
       return (
-        <Button size="sm" onClick={() => openActionDialog(transaction.id, 'SUBMIT')}>
+        <Button size="sm" onClick={() => openActionDialog(transaction.id!, 'SUBMIT')}>
           <Send className="mr-2 h-4 w-4" /> Submit
         </Button>
       );
@@ -397,10 +394,10 @@ export default function WorkflowPage() {
     if (currentUserRole === 'Admin' && transaction.currentStatus === 'PENDING_ADMIN_APPROVAL') {
       return (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => openActionDialog(transaction.id, 'APPROVE')}>
+          <Button size="sm" variant="outline" onClick={() => openActionDialog(transaction.id!, 'APPROVE')}>
             <Check className="mr-2 h-4 w-4" /> Approve
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => openActionDialog(transaction.id, 'REJECT')}>
+          <Button size="sm" variant="destructive" onClick={() => openActionDialog(transaction.id!, 'REJECT')}>
             <X className="mr-2 h-4 w-4" /> Reject
           </Button>
         </div>
@@ -410,10 +407,10 @@ export default function WorkflowPage() {
     if (currentUserRole === 'Super Admin' && transaction.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL') {
       return (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => openActionDialog(transaction.id, 'APPROVE')}>
+          <Button size="sm" variant="outline" onClick={() => openActionDialog(transaction.id!, 'APPROVE')}>
             <Check className="mr-2 h-4 w-4" /> Approve & Post
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => openActionDialog(transaction.id, 'REJECT')}>
+          <Button size="sm" variant="destructive" onClick={() => openActionDialog(transaction.id!, 'REJECT')}>
             <X className="mr-2 h-4 w-4" /> Reject
           </Button>
         </div>
@@ -432,9 +429,9 @@ export default function WorkflowPage() {
         t.id,
         t.type,
         `$${t.amount.toLocaleString()}`,
-        t.createdByUser.name,
-        format(new Date(t.submittedForApprovalDate), 'PP'),
-        statusConfig[t.currentStatus].label
+        t.createdByUser,
+        format(new Date(t.date), 'PP'),
+        statusConfig[t.currentStatus!].label
     ]);
     
     (doc as any).autoTable({
@@ -451,9 +448,9 @@ export default function WorkflowPage() {
         'Transaction ID': t.id,
         'Type': t.type,
         'Amount': t.amount,
-        'Created By': t.createdByUser.name,
-        'Submission Date': format(new Date(t.submittedForApprovalDate), 'PP'),
-        'Status': statusConfig[t.currentStatus].label
+        'Created By': t.createdByUser,
+        'Submission Date': format(new Date(t.date), 'PP'),
+        'Status': statusConfig[t.currentStatus!].label
     }));
 
     const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -525,83 +522,89 @@ export default function WorkflowPage() {
               </p>
             </div>
 
-            <Table className="mt-4">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Transaction ID</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Created By</TableHead>
-                  <TableHead>Submission Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell className="font-mono text-xs">{t.id}</TableCell>
-                      <TableCell>{t.type}</TableCell>
-                      <TableCell className="font-medium">
-                        ${t.amount.toLocaleString()}
-                      </TableCell>
-                      <TableCell>{t.createdByUser.name}</TableCell>
-                      <TableCell>
-                        {format(new Date(t.submittedForApprovalDate), 'PP')}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusConfig[t.currentStatus].color}>
-                          {statusConfig[t.currentStatus].label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                             {getActionButtons(t)}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                            <File className="mr-2 h-4 w-4" />
-                                            View Details
-                                        </DropdownMenuItem>
-                                    </DialogTrigger>
-                                    <TransactionDetailsDialog transaction={t} />
-                                </Dialog>
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                            <History className="mr-2 h-4 w-4" />
-                                            View History
-                                        </DropdownMenuItem>
-                                    </DialogTrigger>
-                                     <ApprovalHistoryDialog history={t.approvalHistory} transactionId={t.id}/>
-                                </Dialog>
-                                <DropdownMenuItem onSelect={() => openActionDialog(t.id, 'ADD_COMMENT')}>
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    + Add Comment
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                      </TableCell>
+            {isLoading ? (
+                 <div className="flex h-40 items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                 </div>
+            ) : (
+                <Table className="mt-4">
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Transaction ID</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Created By</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      No transactions match the current filter.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                    {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map((t) => (
+                        <TableRow key={t.id}>
+                        <TableCell className="font-mono text-xs">{t.id}</TableCell>
+                        <TableCell>{t.type}</TableCell>
+                        <TableCell className="font-medium">
+                            ${t.amount.toLocaleString()}
+                        </TableCell>
+                        <TableCell>{t.createdByUser}</TableCell>
+                        <TableCell>
+                            {format(new Date(t.date), 'PP')}
+                        </TableCell>
+                        <TableCell>
+                            <Badge variant={statusConfig[t.currentStatus!].color}>
+                            {statusConfig[t.currentStatus!].label}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2">
+                                {getActionButtons(t)}
+                                <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                                <File className="mr-2 h-4 w-4" />
+                                                View Details
+                                            </DropdownMenuItem>
+                                        </DialogTrigger>
+                                        <TransactionDetailsDialog transaction={t} />
+                                    </Dialog>
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={!t.approvalHistory || t.approvalHistory.length === 0}>
+                                                <History className="mr-2 h-4 w-4" />
+                                                View History
+                                            </DropdownMenuItem>
+                                        </DialogTrigger>
+                                        <ApprovalHistoryDialog history={t.approvalHistory || []} transactionId={t.id!} />
+                                    </Dialog>
+                                    <DropdownMenuItem onSelect={() => openActionDialog(t.id!, 'ADD_COMMENT')}>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        + Add Comment
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </TableCell>
+                        </TableRow>
+                    ))
+                    ) : (
+                    <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                        No transactions match the current filter.
+                        </TableCell>
+                    </TableRow>
+                    )}
+                </TableBody>
+                </Table>
+            )}
         </CardContent>
       </Card>
     </div>
