@@ -1,5 +1,3 @@
-
-
 import { z } from 'zod';
 
 export const invoiceAllocationSchema = z.object({
@@ -29,6 +27,7 @@ export const paymentSchema = z.object({
   remarks: z.string().optional(),
   status: z.enum(['Paid', 'Received', 'Cancelled']),
   agentCode: z.string().optional(),
+  createdByUser: z.string().optional(),
   invoiceAllocations: z.array(invoiceAllocationSchema).optional(),
 });
 

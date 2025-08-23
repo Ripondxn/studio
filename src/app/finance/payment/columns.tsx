@@ -1,4 +1,3 @@
-
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -108,6 +107,10 @@ export const columns: ColumnDef<Payment>[] = [
   {
     accessorKey: 'referenceNo',
     header: 'Reference',
+  },
+  {
+    accessorKey: 'createdByUser',
+    header: 'By User Name',
   },
   {
     accessorKey: 'status',

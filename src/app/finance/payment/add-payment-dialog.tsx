@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -68,6 +66,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [], references: [] });
+  const [currentUser, setCurrentUser] = useState<string>('');
 
   const {
     register,
@@ -91,6 +90,13 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const paymentFrom = watch('paymentFrom');
 
   const [invoicesForCustomer, setInvoicesForCustomer] = useState<Invoice[]>(customerInvoices);
+  
+  useEffect(() => {
+    const userProfile = sessionStorage.getItem('userProfile');
+    if(userProfile) {
+        setCurrentUser(JSON.parse(userProfile).name);
+    }
+  }, []);
 
   useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties })));
@@ -184,7 +190,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
   const onSubmit = async (data: PaymentFormData) => {
     setIsSaving(true);
-    const result = await addPayment(data);
+    const result = await addPayment({...data, createdByUser: currentUser});
 
     if (result.success) {
       toast({

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -74,6 +73,14 @@ export function DataTable<TData, TValue>({
           value={(table.getColumn('partyName')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
             table.getColumn('partyName')?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+         <Input
+          placeholder="Filter by User Name..."
+          value={(table.getColumn('createdByUser')?.getFilterValue() as string) ?? ''}
+          onChange={(event) =>
+            table.getColumn('createdByUser')?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
