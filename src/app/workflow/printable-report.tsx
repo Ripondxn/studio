@@ -46,7 +46,8 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
             @page { size: A4; margin: 1.5cm; }
             body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
             .printable-area { display: flex; flex-direction: column; justify-content: space-between; min-height: 24cm; }
-            .printable-table th, .printable-table td { border: 1px solid #e5e7eb; }
+            .printable-table th, .printable-table td { border: 1px solid #e5e7eb !important; padding: 4px 6px; font-size: 9pt; }
+            .printable-table th { background-color: #f9fafb !important; }
           `}
         </style>
         <div className="printable-area">
@@ -76,6 +77,11 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                             <TableHead className="border border-gray-300">Date</TableHead>
                             <TableHead className="border border-gray-300">Transaction ID</TableHead>
                             <TableHead className="border border-gray-300">Type</TableHead>
+                            <TableHead className="border border-gray-300">Party Name</TableHead>
+                            <TableHead className="border border-gray-300">Property</TableHead>
+                            <TableHead className="border border-gray-300">Unit</TableHead>
+                            <TableHead className="border border-gray-300">Room</TableHead>
+                            <TableHead className="border border-gray-300">Reference</TableHead>
                             <TableHead className="border border-gray-300">Created By</TableHead>
                             <TableHead className="border border-gray-300">Status</TableHead>
                             <TableHead className="text-right border border-gray-300">Amount</TableHead>
@@ -87,6 +93,11 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                                 <TableCell className="border border-gray-300">{format(new Date(t.date), 'PP')}</TableCell>
                                 <TableCell className="font-mono text-xs border border-gray-300">{t.id}</TableCell>
                                 <TableCell className="border border-gray-300">{t.type}</TableCell>
+                                <TableCell className="border border-gray-300">{t.partyName}</TableCell>
+                                <TableCell className="border border-gray-300">{t.property || '-'}</TableCell>
+                                <TableCell className="border border-gray-300">{t.unitCode || '-'}</TableCell>
+                                <TableCell className="border border-gray-300">{t.roomCode || '-'}</TableCell>
+                                <TableCell className="border border-gray-300">{t.referenceNo || '-'}</TableCell>
                                 <TableCell className="border border-gray-300">{t.createdByUser}</TableCell>
                                 <TableCell className="border border-gray-300">
                                   <Badge variant="outline">{t.currentStatus ? statusLabelMap[t.currentStatus] : 'N/A'}</Badge>
