@@ -140,6 +140,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         subItems: [
             { href: '/admin/user-roles', label: 'User Roles' },
             { href: '/admin/communication', label: 'Communication' },
+            { href: '/admin/backup', label: 'Backup & Restore' },
         ]
     },
   ]
