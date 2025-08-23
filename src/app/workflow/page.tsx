@@ -21,7 +21,8 @@ import {
   MessageSquare,
   PlusCircle,
   Loader2,
-  Printer
+  Printer,
+  Columns
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -57,6 +58,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   Dialog,
@@ -270,6 +274,21 @@ const ActionDialog = ({ isOpen, setIsOpen, onConfirm, actionType }: ActionDialog
     )
 }
 
+const defaultColumnVisibility = {
+    'id': true,
+    'type': true,
+    'partyName': true,
+    'property': true,
+    'unitCode': true,
+    'roomCode': false,
+    'referenceNo': true,
+    'amount': true,
+    'createdByUser': false,
+    'date': true,
+    'currentStatus': true,
+};
+
+type ColumnId = keyof typeof defaultColumnVisibility;
 
 export default function WorkflowPage() {
   const [transactions, setTransactions] = useState<Payment[]>([]);
@@ -281,6 +300,7 @@ export default function WorkflowPage() {
   const [userFilter, setUserFilter] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date }>({});
   const [partyNameLookups, setPartyNameLookups] = useState<Record<string, string>>({});
+  const [columnVisibility, setColumnVisibility] = useState<Record<ColumnId, boolean>>(defaultColumnVisibility);
 
   const router = useRouter();
   const printableRef = useRef<HTMLDivElement>(null);
@@ -491,17 +511,21 @@ export default function WorkflowPage() {
         const printWindow = window.open('', '_blank');
         if (printWindow) {
             printWindow.document.write('<html><head><title>Print Report</title>');
-            printWindow.document.write('<link rel="stylesheet" href="/path/to/your/tailwind.css">'); // You might need to adjust path
-            printWindow.document.write('</head><body>');
+            printWindow.document.write('<style>@import url("https://rsms.me/inter/inter.css");</style>');
+            printWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}/globals.css" type="text/css" />`); // Not ideal but might work
+            printWindow.document.write('<style>body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }</style>');
+            printWindow.document.write('</head><body class="bg-white">');
             printWindow.document.write(printContent);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
-            // A timeout might be needed to allow styles to load in some browsers
-            setTimeout(() => printWindow.print(), 500);
+             setTimeout(() => printWindow.print(), 1000);
         }
     }
   }
   
+  const toggleColumnVisibility = (columnId: ColumnId) => {
+    setColumnVisibility(prev => ({ ...prev, [columnId]: !prev[columnId] }));
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -526,6 +550,24 @@ export default function WorkflowPage() {
                     </CardDescription>
                 </div>
                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm"><Columns className="mr-2 h-4 w-4" /> View</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {Object.entries(columnVisibility).map(([key, value]) => (
+                                <DropdownMenuCheckboxItem
+                                    key={key}
+                                    checked={value}
+                                    onCheckedChange={() => toggleColumnVisibility(key as ColumnId)}
+                                >
+                                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print Report</Button>
                     <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
                     <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
@@ -603,17 +645,17 @@ export default function WorkflowPage() {
                 <Table className="mt-4">
                 <TableHeader>
                     <TableRow>
-                    <TableHead>Transaction ID</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Party Name</TableHead>
-                    <TableHead>Property</TableHead>
-                    <TableHead>Unit</TableHead>
-                    <TableHead>Room</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
+                    {columnVisibility.id && <TableHead>Transaction ID</TableHead>}
+                    {columnVisibility.type && <TableHead>Type</TableHead>}
+                    {columnVisibility.partyName && <TableHead>Party Name</TableHead>}
+                    {columnVisibility.property && <TableHead>Property</TableHead>}
+                    {columnVisibility.unitCode && <TableHead>Unit</TableHead>}
+                    {columnVisibility.roomCode && <TableHead>Room</TableHead>}
+                    {columnVisibility.referenceNo && <TableHead>Reference</TableHead>}
+                    {columnVisibility.amount && <TableHead>Amount</TableHead>}
+                    {columnVisibility.createdByUser && <TableHead>Created By</TableHead>}
+                    {columnVisibility.date && <TableHead>Date</TableHead>}
+                    {columnVisibility.currentStatus && <TableHead>Status</TableHead>}
                     <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -621,21 +663,21 @@ export default function WorkflowPage() {
                     {filteredTransactions.length > 0 ? (
                     filteredTransactions.map((t) => (
                         <TableRow key={t.id}>
-                        <TableCell className="font-mono text-xs">{t.id}</TableCell>
-                        <TableCell>{t.type}</TableCell>
-                        <TableCell>{partyNameLookups[t.partyName] || t.partyName}</TableCell>
-                        <TableCell>{t.property || '-'}</TableCell>
-                        <TableCell>{t.unitCode || '-'}</TableCell>
-                        <TableCell>{t.roomCode || '-'}</TableCell>
-                        <TableCell>{t.referenceNo || '-'}</TableCell>
-                        <TableCell className="font-medium">
+                        {columnVisibility.id && <TableCell className="font-mono text-xs">{t.id}</TableCell>}
+                        {columnVisibility.type && <TableCell>{t.type}</TableCell>}
+                        {columnVisibility.partyName && <TableCell>{partyNameLookups[t.partyName] || t.partyName}</TableCell>}
+                        {columnVisibility.property && <TableCell>{t.property || '-'}</TableCell>}
+                        {columnVisibility.unitCode && <TableCell>{t.unitCode || '-'}</TableCell>}
+                        {columnVisibility.roomCode && <TableCell>{t.roomCode || '-'}</TableCell>}
+                        {columnVisibility.referenceNo && <TableCell>{t.referenceNo || '-'}</TableCell>}
+                        {columnVisibility.amount && <TableCell className="font-medium">
                             ${t.amount.toLocaleString()}
-                        </TableCell>
-                        <TableCell>{t.createdByUser}</TableCell>
-                        <TableCell>
+                        </TableCell>}
+                        {columnVisibility.createdByUser && <TableCell>{t.createdByUser}</TableCell>}
+                        {columnVisibility.date && <TableCell>
                             {format(new Date(t.date), 'PP')}
-                        </TableCell>
-                        <TableCell>
+                        </TableCell>}
+                        {columnVisibility.currentStatus && <TableCell>
                             {t.currentStatus && statusConfig[t.currentStatus] ? (
                                 <Badge variant={statusConfig[t.currentStatus].color}>
                                     {statusConfig[t.currentStatus].label}
@@ -643,7 +685,7 @@ export default function WorkflowPage() {
                             ) : (
                                 <Badge variant="secondary">Unknown</Badge>
                             )}
-                        </TableCell>
+                        </TableCell>}
                         <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-2">
                                 {getActionButtons(t)}
