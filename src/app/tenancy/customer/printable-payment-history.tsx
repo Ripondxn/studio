@@ -4,7 +4,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { type Payment } from '@/app/finance/payment/schema';
-import { type Invoice } from './invoice/schema';
+import { type Invoice } from './schema';
 import {
   Table,
   TableBody,
@@ -25,15 +25,15 @@ interface PrintablePaymentHistoryProps {
 export const PrintablePaymentHistory = React.forwardRef<HTMLDivElement, PrintablePaymentHistoryProps>(
   ({ payments, invoices, customerName }, ref) => {
     
-    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-
     const paymentsByInvoice = payments.reduce((acc, p) => {
         if (p.invoiceAllocations && p.invoiceAllocations.length > 0) {
             p.invoiceAllocations.forEach(alloc => {
-                if (!acc[alloc.invoiceId]) {
-                    acc[alloc.invoiceId] = [];
+                if (alloc.amount > 0) { // Only include allocations with an amount
+                    if (!acc[alloc.invoiceId]) {
+                        acc[alloc.invoiceId] = [];
+                    }
+                    acc[alloc.invoiceId].push({ ...p, allocatedAmount: alloc.amount });
                 }
-                acc[alloc.invoiceId].push({ ...p, allocatedAmount: alloc.amount });
             });
         }
         return acc;
@@ -41,95 +41,95 @@ export const PrintablePaymentHistory = React.forwardRef<HTMLDivElement, Printabl
 
     return (
       <div ref={ref} className="p-8 bg-white text-black max-w-4xl mx-auto my-4 font-sans">
+        <style type="text/css" media="print">
+          {`
+            @page { size: A4; margin: 1.5cm; }
+            body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+            .printable-area { display: block; }
+            .page-break-before { page-break-before: always; }
+            .invoice-summary-table, .payments-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+            .invoice-summary-table th, .invoice-summary-table td, .payments-table th, .payments-table td { border: 1px solid #dee2e6 !important; padding: 0.5rem; font-size: 9pt; }
+            .invoice-summary-table th { background-color: #cfe2f3 !important; } /* Light Blue */
+            .payments-table th { background-color: #d9ead3 !important; } /* Light Green */
+          `}
+        </style>
         <div className="printable-area">
-            <div>
-                <header className="flex justify-between items-start pb-6 mb-6 border-b border-gray-300">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-primary/10 text-primary rounded-lg">
-                            <Building2 className="h-8 w-8" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Trust Famous Real Estate</h1>
-                            <p className="text-xs text-gray-500">Statement of Account</p>
-                        </div>
+            <header className="flex justify-between items-start pb-6 mb-6 border-b border-gray-300">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary/10 text-primary rounded-lg">
+                        <Building2 className="h-8 w-8" />
                     </div>
-                    <div className="text-right text-xs">
-                        <p><span className="font-semibold">Report Date:</span> {format(new Date(), 'PP')}</p>
-                        <p><span className="font-semibold">Customer:</span> {customerName}</p>
-                    </div>
-                </header>
-                
-                {invoices.map(invoice => (
-                     <div key={invoice.id} className="mb-8 page-break-before">
-                        <div className="p-4 rounded-lg border bg-gray-50 mb-2">
-                             <div className="grid grid-cols-4 gap-4">
-                                <div>
-                                    <p className="text-xs text-gray-500">Invoice No.</p>
-                                    <p className="font-semibold">{invoice.invoiceNo}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Invoice Date</p>
-                                    <p className="font-semibold">{format(new Date(invoice.invoiceDate), 'PP')}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-500">Invoice Amount</p>
-                                    <p className="font-semibold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}</p>
-                                </div>
-                                 <div className="text-right">
-                                    <p className="text-xs text-gray-500">Balance Due</p>
-                                    <p className="font-semibold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                         <Table className="printable-table">
-                            <TableHeader>
-                                <TableRow className="bg-gray-100">
-                                    <TableHead>Payment Date</TableHead>
-                                    <TableHead>Payment Ref</TableHead>
-                                    <TableHead>Method</TableHead>
-                                    <TableHead className="text-right">Amount Received</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {paymentsByInvoice[invoice.id] && paymentsByInvoice[invoice.id].length > 0 ? (
-                                    paymentsByInvoice[invoice.id].map(p => (
-                                        <TableRow key={p.id}>
-                                            <TableCell>{format(new Date(p.date), 'PP')}</TableCell>
-                                            <TableCell>{p.id}</TableCell>
-                                            <TableCell>{p.paymentMethod}</TableCell>
-                                            <TableCell className="text-right font-medium">
-                                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(p.allocatedAmount)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-xs text-gray-500">No payments recorded for this invoice.</TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                            <TableFooter>
-                                <TableRow>
-                                    <TableCell colSpan={3} className="text-right font-semibold">Total Received for this Invoice</TableCell>
-                                    <TableCell className="text-right font-bold">
-                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.amountPaid || 0)}
-                                    </TableCell>
-                                </TableRow>
-                            </TableFooter>
-                        </Table>
-                     </div>
-                ))}
-
-                <div className="flex justify-end mt-8">
-                    <div className="w-full max-w-xs space-y-2 mt-4">
-                        <div className="flex justify-between border-t-2 border-gray-800 pt-2 mt-2">
-                            <span className="font-bold text-gray-800 text-base">Total Paid:</span>
-                            <span className="font-bold text-gray-800 text-base">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalPaid)}</span>
-                        </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-800">Trust Famous Real Estate</h1>
+                        <p className="text-xs text-gray-500">Statement of Account</p>
                     </div>
                 </div>
-            </div>
+                <div className="text-right text-xs">
+                    <p><span className="font-semibold">Report Date:</span> {format(new Date(), 'PP')}</p>
+                    <p><span className="font-semibold">Customer:</span> {customerName}</p>
+                </div>
+            </header>
+            
+            {invoices.map(invoice => (
+                 <div key={invoice.id} className="mb-8 page-break-before:mt-8">
+                    <table className="invoice-summary-table">
+                        <tbody>
+                            <TableRow>
+                                <TableCell className="font-semibold">Invoice No</TableCell>
+                                <TableCell>{invoice.invoiceNo}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-semibold">Amount</TableCell>
+                                <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}</TableCell>
+                            </TableRow>
+                             <TableRow>
+                                <TableCell className="font-semibold">Balance</TableCell>
+                                <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</TableCell>
+                            </TableRow>
+                        </tbody>
+                    </table>
+
+                     <Table className="payments-table">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>SN</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Receipt No</TableHead>
+                                <TableHead>Amount</TableHead>
+                                <TableHead>Reference No</TableHead>
+                                <TableHead>Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paymentsByInvoice[invoice.id] && paymentsByInvoice[invoice.id].length > 0 ? (
+                                paymentsByInvoice[invoice.id].map((p, index) => (
+                                    <TableRow key={p.id}>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>{format(new Date(p.date), 'dd/M/yyyy')}</TableCell>
+                                        <TableCell>{p.id}</TableCell>
+                                        <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(p.allocatedAmount)}</TableCell>
+                                        <TableCell>{p.referenceNo}</TableCell>
+                                        <TableCell>{p.status}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center text-xs text-gray-500">No payments recorded for this invoice.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-right font-bold">Total Amount Received =</TableCell>
+                                <TableCell className="font-bold">
+                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.amountPaid || 0)}
+                                </TableCell>
+                                <TableCell colSpan={2}></TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                 </div>
+            ))}
 
             <footer className="mt-16 pt-8 grid grid-cols-2 gap-8 text-center text-xs text-gray-600">
                  <div className="border-t border-gray-400 pt-2">

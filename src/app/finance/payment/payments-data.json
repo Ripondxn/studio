@@ -135,5 +135,40 @@
         "comments": "Initial Draft"
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-23",
+    "partyType": "Customer",
+    "partyName": "C002",
+    "amount": 700,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "referenceType": "Invoice",
+    "referenceNo": "INV-1755966773964",
+    "description": "Payment for Invoice: INV-1755966773964 - Bal: $2,300.00",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "invoiceAllocations": [
+      {
+        "invoiceId": "INV-1755958498210",
+        "amount": 0
+      },
+      {
+        "invoiceId": "INV-1755966806827",
+        "amount": 700
+      }
+    ],
+    "id": "PAY-1755966866394",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-23T16:34:26.394Z",
+        "comments": "Initial Draft"
+      }
+    ]
   }
 ]

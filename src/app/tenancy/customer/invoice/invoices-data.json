@@ -55,5 +55,33 @@
     "status": "Sent",
     "id": "INV-1755958498210",
     "amountPaid": 3500
+  },
+  {
+    "invoiceNo": "INV-1755966773964",
+    "customerCode": "C002",
+    "customerName": "Md Ripon Ahmed",
+    "property": "",
+    "unitCode": "",
+    "roomCode": "",
+    "partitionCode": "",
+    "invoiceDate": "2025-08-23",
+    "dueDate": "2025-08-23",
+    "items": [
+      {
+        "id": "item-1755966773964",
+        "description": "monthly rent",
+        "quantity": 1,
+        "unitPrice": 2300,
+        "total": 0
+      }
+    ],
+    "subTotal": 2300,
+    "taxType": "inclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 2300,
+    "status": "Sent",
+    "id": "INV-1755966806827",
+    "amountPaid": 700
   }
 ]
