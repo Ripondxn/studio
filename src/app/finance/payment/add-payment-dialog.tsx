@@ -25,7 +25,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit } from '@/app/tenancy/contract/actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -168,8 +168,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     const fetchSubUnits = async () => {
         if (watchedProperty && watchedUnit) {
             const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
-            const partitions = await getPartitionsForUnit(watchedProperty, watchedUnit);
-            setLookups(prev => ({...prev, rooms, partitions}));
+            setLookups(prev => ({...prev, rooms, partitions: []}));
         } else {
             setLookups(prev => ({...prev, rooms: [], partitions: []}));
         }
