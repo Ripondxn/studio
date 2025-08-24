@@ -23,6 +23,7 @@ import { getTransactionsByIds } from './actions';
 import { type Payment } from '@/app/finance/payment/schema';
 import { PrintableReport } from './printable-report';
 import { getPartyNameLookups } from '../payment/actions';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const statusConfig = {
   PENDING_ADMIN_APPROVAL: { label: 'Pending Admin Approval', color: 'bg-yellow-500/20 text-yellow-700', icon: <Clock className="h-3 w-3" /> },
@@ -57,8 +58,8 @@ const ViewCheckoutDialog = ({ checkout, isOpen, setIsOpen }: { checkout: DailyCh
              const printWindow = window.open('', '_blank');
             if(printWindow){
                 printWindow.document.write('<html><head><title>Checkout Voucher</title>');
-                printWindow.document.write('<style>body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }</style>');
-                printWindow.document.write('</head><body>');
+                printWindow.document.write('<style>body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; } @page { size: A4; margin: 1cm; }</style>');
+                printWindow.document.write('</head><body class="bg-white">');
                 printWindow.document.write(printContent.innerHTML);
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
@@ -76,7 +77,7 @@ const ViewCheckoutDialog = ({ checkout, isOpen, setIsOpen }: { checkout: DailyCh
                         Details for voucher submitted on {format(new Date(checkout.date), 'PP')}.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="max-h-[70vh] overflow-y-auto">
+                <ScrollArea className="max-h-[70vh]">
                     <div className="printable-content p-4" ref={printRef}>
                        <PrintableReport 
                          transactions={transactions} 
@@ -84,7 +85,7 @@ const ViewCheckoutDialog = ({ checkout, isOpen, setIsOpen }: { checkout: DailyCh
                          partyNameLookups={partyNameLookups} 
                         />
                     </div>
-                </div>
+                </ScrollArea>
                 <DialogFooter className="no-print">
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4"/> Print
