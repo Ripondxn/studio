@@ -28,7 +28,7 @@ export async function getDuesForPayee(payeeCode: string) {
     if (!payeeCode) return [];
 
     const today = startOfToday();
-    const dueItems: { label: string; value: number; reference: string }[] = [];
+    const dueItems: { label: string; value: number; reference: string, chequeNo?: string, bankName?: string }[] = [];
     const partyType = payeeCode.charAt(0);
 
     try {
@@ -59,6 +59,8 @@ export async function getDuesForPayee(payeeCode: string) {
                                 label: `Lease Pymt for ${contract.property} - Inst. ${installment.installment}`,
                                 value: installment.amount,
                                 reference: `${contract.contractNo}-${installment.installment}`,
+                                chequeNo: installment.chequeNo,
+                                bankName: installment.bankName,
                             });
                         }
                     });

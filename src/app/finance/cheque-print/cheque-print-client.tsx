@@ -53,6 +53,8 @@ type DueItem = {
     label: string;
     value: number;
     reference: string;
+    chequeNo?: string;
+    bankName?: string;
 }
 
 export function ChequePrintClient() {
@@ -105,6 +107,9 @@ export function ChequePrintClient() {
     if(selectedDue) {
         form.setValue('amount', selectedDue.value);
         form.setValue('memo', `Payment for ${selectedDue.reference}`);
+        if (selectedDue.bankName) {
+            form.setValue('bankName', selectedDue.bankName);
+        }
     }
   }
 
