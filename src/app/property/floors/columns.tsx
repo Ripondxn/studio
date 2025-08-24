@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -173,10 +174,14 @@ export const columns: ColumnDef<Floor>[] = [
     header: 'Occupancy Status',
     cell: ({ row }) => {
       const status = row.original.occupancyStatus;
-      const variant = status === 'Vacant' ? 'default' : status === 'Partially Occupied' ? 'secondary' : 'destructive';
-      const color = status === 'Vacant' ? 'bg-green-500/20 text-green-700' : status === 'Partially Occupied' ? 'bg-yellow-500/20 text-yellow-700' : 'bg-red-500/20 text-red-700';
+      const statusConfig = {
+        'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
+        'Fully Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700' },
+        'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700' }
+      };
+      const config = statusConfig[status as keyof typeof statusConfig] || { variant: 'secondary', color: '' };
       
-      return <Badge variant={variant} className={cn(color, 'border-transparent')}>{status}</Badge>;
+      return <Badge variant={config.variant as any} className={cn(config.color, 'border-transparent')}>{status}</Badge>;
     },
   },
   {

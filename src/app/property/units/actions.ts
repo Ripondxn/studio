@@ -50,17 +50,15 @@ export async function getUnits() {
         
         let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
 
-        if (roomsInUnit.length > 0) {
+        if (occupiedUnitCodes.has(unit.unitCode)) {
+            occupancyStatus = 'Occupied';
+        } else if (roomsInUnit.length > 0) {
             const occupiedRoomsCount = roomsInUnit.filter(r => occupiedRoomCodes.has(r.roomCode)).length;
             if (occupiedRoomsCount === 0) {
                 occupancyStatus = 'Vacant';
             } else if (occupiedRoomsCount < roomsInUnit.length) {
                 occupancyStatus = 'Partially Occupied';
             } else {
-                occupancyStatus = 'Occupied';
-            }
-        } else {
-            if (occupiedUnitCodes.has(unit.unitCode)) {
                 occupancyStatus = 'Occupied';
             }
         }
