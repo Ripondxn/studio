@@ -1,2 +1,20 @@
-
-[]
+[
+  {
+    "roomCode": "Room-1/A",
+    "propertyCode": "LT-C38",
+    "unitCode": "F101",
+    "roomType": "Master Bed",
+    "rentAmount": 400,
+    "rentFrequency": "Monthly",
+    "id": "ROOM-1756022577690"
+  },
+  {
+    "roomCode": "Room-1/B",
+    "propertyCode": "LT-C38",
+    "unitCode": "F101",
+    "roomType": "Standard",
+    "rentAmount": 500,
+    "rentFrequency": "Monthly",
+    "id": "ROOM-1756022645430"
+  }
+]

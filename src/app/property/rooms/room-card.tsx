@@ -3,13 +3,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DoorClosed, Hash, Building, Tag, UserX, UserCheck, FilePlus2 } from 'lucide-react';
+import { DoorClosed, Hash, Building, Tag, UserX, UserCheck, FilePlus2, Home } from 'lucide-react';
 import type { Room } from './schema';
 import { EditRoomDialog } from './edit-room-dialog';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface RoomCardProps {
   room: Room;
@@ -17,6 +18,11 @@ interface RoomCardProps {
 
 export function RoomCard({ room }: RoomCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSuccess = () => {
+    router.refresh();
+  }
 
   const status = room.occupancyStatus;
   const variant = status === 'Occupied' ? 'destructive' : 'default';
@@ -29,13 +35,14 @@ export function RoomCard({ room }: RoomCardProps) {
         room={room} 
         isOpen={isEditDialogOpen} 
         setIsOpen={setIsEditDialogOpen}
+        onRoomUpdated={handleSuccess}
       />
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
               <CardDescription>{room.roomCode}</CardDescription>
-              <CardTitle>{room.roomName}</CardTitle>
+              <CardTitle>{room.roomName || room.roomCode}</CardTitle>
             </div>
              <Badge variant={variant} className={cn('gap-1', color, 'border-transparent')}>
                 <Icon className="h-3 w-3" />
@@ -45,8 +52,8 @@ export function RoomCard({ room }: RoomCardProps) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground flex items-center gap-2"><Building className="h-4 w-4" /> Floor</span>
-            <span className="font-medium">{room.floorCode}</span>
+            <span className="text-muted-foreground flex items-center gap-2"><Home className="h-4 w-4" /> Unit Code</span>
+            <span className="font-medium">{room.unitCode}</span>
           </div>
            <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground flex items-center gap-2"><Hash className="h-4 w-4" /> Room Type</span>
