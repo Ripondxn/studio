@@ -274,7 +274,7 @@ export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
 
     return allRooms
         .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode && !occupiedRoomCodes.has(r.roomCode))
-        .map((r: any) => ({ value: r.roomCode, label: `${r.roomCode} (${r.roomName || 'No Name'})` }));
+        .map((r: any) => ({ value: r.roomCode, label: r.roomCode }));
 }
 
 export async function getUnitDetails(unitCode: string) {
@@ -305,4 +305,3 @@ export async function getRoomDetails(roomCode: string) {
     }
     return { success: true, data: room };
 }
-
