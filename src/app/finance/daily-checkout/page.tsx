@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 export default function DailyCheckoutPage() {
   const [checkouts, setCheckouts] = useState<DailyCheckout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<{ email: string, role: UserRole['role'] } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ email: string; name: string; role: UserRole['role'] } | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -26,7 +26,7 @@ export default function DailyCheckoutPage() {
     const storedProfile = sessionStorage.getItem('userProfile');
     if (storedProfile) {
         const profile = JSON.parse(storedProfile);
-        setCurrentUser({ email: profile.email, role: profile.role });
+        setCurrentUser(profile);
     } else {
       router.push('/login');
     }
@@ -86,5 +86,3 @@ export default function DailyCheckoutPage() {
     </div>
   );
 }
-
-

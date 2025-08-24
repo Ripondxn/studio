@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -59,12 +60,12 @@ export async function getDraftTransactions(user: { email: string, role: string, 
     return allPayments.filter(p => p.currentStatus === 'DRAFT' && p.createdByUser === user.name);
 }
 
-export async function getCheckouts(user: { email: string, role: string }) {
+export async function getCheckouts(user: { email: string, name: string, role: UserRole['role'] }) {
     const allCheckouts = await readCheckouts();
     if(user.role === 'Admin' || user.role === 'Super Admin') {
         return allCheckouts;
     }
-    return allCheckouts.filter(c => c.submittedBy === user.email);
+    return allCheckouts.filter(c => c.submittedBy === user.name);
 }
 
 
