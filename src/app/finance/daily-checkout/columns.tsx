@@ -40,8 +40,7 @@ const statusConfig = {
 };
 
 
-const ViewCheckoutDialog = ({ checkout }: { checkout: DailyCheckout }) => {
-    const [isOpen, setIsOpen] = useState(false);
+const ViewCheckoutDialog = ({ checkout, isOpen, setIsOpen }: { checkout: DailyCheckout, isOpen: boolean, setIsOpen: (open: boolean) => void }) => {
     const [transactions, setTransactions] = useState<Payment[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
@@ -75,11 +74,6 @@ const ViewCheckoutDialog = ({ checkout }: { checkout: DailyCheckout }) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <div onClick={() => setIsOpen(true)} className="flex items-center w-full">
-                    <Eye className="mr-2 h-4 w-4"/> View / Print Voucher
-                </div>
-            </DropdownMenuItem>
              <DialogContent className="max-w-4xl">
                 <div ref={printRef} className="printable-content">
                     <DialogHeader>
@@ -128,16 +122,13 @@ const ViewCheckoutDialog = ({ checkout }: { checkout: DailyCheckout }) => {
 
 const ActionsCell = ({ row }: { row: { original: DailyCheckout } }) => {
     const checkout = row.original;
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     return (
         <div className="text-right">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                     <ViewCheckoutDialog checkout={checkout} />
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <ViewCheckoutDialog checkout={checkout} isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
+            <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
+                <Eye className="mr-2 h-4 w-4"/> View/Print
+            </Button>
         </div>
     )
 }
