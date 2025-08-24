@@ -42,7 +42,7 @@ export async function getUnits() {
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
-    const occupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode).map(c => c.unitCode));
+    const occupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
     const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
 
     return allUnits.map(unit => {
