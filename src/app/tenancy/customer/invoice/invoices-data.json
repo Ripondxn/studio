@@ -52,9 +52,9 @@
     "taxRate": 0,
     "tax": 0,
     "total": 4500,
-    "status": "Sent",
+    "status": "Paid",
     "id": "INV-1755958498210",
-    "amountPaid": 3500
+    "amountPaid": 4500
   },
   {
     "invoiceNo": "INV-1755966773964",

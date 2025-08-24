@@ -199,5 +199,43 @@
         "comments": "Initial Draft"
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-24",
+    "partyType": "Customer",
+    "partyName": "C002",
+    "amount": 1000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "property": "LT-C38",
+    "unitCode": "F201",
+    "roomCode": "",
+    "referenceType": "Invoice",
+    "referenceNo": "INV-1755958518020",
+    "description": "Payment for Invoice: INV-1755958518020 - Bal: $1,000.00",
+    "status": "Received",
+    "createdByUser": "Tanvir Ahmed",
+    "invoiceAllocations": [
+      {
+        "invoiceId": "INV-1755958498210",
+        "amount": 1000
+      },
+      {
+        "invoiceId": "INV-1755966806827",
+        "amount": 0
+      }
+    ],
+    "id": "PAY-1756050127844",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Tanvir Ahmed",
+        "actorRole": "User",
+        "timestamp": "2025-08-24T15:42:07.844Z",
+        "comments": "Initial Draft"
+      }
+    ]
   }
 ]

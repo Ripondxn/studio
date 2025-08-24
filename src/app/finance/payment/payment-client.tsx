@@ -67,7 +67,23 @@ export function PaymentsClient() {
   }, [currentUser, toast]);
 
   useEffect(() => {
-    refreshData();
+    if (currentUser) {
+        refreshData();
+    }
+  }, [currentUser, refreshData]);
+  
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [refreshData]);
 
   const filteredPayments = useMemo(() => {
