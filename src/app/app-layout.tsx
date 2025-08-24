@@ -128,29 +128,29 @@ const navLinks = [
 
 function SidebarNav({ isCollapsed, pathname }: { isCollapsed: boolean, pathname: string }) {
     return (
-        <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
+        <nav className="grid gap-1 px-2 text-sm font-medium text-sidebar-foreground group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
             {navLinks.map((link, index) => {
                 const hasSubItems = link.subItems && link.subItems.length > 0;
                 const isActive = hasSubItems ? link.subItems.some(sub => pathname.startsWith(sub.href)) : link.href ? pathname.startsWith(link.href) : false;
 
                 if (hasSubItems) {
                     return (
-                        <Collapsible key={index} defaultOpen={isActive}>
+                        <Collapsible key={index} defaultOpen={isActive} className="[&_svg]:text-sidebar-muted-foreground">
                             <CollapsibleTrigger asChild>
-                                <Button variant={isActive ? "secondary" : "ghost"} className="w-full justify-start">
+                                <Button variant={isActive ? "sidebar-accent" : "ghost"} className="w-full justify-start hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                                     {link.icon}
                                     {!isCollapsed && <span className="ml-4">{link.label}</span>}
                                     {!isCollapsed && <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
                                 </Button>
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="space-y-1 ml-4 pl-6 border-l">
+                            <CollapsibleContent className="space-y-1 ml-4 my-1 pl-6 border-l border-sidebar-border">
                                  {link.subItems!.map(subItem => (
                                      <Link
                                         key={subItem.href}
                                         href={subItem.href}
                                         className={cn(
-                                            "block py-2 px-3 text-sm rounded-md",
-                                            pathname.startsWith(subItem.href) ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-muted'
+                                            "block py-1.5 px-3 text-sm rounded-md text-sidebar-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                            pathname.startsWith(subItem.href) && 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
                                         )}
                                         >
                                         {subItem.label}
@@ -166,8 +166,8 @@ function SidebarNav({ isCollapsed, pathname }: { isCollapsed: boolean, pathname:
                     key={index}
                     href={link.href!}
                     className={cn(
-                        "flex items-center rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted",
-                        isActive && "bg-muted font-semibold text-foreground",
+                        "flex items-center rounded-lg px-3 py-2 text-sidebar-muted-foreground transition-colors hover:text-sidebar-accent-foreground hover:bg-sidebar-accent",
+                        isActive && "bg-sidebar-accent font-semibold text-sidebar-accent-foreground",
                         isCollapsed && "justify-center"
                     )}
                     >

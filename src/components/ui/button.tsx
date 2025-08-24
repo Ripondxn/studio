@@ -19,6 +19,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground",
         ghost: "",
         link: "text-primary underline-offset-4",
+        "sidebar-accent": "bg-sidebar-accent text-sidebar-accent-foreground"
       },
       size: {
         default: "h-10 px-4 py-2",
