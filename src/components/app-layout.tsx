@@ -122,6 +122,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/finance/pdc-cheque', label: 'PDC Cheque' },
             { href: '/finance/payment', label: 'Payment' },
             { href: '/finance/due-payments', label: 'Due Payments' },
+            { href: '/finance/cheque-print', label: 'Cheque Print' },
         ]
     },
     {
