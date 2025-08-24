@@ -23,8 +23,6 @@ const chequePrintSchema = z.object({
   amount: z.coerce.number().min(0.01, 'Amount must be greater than zero.'),
   date: z.string(),
   memo: z.string().optional(),
-  bankName: z.string().optional(),
-  branch: z.string().optional(),
 }).refine(data => data.payee || data.customPayee, {
     message: 'Either select an existing payee or enter a custom one.',
     path: ['payee'],
@@ -71,8 +69,6 @@ export function ChequePrintClient() {
       amount: 0,
       date: format(new Date(), 'yyyy-MM-dd'),
       memo: '',
-      bankName: '',
-      branch: '',
     },
   });
 
@@ -107,9 +103,7 @@ export function ChequePrintClient() {
     if(selectedDue) {
         form.setValue('amount', selectedDue.value);
         form.setValue('memo', `Payment for ${selectedDue.reference}`);
-        if (selectedDue.bankName) {
-            form.setValue('bankName', selectedDue.bankName);
-        }
+        
          if (selectedDue.chequeNo) {
             // In a real app you might want a separate field for this, but for now we'll put it in memo
             form.setValue('memo', `Pymt for ${selectedDue.reference} (Cheque #: ${selectedDue.chequeNo})`);
@@ -153,8 +147,6 @@ export function ChequePrintClient() {
         amount: 0,
         date: format(new Date(), 'yyyy-MM-dd'),
         memo: '',
-        bankName: '',
-        branch: ''
       });
   }
 
@@ -219,16 +211,6 @@ export function ChequePrintClient() {
                     <Input id="date" type="date" {...form.register('date')} />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                    <Label htmlFor="bankName">Bank Name</Label>
-                    <Input id="bankName" {...form.register('bankName')} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="branch">Branch</Label>
-                    <Input id="branch" {...form.register('branch')} />
-                </div>
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="memo">Memo / For</Label>
                 <Input id="memo" {...form.register('memo')} />
@@ -251,8 +233,8 @@ export function ChequePrintClient() {
       <div className="hidden">
         <div ref={printRef}>
             <div className="cheque">
-                <div className="bank-name">{form.getValues('bankName')}</div>
-                <div className="branch">{form.getValues('branch')}</div>
+                <div className="bank-name"></div>
+                <div className="branch"></div>
                 <div className="date">{formattedDate}</div>
                 <div className="payee">{getPayeeName()}</div>
                 <div className="amount-words">{amountInWords}</div>
