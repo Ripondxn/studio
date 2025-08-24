@@ -6,14 +6,12 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { type Unit } from '@/app/property/units/schema';
 import { type Contract } from '@/app/tenancy/contract/schema';
-import { type Floor } from '../floors/schema';
 import { type Room } from '../rooms/schema';
 import { type Partition } from '../partitions/schema';
 
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
-const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
 
@@ -172,10 +170,6 @@ export async function getUnitsForProperty(propertyCode: string): Promise<{ succe
         const allUnits = await readUnits();
         const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
         const allContracts: Contract[] = JSON.parse(contractsData);
-        const floorsData = await fs.readFile(floorsFilePath, 'utf-8').catch(() => '[]');
-        const allFloors: Floor[] = JSON.parse(floorsData);
-
-        const floorMap = new Map(allFloors.map(f => [f.floorCode, f.floorName]));
 
         const occupiedUnitCodes = new Set(
             allContracts
@@ -187,7 +181,6 @@ export async function getUnitsForProperty(propertyCode: string): Promise<{ succe
             .filter(u => u.propertyCode === propertyCode)
             .map(unit => ({
                 ...unit,
-                floor: floorMap.get(unit.floor) || unit.floor, // Replace floor code with floor name
                 occupancyStatus: occupiedUnitCodes.has(unit.unitCode) ? 'Occupied' : 'Vacant',
             }));
             

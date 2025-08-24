@@ -175,16 +175,6 @@ export async function deleteUnit(unitId: string) {
     }
 }
 
-
-async function readFloors() {
-    try {
-        const data = await fs.readFile(path.join(process.cwd(), 'src/app/property/floors/floors-data.json'), 'utf-8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
-}
-
 async function readProperties() {
     try {
         const data = await fs.readFile(path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json'), 'utf-8');
@@ -195,11 +185,9 @@ async function readProperties() {
 }
 
 export async function getUnitLookups(propertyCode: string) {
-    const floors = await readFloors();
     const properties = await readProperties();
     return {
         properties: properties.map((p:any) => ({ value: p.propertyData.code, label: p.propertyData.name })),
-        floors: floors.filter((f: any) => f.propertyCode === propertyCode).map((f:any) => ({ value: f.floorCode, label: f.floorName })),
     }
 }
 

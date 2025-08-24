@@ -37,7 +37,7 @@ interface EditUnitDialogProps {
 export function EditUnitDialog({ unit, isOpen, setIsOpen, onUnitUpdated }: EditUnitDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<{ properties: { value: string, label: string }[], floors: { value: string, label: string }[] }>({ properties: [], floors: [] });
+  const [lookups, setLookups] = useState<{ properties: { value: string, label: string }[] }>({ properties: [] });
 
   useEffect(() => {
       if(isOpen) {
@@ -105,22 +105,6 @@ export function EditUnitDialog({ unit, isOpen, setIsOpen, onUnitUpdated }: EditU
                     <Label htmlFor="unitCode">Unit Code</Label>
                     <Input id="unitCode" {...register('unitCode')} />
                     {errors.unitCode && <p className="text-destructive text-xs mt-1">{errors.unitCode.message}</p>}
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="floor">Floor</Label>
-                    <Controller
-                        name="floor"
-                        control={control}
-                        render={({ field }) => (
-                           <Combobox
-                                options={lookups.floors}
-                                value={field.value}
-                                onSelect={field.onChange}
-                                placeholder="Select a floor"
-                           />
-                        )}
-                    />
-                    {errors.floor && <p className="text-destructive text-xs mt-1">{errors.floor.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="unitType">Unit Type</Label>

@@ -94,12 +94,6 @@ import { UnitGrid } from '../units/unit-grid';
 import { RoomGrid } from '../rooms/room-grid';
 import { ImportUnitsDialog } from '../units/import-units-dialog';
 import { ImportRoomsDialog } from '../rooms/import-rooms-dialog';
-import { getFloorsForProperty } from '../floors/actions';
-import { type Floor } from '../floors/schema';
-import { DataTable as FloorsDataTable } from '../floors/data-table';
-import { columns as floorColumns } from '../floors/columns';
-import { AddFloorDialog } from '../floors/add-floor-dialog';
-import { FloorGrid } from '../floors/floor-grid';
 
 
 type Particular = {
@@ -190,13 +184,9 @@ export default function PropertyPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   
-  const [floors, setFloors] = useState<Floor[]>([]);
-  const [isLoadingFloors, setIsLoadingFloors] = useState(false);
-  
   const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
   const [unitsViewMode, setUnitsViewMode] = useState<ViewMode>('grid');
   const [roomsViewMode, setRoomsViewMode] = useState<ViewMode>('grid');
-  const [floorsViewMode, setFloorsViewMode] = useState<ViewMode>('grid');
 
 
   const fetchPropertySubData = useCallback((code: string) => {
@@ -225,18 +215,6 @@ export default function PropertyPage() {
         })
         .finally(() => setIsLoadingRooms(false));
         
-    setIsLoadingFloors(true);
-    getFloorsForProperty(code)
-        .then(result => {
-            if (result.success && result.data) {
-                 const sortedFloors = result.data.sort((a, b) => 
-                    a.floorCode.localeCompare(b.floorCode, undefined, { numeric: true, sensitivity: 'base' })
-                );
-                setFloors(sortedFloors);
-            }
-        })
-        .finally(() => setIsLoadingFloors(false));
-
     setIsLoadingOccupancy(true);
     getOccupancyInfoForProperty(code)
         .then(result => {
@@ -694,7 +672,6 @@ export default function PropertyPage() {
       <Tabs defaultValue="flats">
         <TabsList>
             <TabsTrigger value="particulars">Particulars</TabsTrigger>
-            <TabsTrigger value="floors">Floors</TabsTrigger>
             <TabsTrigger value="flats">Flats</TabsTrigger>
             <TabsTrigger value="rooms">Rooms</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
@@ -747,34 +724,6 @@ export default function PropertyPage() {
                 </Button>
             </CardContent>
           </Card>
-        </TabsContent>
-        <TabsContent value="floors">
-           <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>Floors</CardTitle>
-                        <CardDescription>Manage all floors within this property.</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center rounded-md bg-muted p-1">
-                            <Button variant={floorsViewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setFloorsViewMode('grid')}><LayoutGrid className="h-5 w-5" /></Button>
-                            <Button variant={floorsViewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setFloorsViewMode('list')}><List className="h-5 w-5" /></Button>
-                        </div>
-                        <AddFloorDialog propertyCode={propertyData.code} onFloorAdded={() => fetchPropertySubData(propertyData.code)} />
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                {isLoadingFloors ? (
-                    <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-                ) : floorsViewMode === 'list' ? (
-                    <FloorsDataTable columns={floorColumns} data={floors} />
-                ) : (
-                    <FloorGrid floors={floors} />
-                )}
-            </CardContent>
-           </Card>
         </TabsContent>
         <TabsContent value="flats">
            <Card>
