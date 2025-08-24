@@ -110,9 +110,14 @@ export async function updateUnit(data: z.infer<typeof updateUnitFormSchema>) {
 
 
 export async function deleteUnit(unitId: string) {
+    if (!unitId) {
+        return { success: false, error: "Unit ID is required." };
+    }
+
     try {
         const allUnits = await readUnits();
         const unitToDelete = allUnits.find(u => u.id === unitId);
+        
         if (!unitToDelete) {
              return { success: false, error: 'Unit not found.' };
         }
@@ -207,4 +212,3 @@ export async function importUnits(unitsData: unknown) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred during import.' };
     }
 }
-

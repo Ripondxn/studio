@@ -121,9 +121,14 @@ export async function updateRoom(data: z.infer<typeof updateRoomFormSchema>) {
 
 
 export async function deleteRoom(roomId: string) {
+    if (!roomId) {
+        return { success: false, error: "Room ID is required." };
+    }
+
     try {
         const allRooms = await readRooms();
         const roomToDelete = allRooms.find(r => r.id === roomId);
+        
         if (!roomToDelete) {
              return { success: false, error: 'Room not found.' };
         }
