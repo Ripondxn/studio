@@ -11,6 +11,7 @@ import { parseISO, isBefore, startOfToday } from 'date-fns';
 const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 
 async function readData(filePath: string) {
     try {
@@ -68,7 +69,25 @@ export async function getDuesForPayee(payeeCode: string) {
             });
         }
         
-        // This can be extended for other party types like Vendors (V) or Tenants (T) if needed.
+        if (partyType === 'T') {
+            const tenancyContracts: TenancyContract[] = await readData(tenancyContractsFilePath);
+            tenancyContracts.forEach(contract => {
+                if (contract.tenantCode === payeeCode && contract.paymentSchedule) {
+                    contract.paymentSchedule.forEach(installment => {
+                        const dueDate = parseISO(installment.dueDate);
+                         if (installment.status === 'unpaid' && !isBefore(today, dueDate)) {
+                             dueItems.push({
+                                label: `Tenancy Pymt for ${contract.property}/${contract.unitCode} - Inst. ${installment.installment}`,
+                                value: installment.amount,
+                                reference: `${contract.contractNo}-${installment.installment}`,
+                                chequeNo: installment.chequeNo,
+                                bankName: installment.bankName,
+                             });
+                         }
+                    });
+                }
+            });
+        }
 
     } catch (error) {
         console.error("Error fetching dues for payee:", error);

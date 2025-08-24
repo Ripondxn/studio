@@ -110,6 +110,10 @@ export function ChequePrintClient() {
         if (selectedDue.bankName) {
             form.setValue('bankName', selectedDue.bankName);
         }
+         if (selectedDue.chequeNo) {
+            // In a real app you might want a separate field for this, but for now we'll put it in memo
+            form.setValue('memo', `Pymt for ${selectedDue.reference} (Cheque #: ${selectedDue.chequeNo})`);
+        }
     }
   }
 
