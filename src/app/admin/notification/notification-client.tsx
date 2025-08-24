@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Bell, Loader2, Send } from 'lucide-react';
 import { sendNotificationEmail } from './actions';
 import { templates } from './templates';
+import { Form } from '@/components/ui/form';
 
 const formSchema = z.object({
   recipient: z.string().min(1, 'A recipient is required.'),
