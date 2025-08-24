@@ -12,14 +12,20 @@ import { Label } from '@/components/ui/label';
 import { Printer, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ToWords } from 'to-words';
+import { getLookups as getPaymentLookups } from '../payment/actions';
+import { Combobox } from '@/components/ui/combobox';
 
 const chequePrintSchema = z.object({
-  payee: z.string().min(1, 'Payee is required.'),
+  payee: z.string().optional(),
+  customPayee: z.string().optional(),
   amount: z.coerce.number().min(0.01, 'Amount must be greater than zero.'),
   date: z.string(),
   memo: z.string().optional(),
   bankName: z.string().optional(),
   branch: z.string().optional(),
+}).refine(data => data.payee || data.customPayee, {
+    message: 'Either select an existing payee or enter a custom one.',
+    path: ['payee'],
 });
 
 type ChequePrintFormData = z.infer<typeof chequePrintSchema>;
@@ -34,13 +40,22 @@ const toWords = new ToWords({
   }
 });
 
+type Lookups = {
+    tenants: { value: string, label: string }[];
+    landlords: { value: string, label: string }[];
+    vendors: { value: string, label: string }[];
+    customers: { value: string, label: string }[];
+}
+
 export function ChequePrintClient() {
   const printRef = useRef<HTMLDivElement>(null);
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [] });
   
   const form = useForm<ChequePrintFormData>({
     resolver: zodResolver(chequePrintSchema),
     defaultValues: {
       payee: '',
+      customPayee: '',
       amount: 0,
       date: format(new Date(), 'yyyy-MM-dd'),
       memo: '',
@@ -49,9 +64,29 @@ export function ChequePrintClient() {
     },
   });
 
+  useEffect(() => {
+    getPaymentLookups().then(data => setLookups(data));
+  }, []);
+
+  const payeeOptions = [
+      ...lookups.tenants,
+      ...lookups.landlords,
+      ...lookups.vendors,
+      ...lookups.customers
+  ];
+
   const watchedAmount = form.watch('amount');
   const amountInWords = watchedAmount > 0 ? toWords.convert(watchedAmount) : '';
   const formattedDate = format(new Date(form.watch('date') || new Date()), 'ddMMyyyy').split('').join(' ');
+  
+  const getPayeeName = () => {
+    const customPayee = form.getValues('customPayee');
+    if (customPayee) return customPayee;
+    
+    const selectedPayeeCode = form.getValues('payee');
+    return payeeOptions.find(p => p.value === selectedPayeeCode)?.label || '';
+  }
+
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -72,6 +107,7 @@ export function ChequePrintClient() {
   const handleClear = () => {
       form.reset({
         payee: '',
+        customPayee: '',
         amount: 0,
         date: format(new Date(), 'yyyy-MM-dd'),
         memo: '',
@@ -82,27 +118,47 @@ export function ChequePrintClient() {
 
   return (
     <>
-      <Card className="w-full max-w-3xl mx-auto">
+      <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Cheque Printing</CardTitle>
           <CardDescription>
-            Fill in the details below to generate a printable cheque.
+            Fill in the details below to generate a printable cheque. You can select an existing payee or enter a custom name.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="space-y-2">
-                    <Label htmlFor="payee">Pay to the Order of</Label>
-                    <Input id="payee" {...form.register('payee')} placeholder="Enter payee name"/>
-                    {form.formState.errors.payee && <p className="text-destructive text-sm">{form.formState.errors.payee.message}</p>}
+                    <Label htmlFor="payee">Select Existing Payee (Optional)</Label>
+                    <Controller
+                        name="payee"
+                        control={form.control}
+                        render={({ field }) => (
+                            <Combobox
+                                options={payeeOptions}
+                                value={field.value || ''}
+                                onSelect={field.onChange}
+                                placeholder="Select from existing list..."
+                            />
+                        )}
+                    />
                 </div>
+                <div className="space-y-2">
+                    <Label htmlFor="customPayee">Or Enter Custom Payee Name</Label>
+                    <Input id="customPayee" {...form.register('customPayee')} placeholder="e.g. John Doe"/>
+                </div>
+             </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="amount">Amount</Label>
                     <Input id="amount" type="number" {...form.register('amount')} />
                      {form.formState.errors.amount && <p className="text-destructive text-sm">{form.formState.errors.amount.message}</p>}
                 </div>
-             </div>
+                <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" type="date" {...form.register('date')} />
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div className="space-y-2">
                     <Label htmlFor="bankName">Bank Name</Label>
@@ -113,16 +169,11 @@ export function ChequePrintClient() {
                     <Input id="branch" {...form.register('branch')} />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Input id="date" type="date" {...form.register('date')} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="memo">Memo</Label>
-                    <Input id="memo" {...form.register('memo')} />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="memo">Memo</Label>
+                <Input id="memo" {...form.register('memo')} />
             </div>
+            {form.formState.errors.payee && <p className="text-destructive text-sm">{form.formState.errors.payee.message}</p>}
             <div className="pt-8 flex justify-end gap-2">
                  <Button type="button" variant="outline" onClick={handleClear}>
                     <X className="mr-2 h-4 w-4"/>
@@ -143,7 +194,7 @@ export function ChequePrintClient() {
                 <div className="bank-name">{form.getValues('bankName')}</div>
                 <div className="branch">{form.getValues('branch')}</div>
                 <div className="date">{formattedDate}</div>
-                <div className="payee">{form.getValues('payee')}</div>
+                <div className="payee">{getPayeeName()}</div>
                 <div className="amount-words">{amountInWords}</div>
                 <div className="amount-box">**{form.getValues('amount').toLocaleString('en-US', {minimumFractionDigits: 2})}**</div>
                 <div className="memo">{form.getValues('memo')}</div>
