@@ -298,9 +298,8 @@ export default function WorkflowPage() {
   const [transactions, setTransactions] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionProcessing, setIsActionProcessing] = useState(false);
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole['role']>('User');
-  const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
-  
+  const [currentUser, setCurrentUser] = useState<{ email: string, role: UserRole['role'] } | null>(null);
+
   const [statusFilter, setStatusFilter] = useState<Status | 'ALL'>('ALL');
   const [userFilter, setUserFilter] = useState<string>('');
   const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date }>({});
@@ -317,29 +316,27 @@ export default function WorkflowPage() {
     action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
   } | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async (user: { email: string, role: UserRole['role'] }) => {
     setIsLoading(true);
     const [payments, lookups] = await Promise.all([
-        getPayments(),
+        getPayments(user),
         getPartyNameLookups()
     ]);
     setTransactions(payments);
     setPartyNameLookups(lookups);
     setIsLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
-    fetchData();
-    
     const storedProfile = sessionStorage.getItem('userProfile');
     if (storedProfile) {
       const profile = JSON.parse(storedProfile);
-      setCurrentUserRole(profile.role || 'User');
-      setCurrentUserEmail(profile.email || '');
+      setCurrentUser(profile);
+      fetchData(profile);
     } else {
       router.push('/login');
     }
-  }, [router]);
+  }, [router, fetchData]);
 
 
   const handleAction = async (
@@ -347,13 +344,14 @@ export default function WorkflowPage() {
     action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT',
     comment: string
   ) => {
+    if (!currentUser) return;
     setIsActionProcessing(true);
     let result;
 
     const params = {
       transactionId,
-      actorId: currentUserEmail,
-      actorRole: currentUserRole,
+      actorId: currentUser.email,
+      actorRole: currentUser.role,
       comment
     };
 
@@ -374,7 +372,7 @@ export default function WorkflowPage() {
 
     if (result.success) {
       toast({ title: 'Success', description: `Action "${action}" performed successfully.` });
-      await fetchData(); // Re-fetch data to get the latest state from server
+      await fetchData(currentUser); // Re-fetch data to get the latest state from server
     } else {
       toast({ variant: 'destructive', title: 'Error', description: result.error });
     }
@@ -411,9 +409,10 @@ export default function WorkflowPage() {
 
 
   const getActionButtons = (transaction: Payment) => {
+    if (!currentUser) return null;
     const canSubmitRoles: Role[] = ['User', 'Property Manager', 'Accountant', 'Admin', 'Super Admin'];
 
-    if (canSubmitRoles.includes(currentUserRole) && (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED')) {
+    if (canSubmitRoles.includes(currentUser.role) && (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED')) {
       return (
         <Button size="sm" onClick={() => openActionDialog(transaction.id!, 'SUBMIT')}>
           <Send className="mr-2 h-4 w-4" /> Submit
@@ -421,7 +420,7 @@ export default function WorkflowPage() {
       );
     }
     
-    if (currentUserRole === 'Admin' && transaction.currentStatus === 'PENDING_ADMIN_APPROVAL') {
+    if (currentUser.role === 'Admin' && transaction.currentStatus === 'PENDING_ADMIN_APPROVAL') {
       return (
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => openActionDialog(transaction.id!, 'APPROVE')}>
@@ -434,7 +433,7 @@ export default function WorkflowPage() {
       );
     }
     
-    if (currentUserRole === 'Super Admin' && transaction.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL') {
+    if (currentUser.role === 'Super Admin' && transaction.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL') {
       return (
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => openActionDialog(transaction.id!, 'APPROVE')}>
@@ -617,7 +616,7 @@ export default function WorkflowPage() {
             <div className="mb-4">
                <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">
                 Viewing as a{' '}
-                <span className="font-bold text-primary">{currentUserRole}</span>. This
+                <span className="font-bold text-primary">{currentUser?.role}</span>. This
                 dashboard shows transactions relevant to your role.
               </p>
             </div>
