@@ -1,3 +1,4 @@
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -70,15 +71,15 @@ async function writeInvoices(data: Invoice[]) {
 }
 
 
-export async function getPayments(user: { email: string, role: string }) {
+export async function getPayments(user: { email: string; role: string; name?: string; }) {
     const allPayments = await readPayments();
     
-    if (user && (user.role === 'Admin' || user.role === 'Super Admin')) {
+    if (user.role === 'Admin' || user.role === 'Super Admin') {
         return allPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
     
     // Default to only showing the user's own transactions if they are not an admin
-    const userPayments = allPayments.filter(p => p.createdByUser === user.email);
+    const userPayments = allPayments.filter(p => p.createdByUser === user.name);
 
     return userPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
@@ -376,3 +377,5 @@ export async function getReferences(partyType: string, partyCode: string, refere
             return [];
     }
 }
+
+    

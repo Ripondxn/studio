@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -298,7 +299,7 @@ export default function WorkflowPage() {
   const [transactions, setTransactions] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionProcessing, setIsActionProcessing] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ email: string, role: UserRole['role'] } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ email: string, name: string, role: UserRole['role'] } | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<Status | 'ALL'>('ALL');
   const [userFilter, setUserFilter] = useState<string>('');
@@ -316,7 +317,7 @@ export default function WorkflowPage() {
     action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
   } | null>(null);
 
-  const fetchData = React.useCallback(async (user: { email: string, role: UserRole['role'] }) => {
+  const fetchData = React.useCallback(async (user: { email: string, name: string, role: UserRole['role'] }) => {
     setIsLoading(true);
     const [payments, lookups] = await Promise.all([
         getPayments(user),
@@ -404,7 +405,7 @@ export default function WorkflowPage() {
   
   const uniqueUsers = useMemo(() => {
     const users = new Set(transactions.map(t => t.createdByUser).filter(Boolean));
-    return Array.from(users);
+    return Array.from(users) as string[];
   }, [transactions]);
 
 
@@ -731,3 +732,5 @@ export default function WorkflowPage() {
     </div>
   );
 }
+
+    
