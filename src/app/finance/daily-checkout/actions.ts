@@ -51,6 +51,9 @@ async function writePayments(data: Payment[]) {
 
 
 export async function getDraftTransactions(user: { email: string, role: string, name?: string }) {
+    if (!user || !user.name) {
+        return [];
+    }
     const allPayments = await getPayments(user);
     
     return allPayments.filter(p => p.currentStatus === 'DRAFT' && p.createdByUser === user.name);
@@ -119,3 +122,7 @@ export async function createCheckout(data: { transactionIds: string[], user: { e
     return { success: true, data: newCheckout };
 }
 
+export async function getTransactionsByIds(transactionIds: string[]): Promise<Payment[]> {
+    const allPayments = await readPayments();
+    return allPayments.filter(p => transactionIds.includes(p.id!));
+}

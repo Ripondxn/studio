@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -89,11 +90,11 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onSelect={() => alert('Edit functionality coming soon!')}>
+                    <DropdownMenuItem onSelect={() => alert('Edit functionality coming soon!')} disabled={payment.currentStatus !== 'DRAFT'}>
                         <Edit className="mr-2 h-4 w-4"/> Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)}>
+                    <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)} disabled={payment.currentStatus !== 'DRAFT'}>
                         <Trash2 className="mr-2 h-4 w-4"/> Delete
                     </DropdownMenuItem>
                 </DropdownMenuContent>

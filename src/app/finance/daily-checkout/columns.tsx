@@ -1,9 +1,12 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { MoreHorizontal, CheckCircle, Clock, XCircle, FileCheck2, Eye, Printer } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, Clock, XCircle, FileCheck2, Eye, Printer, Loader2 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,8 +27,10 @@ import {
 } from '@/components/ui/dialog';
 import { type DailyCheckout } from './schema';
 import { cn } from '@/lib/utils';
-import { DataTable } from './data-table';
-import { paymentColumns } from '@/app/finance/payment/columns';
+import { getTransactionsByIds } from './actions';
+import { type Payment } from '@/app/finance/payment/schema';
+import { DataTable } from '@/app/finance/payment/data-table';
+import { columns as paymentColumns } from '@/app/finance/payment/columns';
 
 const statusConfig = {
   PENDING_ADMIN_APPROVAL: { label: 'Pending Admin Approval', color: 'bg-yellow-500/20 text-yellow-700', icon: <Clock className="h-3 w-3" /> },
@@ -37,31 +42,36 @@ const statusConfig = {
 
 const ViewCheckoutDialog = ({ checkout }: { checkout: DailyCheckout }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [transactions, setTransactions] = useState<Payment[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const printRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if(isOpen && checkout.transactionIds.length > 0) {
+            setIsLoading(true);
+            getTransactionsByIds(checkout.transactionIds)
+                .then(setTransactions)
+                .finally(() => setIsLoading(false));
+        }
+    }, [isOpen, checkout.transactionIds]);
 
     const handlePrint = () => {
-        // This is a simplified print logic. In a real app, you might use a library or a dedicated printable component.
-        const printWindow = window.open('', '', 'height=800,width=800');
-        if(printWindow){
-            printWindow.document.write('<html><head><title>Checkout Voucher</title>');
-            // You can add styles here
-            printWindow.document.write('</head><body>');
-            printWindow.document.write(`<h1>Checkout Voucher: ${checkout.id}</h1>`);
-            printWindow.document.write(`<p>Date: ${format(new Date(checkout.date), 'PPp')}</p>`);
-            printWindow.document.write(`<p>Submitted By: ${checkout.submittedBy}</p>`);
-            printWindow.document.write(`<p>Total Amount: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(checkout.totalAmount)}</p>`);
-            printWindow.document.write(`<p>Status: ${checkout.status}</p>`);
-            printWindow.document.write(`<h2>Transactions (${checkout.transactionIds.length})</h2>`);
-            // Here you would ideally fetch and display transaction details.
-            printWindow.document.write('<ul>');
-            checkout.transactionIds.forEach(txId => {
-                 printWindow.document.write(`<li>${txId}</li>`);
-            })
-            printWindow.document.write('</ul>');
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.print();
+        const printContent = printRef.current;
+        if (printContent) {
+             const printWindow = window.open('', '', 'height=800,width=800');
+            if(printWindow){
+                printWindow.document.write('<html><head><title>Checkout Voucher</title>');
+                printWindow.document.write('<style>@page { size: A4; margin: 1cm; } body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; font-size: 9pt; } .no-print { display: none; } </style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContent.innerHTML);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.print();
+            }
         }
     }
+    
+    const columnsWithoutActions = paymentColumns.filter(c => c.id !== 'select' && c.id !== 'actions');
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -71,28 +81,39 @@ const ViewCheckoutDialog = ({ checkout }: { checkout: DailyCheckout }) => {
                 </div>
             </DropdownMenuItem>
              <DialogContent className="max-w-4xl">
-                <DialogHeader>
-                    <DialogTitle>Checkout Voucher: {checkout.id}</DialogTitle>
-                    <DialogDescription>
-                        Details for the checkout voucher submitted on {format(new Date(checkout.date), 'PP')}.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid grid-cols-3 gap-4 py-4">
-                    <div><span className="font-semibold">Submitted By:</span> {checkout.submittedBy}</div>
-                    <div><span className="font-semibold">Total Amount:</span> {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(checkout.totalAmount)}</div>
-                    <div><span className="font-semibold">Status:</span> <Badge variant="outline" className={cn(statusConfig[checkout.status].color, 'border-transparent')}>{statusConfig[checkout.status].label}</Badge></div>
+                <div ref={printRef} className="printable-content">
+                    <DialogHeader>
+                        <DialogTitle>Checkout Voucher: {checkout.id}</DialogTitle>
+                        <DialogDescription>
+                            Details for the checkout voucher submitted on {format(new Date(checkout.date), 'PP')}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-3 gap-4 py-4">
+                        <div><span className="font-semibold">Submitted By:</span> {checkout.submittedBy}</div>
+                        <div><span className="font-semibold">Total Amount:</span> {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(checkout.totalAmount)}</div>
+                        <div><span className="font-semibold">Status:</span> <Badge variant="outline" className={cn(statusConfig[checkout.status].color, 'border-transparent')}>{statusConfig[checkout.status].label}</Badge></div>
+                    </div>
+                     <div>
+                        <h4 className="font-semibold mb-2">Notes</h4>
+                        <p className="text-sm text-muted-foreground italic border p-4 rounded-md">"{checkout.notes || 'No notes provided.'}"</p>
+                    </div>
+                    <div className="mt-4">
+                        <h4 className="font-semibold mb-2">Included Transactions ({checkout.transactionIds.length})</h4>
+                        {isLoading ? (
+                             <div className="flex justify-center items-center h-40">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : (
+                             <DataTable columns={columnsWithoutActions} data={transactions} />
+                        )}
+                    </div>
+                     <div className="grid grid-cols-3 gap-8 mt-16 pt-8 border-t">
+                        <div className="flex flex-col items-center"><span className="border-b w-full text-center pb-2"></span><span className="pt-2 text-sm font-semibold">Prepared by</span></div>
+                        <div className="flex flex-col items-center"><span className="border-b w-full text-center pb-2"></span><span className="pt-2 text-sm font-semibold">Checked by</span></div>
+                        <div className="flex flex-col items-center"><span className="border-b w-full text-center pb-2"></span><span className="pt-2 text-sm font-semibold">Approved by</span></div>
+                    </div>
                 </div>
-                <div>
-                    <h4 className="font-semibold mb-2">Included Transactions ({checkout.transactionIds.length})</h4>
-                    <ul className="list-disc list-inside bg-muted/50 p-4 rounded-md text-sm">
-                        {checkout.transactionIds.map(id => <li key={id} className="font-mono">{id}</li>)}
-                    </ul>
-                </div>
-                 <div>
-                    <h4 className="font-semibold mb-2">Notes</h4>
-                    <p className="text-sm text-muted-foreground italic border p-4 rounded-md">"{checkout.notes || 'No notes provided.'}"</p>
-                </div>
-                <DialogFooter>
+                <DialogFooter className="no-print">
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4"/> Print
                     </Button>
