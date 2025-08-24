@@ -8,6 +8,7 @@ import { revalidatePath } from 'next/cache';
 import { getPayments } from '../payment/actions';
 import { type Payment } from '../payment/schema';
 import { type DailyCheckout, dailyCheckoutSchema } from './schema';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 const checkoutsFilePath = path.join(process.cwd(), 'src/app/finance/daily-checkout/checkouts-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -31,10 +32,28 @@ async function writeCheckouts(data: DailyCheckout[]) {
     await fs.writeFile(checkoutsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-export async function getDraftTransactions(user: { email: string, role: string }) {
+async function readPayments(): Promise<Payment[]> {
+    try {
+        await fs.access(paymentsFilePath);
+        const data = await fs.readFile(paymentsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+async function writePayments(data: Payment[]) {
+    await fs.writeFile(paymentsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+
+export async function getDraftTransactions(user: { email: string, role: string, name?: string }) {
     const allPayments = await getPayments(user);
     
-    return allPayments.filter(p => p.currentStatus === 'DRAFT' && p.createdByUser === user.email);
+    return allPayments.filter(p => p.currentStatus === 'DRAFT' && p.createdByUser === user.name);
 }
 
 export async function getCheckouts(user: { email: string, role: string }) {
@@ -46,18 +65,21 @@ export async function getCheckouts(user: { email: string, role: string }) {
 }
 
 
-export async function createCheckout(data: { transactionIds: string[], submittedBy: string, totalAmount: number, notes?: string }) {
+export async function createCheckout(data: { transactionIds: string[], user: { email: string, name: string, role: UserRole['role'] }, totalAmount: number, notes?: string }) {
+    const allPayments = await readPayments();
+    
     const newCheckout: DailyCheckout = {
         id: `CO-${Date.now()}`,
         date: new Date().toISOString(),
         status: 'PENDING_ADMIN_APPROVAL',
-        submittedBy: data.submittedBy,
+        submittedBy: data.user.name,
         totalAmount: data.totalAmount,
         transactionIds: data.transactionIds,
         notes: data.notes,
         history: [{
             action: 'Created & Submitted',
-            actorId: data.submittedBy,
+            actorId: data.user.name,
+            actorRole: data.user.role,
             timestamp: new Date().toISOString(),
             comments: data.notes || 'Initial submission'
         }]
@@ -67,8 +89,32 @@ export async function createCheckout(data: { transactionIds: string[], submitted
     allCheckouts.push(newCheckout);
     await writeCheckouts(allCheckouts);
 
+    // Update status of individual transactions
+    const updatedPayments = allPayments.map(p => {
+        if (data.transactionIds.includes(p.id!)) {
+            return {
+                ...p,
+                currentStatus: 'PENDING_ADMIN_APPROVAL' as const,
+                approvalHistory: [
+                    ...(p.approvalHistory || []),
+                    {
+                        action: 'Submitted for Approval',
+                        actorId: data.user.name,
+                        actorRole: data.user.role,
+                        timestamp: new Date().toISOString(),
+                        comments: `Part of checkout ${newCheckout.id}`
+                    }
+                ]
+            }
+        }
+        return p;
+    });
+
+    await writePayments(updatedPayments);
+
+
     revalidatePath('/finance/daily-checkout');
-    revalidatePath('/workflow'); // Assuming it might appear here too
+    revalidatePath('/workflow'); // Revalidate workflow page as well
     
     return { success: true, data: newCheckout };
 }
