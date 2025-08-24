@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -35,6 +36,7 @@ import {
   UserSquare,
   MessageCircle,
   Home,
+  Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -84,9 +86,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         icon: <FileSignature />,
         subItems: [
             { href: '/property/properties/list', label: 'Properties' },
-            { href: '/property/floors/list', label: 'Floors' },
-            { href: '/property/rooms/list', label: 'Rooms' },
             { href: '/property/units/list', label: 'Units' },
+            { href: '/property/rooms/list', label: 'Rooms' },
             { href: '/property/units/vacant', label: 'Vacant Units' },
             { href: '/landlord', label: 'Landlord' },
             { href: '/lease/contracts', label: 'Lease Contracts' },
@@ -143,6 +144,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/admin/user-roles', label: 'User Roles' },
             { href: '/admin/communication', label: 'Communication' },
             { href: '/admin/backup', label: 'Backup & Restore' },
+            { href: '/admin/notification', label: 'Notifications' },
         ]
     },
   ]
