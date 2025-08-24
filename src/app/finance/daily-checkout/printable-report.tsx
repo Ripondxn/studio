@@ -36,10 +36,12 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
         <style type="text/css" media="print">
           {`
             @page { size: A4; margin: 1.5cm; }
-            body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+            body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; font-family: sans-serif; }
             .printable-area { display: flex; flex-direction: column; justify-content: space-between; min-height: 24cm; }
             .printable-table th, .printable-table td { border: 1px solid #e5e7eb !important; padding: 4px 6px; font-size: 9pt; }
             .printable-table th { background-color: #f9fafb !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
           `}
         </style>
         <div className="printable-area">
