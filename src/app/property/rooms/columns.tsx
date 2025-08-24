@@ -160,10 +160,6 @@ export const columns: ColumnDef<Room>[] = [
     header: 'Room Name',
   },
   {
-    accessorKey: 'floorCode',
-    header: 'Floor Code',
-  },
-    {
     accessorKey: 'unitCode',
     header: 'Unit Code',
   },

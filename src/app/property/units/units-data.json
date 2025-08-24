@@ -12,13 +12,14 @@
   },
   {
     "id": "UNIT-1755710073670",
-    "unitCode": "102",
+    "unitCode": "F102",
     "unitName": "Unit 102",
     "propertyCode": "LT-C38",
     "floor": "F-01",
     "unitType": "2BHK",
     "annualRent": 75000,
-    "unitStatus": "Active"
+    "unitStatus": "Active",
+    "occupancyStatus": "Occupied"
   },
   {
     "id": "UNIT-1755710073671",
