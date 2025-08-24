@@ -26,7 +26,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type RoomFormData = Omit<Room, 'id'>;
-const roomFormSchema = roomSchema.omit({ id: true });
+const roomFormSchema = roomSchema.omit({ id: true, occupancyStatus: true });
 
 export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: string, onRoomAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -130,6 +130,7 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
                                 <SelectContent>
                                     <SelectItem value="Master Bed">Master Bed</SelectItem>
                                     <SelectItem value="Standard">Standard</SelectItem>
+                                    <SelectItem value="Partition">Partition</SelectItem>
                                 </SelectContent>
                             </Select>
                         )}

@@ -130,6 +130,7 @@ export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen
                                 <SelectContent>
                                     <SelectItem value="Master Bed">Master Bed</SelectItem>
                                     <SelectItem value="Standard">Standard</SelectItem>
+                                    <SelectItem value="Partition">Partition</SelectItem>
                                 </SelectContent>
                             </Select>
                         )}
