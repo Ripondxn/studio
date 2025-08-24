@@ -497,7 +497,7 @@ export default function WorkflowPage() {
             printWindow.document.write('<html><head><title>Print Report</title>');
             printWindow.document.write('<style>@import url("https://rsms.me/inter/inter.css");</style>');
             printWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}/globals.css" type="text/css" />`); // Not ideal but might work
-            printWindow.document.write('<style>body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }</style>');
+            printWindow.document.write('<style>body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; } @page { size: A4; margin: 1cm; }</style>');
             printWindow.document.write('</head><body class="bg-white">');
             printWindow.document.write(printContent);
             printWindow.document.write('</body></html>');

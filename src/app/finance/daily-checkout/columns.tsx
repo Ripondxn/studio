@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -21,8 +22,8 @@ import { type DailyCheckout } from './schema';
 import { cn } from '@/lib/utils';
 import { getTransactionsByIds } from './actions';
 import { type Payment } from '@/app/finance/payment/schema';
-import { PrintableReport } from './printable-report';
-import { getPartyNameLookups } from '../payment/actions';
+import { PrintableReport } from '@/app/workflow/printable-report';
+import { getPartyNameLookups } from '@/app/finance/payment/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const statusConfig = {
@@ -81,7 +82,13 @@ const ViewCheckoutDialog = ({ checkout, isOpen, setIsOpen }: { checkout: DailyCh
                     <div className="printable-content p-4" ref={printRef}>
                        <PrintableReport 
                          transactions={transactions} 
-                         filters={{ status: 'ALL', user: checkout.submittedBy, from: undefined, to: undefined }} 
+                         filters={{ 
+                             status: 'ALL', 
+                             user: checkout.submittedBy, 
+                             from: undefined, 
+                             to: undefined,
+                             voucherId: checkout.id
+                         }} 
                          partyNameLookups={partyNameLookups} 
                         />
                     </div>

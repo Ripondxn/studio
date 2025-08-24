@@ -23,6 +23,7 @@ interface PrintableReportProps {
     user: string;
     from?: Date;
     to?: Date;
+    voucherId?: string;
   },
   partyNameLookups: Record<string, string>;
 }
@@ -33,14 +34,16 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
     const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
 
     return (
-      <div ref={ref} className="p-8 bg-white text-black max-w-4xl mx-auto my-4 font-sans">
+      <div ref={ref} className="p-8 bg-white text-black font-sans">
         <style type="text/css" media="print">
           {`
             @page { size: A4; margin: 1.5cm; }
-            body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+            body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; font-family: sans-serif; }
             .printable-area { display: flex; flex-direction: column; justify-content: space-between; min-height: 24cm; }
             .printable-table th, .printable-table td { border: 1px solid #e5e7eb !important; padding: 4px 6px; font-size: 9pt; }
             .printable-table th { background-color: #f9fafb !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
           `}
         </style>
         <div className="printable-area">
@@ -58,6 +61,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                     <div className="text-right text-xs">
                         <p><span className="font-semibold">Report Date:</span> {format(new Date(), 'PP')}</p>
                         {filters.user && <p><span className="font-semibold">User:</span> {filters.user}</p>}
+                        {filters.voucherId && <p><span className="font-semibold">Voucher ID:</span> {filters.voucherId}</p>}
                         {filters.from && <p><span className="font-semibold">From:</span> {format(filters.from, 'PP')}</p>}
                         {filters.to && <p><span className="font-semibold">To:</span> {format(filters.to, 'PP')}</p>}
                     </div>
