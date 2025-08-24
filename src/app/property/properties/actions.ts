@@ -172,6 +172,10 @@ export async function getUnitsForProperty(propertyCode: string): Promise<{ succe
         const allUnits = await readUnits();
         const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
         const allContracts: Contract[] = JSON.parse(contractsData);
+        const floorsData = await fs.readFile(floorsFilePath, 'utf-8').catch(() => '[]');
+        const allFloors: Floor[] = JSON.parse(floorsData);
+
+        const floorMap = new Map(allFloors.map(f => [f.floorCode, f.floorName]));
 
         const occupiedUnitCodes = new Set(
             allContracts
@@ -183,6 +187,7 @@ export async function getUnitsForProperty(propertyCode: string): Promise<{ succe
             .filter(u => u.propertyCode === propertyCode)
             .map(unit => ({
                 ...unit,
+                floor: floorMap.get(unit.floor) || unit.floor, // Replace floor code with floor name
                 occupancyStatus: occupiedUnitCodes.has(unit.unitCode) ? 'Occupied' : 'Vacant',
             }));
             
