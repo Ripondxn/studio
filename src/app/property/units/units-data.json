@@ -1,14 +1,14 @@
-
 [
   {
     "id": "UNIT-1755710073669",
-    "unitCode": "101",
+    "unitCode": "F101",
     "unitName": "Unit 101",
     "propertyCode": "LT-C38",
     "floor": "F-01",
     "unitType": "1BHK",
     "annualRent": 55000,
-    "unitStatus": "Active"
+    "unitStatus": "Active",
+    "occupancyStatus": "Occupied"
   },
   {
     "id": "UNIT-1755710073670",
@@ -191,5 +191,3 @@
     "id": "UNIT-1755861314728-04879852587935636"
   }
 ]
-
-    

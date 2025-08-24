@@ -162,10 +162,6 @@ export const columns: ColumnDef<Unit>[] = [
     },
   },
   {
-    accessorKey: 'floor',
-    header: 'Floor',
-  },
-  {
     accessorKey: 'unitType',
     header: 'Unit Type',
   },
@@ -187,7 +183,7 @@ export const columns: ColumnDef<Unit>[] = [
     cell: ({ row }) => {
       const status = row.getValue('occupancyStatus') as string;
       const variant = status === 'Occupied' ? 'destructive' : 'default';
-      return <Badge variant={variant} className={cn(status === 'Vacant' ? 'bg-green-500/20 text-green-700 border-transparent' : 'bg-red-500/20 text-red-700 border-transparent')}>{status}</Badge>;
+      return <Badge variant={variant} className={cn(status === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700', 'border-transparent')}>{status}</Badge>;
     },
   },
    {
