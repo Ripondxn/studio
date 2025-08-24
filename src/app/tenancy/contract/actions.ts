@@ -266,7 +266,7 @@ export async function getContractLookups() {
 export async function getUnitsForProperty(propertyCode: string) {
     const allUnits = await readUnits();
     const allContracts = await readContracts();
-    const occupiedUnitCodes = new Set(allContracts.filter(c => c.status === 'New' || c.status === 'Renew').map(c => c.unitCode));
+    const occupiedUnitCodes = new Set(allContracts.filter(c => c.status === 'New' || c.status === 'Renew' && !c.roomCode).map(c => c.unitCode));
     
     return allUnits
         .filter(u => u.propertyCode === propertyCode && !occupiedUnitCodes.has(u.unitCode))

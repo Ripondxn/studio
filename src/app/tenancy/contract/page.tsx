@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -166,8 +165,19 @@ export default function TenancyContractPage() {
         if (result.success && result.data?.rentAmount) {
              setContract(prev => ({...prev, totalRent: result.data!.rentAmount! }));
         }
+    } else {
+        // If room is deselected, revert to unit rent
+        if (contract.unitCode) {
+            const result = await getUnitDetails(contract.unitCode);
+            if (result.success && result.data) {
+                setContract(prev => ({
+                    ...prev,
+                    totalRent: result.data.totalRent,
+                }));
+            }
+        }
     }
-  }, []);
+  }, [contract.unitCode]);
 
   const handleTenantSelect = (tenantCode: string) => {
       const tenant = lookups.tenants.find(t => t.value === tenantCode);
