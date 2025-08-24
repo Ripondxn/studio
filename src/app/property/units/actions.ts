@@ -42,24 +42,35 @@ export async function getUnits() {
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
-    const occupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
-    const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+    // Contracts for entire units (no room specified)
+    const unitLevelContracts = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
+    
+    // Contracts for specific rooms
+    const roomLevelContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
 
     return allUnits.map(unit => {
-        const roomsInUnit = allRooms.filter(r => r.propertyCode === unit.propertyCode && r.unitCode === unit.unitCode);
-        
         let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
 
-        if (occupiedUnitCodes.has(unit.unitCode)) {
+        // 1. Check if the unit as a whole is rented out. This is the highest priority.
+        if (unitLevelContracts.has(unit.unitCode)) {
             occupancyStatus = 'Occupied';
-        } else if (roomsInUnit.length > 0) {
-            const occupiedRoomsCount = roomsInUnit.filter(r => occupiedRoomCodes.has(r.roomCode)).length;
-            if (occupiedRoomsCount === 0) {
-                occupancyStatus = 'Vacant';
-            } else if (occupiedRoomsCount < roomsInUnit.length) {
-                occupancyStatus = 'Partially Occupied';
+        } else {
+            // 2. If not rented as a whole, check its rooms.
+            const roomsInUnit = allRooms.filter(r => r.propertyCode === unit.propertyCode && r.unitCode === unit.unitCode);
+            
+            if (roomsInUnit.length > 0) {
+                const occupiedRoomsCount = roomsInUnit.filter(r => roomLevelContracts.has(r.roomCode)).length;
+
+                if (occupiedRoomsCount === 0) {
+                    occupancyStatus = 'Vacant';
+                } else if (occupiedRoomsCount < roomsInUnit.length) {
+                    occupancyStatus = 'Partially Occupied';
+                } else { // occupiedRoomsCount === roomsInUnit.length
+                    occupancyStatus = 'Occupied';
+                }
             } else {
-                occupancyStatus = 'Occupied';
+                // 3. If it has no rooms and isn't rented as a whole, it's vacant.
+                occupancyStatus = 'Vacant';
             }
         }
 
