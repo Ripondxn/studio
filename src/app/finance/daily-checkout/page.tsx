@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getCheckouts } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -11,6 +11,9 @@ import { type DailyCheckout } from './schema';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function DailyCheckoutPage() {
   const [checkouts, setCheckouts] = useState<DailyCheckout[]>([]);
@@ -29,7 +32,7 @@ export default function DailyCheckoutPage() {
     }
   }, [router]);
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     if (!currentUser) return;
     setIsLoading(true);
     try {
@@ -40,13 +43,27 @@ export default function DailyCheckoutPage() {
     } finally {
         setIsLoading(false);
     }
-  }
+  }, [currentUser, toast]);
 
   useEffect(() => {
       if(currentUser) {
           refreshData();
       }
-  }, [currentUser]);
+  }, [currentUser, refreshData]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshData]);
 
 
   return (
@@ -58,12 +75,16 @@ export default function DailyCheckoutPage() {
                 Group and submit your daily transactions for approval.
             </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
             <AddCheckoutDialog onCheckoutCreated={refreshData} />
+            <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
+                <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            </Button>
         </div>
       </div>
       <DataTable columns={columns} data={checkouts} isLoading={isLoading} />
     </div>
   );
 }
+
 
