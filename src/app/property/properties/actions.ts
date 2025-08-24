@@ -164,25 +164,60 @@ async function readUnits(): Promise<Unit[]> {
     }
 }
 
+async function readRooms(): Promise<Room[]> {
+    try {
+        const data = await fs.readFile(roomsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
 
 export async function getUnitsForProperty(propertyCode: string): Promise<{ success: boolean, data?: Unit[], error?: string }> {
     try {
         const allUnits = await readUnits();
+        const allRooms = await readRooms();
         const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
         const allContracts: Contract[] = JSON.parse(contractsData);
 
-        const occupiedUnitCodes = new Set(
-            allContracts
-                .filter(c => c.status === 'New' || c.status === 'Renew')
-                .map(c => c.unitCode)
-        );
+        const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
+        
+        const unitLevelContractCodes = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
+        const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
 
         const propertyUnits = allUnits
             .filter(u => u.propertyCode === propertyCode)
-            .map(unit => ({
-                ...unit,
-                occupancyStatus: occupiedUnitCodes.has(unit.unitCode) ? 'Occupied' : 'Vacant',
-            }));
+            .map(unit => {
+                let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
+
+                if (unitLevelContractCodes.has(unit.unitCode)) {
+                    occupancyStatus = 'Occupied';
+                } else {
+                    const roomsInUnit = allRooms.filter(r => r.propertyCode === unit.propertyCode && r.unitCode === unit.unitCode);
+                    if (roomsInUnit.length > 0) {
+                        const occupiedRoomsCount = roomsInUnit.filter(r => occupiedRoomCodes.has(r.roomCode)).length;
+
+                        if (occupiedRoomsCount === 0) {
+                            occupancyStatus = 'Vacant';
+                        } else if (occupiedRoomsCount < roomsInUnit.length) {
+                            occupancyStatus = 'Partially Occupied';
+                        } else {
+                            occupancyStatus = 'Occupied';
+                        }
+                    } else {
+                        occupancyStatus = 'Vacant';
+                    }
+                }
+                
+                return {
+                    ...unit,
+                    occupancyStatus,
+                };
+            });
             
         return { success: true, data: propertyUnits };
     } catch (error) {
