@@ -5,7 +5,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BedDouble, Bath, Home, Tag, FilePlus2 } from 'lucide-react';
+import { BedDouble, Bath, Home, Tag, FilePlus2, Users } from 'lucide-react';
 import type { Unit } from './schema';
 import { EditUnitDialog } from './edit-unit-dialog';
 import { useState } from 'react';
@@ -25,6 +25,15 @@ export function UnitCard({ unit }: UnitCardProps) {
     router.refresh();
   }
 
+  const occupancyStatusConfig = {
+    'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
+    'Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700' },
+    'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700' }
+  };
+  
+  const status = unit.occupancyStatus || 'Vacant';
+  const config = occupancyStatusConfig[status];
+
   return (
     <>
       <EditUnitDialog 
@@ -40,8 +49,8 @@ export function UnitCard({ unit }: UnitCardProps) {
               <CardDescription>{unit.unitType}</CardDescription>
               <CardTitle>{unit.unitCode}</CardTitle>
             </div>
-            <Badge variant={unit.occupancyStatus === 'Vacant' ? 'default' : 'destructive'} className={cn(unit.occupancyStatus === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700', 'border-transparent')}>
-              {unit.occupancyStatus}
+            <Badge variant={config.variant as any} className={cn(config.color, 'border-transparent')}>
+              {status}
             </Badge>
           </div>
         </CardHeader>
@@ -63,7 +72,7 @@ export function UnitCard({ unit }: UnitCardProps) {
           </div>
         </CardContent>
         <CardFooter className="gap-2">
-          {unit.occupancyStatus === 'Vacant' && (
+          {unit.occupancyStatus !== 'Occupied' && (
              <Button asChild className="w-full">
                 <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
                     <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy

@@ -265,17 +265,55 @@ export async function getContractLookups() {
 
 export async function getUnitsForProperty(propertyCode: string) {
     const allUnits = await readUnits();
-    const allContracts = await readContracts();
-    const occupiedUnitCodes = new Set(allContracts.filter(c => c.status === 'New' || c.status === 'Renew' && !c.roomCode).map(c => c.unitCode));
+    const allRooms = await readRooms();
+    const allContracts: Contract[] = await readContracts();
     
+    const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
+    
+    // Units that are fully occupied by a contract on the unit itself (not room-based)
+    const fullyOccupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode).map(c => c.unitCode));
+
+    // Rooms that are occupied by a contract
+    const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+
+    const unitsWithRoomCounts = new Map<string, { total: number, occupied: number }>();
+
+    allRooms.forEach(room => {
+        if (room.propertyCode === propertyCode) {
+            if (!unitsWithRoomCounts.has(room.unitCode!)) {
+                unitsWithRoomCounts.set(room.unitCode!, { total: 0, occupied: 0 });
+            }
+            const counts = unitsWithRoomCounts.get(room.unitCode!)!;
+            counts.total++;
+            if (occupiedRoomCodes.has(room.roomCode)) {
+                counts.occupied++;
+            }
+        }
+    });
+
     return allUnits
-        .filter(u => u.propertyCode === propertyCode && !occupiedUnitCodes.has(u.unitCode))
+        .filter(u => {
+            if (u.propertyCode !== propertyCode) {
+                return false;
+            }
+            // If it's fully rented as a whole unit, don't show it.
+            if (fullyOccupiedUnitCodes.has(u.unitCode)) {
+                return false;
+            }
+            // If it has rooms, check if all are occupied.
+            const roomCounts = unitsWithRoomCounts.get(u.unitCode);
+            if (roomCounts) {
+                return roomCounts.occupied < roomCounts.total;
+            }
+            // If it has no rooms, it's available if it's not in the fully occupied set.
+            return true;
+        })
         .map((u: any) => ({ value: u.unitCode, label: u.unitCode }));
 }
 
 export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
     const allRooms = await readRooms();
-    const allContracts = await readContracts();
+    const allContracts: Contract[] = await readContracts();
     const occupiedRoomCodes = new Set(allContracts.filter(c => c.status === 'New' || c.status === 'Renew').map(c => c.roomCode));
 
     return allRooms

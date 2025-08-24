@@ -43,7 +43,7 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const isVacant = unit.occupancyStatus === 'Vacant';
+    const isAvailable = unit.occupancyStatus !== 'Occupied';
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -91,6 +91,7 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
                 unit={unit}
                 isOpen={isEditDialogOpen}
                 setIsOpen={setIsEditDialogOpen}
+                onUnitUpdated={() => router.refresh()}
             />
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -101,7 +102,7 @@ const ActionsCell = ({ row }: { row: { original: Unit } }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    {isVacant && (
+                    {isAvailable && (
                         <DropdownMenuItem asChild>
                             <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
                                 <FilePlus2 className="mr-2 h-4 w-4" />
@@ -183,8 +184,13 @@ export const columns: ColumnDef<Unit>[] = [
     header: 'Occupancy Status',
     cell: ({ row }) => {
       const status = row.getValue('occupancyStatus') as string;
-      const variant = status === 'Occupied' ? 'destructive' : 'default';
-      return <Badge variant={variant} className={cn(status === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700', 'border-transparent')}>{status}</Badge>;
+      const statusConfig = {
+        'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
+        'Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700' },
+        'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700' }
+      };
+      const config = statusConfig[status as keyof typeof statusConfig] || { variant: 'secondary', color: '' };
+      return <Badge variant={config.variant as any} className={cn(config.color, 'border-transparent')}>{status}</Badge>;
     },
   },
    {

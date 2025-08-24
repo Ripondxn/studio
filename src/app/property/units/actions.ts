@@ -8,44 +8,68 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { unitSchema, type Unit } from './schema';
 import { type Contract } from '@/app/tenancy/contract/schema';
+import { type Room } from '../rooms/schema';
 
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 
 
-async function readUnits(): Promise<Unit[]> {
+async function readData(filePath: string): Promise<any[]> {
     try {
-        await fs.access(unitsFilePath);
-        const data = await fs.readFile(unitsFilePath, 'utf-8');
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await writeUnits([]);
             return [];
         }
         throw error;
     }
 }
 
+async function readUnits(): Promise<Unit[]> {
+    return await readData(unitsFilePath);
+}
 async function writeUnits(data: Unit[]) {
     await fs.writeFile(unitsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 export async function getUnits() {
     const allUnits = await readUnits();
-    const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
-    const allContracts: Contract[] = JSON.parse(contractsData);
+    const allContracts: Contract[] = await readData(contractsFilePath);
+    const allRooms: Room[] = await readData(roomsFilePath);
 
-    const occupiedUnitCodes = new Set(
-        allContracts
-            .filter(c => c.status === 'New' || c.status === 'Renew')
-            .map(c => c.unitCode)
-    );
+    const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
+    
+    const occupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode).map(c => c.unitCode));
+    const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
 
-    return allUnits.map(unit => ({
-        ...unit,
-        occupancyStatus: occupiedUnitCodes.has(unit.unitCode) ? 'Occupied' : 'Vacant',
-    }));
+    return allUnits.map(unit => {
+        const roomsInUnit = allRooms.filter(r => r.propertyCode === unit.propertyCode && r.unitCode === unit.unitCode);
+        
+        let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
+
+        if (roomsInUnit.length > 0) {
+            const occupiedRoomsCount = roomsInUnit.filter(r => occupiedRoomCodes.has(r.roomCode)).length;
+            if (occupiedRoomsCount === 0) {
+                occupancyStatus = 'Vacant';
+            } else if (occupiedRoomsCount < roomsInUnit.length) {
+                occupancyStatus = 'Partially Occupied';
+            } else {
+                occupancyStatus = 'Occupied';
+            }
+        } else {
+            if (occupiedUnitCodes.has(unit.unitCode)) {
+                occupancyStatus = 'Occupied';
+            }
+        }
+
+        return {
+            ...unit,
+            occupancyStatus,
+        };
+    });
 }
 
 const addUnitFormSchema = unitSchema.omit({ id: true, occupancyStatus: true });
