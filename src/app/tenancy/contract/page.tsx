@@ -586,12 +586,12 @@ export default function TenancyContractPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label>Tenancy Period</Label>
-                                    <Select value={tenancyPeriod?.period || ''} disabled>
+                                    <Select value={tenancyPeriod?.period} disabled>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Calculated from dates" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value={tenancyPeriod?.period || ''}>{tenancyPeriod?.period || ''}</SelectItem>
+                                            {tenancyPeriod?.period && <SelectItem value={tenancyPeriod.period}>{tenancyPeriod.period}</SelectItem>}
                                         </SelectContent>
                                     </Select>
                                 </div>
