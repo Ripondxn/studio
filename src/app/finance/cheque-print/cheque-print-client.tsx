@@ -12,8 +12,10 @@ import { Label } from '@/components/ui/label';
 import { Printer, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ToWords } from 'to-words';
-import { getLookups as getPaymentLookups } from '../payment/actions';
+import { getPaymentLookups } from '../payment/actions';
+import { getDuesForPayee } from './actions';
 import { Combobox } from '@/components/ui/combobox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const chequePrintSchema = z.object({
   payee: z.string().optional(),
@@ -47,9 +49,17 @@ type Lookups = {
     customers: { value: string, label: string }[];
 }
 
+type DueItem = {
+    label: string;
+    value: number;
+    reference: string;
+}
+
 export function ChequePrintClient() {
   const printRef = useRef<HTMLDivElement>(null);
   const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], customers: [] });
+  const [dueItems, setDueItems] = useState<DueItem[]>([]);
+  const [isLoadingDues, setIsLoadingDues] = useState(false);
   
   const form = useForm<ChequePrintFormData>({
     resolver: zodResolver(chequePrintSchema),
@@ -74,6 +84,29 @@ export function ChequePrintClient() {
       ...lookups.vendors,
       ...lookups.customers
   ];
+  
+  const watchedPayee = form.watch('payee');
+  
+  useEffect(() => {
+    if (watchedPayee) {
+        setIsLoadingDues(true);
+        getDuesForPayee(watchedPayee)
+            .then(items => {
+                setDueItems(items);
+                setIsLoadingDues(false);
+            });
+    } else {
+        setDueItems([]);
+    }
+  }, [watchedPayee]);
+
+  const handleDueItemSelect = (value: string) => {
+    const selectedDue = dueItems.find(item => item.reference === value);
+    if(selectedDue) {
+        form.setValue('amount', selectedDue.value);
+        form.setValue('memo', `Payment for ${selectedDue.reference}`);
+    }
+  }
 
   const watchedAmount = form.watch('amount');
   const amountInWords = watchedAmount > 0 ? toWords.convert(watchedAmount) : '';
@@ -137,7 +170,10 @@ export function ChequePrintClient() {
                             <Combobox
                                 options={payeeOptions}
                                 value={field.value || ''}
-                                onSelect={field.onChange}
+                                onSelect={(value) => {
+                                    field.onChange(value);
+                                    form.setValue('customPayee', ''); // Clear custom payee when selecting from list
+                                }}
                                 placeholder="Select from existing list..."
                             />
                         )}
@@ -148,6 +184,21 @@ export function ChequePrintClient() {
                     <Input id="customPayee" {...form.register('customPayee')} placeholder="e.g. John Doe"/>
                 </div>
              </div>
+             {isLoadingDues ? <p className="text-sm text-muted-foreground">Loading due payments...</p> : dueItems.length > 0 && (
+                <div className="space-y-2">
+                    <Label>Select Due Amount (Optional)</Label>
+                     <Select onValueChange={handleDueItemSelect}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a due payment to auto-fill amount"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {dueItems.map(item => (
+                                <SelectItem key={item.reference} value={item.reference}>{item.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+             )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="amount">Amount</Label>
@@ -170,7 +221,7 @@ export function ChequePrintClient() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="memo">Memo</Label>
+                <Label htmlFor="memo">Memo / For</Label>
                 <Input id="memo" {...form.register('memo')} />
             </div>
             {form.formState.errors.payee && <p className="text-destructive text-sm">{form.formState.errors.payee.message}</p>}
