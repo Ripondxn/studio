@@ -56,7 +56,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Trust Famous Real Estate</h1>
                             <div className="text-center">
-                              <h2 className="text-sm font-bold text-gray-800">Daily Checkout Reports</h2>
+                              <h2 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>Daily Checkout Reports</h2>
                             </div>
                         </div>
                     </div>
@@ -79,7 +79,6 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                             <TableHead className="border border-gray-300">Property</TableHead>
                             <TableHead className="border border-gray-300">Unit</TableHead>
                             <TableHead className="border border-gray-300">Room</TableHead>
-                            <TableHead className="border border-gray-300">Reference</TableHead>
                             <TableHead className="text-right border border-gray-300">Amount</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -93,7 +92,6 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                                 <TableCell className="border border-gray-300">{t.property || '-'}</TableCell>
                                 <TableCell className="border border-gray-300">{t.unitCode || '-'}</TableCell>
                                 <TableCell className="border border-gray-300">{t.roomCode || '-'}</TableCell>
-                                <TableCell className="border border-gray-300">{t.referenceNo || '-'}</TableCell>
                                 <TableCell className="text-right font-medium border border-gray-300">
                                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(t.amount)}
                                 </TableCell>
