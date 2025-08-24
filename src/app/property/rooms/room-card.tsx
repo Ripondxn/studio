@@ -39,16 +39,14 @@ export function RoomCard({ room }: RoomCardProps) {
       />
       <Card className="flex flex-col h-full">
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-xl">{room.roomCode}</CardTitle>
-              <CardDescription>{room.roomType}</CardDescription>
-            </div>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-sm font-normal">{room.roomCode}</CardTitle>
              <Badge variant={variant} className={cn('gap-1', color, 'border-transparent')}>
                 <Icon className="h-3 w-3" />
                 {status}
             </Badge>
           </div>
+          <CardDescription>{room.roomType}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 flex-1">
           <div className="flex items-center justify-between text-sm">

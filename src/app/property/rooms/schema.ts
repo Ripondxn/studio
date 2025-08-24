@@ -7,6 +7,7 @@ export const roomSchema = z.object({
   roomCode: z.string().min(1, "Room code is required."),
   propertyCode: z.string().min(1, "Property code is required."),
   unitCode: z.string().optional(),
+  roomName: z.string().optional(),
   roomType: z.string().optional(),
   rentAmount: z.number().optional(),
   rentFrequency: z.enum(['Monthly', 'Yearly']).optional(),

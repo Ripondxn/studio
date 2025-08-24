@@ -28,7 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const roomFormSchema = roomSchema.omit({ propertyCode: true });
 
-export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen: boolean, setIsOpen: (open: boolean) => void }) {
+export function EditRoomDialog({ room, isOpen, setIsOpen, onRoomUpdated }: { room: Room, isOpen: boolean, setIsOpen: (open: boolean) => void, onRoomUpdated?: () => void }) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -58,7 +58,7 @@ export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen
 
   const onSubmit = async (data: z.infer<typeof roomFormSchema>) => {
     setIsSaving(true);
-    const result = await updateRoom(data);
+    const result = await updateRoom({ ...data, propertyCode: room.propertyCode });
 
     if (result.success) {
       toast({
@@ -66,6 +66,7 @@ export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen
         description: `Successfully updated room.`,
       });
       setIsOpen(false);
+      if (onRoomUpdated) onRoomUpdated();
       router.refresh();
     } else {
       toast({

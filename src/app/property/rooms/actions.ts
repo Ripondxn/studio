@@ -39,7 +39,7 @@ export async function getRooms() {
 
     const occupiedRoomCodes = new Set(
         allContracts
-            .filter(c => c.status === 'New' || c.status === 'Renew')
+            .filter(c => (c.status === 'New' || c.status === 'Renew') && c.roomCode)
             .map(c => c.roomCode)
     );
 
