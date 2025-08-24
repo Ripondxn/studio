@@ -41,7 +41,7 @@ export function RoomCard({ room }: RoomCardProps) {
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-xl">{room.roomCode}</CardTitle>
+              <CardTitle className="text-2xl">{room.roomCode}</CardTitle>
               <CardDescription>{room.roomType}</CardDescription>
             </div>
              <Badge variant={variant} className={cn('gap-1', color, 'border-transparent')}>
