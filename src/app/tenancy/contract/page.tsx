@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit } from './actions';
+import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getRoomDetails } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
@@ -133,6 +133,7 @@ export default function TenancyContractPage() {
     const contractId = searchParams.get('id');
     const propertyCode = searchParams.get('propertyCode');
     const unitCode = searchParams.get('unitCode');
+    const roomCode = searchParams.get('roomCode');
 
     if (contractId) {
        fetchContractData(contractId);
@@ -142,12 +143,14 @@ export default function TenancyContractPage() {
             const newContract = {...result.data};
             if(propertyCode) newContract.property = propertyCode;
             if(unitCode) newContract.unitCode = unitCode;
+            if(roomCode) newContract.roomCode = roomCode;
             setContract(newContract);
             setInitialContract(newContract);
             
-            if(propertyCode && unitCode){
+            if(propertyCode) {
                 handlePropertySelect(propertyCode).then(() => {
-                    handleUnitSelect(unitCode);
+                    if (unitCode) handleUnitSelect(unitCode);
+                    if (roomCode) handleRoomSelect(roomCode);
                 })
             }
         }
@@ -204,6 +207,16 @@ export default function TenancyContractPage() {
     }
   }
   
+  const handleRoomSelect = async (roomCode: string) => {
+    setContract(prev => ({...prev, roomCode}));
+    if (roomCode) {
+        const result = await getRoomDetails(roomCode);
+        if (result.success && result.data?.rentAmount) {
+             setContract(prev => ({...prev, totalRent: result.data.rentAmount! }));
+        }
+    }
+  }
+
   const handleTenantSelect = (tenantCode: string) => {
       const tenant = lookups.tenants.find(t => t.value === tenantCode);
       if (tenant) {
@@ -497,7 +510,7 @@ export default function TenancyContractPage() {
                                     <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div>
                                     <Label htmlFor="property">Property</Label>
                                     <Combobox
@@ -518,19 +531,16 @@ export default function TenancyContractPage() {
                                         disabled={!isEditing || !contract.property}
                                     />
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <Label htmlFor="room-code">Room</Label>
+                                    <Label htmlFor="room-code">Room Code</Label>
                                     <Combobox
                                         options={lookups.rooms}
                                         value={contract.roomCode || ''}
-                                        onSelect={(value) => handleInputChange('roomCode', value)}
+                                        onSelect={handleRoomSelect}
                                         placeholder="Select a Room"
                                         disabled={!isEditing || !contract.unitCode}
                                     />
                                 </div>
-                               
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -772,3 +782,4 @@ export default function TenancyContractPage() {
     </div>
   );
 }
+

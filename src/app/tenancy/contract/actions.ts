@@ -115,9 +115,22 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
                 return { success: false, error: 'This rental space is already occupied by an active contract.' };
             }
 
+             let maxNum = 0;
+            allContracts.forEach(c => {
+                const match = c.contractNo.match(/^TC-(\d+)$/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxNum) {
+                        maxNum = num;
+                    }
+                }
+            });
+            const newContractNo = `TC-${(maxNum + 1).toString().padStart(4, '0')}`;
+
              const newContract: Contract = {
                 ...validation.data,
                 id: `CON-${Date.now()}`,
+                contractNo: newContractNo,
             };
             allContracts.push(newContract);
             savedContract = newContract;
@@ -245,16 +258,22 @@ export async function getContractLookups() {
 }
 
 export async function getUnitsForProperty(propertyCode: string) {
-    const units = await readUnits();
-    return units
-        .filter(u => u.propertyCode === propertyCode)
+    const allUnits = await readUnits();
+    const allContracts = await readContracts();
+    const occupiedUnitCodes = new Set(allContracts.filter(c => c.status === 'New' || c.status === 'Renew').map(c => c.unitCode));
+    
+    return allUnits
+        .filter(u => u.propertyCode === propertyCode && !occupiedUnitCodes.has(u.unitCode))
         .map((u: any) => ({ value: u.unitCode, label: u.unitName || u.unitCode }));
 }
 
 export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
-    const rooms = await readRooms();
-    return rooms
-        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode)
+    const allRooms = await readRooms();
+    const allContracts = await readContracts();
+    const occupiedRoomCodes = new Set(allContracts.filter(c => c.status === 'New' || c.status === 'Renew').map(c => c.roomCode));
+
+    return allRooms
+        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode && !occupiedRoomCodes.has(r.roomCode))
         .map((r: any) => ({ value: r.roomCode, label: `${r.roomCode} (${r.roomName || 'No Name'})` }));
 }
 
@@ -277,3 +296,13 @@ export async function getUnitDetails(unitCode: string) {
         }
     };
 }
+
+export async function getRoomDetails(roomCode: string) {
+    const allRooms = await readRooms();
+    const room = allRooms.find(r => r.roomCode === roomCode);
+    if (!room) {
+        return { success: false, error: 'Room not found' };
+    }
+    return { success: true, data: room };
+}
+
