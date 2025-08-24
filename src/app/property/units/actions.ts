@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -42,23 +41,21 @@ export async function getUnits() {
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
-    // Contracts for entire units (no room specified)
     const unitLevelContracts = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
-    
-    // Contracts for specific rooms
     const roomLevelContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
 
     return allUnits.map(unit => {
         let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
 
-        // 1. Check if the unit as a whole is rented out. This is the highest priority.
+        // Case 1: The entire unit is rented under one contract. It's fully Occupied.
         if (unitLevelContracts.has(unit.unitCode)) {
             occupancyStatus = 'Occupied';
         } else {
-            // 2. If not rented as a whole, check its rooms.
+            // Case 2: The unit is not rented as a whole, so check its rooms.
             const roomsInUnit = allRooms.filter(r => r.propertyCode === unit.propertyCode && r.unitCode === unit.unitCode);
             
             if (roomsInUnit.length > 0) {
+                // It's a parent unit with rooms. Check how many are occupied.
                 const occupiedRoomsCount = roomsInUnit.filter(r => roomLevelContracts.has(r.roomCode)).length;
 
                 if (occupiedRoomsCount === 0) {
@@ -69,7 +66,7 @@ export async function getUnits() {
                     occupancyStatus = 'Occupied';
                 }
             } else {
-                // 3. If it has no rooms and isn't rented as a whole, it's vacant.
+                // Case 3: It's a standalone unit with no rooms and no active contract. It's Vacant.
                 occupancyStatus = 'Vacant';
             }
         }
