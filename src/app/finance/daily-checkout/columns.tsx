@@ -85,13 +85,22 @@ const ViewCheckoutDialog = ({ checkout, isOpen, setIsOpen }: { checkout: DailyCh
                         </div>
                     </DialogHeader>
                     <div className="printable-grid grid grid-cols-1 sm:grid-cols-3 gap-4 py-4">
-                        <div><span className="font-semibold text-sm text-muted-foreground">Submitted By:</span> <p>{checkout.submittedBy}</p></div>
-                        <div><span className="font-semibold text-sm text-muted-foreground">Total Amount:</span> <p className="font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(checkout.totalAmount)}</p></div>
-                        <div><span className="font-semibold text-sm text-muted-foreground">Status:</span> <p><Badge variant="outline" className={cn(statusConfig[checkout.status].color, 'border-transparent')}>{statusConfig[checkout.status].label}</Badge></p></div>
+                        <div>
+                            <span className="font-semibold text-sm text-muted-foreground">Submitted By:</span>
+                            <div className="text-base">{checkout.submittedBy}</div>
+                        </div>
+                        <div>
+                            <span className="font-semibold text-sm text-muted-foreground">Total Amount:</span>
+                            <div className="font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(checkout.totalAmount)}</div>
+                        </div>
+                        <div>
+                            <span className="font-semibold text-sm text-muted-foreground">Status:</span>
+                            <div><Badge variant="outline" className={cn(statusConfig[checkout.status].color, 'border-transparent')}>{statusConfig[checkout.status].label}</Badge></div>
+                        </div>
                     </div>
                      <div>
                         <h4 className="font-semibold mb-2">Notes</h4>
-                        <p className="text-sm text-muted-foreground italic border p-4 rounded-md">"{checkout.notes || 'No notes provided.'}"</p>
+                        <div className="text-sm text-muted-foreground italic border p-4 rounded-md">"{checkout.notes || 'No notes provided.'}"</div>
                     </div>
                     <div className="mt-4">
                         <h4 className="font-semibold mb-2">Included Transactions ({checkout.transactionIds.length})</h4>
