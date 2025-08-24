@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
@@ -194,7 +193,11 @@ export default function PropertyPage() {
     getUnitsForProperty(code)
         .then(result => {
             if (result.success && result.data) {
-                setUnits(result.data);
+                // Natural sort for alphanumeric codes
+                const sortedUnits = result.data.sort((a, b) => 
+                    a.unitCode.localeCompare(b.unitCode, undefined, { numeric: true, sensitivity: 'base' })
+                );
+                setUnits(sortedUnits);
             }
         })
         .finally(() => setIsLoadingUnits(false));
@@ -203,7 +206,10 @@ export default function PropertyPage() {
     getRoomsForProperty(code)
         .then(result => {
             if (result.success && result.data) {
-                setRooms(result.data);
+                 const sortedRooms = result.data.sort((a, b) => 
+                    a.roomCode.localeCompare(b.roomCode, undefined, { numeric: true, sensitivity: 'base' })
+                );
+                setRooms(sortedRooms);
             }
         })
         .finally(() => setIsLoadingRooms(false));

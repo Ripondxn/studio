@@ -1,2 +1,43 @@
-
-[]
+[
+  {
+    "unitCode": "F101",
+    "unitName": "",
+    "propertyCode": "LT-C38",
+    "floor": "1st Floor",
+    "unitType": "2BHK",
+    "annualRent": 55000,
+    "unitStatus": "Active",
+    "id": "UNIT-1756021195219",
+    "occupancyStatus": "Vacant"
+  },
+  {
+    "unitCode": "F201",
+    "unitName": "",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "2BHK",
+    "annualRent": 45000,
+    "unitStatus": "Active",
+    "id": "UNIT-1756021298174"
+  },
+  {
+    "unitCode": "F102",
+    "unitName": "",
+    "propertyCode": "LT-C38",
+    "floor": "F-01",
+    "unitType": "2BHK",
+    "annualRent": 47000,
+    "unitStatus": "Active",
+    "id": "UNIT-1756021342114"
+  },
+  {
+    "unitCode": "F202",
+    "unitName": "",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "3BHK",
+    "annualRent": 60000,
+    "unitStatus": "Active",
+    "id": "UNIT-1756021380444"
+  }
+]
