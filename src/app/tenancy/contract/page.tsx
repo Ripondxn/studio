@@ -124,6 +124,49 @@ export default function TenancyContractPage() {
     }
   }, [router, toast]);
 
+    const handlePropertySelect = useCallback(async (propertyCode: string) => {
+      setContract(prev => ({
+        ...prev, 
+        property: propertyCode, 
+        unitCode: '', 
+        roomCode: '', 
+      }));
+      setLookups(prev => ({...prev, units: [], rooms: []}));
+      if(propertyCode) {
+          const units = await getUnitsForProperty(propertyCode);
+          setLookups(prev => ({...prev, units}));
+      }
+    }, []);
+
+  const handleUnitSelect = useCallback(async (unitCode: string) => {
+    setContract(prev => ({ ...prev, unitCode, roomCode: '' }));
+    setLookups(prev => ({...prev, rooms: []}));
+    
+    if (unitCode) {
+        if(contract.property) {
+            const rooms = await getRoomsForUnit(contract.property, unitCode);
+            setLookups(prev => ({...prev, rooms}));
+        }
+
+        const result = await getUnitDetails(unitCode);
+        if (result.success && result.data) {
+            setContract(prev => ({
+                ...prev,
+                totalRent: result.data.totalRent,
+            }));
+        }
+    }
+  }, [contract.property]);
+  
+  const handleRoomSelect = useCallback(async (roomCode: string) => {
+    setContract(prev => ({...prev, roomCode}));
+    if (roomCode) {
+        const result = await getRoomDetails(roomCode);
+        if (result.success && result.data?.rentAmount) {
+             setContract(prev => ({...prev, totalRent: result.data!.rentAmount! }));
+        }
+    }
+  }, []);
 
   useEffect(() => {
     getContractLookups().then(data => {
@@ -138,29 +181,28 @@ export default function TenancyContractPage() {
     if (contractId) {
        fetchContractData(contractId);
     } else {
-      findContract({ contractId: 'new' }).then(result => {
-        if (result.success && result.data) {
-            const newContract = {...result.data};
+        setContract(prev => {
+            const newContract = {...initialContractState};
             if(propertyCode) newContract.property = propertyCode;
             if(unitCode) newContract.unitCode = unitCode;
             if(roomCode) newContract.roomCode = roomCode;
-            setContract(newContract);
-            setInitialContract(newContract);
-            
-            if(propertyCode) {
-                handlePropertySelect(propertyCode).then(() => {
-                    if (unitCode) handleUnitSelect(unitCode);
-                    if (roomCode) handleRoomSelect(roomCode);
-                })
-            }
+            return newContract;
+        });
+        
+        setInitialContract(initialContractState);
+        
+        if(propertyCode) {
+            handlePropertySelect(propertyCode).then(() => {
+                if (unitCode) handleUnitSelect(unitCode);
+                if (roomCode) handleRoomSelect(roomCode);
+            })
         }
         setIsNewRecord(true);
         setIsEditing(true);
         setEditedInstallmentIndexes(new Set());
         setIsLoading(false);
-      });
     }
-  }, [searchParams, fetchContractData]);
+  }, [searchParams, fetchContractData, handlePropertySelect, handleUnitSelect, handleRoomSelect]);
 
   const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
@@ -168,53 +210,6 @@ export default function TenancyContractPage() {
   
   const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount', value: string) => {
     setContract(prev => ({...prev, [field]: parseFloat(value) || 0 }));
-  }
-
-  const handlePropertySelect = async (propertyCode: string) => {
-      setContract(prev => ({
-        ...prev, 
-        property: propertyCode, 
-        unitCode: '', 
-        roomCode: '', 
-      }));
-      setLookups(prev => ({...prev, units: [], rooms: []}));
-      if(propertyCode) {
-          const units = await getUnitsForProperty(propertyCode);
-          setLookups(prev => ({...prev, units}));
-      }
-  }
-  
-  const handleUnitSelect = async (unitCode: string) => {
-    setContract(prev => ({ ...prev, unitCode, roomCode: '' }));
-    setLookups(prev => ({...prev, rooms: []}));
-    
-    if (unitCode) {
-        const rooms = await getRoomsForUnit(contract.property || '', unitCode);
-        setLookups(prev => ({...prev, rooms}));
-
-        const result = await getUnitDetails(unitCode);
-        if (result.success && result.data) {
-            setContract(prev => ({
-                ...prev,
-                totalRent: result.data.totalRent,
-            }));
-            
-            const tenant = result.data.tenant;
-            if(tenant) {
-                 handleTenantSelect(tenant.code);
-            }
-        }
-    }
-  }
-  
-  const handleRoomSelect = async (roomCode: string) => {
-    setContract(prev => ({...prev, roomCode}));
-    if (roomCode) {
-        const result = await getRoomDetails(roomCode);
-        if (result.success && result.data?.rentAmount) {
-             setContract(prev => ({...prev, totalRent: result.data.rentAmount! }));
-        }
-    }
   }
 
   const handleTenantSelect = (tenantCode: string) => {
@@ -782,4 +777,5 @@ export default function TenancyContractPage() {
     </div>
   );
 }
+
 

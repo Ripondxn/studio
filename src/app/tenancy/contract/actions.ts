@@ -91,30 +91,6 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
         let savedContract: Contract;
         
         if (isNewRecord) {
-             const contractExists = allContracts.some(c => c.contractNo === data.contractNo);
-             if (contractExists) {
-                return { success: false, error: `Contract with number "${data.contractNo}" already exists.`};
-             }
-
-            // Check for active contracts on the same unit/room
-            const activeContractExists = allContracts.some(c => {
-                if (c.status !== 'New' && c.status !== 'Renew') return false;
-                
-                // If it's a room-based rental
-                if(data.roomCode && c.roomCode === data.roomCode && c.property === data.property && c.unitCode === data.unitCode) {
-                    return true;
-                }
-                // If it's a whole unit rental (no room)
-                if(!data.roomCode && c.unitCode === data.unitCode && c.property === data.property) {
-                    return true;
-                }
-                return false;
-            });
-
-            if (activeContractExists) {
-                return { success: false, error: 'This rental space is already occupied by an active contract.' };
-            }
-
              let maxNum = 0;
             allContracts.forEach(c => {
                 const match = c.contractNo.match(/^TC-(\d+)$/);
@@ -285,13 +261,9 @@ export async function getUnitDetails(unitCode: string) {
         return { success: false, error: 'Unit not found' };
     }
     
-    const allTenants = await readTenants();
-    const tenant = allTenants.find((t: any) => t.tenantData.unitCode === unit.unitCode);
-
     return { 
         success: true, 
         data: {
-            tenant: tenant ? tenant.tenantData : null,
             totalRent: unit.annualRent,
         }
     };
