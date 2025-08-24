@@ -40,7 +40,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                 size: A4; 
                 margin: 1cm 0.25in;
             }
-            body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; font-family: sans-serif; }
+            body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
             .printable-area { display: flex; flex-direction: column; justify-content: space-between; min-height: 24cm; width: 100%; }
             .printable-table, .printable-table th, .printable-table td { border: 1px solid #e5e7eb !important; padding: 4px 6px; font-size: 9pt; }
             .printable-table th { background-color: #f9fafb !important; }
@@ -57,8 +57,8 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Trust Famous Real Estate</h1>
-                            <div className="text-center">
-                              <h2 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>Daily Checkout Reports</h2>
+                             <div className="text-center">
+                              <h2 className="font-bold text-gray-800" style={{ fontSize: '14px' }}>Daily Checkout Reports</h2>
                             </div>
                         </div>
                     </div>
