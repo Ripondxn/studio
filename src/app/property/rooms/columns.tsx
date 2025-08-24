@@ -156,10 +156,6 @@ export const columns: ColumnDef<Room>[] = [
     ),
   },
   {
-    accessorKey: 'roomName',
-    header: 'Room Name',
-  },
-  {
     accessorKey: 'unitCode',
     header: 'Unit Code',
   },
