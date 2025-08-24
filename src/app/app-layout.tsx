@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -166,7 +165,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         return (
                             <DropdownMenu key={index}>
                                 <DropdownMenuTrigger asChild>
-                                     <Button variant="ghost" className={cn("flex items-center gap-1 transition-colors hover:text-foreground data-[state=open]:text-foreground", isActive ? "text-foreground" : "text-muted-foreground")}>
+                                     <Button variant="ghost" className={cn("flex items-center gap-1 transition-colors data-[state=open]:text-foreground", isActive ? "text-foreground" : "text-muted-foreground")}>
                                         {link.icon && React.cloneElement(link.icon, { className: 'h-4 w-4 mr-1' })}
                                         {link.label}
                                         <ChevronDown className="h-4 w-4" />
@@ -187,7 +186,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                              <Link
                                 key={index}
                                 href={link.href}
-                                className={cn("flex items-center gap-1 transition-colors hover:text-foreground", isActive ? "text-foreground" : "text-muted-foreground")}
+                                className={cn("flex items-center gap-1 transition-colors", isActive ? "text-foreground" : "text-muted-foreground")}
                             >
                                 {link.icon && React.cloneElement(link.icon, { className: 'h-4 w-4 mr-1' })}
                                 {link.label}

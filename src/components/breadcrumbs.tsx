@@ -107,7 +107,7 @@ export const Breadcrumbs = () => {
           <Link
             href="/"
             className={cn(
-              'flex items-center gap-2 rounded-md px-3 py-1.5 transition-colors hover:bg-muted hover:text-foreground',
+              'flex items-center gap-2 rounded-md px-3 py-1.5 transition-colors',
               pathname === '/' ? 'font-semibold text-foreground bg-muted' : ''
             )}
           >
@@ -120,7 +120,7 @@ export const Breadcrumbs = () => {
                 href={tab.path}
                 aria-current={pathname === tab.path ? 'page' : undefined}
                 className={cn(
-                'group flex items-center gap-2 rounded-t-md border-b-2 px-3 py-2 transition-colors hover:border-primary hover:text-foreground',
+                'group flex items-center gap-2 rounded-t-md border-b-2 px-3 py-2 transition-colors',
                 pathname === tab.path ? 'font-semibold text-primary border-primary' : 'border-transparent'
                 )}
             >
