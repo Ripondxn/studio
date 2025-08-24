@@ -7,7 +7,8 @@ import path from 'path';
 const settingsFilePath = path.join(process.cwd(), 'src/app/admin/communication/settings.json');
 
 const defaultSettings = {
-    sendgridApiKey: '',
+    gmailUser: '',
+    gmailAppPassword: '',
     twilioAccountSid: '',
     twilioAuthToken: '',
     twilioPhoneNumber: ''

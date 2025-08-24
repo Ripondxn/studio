@@ -1,6 +1,7 @@
 
 {
-  "sendgridApiKey": "",
+  "gmailUser": "",
+  "gmailAppPassword": "",
   "twilioAccountSid": "",
   "twilioAuthToken": "",
   "twilioPhoneNumber": ""

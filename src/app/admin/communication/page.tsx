@@ -14,7 +14,8 @@ import { getCommunicationSettings, saveCommunicationSettings } from './actions';
 export default function CommunicationSettingsPage() {
     const { toast } = useToast();
     const [settings, setSettings] = useState({
-        sendgridApiKey: '',
+        gmailUser: '',
+        gmailAppPassword: '',
         twilioAccountSid: '',
         twilioAuthToken: '',
         twilioPhoneNumber: ''
@@ -71,18 +72,29 @@ export default function CommunicationSettingsPage() {
                 </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Email Settings (SendGrid)</CardTitle>
-                        <CardDescription>Configure settings for sending emails via SendGrid.</CardDescription>
+                        <CardTitle>Email Settings (Gmail)</CardTitle>
+                        <CardDescription>Configure settings for sending emails via Gmail. Use an App Password for security.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="sendgridApiKey">SendGrid API Key</Label>
+                            <Label htmlFor="gmailUser">Gmail Address</Label>
                             <Input
-                                id="sendgridApiKey"
-                                name="sendgridApiKey"
+                                id="gmailUser"
+                                name="gmailUser"
+                                type="email"
+                                placeholder="your-email@gmail.com"
+                                value={settings.gmailUser}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="gmailAppPassword">Gmail App Password</Label>
+                            <Input
+                                id="gmailAppPassword"
+                                name="gmailAppPassword"
                                 type="password"
-                                placeholder="SG.XXXXXXXXXXXXXXXX"
-                                value={settings.sendgridApiKey}
+                                placeholder="****************"
+                                value={settings.gmailAppPassword}
                                 onChange={handleInputChange}
                             />
                         </div>

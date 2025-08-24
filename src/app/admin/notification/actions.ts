@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
+import nodemailer from 'nodemailer';
 
 // This file contains a placeholder for email sending logic.
 // In a real application, you would integrate a service like SendGrid, AWS SES, or similar.
@@ -54,13 +55,13 @@ export async function sendNotificationEmail(data: z.infer<typeof formSchema>) {
         return { success: false, error: 'Invalid data provided.' };
     }
 
-    // In a real app, this is where you'd call the SendGrid/Twilio API.
+    // In a real app, this is where you'd call the email service API.
     // We will simulate a successful send after a short delay.
-    console.log('--- SIMULATING EMAIL SEND ---');
+    console.log('--- SIMULATING EMAIL SEND VIA GMAIL ---');
     console.log('To:', validation.data.recipient);
     console.log('Subject:', validation.data.subject);
     console.log('Body:', validation.data.body);
-    console.log('-----------------------------');
+    console.log('------------------------------------');
 
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -70,20 +71,25 @@ export async function sendNotificationEmail(data: z.infer<typeof formSchema>) {
         const settingsPath = path.join(process.cwd(), 'src/app/admin/communication/settings.json');
         const settingsData = await fs.readFile(settingsPath, 'utf-8');
         const settings = JSON.parse(settingsData);
-        if (!settings.sendgridApiKey) {
-            return { success: false, error: 'SendGrid API key is not configured. Please add it in Communication Settings.' };
+        if (!settings.gmailUser || !settings.gmailAppPassword) {
+            return { success: false, error: 'Gmail user and App Password are not configured. Please add them in Communication Settings.' };
         }
 
-        // Placeholder for actual SendGrid API call
-        // const sgMail = require('@sendgrid/mail');
-        // sgMail.setApiKey(settings.sendgridApiKey);
-        // const msg = {
+        // Placeholder for actual Nodemailer API call
+        // const transporter = nodemailer.createTransport({
+        //   service: 'gmail',
+        //   auth: {
+        //     user: settings.gmailUser,
+        //     pass: settings.gmailAppPassword,
+        //   },
+        // });
+        // const mailOptions = {
+        //   from: settings.gmailUser,
         //   to: validation.data.recipient,
-        //   from: 'no-reply@yourdomain.com', // This should be a verified sender in SendGrid
         //   subject: validation.data.subject,
-        //   html: validation.data.body.replace(/\n/g, '<br>'),
+        //   html: validation.data.body.replace(/\\n/g, '<br>'),
         // };
-        // await sgMail.send(msg);
+        // await transporter.sendMail(mailOptions);
 
         return { success: true };
 
