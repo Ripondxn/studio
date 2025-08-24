@@ -24,7 +24,6 @@ const breadcrumbNameMap: { [key: string]: string } = {
   units: 'Units',
   floors: 'Floors',
   rooms: 'Rooms',
-  partitions: 'Partitions',
   vacant: 'Vacant Units',
   finance: 'Finance',
   'chart-of-accounts': 'Chart of Accounts',

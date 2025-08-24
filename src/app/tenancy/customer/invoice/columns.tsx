@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -119,9 +120,6 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
           header: 'Unit',
           cell: ({row}) => {
             const invoice = row.original;
-            if (invoice.partitionCode) {
-              return <span>{invoice.unitCode} / {invoice.partitionCode}</span>
-            }
             if (invoice.roomCode) {
               return <span>{invoice.unitCode} / {invoice.roomCode}</span>
             }

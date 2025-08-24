@@ -26,7 +26,6 @@ const JSON_FILES_TO_BACKUP = [
   'property/units/units-data.json',
   'property/floors/floors-data.json',
   'property/rooms/rooms-data.json',
-  'property/partitions/partitions-data.json',
   'tenancy/tenants/tenants-data.json',
   'tenancy/customer/customers-data.json',
   'tenancy/customer/invoice/invoices-data.json',

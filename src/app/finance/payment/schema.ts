@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 import { type Role } from '@/app/workflow/types';
 
@@ -29,7 +30,6 @@ export const paymentSchema = z.object({
   unitCode: z.string().optional(),
   floor: z.string().optional(),
   roomCode: z.string().optional(),
-  partitionCode: z.string().optional(),
   referenceType: z.string().optional(),
   referenceNo: z.string().optional(),
   description: z.string().optional(),

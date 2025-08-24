@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -34,7 +35,7 @@ import { saveInvoice } from './actions';
 import { invoiceSchema, invoiceItemSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit } from '../../contract/actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 
@@ -59,9 +60,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const [lookups, setLookups] = useState<{
     properties: {value: string, label: string}[],
     units: {value: string, label: string}[],
-    rooms: {value: string, label: string}[],
-    partitions: {value: string, label: string}[]
-  }>({ properties: [], units: [], rooms: [], partitions: [] });
+    rooms: {value: string, label: string}[]
+  }>({ properties: [], units: [], rooms: [] });
 
   const {
     register,
@@ -106,10 +106,9 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     const fetchSubUnits = async () => {
         if (watchedProperty && watchedUnit) {
             const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
-            const partitions = await getPartitionsForUnit(watchedProperty, watchedUnit);
-            setLookups(prev => ({...prev, rooms, partitions}));
+            setLookups(prev => ({...prev, rooms}));
         } else {
-            setLookups(prev => ({...prev, rooms: [], partitions: []}));
+            setLookups(prev => ({...prev, rooms: []}));
         }
     }
     fetchSubUnits();
@@ -145,7 +144,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
         setValue('property', '');
         setValue('unitCode', '');
         setValue('roomCode', '');
-        setValue('partitionCode', '');
     }
   }, [isPropertyInvoice, setValue]);
 
@@ -163,7 +161,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             property: '',
             unitCode: '',
             roomCode: '',
-            partitionCode: '',
             invoiceDate: format(new Date(), 'yyyy-MM-dd'),
             dueDate: format(new Date(), 'yyyy-MM-dd'),
             items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
@@ -267,7 +264,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             </div>
 
             {isPropertyInvoice && (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 p-4 border rounded-md bg-muted/50">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4 p-4 border rounded-md bg-muted/50">
                   <div>
                       <Label>Property</Label>
                       <Controller
@@ -281,7 +278,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                                       field.onChange(value);
                                       setValue('unitCode', '');
                                       setValue('roomCode', '');
-                                      setValue('partitionCode', '');
                                   }}
                                   placeholder="Select Property"
                               />
@@ -300,7 +296,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                                   onSelect={(value) => {
                                       field.onChange(value);
                                       setValue('roomCode', '');
-                                      setValue('partitionCode', '');
                                   }}
                                   placeholder="Select Unit"
                                   disabled={!watchedProperty}
@@ -320,22 +315,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                                   onSelect={field.onChange}
                                   placeholder="Select Room"
                                   disabled={!watchedUnit || lookups.rooms.length === 0}
-                              />
-                          )}
-                      />
-                  </div>
-                  <div>
-                      <Label>Partition</Label>
-                      <Controller
-                          name="partitionCode"
-                          control={control}
-                          render={({ field }) => (
-                              <Combobox
-                                  options={lookups.partitions}
-                                  value={field.value || ''}
-                                  onSelect={field.onChange}
-                                  placeholder="Select Partition"
-                                  disabled={!watchedUnit || lookups.partitions.length === 0}
                               />
                           )}
                       />

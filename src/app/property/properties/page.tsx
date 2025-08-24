@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -494,7 +495,7 @@ export default function PropertyPage() {
 
   const handleExportUnitsPDF = () => {
     const doc = new jsPDF();
-    doc.text(`Units List for ${propertyData.name}`, 14, 16);
+    doc.text(`Flats List for ${propertyData.name}`, 14, 16);
     (doc as any).autoTable({
         head: [['Unit Code', 'Floor', 'Type', 'Annual Rent', 'Status']],
         body: units.map(u => [
@@ -528,10 +529,9 @@ export default function PropertyPage() {
     const doc = new jsPDF();
     doc.text(`Rooms List for ${propertyData.name}`, 14, 16);
     (doc as any).autoTable({
-        head: [['Room Code', 'Floor', 'Unit', 'Type', 'Rent', 'Status']],
+        head: [['Room Code', 'Unit', 'Type', 'Rent', 'Status']],
         body: rooms.map(r => [
             r.roomCode,
-            r.floorCode,
             r.unitCode,
             r.roomType,
             new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(r.rentAmount || 0),
@@ -545,7 +545,6 @@ export default function PropertyPage() {
   const handleExportRoomsExcel = () => {
     const dataToExport = rooms.map(r => ({
         'Room Code': r.roomCode,
-        'Floor': r.floorCode,
         'Unit': r.unitCode,
         'Type': r.roomType,
         'Rent': r.rentAmount,

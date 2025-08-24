@@ -18,7 +18,6 @@ export const contractSchema = z.object({
   property: z.string().optional(),
   unitCode: z.string().min(1, "Unit code is required."),
   roomCode: z.string().optional(),
-  partitionCode: z.string().optional(),
   tenantCode: z.string().optional(),
   tenantName: z.string().min(1, "Tenant name is required."),
   mobile: z.string().optional(),

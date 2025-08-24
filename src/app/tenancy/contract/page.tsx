@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getPartitionsForUnit, getPartitionDetails } from './actions';
+import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
@@ -47,7 +47,6 @@ const initialContractState: Contract = {
     contractDate: '',
     unitCode: '',
     roomCode: '',
-    partitionCode: '',
     property: '',
     tenantCode: '',
     tenantName: '',
@@ -75,7 +74,6 @@ type LookupData = {
     properties: {value: string, label: string}[];
     units: {value: string, label: string}[];
     rooms: {value: string, label: string}[];
-    partitions: {value: string, label: string}[];
     tenants: (Tenant & {value: string, label: string})[];
 }
 
@@ -91,7 +89,7 @@ export default function TenancyContractPage() {
   const [contract, setContract] = useState<Contract>(initialContractState);
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
-  const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], partitions: [], tenants: [] });
+  const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], tenants: [] });
 
 
   const fetchContractData = useCallback(async (contractId: string) => {
@@ -113,8 +111,6 @@ export default function TenancyContractPage() {
             if (fetchedContract.property && fetchedContract.unitCode) {
                 const rooms = await getRoomsForUnit(fetchedContract.property, fetchedContract.unitCode);
                 setLookups(prev => ({...prev, rooms}));
-                const partitions = await getPartitionsForUnit(fetchedContract.property, fetchedContract.unitCode);
-                setLookups(prev => ({...prev, partitions}));
             }
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error || "Contract not found" });
@@ -161,7 +157,7 @@ export default function TenancyContractPage() {
     }
   }, [searchParams, fetchContractData]);
 
-  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod'>, value: string) => {
+  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
   }
   
@@ -175,9 +171,8 @@ export default function TenancyContractPage() {
         property: propertyCode, 
         unitCode: '', 
         roomCode: '', 
-        partitionCode: ''
       }));
-      setLookups(prev => ({...prev, units: [], rooms: [], partitions: []}));
+      setLookups(prev => ({...prev, units: [], rooms: []}));
       if(propertyCode) {
           const units = await getUnitsForProperty(propertyCode);
           setLookups(prev => ({...prev, units}));
@@ -185,14 +180,12 @@ export default function TenancyContractPage() {
   }
   
   const handleUnitSelect = async (unitCode: string) => {
-    setContract(prev => ({ ...prev, unitCode, roomCode: '', partitionCode: '' }));
-    setLookups(prev => ({...prev, rooms: [], partitions: []}));
+    setContract(prev => ({ ...prev, unitCode, roomCode: '' }));
+    setLookups(prev => ({...prev, rooms: []}));
     
     if (unitCode) {
         const rooms = await getRoomsForUnit(contract.property || '', unitCode);
         setLookups(prev => ({...prev, rooms}));
-        const partitions = await getPartitionsForUnit(contract.property || '', unitCode);
-        setLookups(prev => ({...prev, partitions}));
 
         const result = await getUnitDetails(unitCode);
         if (result.success && result.data) {
@@ -204,26 +197,6 @@ export default function TenancyContractPage() {
             const tenant = result.data.tenant;
             if(tenant) {
                  handleTenantSelect(tenant.code);
-            }
-        }
-    }
-  }
-
-  const handlePartitionSelect = async (partitionCode: string) => {
-    setContract(prev => ({...prev, partitionCode: partitionCode}));
-     if (partitionCode) {
-        const result = await getPartitionDetails(partitionCode);
-        if (result.success && result.data) {
-            setContract(prev => ({
-                ...prev,
-                totalRent: result.data.totalRent
-            }));
-        }
-    } else {
-        if(contract.unitCode) {
-            const result = await getUnitDetails(contract.unitCode);
-            if (result.success && result.data) {
-                setContract(prev => ({ ...prev, totalRent: result.data.totalRent }));
             }
         }
     }
@@ -555,16 +528,7 @@ export default function TenancyContractPage() {
                                         disabled={!isEditing || !contract.unitCode}
                                     />
                                 </div>
-                                <div>
-                                    <Label htmlFor="partition-code">Partition</Label>
-                                    <Combobox
-                                        options={lookups.partitions}
-                                        value={contract.partitionCode || ''}
-                                        onSelect={handlePartitionSelect}
-                                        placeholder="Select Partition"
-                                        disabled={!isEditing || !contract.unitCode || lookups.partitions.length === 0}
-                                    />
-                                </div>
+                               
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

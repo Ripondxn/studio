@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -7,15 +8,13 @@ import { revalidatePath } from 'next/cache';
 import { type Contract } from '../contract/schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Room } from '@/app/property/rooms/schema';
-import { type Partition } from '@/app/property/partitions/schema';
-
+import { type Tenant } from '@/app/tenancy/tenants/schema';
 
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
-const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
 
 
 async function readData(filePath: string) {
@@ -50,11 +49,6 @@ async function getProperties() {
 async function getRooms(): Promise<Room[]> {
     return await readData(roomsFilePath);
 }
-
-async function getPartitions(): Promise<Partition[]> {
-    return await readData(partitionsFilePath);
-}
-
 
 async function writeTenants(data: any) {
     await fs.writeFile(tenantsFilePath, JSON.stringify(data, null, 2), 'utf-8');
@@ -153,7 +147,6 @@ export async function findTenantData(tenantCode: string) {
        let contractData: Partial<Contract> = {};
        let unitData: Partial<Unit & { property?: any }> = {};
        let roomData: Partial<Room> = {};
-       let partitionData: Partial<Partition> = {};
 
        const relatedContract = allContracts.find(c => c.tenantCode === tenantCode);
        
@@ -177,15 +170,11 @@ export async function findTenantData(tenantCode: string) {
                     const allRooms = await getRooms();
                     const relatedRoom = allRooms.find(r => r.unitCode === relatedUnit.unitCode && r.propertyCode === relatedUnit.propertyCode);
                     if(relatedRoom) roomData = relatedRoom;
-                    
-                    const allPartitions = await getPartitions();
-                    const relatedPartition = allPartitions.find(p => p.unitCode === relatedUnit.unitCode && p.propertyCode === relatedUnit.propertyCode);
-                    if(relatedPartition) partitionData = relatedPartition;
                 }
             }
        }
 
-       return { success: true, data: {...tenant, contractData, unitData, roomData, partitionData } };
+       return { success: true, data: {...tenant, contractData, unitData, roomData } };
     } else {
        return { success: false, error: "Not Found" };
     }

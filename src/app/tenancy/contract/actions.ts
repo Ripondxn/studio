@@ -10,7 +10,6 @@ import { contractSchema, type Contract } from './schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Floor } from '@/app/property/floors/schema';
 import { type Room } from '@/app/property/rooms/schema';
-import { type Partition } from '@/app/property/partitions/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { addPdcCheque } from '@/app/finance/pdc-cheque/actions';
 
@@ -19,7 +18,6 @@ const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-dat
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
-const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 
 
@@ -98,20 +96,16 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
                 return { success: false, error: `Contract with number "${data.contractNo}" already exists.`};
              }
 
-            // Check for active contracts on the same unit/room/partition
+            // Check for active contracts on the same unit/room
             const activeContractExists = allContracts.some(c => {
                 if (c.status !== 'New' && c.status !== 'Renew') return false;
                 
-                // If it's a partition-based rental
-                if(data.partitionCode && c.partitionCode === data.partitionCode && c.property === data.property && c.unitCode === data.unitCode) {
+                // If it's a room-based rental
+                if(data.roomCode && c.roomCode === data.roomCode && c.property === data.property && c.unitCode === data.unitCode) {
                     return true;
                 }
-                // If it's a room-based rental (and not a partition)
-                if(data.roomCode && !data.partitionCode && c.roomCode === data.roomCode && c.property === data.property && c.unitCode === data.unitCode) {
-                    return true;
-                }
-                // If it's a whole unit rental (no room or partition)
-                if(!data.roomCode && !data.partitionCode && c.unitCode === data.unitCode && c.property === data.property) {
+                // If it's a whole unit rental (no room)
+                if(!data.roomCode && c.unitCode === data.unitCode && c.property === data.property) {
                     return true;
                 }
                 return false;
@@ -230,14 +224,7 @@ async function readRooms(): Promise<Room[]> {
         return [];
     }
 }
-async function readPartitions(): Promise<Partition[]> {
-    try {
-        const data = await fs.readFile(partitionsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
-}
+
 async function readTenants(): Promise<{tenantData: Tenant}[]> {
     try {
         const data = await fs.readFile(tenantsFilePath, 'utf-8');
@@ -271,30 +258,6 @@ export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
         .map((r: any) => ({ value: r.roomCode, label: `${r.roomCode} (${r.roomName || 'No Name'})` }));
 }
 
-export async function getPartitionsForUnit(propertyCode: string, unitCode: string) {
-    const partitions = await readPartitions();
-    return partitions
-        .filter(p => p.propertyCode === propertyCode && p.unitCode === unitCode)
-        .map((p: any) => ({ value: p.partitionCode, label: p.partitionName }));
-}
-
-export async function getPartitionDetails(partitionCode: string) {
-    const allPartitions = await readPartitions();
-    const partition = allPartitions.find(p => p.partitionCode === partitionCode);
-
-    if (!partition) {
-        return { success: false, error: 'Partition not found' };
-    }
-    
-    return { 
-        success: true, 
-        data: {
-            totalRent: partition.monthlyRent,
-        }
-    };
-}
-
-
 export async function getUnitDetails(unitCode: string) {
     const allUnits = await readUnits();
     const unit = allUnits.find(u => u.unitCode === unitCode);
@@ -314,5 +277,3 @@ export async function getUnitDetails(unitCode: string) {
         }
     };
 }
-
-

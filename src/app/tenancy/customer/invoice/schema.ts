@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const invoiceItemSchema = z.object({
@@ -17,7 +18,6 @@ export const invoiceSchema = z.object({
   property: z.string().optional(),
   unitCode: z.string().optional(),
   roomCode: z.string().optional(),
-  partitionCode: z.string().optional(),
   invoiceDate: z.string().min(1, 'Invoice date is required.'),
   dueDate: z.string().min(1, 'Due date is required.'),
   items: z.array(invoiceItemSchema).min(1, 'At least one item is required.'),

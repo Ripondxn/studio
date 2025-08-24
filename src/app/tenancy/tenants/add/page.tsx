@@ -59,7 +59,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { type Contract, type PaymentInstallment } from '../../contract/schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Room } from '@/app/property/rooms/schema';
-import { type Partition } from '@/app/property/partitions/schema';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
@@ -107,7 +106,6 @@ export default function TenantPage() {
   const [contractData, setContractData] = useState<Partial<Contract>>({});
   const [unitData, setUnitData] = useState<Partial<Unit & { property?: any }>>({});
   const [roomData, setRoomData] = useState<Partial<Room>>({});
-  const [partitionData, setPartitionData] = useState<Partial<Partition>>({});
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
@@ -185,7 +183,6 @@ export default function TenantPage() {
     setContractData(data.contractData || {});
     setUnitData(data.unitData || {});
     setRoomData(data.roomData || {});
-    setPartitionData(data.partitionData || {});
   }
 
   const setInitialAllData = (data: any) => {
@@ -484,7 +481,7 @@ export default function TenantPage() {
                                                                 disabled={!isEditing}
                                                             />
                                                         )}
-                                                        <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                                        <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
                                                             {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                                         </Button>
                                                     </div>
@@ -504,7 +501,7 @@ export default function TenantPage() {
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
-                                                <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                                <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                                 </TableCell>
@@ -512,7 +509,7 @@ export default function TenantPage() {
                                         ))}
                                     </TableBody>
                                 </Table>
-                                <Button variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                                     <Plus className="mr-2 h-4 w-4"/> Add Attachment
                                 </Button>
                             </CardContent>
@@ -566,16 +563,6 @@ export default function TenantPage() {
                                             <div className="flex justify-between"><span>Room Name:</span> <span className="font-medium">{roomData.roomName}</span></div>
                                             <div className="flex justify-between"><span>Room Type:</span> <span className="font-medium">{roomData.roomType}</span></div>
                                             <div className="flex justify-between"><span>Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(roomData.rentAmount || 0)} / {roomData.rentFrequency}</span></div>
-                                        </CardContent>
-                                    </Card>
-                                )}
-                                 {partitionData.id && (
-                                    <Card>
-                                        <CardHeader className="p-4"><CardTitle className="text-base">Partition Details</CardTitle></CardHeader>
-                                        <CardContent className="space-y-2 text-sm p-4">
-                                             <div className="flex justify-between"><span>Partition Code:</span> <span className="font-medium">{partitionData.partitionCode}</span></div>
-                                             <div className="flex justify-between"><span>Partition Name:</span> <span className="font-medium">{partitionData.partitionName}</span></div>
-                                             <div className="flex justify-between"><span>Monthly Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(partitionData.monthlyRent || 0)}</span></div>
                                         </CardContent>
                                     </Card>
                                 )}
@@ -714,6 +701,7 @@ export default function TenantPage() {
          <AlertDialog>
             <AlertDialogTrigger asChild>
             <Button
+                type="button"
                 variant="destructive"
                 disabled={isNewRecord || isEditing}
             >
@@ -743,4 +731,3 @@ export default function TenantPage() {
     </div>
   );
 }
-
