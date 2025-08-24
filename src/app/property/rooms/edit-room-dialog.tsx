@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -31,7 +32,7 @@ export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const [lookups, setLookups] = useState<{ floors: { value: string, label: string }[], units: {value: string, label: string}[] }>({ floors: [], units: [] });
+  const [lookups, setLookups] = useState<{ units: {value: string, label: string}[] }>({ units: [] });
 
   useEffect(() => {
       if(isOpen) {
@@ -62,7 +63,7 @@ export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen
     if (result.success) {
       toast({
         title: 'Room Updated',
-        description: `Successfully updated room "${data.roomName}".`,
+        description: `Successfully updated room.`,
       });
       setIsOpen(false);
       router.refresh();
@@ -90,7 +91,7 @@ export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen
             <DialogHeader>
             <DialogTitle>Edit Room</DialogTitle>
             <DialogDescription>
-                Update the details for {room.roomName}. Click save when you're done.
+                Update the details for {room.roomCode}. Click save when you're done.
             </DialogDescription>
             </DialogHeader>
              <div className="grid gap-4 py-4">
@@ -99,27 +100,6 @@ export function EditRoomDialog({ room, isOpen, setIsOpen }: { room: Room, isOpen
                     <Label htmlFor="roomCode">Room Code</Label>
                     <Input id="roomCode" {...register('roomCode')} />
                     {errors.roomCode && <p className="text-destructive text-xs mt-1">{errors.roomCode.message}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="roomName">Room Name</Label>
-                    <Input id="roomName" {...register('roomName')} />
-                    {errors.roomName && <p className="text-destructive text-xs mt-1">{errors.roomName.message}</p>}
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="floorCode">Floor</Label>
-                    <Controller
-                        name="floorCode"
-                        control={control}
-                        render={({ field }) => (
-                           <Combobox
-                                options={lookups.floors}
-                                value={field.value}
-                                onSelect={field.onChange}
-                                placeholder="Select a floor"
-                           />
-                        )}
-                    />
-                    {errors.floorCode && <p className="text-destructive text-xs mt-1">{errors.floorCode.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="unitCode">Unit</Label>

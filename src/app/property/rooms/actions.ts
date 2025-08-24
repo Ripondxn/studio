@@ -161,15 +161,6 @@ export async function deleteRoom(roomId: string) {
     }
 }
 
-async function readFloors() {
-    try {
-        const data = await fs.readFile(path.join(process.cwd(), 'src/app/property/floors/floors-data.json'), 'utf-8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
-}
-
 async function readUnits(): Promise<Unit[]> {
     try {
         const data = await fs.readFile(path.join(process.cwd(), 'src/app/property/units/units-data.json'), 'utf-8');
@@ -181,10 +172,8 @@ async function readUnits(): Promise<Unit[]> {
 
 
 export async function getRoomLookups(propertyCode: string) {
-    const floors = await readFloors();
     const units = await readUnits();
     return {
-        floors: floors.filter((f: any) => f.propertyCode === propertyCode).map((f:any) => ({ value: f.floorCode, label: f.floorName })),
         units: units.filter((u: any) => u.propertyCode === propertyCode).map((u:any) => ({ value: u.unitCode, label: u.unitCode })),
     }
 }
@@ -240,4 +229,3 @@ export async function importRooms(roomsData: unknown) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred during import.' };
     }
 }
-

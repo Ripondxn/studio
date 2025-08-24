@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -31,7 +32,7 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<{ floors: { value: string, label: string }[], units: {value: string, label: string}[] }>({ floors: [], units: [] });
+  const [lookups, setLookups] = useState<{ units: {value: string, label: string}[] }>({ units: [] });
 
   useEffect(() => {
       if(isOpen) {
@@ -49,9 +50,7 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
     resolver: zodResolver(roomFormSchema),
     defaultValues: {
         roomCode: '',
-        roomName: '',
         propertyCode: propertyCode,
-        floorCode: '',
         unitCode: '',
         roomType: '',
         rentAmount: 0,
@@ -66,7 +65,7 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
     if (result.success) {
       toast({
         title: 'Room Added',
-        description: `Successfully added new room "${data.roomName}".`,
+        description: `Successfully added new room.`,
       });
       setIsOpen(false);
       reset();
@@ -101,27 +100,6 @@ export function AddRoomDialog({ propertyCode, onRoomAdded }: { propertyCode: str
                     <Label htmlFor="roomCode">Room Code</Label>
                     <Input id="roomCode" {...register('roomCode')} />
                     {errors.roomCode && <p className="text-destructive text-xs mt-1">{errors.roomCode.message}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="roomName">Room Name</Label>
-                    <Input id="roomName" {...register('roomName')} />
-                    {errors.roomName && <p className="text-destructive text-xs mt-1">{errors.roomName.message}</p>}
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="floorCode">Floor</Label>
-                    <Controller
-                        name="floorCode"
-                        control={control}
-                        render={({ field }) => (
-                           <Combobox
-                                options={lookups.floors}
-                                value={field.value}
-                                onSelect={field.onChange}
-                                placeholder="Select a floor"
-                           />
-                        )}
-                    />
-                    {errors.floorCode && <p className="text-destructive text-xs mt-1">{errors.floorCode.message}</p>}
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="unitCode">Unit</Label>

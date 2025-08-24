@@ -39,5 +39,45 @@
     "annualRent": 60000,
     "unitStatus": "Active",
     "id": "UNIT-1756021380444"
+  },
+  {
+    "unitCode": "F104",
+    "unitName": "",
+    "propertyCode": "LT-C38",
+    "floor": "F-01",
+    "unitType": "2BHK",
+    "annualRent": 34000,
+    "unitStatus": "Active",
+    "id": "UNIT-1756021886060"
+  },
+  {
+    "unitCode": "F103",
+    "unitName": "",
+    "propertyCode": "LT-C38",
+    "floor": "F-01",
+    "unitType": "1BHK",
+    "annualRent": 23000,
+    "unitStatus": "Active",
+    "id": "UNIT-1756021930099"
+  },
+  {
+    "unitCode": "F203",
+    "unitName": "",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "2BHK",
+    "annualRent": 34000,
+    "unitStatus": "Active",
+    "id": "UNIT-1756021994202"
+  },
+  {
+    "unitCode": "F204",
+    "unitName": "",
+    "propertyCode": "LT-C38",
+    "floor": "F-02",
+    "unitType": "2BHK",
+    "annualRent": 40000,
+    "unitStatus": "Active",
+    "id": "UNIT-1756022035712"
   }
 ]
