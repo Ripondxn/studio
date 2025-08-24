@@ -55,7 +55,9 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Trust Famous Real Estate</h1>
-                            <p className="text-xs text-gray-500">Document Approval Workflow Report</p>
+                            <div className="text-center">
+                              <h2 className="text-sm font-bold text-gray-800">Daily Checkout Reports</h2>
+                            </div>
                         </div>
                     </div>
                     <div className="text-right text-xs">
