@@ -102,9 +102,9 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                     </TableBody>
                 </Table>
 
-                <div className="flex justify-end mt-[0.25in]">
-                    <div className="w-full max-w-xs space-y-2 mt-4">
-                        <div className="flex justify-between border-t-2 border-gray-800 pt-2 mt-2">
+                <div className="flex justify-end mt-[0.5in]">
+                    <div className="w-full max-w-xs space-y-2">
+                        <div className="flex justify-between border-t-2 border-gray-800 pt-2">
                             <span className="font-bold text-gray-800 text-base">Total Amount:</span>
                             <span className="font-bold text-gray-800 text-base">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalAmount)}</span>
                         </div>
