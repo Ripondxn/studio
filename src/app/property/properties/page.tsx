@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -85,28 +84,15 @@ import { DataTable as UnitsDataTable } from '../units/data-table';
 import { columns as unitColumns } from '../units/columns';
 import { AddUnitDialog } from '../units/add-unit-dialog';
 import { Combobox } from '@/components/ui/combobox';
-import { type Floor } from '../floors/schema';
-import { getFloorsForProperty } from '../floors/actions';
-import { DataTable as FloorsDataTable } from '../floors/data-table';
-import { columns as floorColumns } from '../floors/columns';
-import { AddFloorDialog } from '../floors/add-floor-dialog';
 import { type Room } from '../rooms/schema';
 import { getRoomsForProperty } from '../rooms/actions';
 import { DataTable as RoomsDataTable } from '../rooms/data-table';
 import { columns as roomColumns } from '../rooms/columns';
 import { AddRoomDialog } from '../rooms/add-room-dialog';
-import { type Partition } from '../partitions/schema';
-import { getPartitionsForProperty } from '../partitions/actions';
-import { DataTable as PartitionsDataTable } from '../partitions/data-table';
-import { columns as partitionColumns } from '../partitions/columns';
-import { AddPartitionDialog } from '../partitions/add-partition-dialog';
 import { UnitGrid } from '../units/unit-grid';
-import { FloorGrid } from '../floors/floor-grid';
 import { RoomGrid } from '../rooms/room-grid';
-import { PartitionGrid } from '../partitions/partition-grid';
 import { ImportUnitsDialog } from '../units/import-units-dialog';
 import { ImportRoomsDialog } from '../rooms/import-rooms-dialog';
-import { ImportPartitionsDialog } from '../partitions/import-partitions-dialog';
 
 
 type Particular = {
@@ -194,20 +180,12 @@ export default function PropertyPage() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [isLoadingUnits, setIsLoadingUnits] = useState(false);
   
-  const [floors, setFloors] = useState<Floor[]>([]);
-  const [isLoadingFloors, setIsLoadingFloors] = useState(false);
-  
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   
-  const [partitions, setPartitions] = useState<Partition[]>([]);
-  const [isLoadingPartitions, setIsLoadingPartitions] = useState(false);
-  
   const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
   const [unitsViewMode, setUnitsViewMode] = useState<ViewMode>('grid');
-  const [floorsViewMode, setFloorsViewMode] = useState<ViewMode>('list');
   const [roomsViewMode, setRoomsViewMode] = useState<ViewMode>('list');
-  const [partitionsViewMode, setPartitionsViewMode] = useState<ViewMode>('list');
 
 
   useEffect(() => {
@@ -246,15 +224,6 @@ export default function PropertyPage() {
         })
         .finally(() => setIsLoadingUnits(false));
     
-    setIsLoadingFloors(true);
-    getFloorsForProperty(code)
-        .then(result => {
-            if (result.success && result.data) {
-                setFloors(result.data);
-            }
-        })
-        .finally(() => setIsLoadingFloors(false));
-    
     setIsLoadingRooms(true);
     getRoomsForProperty(code)
         .then(result => {
@@ -263,15 +232,6 @@ export default function PropertyPage() {
             }
         })
         .finally(() => setIsLoadingRooms(false));
-    
-    setIsLoadingPartitions(true);
-    getPartitionsForProperty(code)
-        .then(result => {
-            if (result.success && result.data) {
-                setPartitions(result.data);
-            }
-        })
-        .finally(() => setIsLoadingPartitions(false));
 
     setIsLoadingOccupancy(true);
     getOccupancyInfoForProperty(code)
@@ -597,41 +557,6 @@ export default function PropertyPage() {
     XLSX.utils.book_append_sheet(wb, ws, "Rooms");
     XLSX.writeFile(wb, `rooms-${propertyData.code}.xlsx`);
   };
-
-  const handleExportPartitionsPDF = () => {
-    const doc = new jsPDF();
-    doc.text(`Partitions List for ${propertyData.name}`, 14, 16);
-    (doc as any).autoTable({
-        head: [['Partition Code', 'Floor', 'Unit', 'Room', 'Rent', 'Status']],
-        body: partitions.map(p => [
-            p.partitionCode,
-            p.floorCode,
-            p.unitCode,
-            p.roomCode,
-            new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(p.monthlyRent || 0),
-            p.occupancyStatus
-        ]),
-        startY: 20,
-    });
-    doc.save(`partitions-${propertyData.code}.pdf`);
-  };
-
-  const handleExportPartitionsExcel = () => {
-    const dataToExport = partitions.map(p => ({
-        'Partition Code': p.partitionCode,
-        'Floor': p.floorCode,
-        'Unit': p.unitCode,
-        'Room': p.roomCode,
-        'Monthly Rent': p.monthlyRent,
-        'Status': p.occupancyStatus
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Partitions");
-    XLSX.writeFile(wb, `partitions-${propertyData.code}.xlsx`);
-  };
-
 
   return (
     <div className="container mx-auto p-4 bg-background">
