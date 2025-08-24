@@ -91,22 +91,9 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
         let savedContract: Contract;
         
         if (isNewRecord) {
-             let maxNum = 0;
-            allContracts.forEach(c => {
-                const match = c.contractNo.match(/^TC-(\d+)$/);
-                if (match) {
-                    const num = parseInt(match[1], 10);
-                    if (num > maxNum) {
-                        maxNum = num;
-                    }
-                }
-            });
-            const newContractNo = `TC-${(maxNum + 1).toString().padStart(4, '0')}`;
-
              const newContract: Contract = {
                 ...validation.data,
                 id: `CON-${Date.now()}`,
-                contractNo: newContractNo,
             };
             allContracts.push(newContract);
             savedContract = newContract;
@@ -141,6 +128,21 @@ export async function findContract(query: { unitCode?: string, tenantName?: stri
         const allContracts = await readContracts();
         let foundContract: Contract | undefined;
         
+        if (query.contractId === 'new') {
+            let maxNum = 0;
+            allContracts.forEach(c => {
+                const match = c.contractNo.match(/^TC-(\d+)$/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxNum) {
+                        maxNum = num;
+                    }
+                }
+            });
+            const newContractNo = `TC-${(maxNum + 1).toString().padStart(4, '0')}`;
+            return { success: true, data: { ...initialContractState, contractNo: newContractNo } };
+        }
+
         if (query.contractId) {
             foundContract = allContracts.find(c => c.id === query.contractId);
         } else if (query.unitCode) {
@@ -160,6 +162,34 @@ export async function findContract(query: { unitCode?: string, tenantName?: stri
     }
 }
 
+const initialContractState: Contract = {
+    id: '',
+    contractNo: '',
+    contractDate: '',
+    unitCode: '',
+    roomCode: '',
+    property: '',
+    tenantCode: '',
+    tenantName: '',
+    mobile: '',
+    email: '',
+    address: '',
+    startDate: '',
+    endDate: '',
+    totalRent: 0,
+    paymentMode: 'cash',
+    status: 'New',
+    terminationDate: '',
+    rentBasedOn: 'Monthly',
+    paymentFrequency: 'Monthly',
+    numberOfPayments: 1,
+    gracePeriod: 0,
+    paymentSchedule: [],
+    terms: '',
+    tawtheeqRegistrationNo: '',
+    tawtheeqStatus: 'Not Registered',
+    tawtheeqRegistrationDate: '',
+};
 
 export async function deleteContract(contractId: string) {
     try {
@@ -240,7 +270,7 @@ export async function getUnitsForProperty(propertyCode: string) {
     
     return allUnits
         .filter(u => u.propertyCode === propertyCode && !occupiedUnitCodes.has(u.unitCode))
-        .map((u: any) => ({ value: u.unitCode, label: u.unitName || u.unitCode }));
+        .map((u: any) => ({ value: u.unitCode, label: u.unitCode }));
 }
 
 export async function getRoomsForUnit(propertyCode: string, unitCode: string) {

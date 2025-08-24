@@ -181,22 +181,25 @@ export default function TenancyContractPage() {
     if (contractId) {
        fetchContractData(contractId);
     } else {
-        setContract(prev => {
+        findContract({contractId: 'new'}).then(result => {
             const newContract = {...initialContractState};
-            if(propertyCode) newContract.property = propertyCode;
+            if(result.success && result.data) {
+                newContract.contractNo = result.data.contractNo;
+            }
+             if(propertyCode) newContract.property = propertyCode;
             if(unitCode) newContract.unitCode = unitCode;
             if(roomCode) newContract.roomCode = roomCode;
-            return newContract;
+
+            setContract(newContract);
+            setInitialContract(newContract);
+             if(propertyCode) {
+                handlePropertySelect(propertyCode).then(() => {
+                    if (unitCode) handleUnitSelect(unitCode);
+                    if (roomCode) handleRoomSelect(roomCode);
+                })
+            }
         });
-        
-        setInitialContract(initialContractState);
-        
-        if(propertyCode) {
-            handlePropertySelect(propertyCode).then(() => {
-                if (unitCode) handleUnitSelect(unitCode);
-                if (roomCode) handleRoomSelect(roomCode);
-            })
-        }
+
         setIsNewRecord(true);
         setIsEditing(true);
         setEditedInstallmentIndexes(new Set());
@@ -777,5 +780,3 @@ export default function TenancyContractPage() {
     </div>
   );
 }
-
-
