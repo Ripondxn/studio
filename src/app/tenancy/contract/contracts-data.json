@@ -1,1 +1,31 @@
-[]
+[
+  {
+    "id": "CON-1756024962157",
+    "contractNo": "TC-0001",
+    "contractDate": "2025-08-24",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "tenantCode": "T003",
+    "tenantName": "Tanvir Ahmed",
+    "mobile": "0509231340",
+    "email": "tanvir@admin.com",
+    "address": "1 Hazza ' Bin Zayed The First Street",
+    "startDate": "2025-08-24",
+    "endDate": "2025-09-23",
+    "totalRent": 400,
+    "paymentMode": "cash",
+    "status": "New",
+    "renewalCount": 0,
+    "terminationDate": "",
+    "rentBasedOn": "Monthly",
+    "paymentFrequency": "Monthly",
+    "numberOfPayments": 1,
+    "gracePeriod": 0,
+    "paymentSchedule": [],
+    "terms": "",
+    "tawtheeqRegistrationNo": "",
+    "tawtheeqStatus": "Not Registered",
+    "tawtheeqRegistrationDate": ""
+  }
+]

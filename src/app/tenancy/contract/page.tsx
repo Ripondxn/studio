@@ -36,7 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getRoomDetails } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { addMonths, format as formatDate } from 'date-fns';
+import { addMonths, format as formatDate, differenceInDays, differenceInMonths, isValid } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import { type Tenant } from '../tenants/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -90,6 +90,7 @@ export default function TenancyContractPage() {
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
   const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], tenants: [] });
+  const [tenancyPeriod, setTenancyPeriod] = useState<{days: number, period: string} | null>(null);
 
 
   const fetchContractData = useCallback(async (contractId: string) => {
@@ -228,6 +229,29 @@ export default function TenancyContractPage() {
 
     initialize();
   }, [searchParams, fetchContractData]);
+  
+    useEffect(() => {
+        const { startDate, endDate } = contract;
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (isValid(start) && isValid(end) && end >= start) {
+            const days = differenceInDays(end, start) + 1;
+            const months = differenceInMonths(end, start);
+            const years = Math.floor(months / 12);
+            const remainingMonths = months % 12;
+
+            let periodString = '';
+            if (years > 0) periodString += `${years} Year(s) `;
+            if (remainingMonths > 0) periodString += `${remainingMonths} Month(s)`;
+            if (!periodString) periodString = `${days} Day(s)`;
+
+            setTenancyPeriod({ days, period: periodString.trim() });
+        } else {
+            setTenancyPeriod(null);
+        }
+    }, [contract.startDate, contract.endDate]);
+
 
   const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
@@ -548,22 +572,36 @@ export default function TenancyContractPage() {
                                     />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                           <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="start-date">Start Date</Label>
                                     <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
                                 </div>
-                                <div>
+                                <div className="relative">
                                     <Label htmlFor="end-date">End Date</Label>
                                     <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
+                                    {tenancyPeriod && <p className="text-xs text-muted-foreground absolute bottom-[-18px] right-1">({tenancyPeriod.days} Days)</p>}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
+                                    <Label>Tenancy Period</Label>
+                                    <Select value={tenancyPeriod?.period || ''} disabled>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Calculated from dates" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={tenancyPeriod?.period || ''}>{tenancyPeriod?.period || ''}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
                                     <Label htmlFor="rent-amount">Total Rent</Label>
                                     <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
                                 </div>
-                                <div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                 <div>
                                     <Label htmlFor="payment-mode">Payment Mode</Label>
                                     <Select value={contract.paymentMode} onValueChange={(value: 'cash' | 'cheque' | 'bank-transfer') => handleInputChange('paymentMode', value)} disabled={!isEditing}>
                                         <SelectTrigger id="payment-mode">
@@ -576,8 +614,6 @@ export default function TenancyContractPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="status">Status</Label>
                                     <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
@@ -590,10 +626,6 @@ export default function TenancyContractPage() {
                                             <SelectItem value="Cancel">Cancel</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="grace-period">Grace Period (days)</Label>
-                                    <Input id="grace-period" type="number" placeholder="0" value={contract.gracePeriod || ''} onChange={e => handleNumberInputChange('gracePeriod', e.target.value)} disabled={!isEditing}/>
                                 </div>
                             </div>
                         </CardContent>
