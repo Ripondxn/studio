@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -169,7 +170,7 @@ export const columns: ColumnDef<Unit>[] = [
     accessorKey: 'annualRent',
     header: () => <div className="text-right">Annual Rent</div>,
      cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('annualRent'));
+      const amount = parseFloat(String(row.getValue('annualRent')));
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',

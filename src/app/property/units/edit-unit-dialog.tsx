@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,7 +18,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { unitSchema, type Unit } from './schema';
@@ -27,10 +27,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const unitFormSchema = unitSchema.omit({ propertyCode: true });
 
-export function EditUnitDialog({ unit, isOpen, setIsOpen }: { unit: Unit, isOpen: boolean, setIsOpen: (open: boolean) => void }) {
+interface EditUnitDialogProps {
+  unit: Unit,
+  isOpen: boolean,
+  setIsOpen: (open: boolean) => void,
+  onUnitUpdated: () => void;
+}
+
+export function EditUnitDialog({ unit, isOpen, setIsOpen, onUnitUpdated }: EditUnitDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
   const [lookups, setLookups] = useState<{ properties: { value: string, label: string }[], floors: { value: string, label: string }[] }>({ properties: [], floors: [] });
 
   useEffect(() => {
@@ -57,7 +63,7 @@ export function EditUnitDialog({ unit, isOpen, setIsOpen }: { unit: Unit, isOpen
 
   const onSubmit = async (data: z.infer<typeof unitFormSchema>) => {
     setIsSaving(true);
-    const result = await updateUnit(data);
+    const result = await updateUnit({ ...data, propertyCode: unit.propertyCode });
 
     if (result.success) {
       toast({
@@ -65,7 +71,7 @@ export function EditUnitDialog({ unit, isOpen, setIsOpen }: { unit: Unit, isOpen
         description: `Successfully updated unit "${data.unitCode}".`,
       });
       setIsOpen(false);
-      router.refresh();
+      onUnitUpdated();
     } else {
       toast({
         variant: 'destructive',
@@ -130,6 +136,9 @@ export function EditUnitDialog({ unit, isOpen, setIsOpen }: { unit: Unit, isOpen
                                     <SelectItem value="1BHK">1BHK</SelectItem>
                                     <SelectItem value="2BHK">2BHK</SelectItem>
                                     <SelectItem value="3BHK">3BHK</SelectItem>
+                                    <SelectItem value="Studio">Studio</SelectItem>
+                                    <SelectItem value="Office">Office</SelectItem>
+                                    <SelectItem value="Shop">Shop</SelectItem>
                                 </SelectContent>
                             </Select>
                         )}

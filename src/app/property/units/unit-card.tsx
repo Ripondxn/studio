@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { EditUnitDialog } from './edit-unit-dialog';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface UnitCardProps {
   unit: Unit;
@@ -17,12 +19,19 @@ interface UnitCardProps {
 
 export function UnitCard({ unit }: UnitCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSuccess = () => {
+    router.refresh();
+  }
+
   return (
     <>
       <EditUnitDialog 
         unit={unit} 
         isOpen={isEditDialogOpen} 
         setIsOpen={setIsEditDialogOpen}
+        onUnitUpdated={handleSuccess}
       />
       <Card>
         <CardHeader>
