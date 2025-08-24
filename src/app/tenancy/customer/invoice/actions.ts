@@ -49,9 +49,22 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
         const isNew = !data.id;
 
         if (isNew) {
+             let maxNum = 0;
+            allInvoices.forEach(i => {
+                const match = i.invoiceNo.match(/^INV-(\d+)$/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxNum) {
+                        maxNum = num;
+                    }
+                }
+            });
+            const newInvoiceNo = `INV-${(maxNum + 1).toString().padStart(4, '0')}`;
+
             const newInvoice: Invoice = {
                 ...validation.data,
                 id: `INV-${Date.now()}`,
+                invoiceNo: newInvoiceNo,
                 amountPaid: 0,
             };
             allInvoices.push(newInvoice);

@@ -108,12 +108,16 @@ export default function LeaseContractPage() {
             })
             .finally(() => setIsLoading(false));
     } else {
-        setIsNewRecord(true);
-        setIsEditing(true);
-        const newContractNo = `LA-${Date.now()}`;
-        setContract({...initialContractState, contractNo: newContractNo});
-        setEditedInstallmentIndexes(new Set());
-        setIsLoading(false);
+        findLeaseContract({ contractId: 'new' }).then(result => {
+            if (result.success && result.data) {
+                setContract(result.data);
+                setInitialContract(result.data);
+                setIsNewRecord(true);
+                setIsEditing(true);
+                setEditedInstallmentIndexes(new Set());
+            }
+             setIsLoading(false);
+        });
     }
   }, [searchParams, router, toast]);
 

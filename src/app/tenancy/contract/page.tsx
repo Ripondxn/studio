@@ -137,23 +137,25 @@ export default function TenancyContractPage() {
     if (contractId) {
        fetchContractData(contractId);
     } else {
+      findContract({ contractId: 'new' }).then(result => {
+        if (result.success && result.data) {
+            const newContract = {...result.data};
+            if(propertyCode) newContract.property = propertyCode;
+            if(unitCode) newContract.unitCode = unitCode;
+            setContract(newContract);
+            setInitialContract(newContract);
+            
+            if(propertyCode && unitCode){
+                handlePropertySelect(propertyCode).then(() => {
+                    handleUnitSelect(unitCode);
+                })
+            }
+        }
         setIsNewRecord(true);
         setIsEditing(true);
-        const newContractNo = `TC-${Date.now()}`;
-        const newContract = {...initialContractState, contractNo: newContractNo};
-        if(propertyCode) newContract.property = propertyCode;
-        if(unitCode) newContract.unitCode = unitCode;
-        
-        setContract(newContract);
-
-        if(propertyCode && unitCode){
-            handlePropertySelect(propertyCode).then(() => {
-                handleUnitSelect(unitCode);
-            })
-        }
-
         setEditedInstallmentIndexes(new Set());
         setIsLoading(false);
+      });
     }
   }, [searchParams, fetchContractData]);
 
@@ -758,7 +760,7 @@ export default function TenancyContractPage() {
                     </div>
                     <div>
                         <Label>Reason for Termination</Label>
-                        <Textarea placeholder="e.g., Early exit, mutual agreement..." value={contract.terminationReason || ''} onChange={(e) => handleInputChange('terminationReason', e.target.value)} disabled={!isEditing}/>
+                        <Textarea placeholder="e.g., Early exit, end of contract..." value={contract.terminationReason || ''} onChange={(e) => handleInputChange('terminationReason', e.target.value)} disabled={!isEditing}/>
                     </div>
                     <p className="text-sm text-muted-foreground pt-4">
                        Note: To terminate, please set the contract status to "Cancel" in the details tab and provide a termination date above, then save the contract.

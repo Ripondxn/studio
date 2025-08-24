@@ -85,7 +85,7 @@ export async function findCustomerData(customerCode: string) {
         let maxNum = 0;
         allCustomers.forEach((c: any) => {
             const code = c.customerData.code || '';
-            const match = code.match(/^C(\d{3,})$/);
+            const match = code.match(/^C(\d+)$/);
             if(match) {
                 const num = parseInt(match[1], 10);
                 if (num > maxNum) {
@@ -93,7 +93,7 @@ export async function findCustomerData(customerCode: string) {
                 }
             }
         });
-        const newCode = `C${(maxNum + 1).toString().padStart(3, '0')}`;
+        const newCode = `C${(maxNum + 1).toString().padStart(4, '0')}`;
         return { success: true, data: { customerData: { code: newCode } } };
     }
 

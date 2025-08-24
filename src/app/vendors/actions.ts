@@ -87,7 +87,7 @@ export async function findVendorData(vendorCode: string) {
                 if (num > maxVendorNum) maxVendorNum = num;
             }
         });
-        const newVendorCode = `V${(maxVendorNum + 1).toString().padStart(3, '0')}`;
+        const newVendorCode = `V${(maxVendorNum + 1).toString().padStart(4, '0')}`;
         return { success: true, data: { vendorData: { code: newVendorCode } } };
     }
 

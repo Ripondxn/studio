@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -84,7 +85,7 @@ export async function findAgentData(agentCode: string) {
                 if (num > maxAgentNum) maxAgentNum = num;
             }
         });
-        const newAgentCode = `A${(maxAgentNum + 1).toString().padStart(3, '0')}`;
+        const newAgentCode = `A${(maxAgentNum + 1).toString().padStart(4, '0')}`;
         return { success: true, data: { code: newAgentCode } };
     }
 

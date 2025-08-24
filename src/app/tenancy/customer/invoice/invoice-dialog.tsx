@@ -155,7 +155,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
       } else {
         setIsPropertyInvoice(true);
         reset({
-            invoiceNo: `INV-${Date.now()}`,
+            invoiceNo: '', // Will be set by the server
             customerCode: customer.code,
             customerName: customer.name,
             property: '',

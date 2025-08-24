@@ -86,13 +86,30 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
     }
 }
 
-export async function findLeaseContract(query: { contractId?: string }): Promise<{ success: boolean; data?: LeaseContract; error?: string }> {
+export async function findLeaseContract(query: { contractId?: string; contractNo?: string }): Promise<{ success: boolean; data?: LeaseContract; error?: string }> {
     try {
         const allContracts = await readContracts();
         let foundContract: LeaseContract | undefined;
+
+        if (query.contractId === 'new') {
+            let maxNum = 0;
+            allContracts.forEach(c => {
+                const match = c.contractNo.match(/^LA-(\d+)$/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxNum) {
+                        maxNum = num;
+                    }
+                }
+            });
+            const newContractNo = `LA-${(maxNum + 1).toString().padStart(4, '0')}`;
+            return { success: true, data: { ...initialContractState, contractNo: newContractNo } };
+        }
         
         if (query.contractId) {
             foundContract = allContracts.find(c => c.id === query.contractId);
+        } else if (query.contractNo) {
+            foundContract = allContracts.find(c => c.contractNo === query.contractNo);
         }
 
         if (foundContract) {
@@ -105,6 +122,28 @@ export async function findLeaseContract(query: { contractId?: string }): Promise
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }
+
+const initialContractState: LeaseContract = {
+    id: '',
+    contractNo: '',
+    contractDate: '',
+    property: '',
+    landlordCode: '',
+    startDate: '',
+    endDate: '',
+    totalRent: 0,
+    vatPercentage: 0,
+    vatAmount: 0,
+    totalRentWithVat: 0,
+    paymentMode: 'cash',
+    status: 'New',
+    terminationDate: '',
+    paymentFrequency: 'Monthly',
+    numberOfPayments: 1,
+    gracePeriod: 0,
+    paymentSchedule: [],
+    terms: '',
+};
 
 
 export async function deleteLeaseContract(contractId: string) {

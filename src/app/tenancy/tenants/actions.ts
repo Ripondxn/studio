@@ -128,7 +128,7 @@ export async function findTenantData(tenantCode: string) {
         let maxNum = 0;
         allTenants.forEach((t: any) => {
             const code = t.tenantData.code || '';
-            const match = code.match(/^T(\d{3,})$/);
+            const match = code.match(/^T(\d+)$/);
             if(match) {
                 const num = parseInt(match[1], 10);
                 if (num > maxNum) {
@@ -136,7 +136,7 @@ export async function findTenantData(tenantCode: string) {
                 }
             }
         });
-        const newCode = `T${(maxNum + 1).toString().padStart(3, '0')}`;
+        const newCode = `T${(maxNum + 1).toString().padStart(4, '0')}`;
         return { success: true, data: { tenantData: { code: newCode } } };
     }
 
