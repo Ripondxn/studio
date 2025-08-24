@@ -735,13 +735,11 @@ export default function PropertyPage() {
             </CardContent>
         </Card>
 
-      <Tabs defaultValue="units">
+      <Tabs defaultValue="flats">
         <TabsList>
             <TabsTrigger value="particulars">Particulars</TabsTrigger>
-            <TabsTrigger value="units">Units</TabsTrigger>
-            <TabsTrigger value="floors">Floors</TabsTrigger>
+            <TabsTrigger value="flats">Flats</TabsTrigger>
             <TabsTrigger value="rooms">Rooms</TabsTrigger>
-            <TabsTrigger value="partitions">Partitions</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
             <TabsTrigger value="occupied-by">Occupied By</TabsTrigger>
         </TabsList>
@@ -793,13 +791,13 @@ export default function PropertyPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="units">
+        <TabsContent value="flats">
            <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Units</CardTitle>
-                        <CardDescription>Manage all units within this property.</CardDescription>
+                        <CardTitle>Flats</CardTitle>
+                        <CardDescription>Manage all flats within this property.</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
                          <div className="flex items-center rounded-md bg-muted p-1">
@@ -826,40 +824,6 @@ export default function PropertyPage() {
                     <UnitsDataTable columns={unitColumns} data={units} propertyCode={propertyData.code} />
                 ) : (
                     <UnitGrid units={units} />
-                )}
-            </CardContent>
-           </Card>
-        </TabsContent>
-        <TabsContent value="floors">
-           <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>Floors</CardTitle>
-                        <CardDescription>Manage floors for this property.</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                         <div className="flex items-center rounded-md bg-muted p-1">
-                            <Button variant={floorsViewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setFloorsViewMode('grid')}>
-                                <LayoutGrid className="h-5 w-5" />
-                            </Button>
-                             <Button variant={floorsViewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setFloorsViewMode('list')}>
-                                <List className="h-5 w-5" />
-                            </Button>
-                        </div>
-                        <AddFloorDialog propertyCode={propertyData.code} onFloorAdded={() => fetchPropertySubData(propertyData.code)} />
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                 {isLoadingFloors ? (
-                    <div className="flex justify-center items-center h-40">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                ) : floorsViewMode === 'list' ? (
-                    <FloorsDataTable columns={floorColumns} data={floors} />
-                ) : (
-                    <FloorGrid floors={floors} />
                 )}
             </CardContent>
            </Card>
@@ -897,43 +861,6 @@ export default function PropertyPage() {
                     <RoomsDataTable columns={roomColumns} data={rooms} />
                 ) : (
                     <RoomGrid rooms={rooms} />
-                )}
-            </CardContent>
-           </Card>
-        </TabsContent>
-        <TabsContent value="partitions">
-           <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>Partitions</CardTitle>
-                        <CardDescription>Manage partitions for units in this property.</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                         <div className="flex items-center rounded-md bg-muted p-1">
-                            <Button variant={partitionsViewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setPartitionsViewMode('grid')}>
-                                <LayoutGrid className="h-5 w-5" />
-                            </Button>
-                             <Button variant={partitionsViewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setPartitionsViewMode('list')}>
-                                <List className="h-5 w-5" />
-                            </Button>
-                        </div>
-                        <ImportPartitionsDialog propertyCode={propertyData.code} onImportSuccess={() => fetchPropertySubData(propertyData.code)} />
-                        <Button variant="outline" size="sm" onClick={handleExportPartitionsPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
-                        <Button variant="outline" size="sm" onClick={handleExportPartitionsExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
-                        <AddPartitionDialog propertyCode={propertyData.code} onPartitionAdded={() => fetchPropertySubData(propertyData.code)} />
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                 {isLoadingPartitions ? (
-                    <div className="flex justify-center items-center h-40">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                ) : partitionsViewMode === 'list' ? (
-                    <PartitionsDataTable columns={partitionColumns} data={partitions} />
-                ) : (
-                    <PartitionGrid partitions={partitions} />
                 )}
             </CardContent>
            </Card>
