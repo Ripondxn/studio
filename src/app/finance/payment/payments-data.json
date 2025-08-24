@@ -170,5 +170,34 @@
         "comments": "Initial Draft"
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-24",
+    "partyType": "Tenant",
+    "partyName": "T002",
+    "amount": 300,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "property": "LT-C38",
+    "unitCode": "F201",
+    "roomCode": "",
+    "referenceType": "Invoice",
+    "referenceNo": "",
+    "description": "",
+    "status": "Received",
+    "createdByUser": "Tanvir Ahmed",
+    "invoiceAllocations": [],
+    "id": "PAY-1756049531115",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Tanvir Ahmed",
+        "actorRole": "User",
+        "timestamp": "2025-08-24T15:32:11.115Z",
+        "comments": "Initial Draft"
+      }
+    ]
   }
 ]

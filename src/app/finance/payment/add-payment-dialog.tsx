@@ -267,7 +267,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
             setTimeout(() => {
                 if(selectedRef.unitCode) setValue('unitCode', selectedRef.unitCode);
                 if(selectedRef.roomCode) setValue('roomCode', selectedRef.roomCode);
-                if(selectedRef.partitionCode) setValue('partitionCode', selectedRef.partitionCode);
             }, 200);
         }
     }
@@ -359,11 +358,10 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
                  <Card>
                     <CardHeader><CardTitle className="flex items-center space-x-2"><Building2 className="h-5 w-5 text-primary" /><span>Property Details</span></CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                         <div className="space-y-2"><Label>Property</Label><Controller name="property" control={control} render={({ field }) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); setValue('partitionCode',''); }} placeholder="Select property"/>)} /></div>
-                         <div className="space-y-2"><Label>Unit</Label><Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); setValue('partitionCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} /></div>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <div className="space-y-2"><Label>Property</Label><Controller name="property" control={control} render={({ field }) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property"/>)} /></div>
+                         <div className="space-y-2"><Label>Unit</Label><Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} /></div>
                          <div className="space-y-2"><Label>Room</Label><Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} /></div>
-                         <div className="space-y-2"><Label>Partition</Label><Controller name="partitionCode" control={control} render={({ field }) => (<Combobox options={lookups.partitions} value={field.value || ''} onSelect={field.onChange} placeholder="Select partition" disabled={!watchedUnit}/>)} /></div>
                     </CardContent>
                 </Card>
 
