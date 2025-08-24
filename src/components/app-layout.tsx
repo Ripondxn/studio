@@ -122,6 +122,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             { href: '/finance/payment', label: 'Payment' },
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
+            { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
     },
     {
