@@ -10,8 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Printer, X } from 'lucide-react';
-import { Combobox } from '@/components/ui/combobox';
-import { getPayeeLookups } from './actions';
 import { format } from 'date-fns';
 import { ToWords } from 'to-words';
 
@@ -25,7 +23,6 @@ const chequePrintSchema = z.object({
 });
 
 type ChequePrintFormData = z.infer<typeof chequePrintSchema>;
-type PayeeLookup = { value: string; label: string };
 
 const toWords = new ToWords({
   localeCode: 'en-US',
@@ -38,7 +35,6 @@ const toWords = new ToWords({
 });
 
 export function ChequePrintClient() {
-  const [payees, setPayees] = useState<PayeeLookup[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
   
   const form = useForm<ChequePrintFormData>({
@@ -56,11 +52,6 @@ export function ChequePrintClient() {
   const watchedAmount = form.watch('amount');
   const amountInWords = watchedAmount > 0 ? toWords.convert(watchedAmount) : '';
   const formattedDate = format(new Date(form.watch('date') || new Date()), 'ddMMyyyy').split('').join(' ');
-
-
-  useEffect(() => {
-    getPayeeLookups().then(lookups => setPayees(lookups.payees));
-  }, []);
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -103,18 +94,7 @@ export function ChequePrintClient() {
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="space-y-2">
                     <Label htmlFor="payee">Pay to the Order of</Label>
-                    <Controller
-                        name="payee"
-                        control={form.control}
-                        render={({ field }) => (
-                            <Combobox
-                                options={payees}
-                                value={field.value}
-                                onSelect={field.onChange}
-                                placeholder="Select a payee"
-                            />
-                        )}
-                    />
+                    <Input id="payee" {...form.register('payee')} placeholder="Enter payee name"/>
                     {form.formState.errors.payee && <p className="text-destructive text-sm">{form.formState.errors.payee.message}</p>}
                 </div>
                 <div className="space-y-2">
