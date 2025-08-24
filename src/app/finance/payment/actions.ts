@@ -72,9 +72,16 @@ async function writeInvoices(data: Invoice[]) {
 }
 
 
-export async function getPayments() {
-    const payments = await readPayments();
-    return payments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+export async function getPayments(user: { email: string, role: string }) {
+    const allPayments = await readPayments();
+    
+    if (user.role === 'Admin' || user.role === 'Super Admin') {
+        return allPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
+    
+    const userPayments = allPayments.filter(p => p.createdByUser === user.email);
+
+    return userPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export async function addPayment(data: z.infer<typeof paymentSchema>) {

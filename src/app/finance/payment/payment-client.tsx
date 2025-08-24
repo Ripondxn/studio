@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getPayments, getSummary } from './actions';
 import { columns } from './columns';
@@ -14,36 +14,61 @@ import { type Payment } from './schema';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { type UserRole } from '@/app/admin/user-roles/schema';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 type Summary = {
     totalReceivedThisMonth: number;
     totalPaidThisMonth: number;
 }
 
-export function PaymentsClient({ initialPayments, initialSummary }: { initialPayments: Payment[], initialSummary: Summary }) {
-  const [payments, setPayments] = useState(initialPayments);
-  const [summary, setSummary] = useState(initialSummary);
-  const [isLoading, setIsLoading] = useState(false);
+export function PaymentsClient() {
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [summary, setSummary] = useState<Summary>({ totalReceivedThisMonth: 0, totalPaidThisMonth: 0});
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<{ email: string, role: UserRole['role'] } | null>(null);
+
   const searchParams = useSearchParams();
   const accountIdFilter = searchParams.get('accountId');
   const router = useRouter();
-
-  const refreshData = async () => {
-    setIsLoading(true);
-    const [paymentsResult, summaryResult] = await Promise.all([
-        getPayments(),
-        getSummary()
-    ]);
-    setPayments(paymentsResult);
-    setSummary(summaryResult);
-    setIsLoading(false);
-    router.refresh();
-  }
+  const { toast } = useToast();
 
   useEffect(() => {
-    setPayments(initialPayments);
-    setSummary(initialSummary);
-  }, [initialPayments, initialSummary]);
+    try {
+        const storedProfile = sessionStorage.getItem('userProfile');
+        if (storedProfile) {
+            const profile = JSON.parse(storedProfile);
+            setCurrentUser({ email: profile.email, role: profile.role });
+        } else {
+            router.push('/login');
+        }
+    } catch(e) {
+        router.push('/login');
+    }
+  }, [router]);
+
+  const refreshData = useCallback(async () => {
+    if (!currentUser) return;
+    
+    setIsLoading(true);
+    try {
+        const [paymentsResult, summaryResult] = await Promise.all([
+            getPayments(currentUser),
+            getSummary()
+        ]);
+        setPayments(paymentsResult);
+        setSummary(summaryResult);
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to load payment data.'});
+    } finally {
+        setIsLoading(false);
+    }
+  }, [currentUser, toast]);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
 
   const filteredPayments = useMemo(() => {
     if (!accountIdFilter) {
@@ -100,8 +125,14 @@ export function PaymentsClient({ initialPayments, initialSummary }: { initialPay
           </CardContent>
         </Card>
       </div>
-
-      <DataTable columns={columns} data={filteredPayments} />
+      
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      ) : (
+        <DataTable columns={columns} data={filteredPayments} />
+      )}
     </div>
   );
 }
