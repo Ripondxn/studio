@@ -48,7 +48,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
             .print-only { display: block !important; }
           `}
         </style>
-        <div className="printable-area">
+        <div className="printable-area w-full">
             <div>
                 <header className="flex justify-between items-start pb-6 mb-6 border-b border-gray-300">
                     <div className="flex items-center gap-4">
@@ -102,7 +102,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                     </TableBody>
                 </Table>
 
-                <div className="flex justify-end mt-8">
+                <div className="flex justify-end mt-[0.25in]">
                     <div className="w-full max-w-xs space-y-2 mt-4">
                         <div className="flex justify-between border-t-2 border-gray-800 pt-2 mt-2">
                             <span className="font-bold text-gray-800 text-base">Total Amount:</span>
