@@ -20,6 +20,8 @@ const chequePrintSchema = z.object({
   amount: z.coerce.number().min(0.01, 'Amount must be greater than zero.'),
   date: z.string(),
   memo: z.string().optional(),
+  bankName: z.string().optional(),
+  branch: z.string().optional(),
 });
 
 type ChequePrintFormData = z.infer<typeof chequePrintSchema>;
@@ -46,6 +48,8 @@ export function ChequePrintClient() {
       amount: 0,
       date: format(new Date(), 'yyyy-MM-dd'),
       memo: '',
+      bankName: '',
+      branch: '',
     },
   });
 
@@ -64,7 +68,7 @@ export function ChequePrintClient() {
       const printWindow = window.open('', '', 'height=400,width=800');
       if(printWindow) {
         printWindow.document.write('<html><head><title>Print Cheque</title>');
-        printWindow.document.write('<style>@page { size: 210mm 99mm; margin: 0; } body { margin: 0; font-family: "Courier New", monospace; color: black; } .cheque { position: relative; width: 210mm; height: 99mm; } .date { position: absolute; top: 18mm; right: 15mm; letter-spacing: 4mm; font-size: 10pt; } .payee { position: absolute; top: 35mm; left: 25mm; font-size: 10pt; font-weight: bold; } .amount-words { position: absolute; top: 45mm; left: 25mm; font-size: 10pt; } .amount-box { position: absolute; top: 45mm; right: 15mm; font-size: 10pt; font-weight: bold; } .memo { position: absolute; top: 55mm; left: 25mm; font-size: 8pt; } </style>');
+        printWindow.document.write('<style>@page { size: 210mm 99mm; margin: 0; } body { margin: 0; font-family: "Courier New", monospace; color: black; } .cheque { position: relative; width: 210mm; height: 99mm; } .bank-name { position: absolute; top: 10mm; left: 15mm; font-size: 10pt; font-weight: bold; } .branch { position: absolute; top: 18mm; left: 15mm; font-size: 8pt; } .date { position: absolute; top: 18mm; right: 15mm; letter-spacing: 4mm; font-size: 10pt; } .payee { position: absolute; top: 35mm; left: 25mm; font-size: 10pt; font-weight: bold; } .amount-words { position: absolute; top: 45mm; left: 25mm; font-size: 10pt; } .amount-box { position: absolute; top: 45mm; right: 15mm; font-size: 10pt; font-weight: bold; } .memo { position: absolute; top: 55mm; left: 25mm; font-size: 8pt; } </style>');
         printWindow.document.write('</head><body>');
         printWindow.document.write(printContent.innerHTML);
         printWindow.document.write('</body></html>');
@@ -79,13 +83,15 @@ export function ChequePrintClient() {
         payee: '',
         amount: 0,
         date: format(new Date(), 'yyyy-MM-dd'),
-        memo: ''
+        memo: '',
+        bankName: '',
+        branch: ''
       });
   }
 
   return (
     <>
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="w-full max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Cheque Printing</CardTitle>
           <CardDescription>
@@ -118,6 +124,16 @@ export function ChequePrintClient() {
                 </div>
              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="bankName">Bank Name</Label>
+                    <Input id="bankName" {...form.register('bankName')} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="branch">Branch</Label>
+                    <Input id="branch" {...form.register('branch')} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="date">Date</Label>
                     <Input id="date" type="date" {...form.register('date')} />
@@ -144,6 +160,8 @@ export function ChequePrintClient() {
       <div className="hidden">
         <div ref={printRef}>
             <div className="cheque">
+                <div className="bank-name">{form.getValues('bankName')}</div>
+                <div className="branch">{form.getValues('branch')}</div>
                 <div className="date">{formattedDate}</div>
                 <div className="payee">{form.getValues('payee')}</div>
                 <div className="amount-words">{amountInWords}</div>
