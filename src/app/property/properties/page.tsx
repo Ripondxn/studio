@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
@@ -189,33 +189,7 @@ export default function PropertyPage() {
   const [roomsViewMode, setRoomsViewMode] = useState<ViewMode>('list');
 
 
-  useEffect(() => {
-    getPropertyLookups().then(data => setLookups(data));
-
-    const propertyCode = searchParams.get('code');
-    if (propertyCode) {
-      setIsNewRecord(false);
-      setPropertyData(prev => ({...prev, code: propertyCode}));
-      handleFindClick(propertyCode);
-    } else {
-        setIsNewRecord(true);
-        setIsEditing(true); 
-        setInitialData(initialPropertyData);
-        setPropertyData(initialPropertyData);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    return () => {
-      attachments.forEach(attachment => {
-        if (attachment.url) {
-          URL.revokeObjectURL(attachment.url);
-        }
-      });
-    };
-  }, [attachments]);
-
-  const fetchPropertySubData = (code: string) => {
+  const fetchPropertySubData = useCallback((code: string) => {
     setIsLoadingUnits(true);
     getUnitsForProperty(code)
         .then(result => {
@@ -242,7 +216,82 @@ export default function PropertyPage() {
             }
         })
         .finally(() => setIsLoadingOccupancy(false));
-  };
+  }, []);
+
+  const handleFindClick = useCallback(async (code?: string) => {
+    const codeToFind = code || propertyData.code;
+    if (!codeToFind) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter a Property Code to find.',
+      });
+      return;
+    }
+    setIsFinding(true);
+    try {
+      const result = await findPropertyData(codeToFind);
+      if (result.success && result.data) {
+        setAllData(result.data);
+        if (codeToFind !== 'new') {
+            setInitialAllData(result.data);
+            setIsNewRecord(false);
+            setIsEditing(false);
+            fetchPropertySubData(codeToFind);
+        } else {
+            setInitialAllData({ propertyData: { ...initialPropertyData, code: result.data.propertyData.code } });
+            setIsNewRecord(true);
+            setIsEditing(true);
+        }
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Not Found',
+          description: `No record found for Property Code: ${codeToFind}. You can create a new one.`,
+        });
+        const newProperty = { ...initialPropertyData, code: codeToFind };
+        setAllData({ propertyData: newProperty });
+        setIsNewRecord(true);
+        setIsEditing(true);
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          (error as Error).message || 'Failed to find property data.',
+      });
+    } finally {
+      setIsFinding(false);
+    }
+  }, [propertyData.code, toast, fetchPropertySubData]);
+  
+  useEffect(() => {
+    getPropertyLookups().then(data => setLookups(data));
+
+    const propertyCode = searchParams.get('code');
+    if (propertyCode) {
+      setIsNewRecord(false);
+      setPropertyData(prev => ({...prev, code: propertyCode}));
+      handleFindClick(propertyCode);
+    } else {
+        setIsNewRecord(true);
+        setIsEditing(true); 
+        setInitialData(initialPropertyData);
+        setPropertyData(initialPropertyData);
+    }
+  }, [searchParams, handleFindClick]);
+
+  useEffect(() => {
+    return () => {
+      attachments.forEach(attachment => {
+        if (attachment.url) {
+          URL.revokeObjectURL(attachment.url);
+        }
+      });
+    };
+  }, [attachments]);
+
 
 
   const handleInputChange = (field: keyof typeof propertyData, value: string) => {
@@ -397,52 +446,6 @@ export default function PropertyPage() {
 
   const handleCloseClick = () => {
     router.push('/property/properties/list');
-  };
-
-  const handleFindClick = async (code?: string) => {
-    const codeToFind = code || propertyData.code;
-    if (!codeToFind) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter a Property Code to find.',
-      });
-      return;
-    }
-    setIsFinding(true);
-    try {
-      const result = await findPropertyData(codeToFind);
-      if (result.success && result.data) {
-        setAllData(result.data);
-        setInitialAllData(result.data);
-        setIsNewRecord(false);
-        setIsEditing(false);
-        fetchPropertySubData(codeToFind);
-        toast({
-          title: 'Found',
-          description: `Found record for Property Code: ${codeToFind}`,
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Not Found',
-          description: `No record found for Property Code: ${codeToFind}. You can create a new one.`,
-        });
-        const newProperty = { ...initialPropertyData, code: codeToFind };
-        setAllData({ propertyData: newProperty });
-        setIsNewRecord(true);
-        setIsEditing(true);
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description:
-          (error as Error).message || 'Failed to find property data.',
-      });
-    } finally {
-      setIsFinding(false);
-    }
   };
 
   const handleDelete = async () => {
@@ -835,7 +838,7 @@ export default function PropertyPage() {
                                                 disabled={!isEditing}
                                             />
                                         )}
-                                            <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
                                             {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                         </Button>
                                     </div>
@@ -863,7 +866,7 @@ export default function PropertyPage() {
                                     />
                                 </TableCell>
                                 <TableCell>
-                                <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                                 </TableCell>
@@ -871,7 +874,7 @@ export default function PropertyPage() {
                         ))}
                     </TableBody>
                     </Table>
-                     <Button variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addAttachmentRow} disabled={!isEditing}>
+                     <Button type="button" variant="outline" size="sm" className="mt-4 hover:bg-accent" onClick={addAttachmentRow} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>

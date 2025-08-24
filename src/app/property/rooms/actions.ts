@@ -82,7 +82,13 @@ export async function addRoom(data: z.infer<typeof addRoomFormSchema>) {
         allRooms.push(newRoom);
         await writeRooms(allRooms);
         
-        revalidatePath(`/property/properties?code=${data.propertyCode}`);
+        revalidatePath(`/property/properties`);
+        revalidatePath(`/property/properties/add`);
+        revalidatePath(`/property/properties/list`);
+        revalidatePath(`/property/rooms/list`);
+        if (data.propertyCode) {
+            revalidatePath(`/property/properties?code=${data.propertyCode}`);
+        }
         return { success: true, data: newRoom };
 
     } catch (error) {
@@ -111,7 +117,13 @@ export async function updateRoom(data: z.infer<typeof updateRoomFormSchema>) {
         
         await writeRooms(allRooms);
         
-        revalidatePath(`/property/properties?code=${allRooms[roomIndex].propertyCode}`);
+        revalidatePath(`/property/properties`);
+        revalidatePath(`/property/properties/add`);
+        revalidatePath(`/property/properties/list`);
+        revalidatePath(`/property/rooms/list`);
+        if (allRooms[roomIndex].propertyCode) {
+            revalidatePath(`/property/properties?code=${allRooms[roomIndex].propertyCode}`);
+        }
         return { success: true, data: allRooms[roomIndex] };
 
     } catch (error) {
@@ -136,7 +148,13 @@ export async function deleteRoom(roomId: string) {
         const updatedRooms = allRooms.filter(r => r.id !== roomId);
         
         await writeRooms(updatedRooms);
-        revalidatePath(`/property/properties?code=${roomToDelete.propertyCode}`);
+        revalidatePath(`/property/properties`);
+        revalidatePath(`/property/properties/add`);
+        revalidatePath(`/property/properties/list`);
+        revalidatePath(`/property/rooms/list`);
+        if (roomToDelete.propertyCode) {
+           revalidatePath(`/property/properties?code=${roomToDelete.propertyCode}`);
+        }
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };

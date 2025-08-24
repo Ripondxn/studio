@@ -71,7 +71,13 @@ export async function addUnit(data: z.infer<typeof addUnitFormSchema>) {
         allUnits.push(newUnit);
         await writeUnits(allUnits);
         
-        revalidatePath(`/property/properties?code=${data.propertyCode}`);
+        revalidatePath(`/property/properties`);
+        revalidatePath(`/property/properties/add`);
+        revalidatePath(`/property/properties/list`);
+        revalidatePath(`/property/units/list`);
+        if (data.propertyCode) {
+            revalidatePath(`/property/properties?code=${data.propertyCode}`);
+        }
         return { success: true, data: newUnit };
 
     } catch (error) {
@@ -100,7 +106,15 @@ export async function updateUnit(data: z.infer<typeof updateUnitFormSchema>) {
         
         await writeUnits(allUnits);
         
-        revalidatePath(`/property/properties?code=${allUnits[unitIndex].propertyCode}`);
+        revalidatePath(`/property/properties`);
+        revalidatePath(`/property/properties/add`);
+        revalidatePath(`/property/properties/list`);
+        revalidatePath(`/property/units/list`);
+
+        if (allUnits[unitIndex].propertyCode) {
+           revalidatePath(`/property/properties?code=${allUnits[unitIndex].propertyCode}`);
+        }
+
         return { success: true, data: allUnits[unitIndex] };
 
     } catch (error) {
@@ -125,7 +139,14 @@ export async function deleteUnit(unitId: string) {
         const updatedUnits = allUnits.filter(u => u.id !== unitId);
         
         await writeUnits(updatedUnits);
-        revalidatePath(`/property/properties?code=${unitToDelete.propertyCode}`);
+
+        revalidatePath(`/property/properties`);
+        revalidatePath(`/property/properties/add`);
+        revalidatePath(`/property/properties/list`);
+        revalidatePath(`/property/units/list`);
+        if (unitToDelete.propertyCode) {
+            revalidatePath(`/property/properties?code=${unitToDelete.propertyCode}`);
+        }
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
