@@ -34,8 +34,10 @@ export async function getRecipients(): Promise<{ value: string, label: string }[
         ...vendors.map((v: any) => ({ value: v.vendorData.email, label: `${v.vendorData.name} (Vendor)` })),
     ];
     
-    // Filter out recipients without a valid email
-    return recipientList.filter(r => r.value);
+    // Filter out recipients without a valid email and remove duplicates
+    const uniqueRecipients = Array.from(new Map(recipientList.filter(r => r.value).map(item => [item.value, item])).values());
+
+    return uniqueRecipients;
 }
 
 
