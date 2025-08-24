@@ -168,53 +168,6 @@ export default function TenancyContractPage() {
     }
   }, []);
 
-  useEffect(() => {
-    getContractLookups().then(data => {
-        setLookups(prev => ({...prev, properties: data.properties, tenants: data.tenants}));
-    });
-
-    const contractId = searchParams.get('id');
-    const propertyCode = searchParams.get('propertyCode');
-    const unitCode = searchParams.get('unitCode');
-    const roomCode = searchParams.get('roomCode');
-
-    if (contractId) {
-       fetchContractData(contractId);
-    } else {
-        findContract({contractId: 'new'}).then(result => {
-            const newContract = {...initialContractState};
-            if(result.success && result.data) {
-                newContract.contractNo = result.data.contractNo;
-            }
-             if(propertyCode) newContract.property = propertyCode;
-            if(unitCode) newContract.unitCode = unitCode;
-            if(roomCode) newContract.roomCode = roomCode;
-
-            setContract(newContract);
-            setInitialContract(newContract);
-             if(propertyCode) {
-                handlePropertySelect(propertyCode).then(() => {
-                    if (unitCode) handleUnitSelect(unitCode);
-                    if (roomCode) handleRoomSelect(roomCode);
-                })
-            }
-        });
-
-        setIsNewRecord(true);
-        setIsEditing(true);
-        setEditedInstallmentIndexes(new Set());
-        setIsLoading(false);
-    }
-  }, [searchParams, fetchContractData, handlePropertySelect, handleUnitSelect, handleRoomSelect]);
-
-  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount'>, value: string) => {
-    setContract(prev => ({...prev, [field]: value}));
-  }
-  
-  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount', value: string) => {
-    setContract(prev => ({...prev, [field]: parseFloat(value) || 0 }));
-  }
-
   const handleTenantSelect = (tenantCode: string) => {
       const tenant = lookups.tenants.find(t => t.value === tenantCode);
       if (tenant) {
@@ -227,6 +180,61 @@ export default function TenancyContractPage() {
               address: tenant.address
           }));
       }
+  }
+
+
+  useEffect(() => {
+    const propertyCode = searchParams.get('propertyCode');
+    const unitCode = searchParams.get('unitCode');
+    const roomCode = searchParams.get('roomCode');
+    
+    const initialize = async () => {
+        const lookupsData = await getContractLookups();
+        setLookups(prev => ({...prev, ...lookupsData}));
+
+        const contractId = searchParams.get('id');
+
+        if (contractId) {
+            await fetchContractData(contractId);
+            return;
+        }
+
+        const newContractResponse = await findContract({contractId: 'new'});
+        const newContract = {...initialContractState};
+        if(newContractResponse.success && newContractResponse.data) {
+            newContract.contractNo = newContractResponse.data.contractNo;
+        }
+
+        if(propertyCode) {
+            newContract.property = propertyCode;
+            const units = await getUnitsForProperty(propertyCode);
+            setLookups(prev => ({...prev, units}));
+        }
+        if(unitCode) {
+            newContract.unitCode = unitCode;
+            if(propertyCode) {
+              const rooms = await getRoomsForUnit(propertyCode, unitCode);
+              setLookups(prev => ({...prev, rooms}));
+            }
+        }
+        if(roomCode) newContract.roomCode = roomCode;
+
+        setContract(newContract);
+        setInitialContract(newContract);
+        setIsNewRecord(true);
+        setIsEditing(true);
+        setIsLoading(false);
+    };
+
+    initialize();
+  }, [searchParams, fetchContractData]);
+
+  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount'>, value: string) => {
+    setContract(prev => ({...prev, [field]: value}));
+  }
+  
+  const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount', value: string) => {
+    setContract(prev => ({...prev, [field]: parseFloat(value) || 0 }));
   }
 
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
