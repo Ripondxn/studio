@@ -21,6 +21,7 @@ import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { getPayments } from '@/app/finance/payment/actions';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -48,12 +49,23 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
   const [summary, setSummary] = useState(initialSummary);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<{ email: string, role: UserRole['role'] } | null>(null);
+
+  useEffect(() => {
+    const storedProfile = sessionStorage.getItem('userProfile');
+    if (storedProfile) {
+        setCurrentUser(JSON.parse(storedProfile));
+    }
+  }, []);
+
 
   const refreshData = async () => {
+    if (!currentUser) return;
     setIsLoading(true);
-    const [chequesResult, summaryResult] = await Promise.all([
+    const [chequesResult, summaryResult, paymentsResult] = await Promise.all([
         getCheques(),
-        getSummary()
+        getSummary(),
+        getPayments(currentUser)
     ]);
     setCheques(chequesResult);
     setSummary(summaryResult);
@@ -62,7 +74,9 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
 
   const handlePaymentAdded = async () => {
     // A payment affects cheques, so refresh everything
-    refreshData();
+    if(currentUser) {
+      refreshData();
+    }
   }
 
   useEffect(() => {
@@ -144,7 +158,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             <DepositChequesDialog cheques={cheques.filter(c => c.status === 'In Hand')} onDeposit={refreshData} />
             <ReturnChequeDialog cheques={cheques.filter(c => c.status === 'In Hand')} onReturn={refreshData} />
             <AddChequeDialog onChequeAdded={refreshData} />
-            <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
+            <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading || !currentUser}>
                 <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
         </div>
