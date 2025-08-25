@@ -47,8 +47,13 @@ async function writeBankAccounts(data: BankAccount[]) {
 
 async function readPettyCash(): Promise<{ balance: number }> {
     const data = await readData(pettyCashFilePath);
-    return data.length === 0 ? { balance: 0 } : data;
+    // if file is empty or doesn't exist, return a default object
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+        return { balance: 0 };
+    }
+    return data;
 }
+
 async function writePettyCash(data: { balance: number }) {
     await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
@@ -144,7 +149,7 @@ async function updateTransactionWorkflow(
         if (newStatus === 'POSTED' && previousStatus !== 'POSTED') {
             const { type, amount, bankAccountId, paymentFrom } = allPayments[transactionIndex];
 
-            if (paymentFrom === 'Petty Cash' || bankAccountId === 'acc_3') {
+            if (paymentFrom === 'Petty Cash') {
                 const pettyCash = await readPettyCash();
                 if (type === 'Payment') {
                     pettyCash.balance -= amount;
