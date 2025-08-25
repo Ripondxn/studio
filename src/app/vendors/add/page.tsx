@@ -52,6 +52,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { vendorSchema, type Vendor } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { VendorTransactionHistory } from '../vendor-transaction-history';
+import { BillList } from '../bill/bill-list';
+import { type Bill } from '../bill/schema';
+import { getBillsForVendor } from '../bill/actions';
 
 
 type Attachment = {
@@ -84,12 +87,22 @@ export default function VendorPage() {
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [isLoadingBills, setIsLoadingBills] = useState(true);
   
   const form = useForm<Vendor>({
     resolver: zodResolver(vendorSchema),
     defaultValues: initialVendorData,
   });
 
+   const fetchBills = async (vendorCode: string) => {
+    if (!vendorCode) return;
+    setIsLoadingBills(true);
+    const data = await getBillsForVendor(vendorCode);
+    setBills(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
+    setIsLoadingBills(false);
+  };
+  
   useEffect(() => {
     return () => {
       attachments.forEach(attachment => {
@@ -207,7 +220,7 @@ export default function VendorPage() {
      }
   }
 
-  const handleFindClick = async (code?: string) => {
+  const handleFindClick = async (code: string) => {
     const codeToFind = code || form.getValues('code');
     if (!codeToFind) {
       toast({
@@ -228,6 +241,7 @@ export default function VendorPage() {
         if (codeToFind !== 'new') {
             setIsNewRecord(false);
             setIsEditing(false);
+            fetchBills(result.data.vendorData.code);
         } else {
             setIsNewRecord(true);
             setIsEditing(true);
@@ -299,6 +313,35 @@ export default function VendorPage() {
                     </Button>
                 </>
                 )}
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={isNewRecord || isEditing}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Vendor
+                    </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the
+                        vendor "{form.getValues('name')}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive hover:bg-destructive/90"
+                        >
+                        Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
                 <Button type="button" variant="outline" onClick={() => router.push('/vendors')}>
                     <X className="mr-2 h-4 w-4" /> Close
                 </Button>
@@ -309,7 +352,8 @@ export default function VendorPage() {
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
-            <TabsTrigger value="billing" disabled={isNewRecord}>Billing & Refund</TabsTrigger>
+            <TabsTrigger value="bills" disabled={isNewRecord}>Bills</TabsTrigger>
+            <TabsTrigger value="payment-history" disabled={isNewRecord}>Payment History</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="vendor-info">
@@ -428,10 +472,21 @@ export default function VendorPage() {
                 </CardContent>
             </Card>
         </TabsContent>
-        <TabsContent value="billing">
-            <VendorTransactionHistory
+        <TabsContent value="bills">
+             <BillList
+                vendorCode={form.watch('code')}
                 vendorName={form.watch('name')}
-                onRefresh={() => handleFindClick(form.watch('code'))}
+                bills={bills}
+                isLoading={isLoadingBills}
+                onRefresh={() => fetchBills(form.watch('code'))}
+            />
+        </TabsContent>
+        <TabsContent value="payment-history">
+           <VendorTransactionHistory
+                vendorName={form.watch('name')}
+                onRefresh={() => {
+                    handleFindClick(form.watch('code'))
+                }}
             />
         </TabsContent>
         <TabsContent value="attachments">
@@ -515,38 +570,6 @@ export default function VendorPage() {
       </Tabs>
       </form>
     </Form>
-
-       <div className="mt-6 flex justify-end">
-         <AlertDialog>
-            <AlertDialogTrigger asChild>
-            <Button
-                type="button"
-                variant="destructive"
-                disabled={isNewRecord || isEditing}
-            >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Vendor
-            </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                vendor "{form.getValues('name')}".
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive hover:bg-destructive/90"
-                >
-                Delete
-                </AlertDialogAction>
-            </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-       </div>
     </div>
   );
 }
