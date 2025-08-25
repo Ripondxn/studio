@@ -305,6 +305,14 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   }
 
   const referenceTypeOptions = () => {
+    if (paymentType === 'Receipt' && partyType === 'Vendor') {
+      return (
+        <>
+          <SelectItem value="Bill">Bill</SelectItem>
+          <SelectItem value="Other">Other</SelectItem>
+        </>
+      )
+    }
     return (
         <>
             <SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem>
