@@ -102,15 +102,15 @@ export async function saveBankAccount(data: z.infer<typeof bankAccountSchema>, i
 }
 
 export async function deleteBankAccount(accountId: string) {
-     if (accountId === 'acc_3') {
-        return { success: false, error: 'The Petty Cash account cannot be deleted.' };
-     }
      try {
         const allAccounts = await readAccounts();
         const updatedAccounts = allAccounts.filter(acc => acc.id !== accountId);
         
         if (allAccounts.length === updatedAccounts.length) {
-            return { success: false, error: 'Account not found.' };
+            // Check if it's the petty cash account, which isn't in the file.
+            if (accountId !== 'acc_3') {
+                 return { success: false, error: 'Account not found.' };
+            }
         }
 
         await writeAccounts(updatedAccounts);
@@ -186,7 +186,7 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         
         const accountPayments = allTransactions.filter((p: Payment) => {
             if (accountId === 'acc_3') {
-                return p.paymentFrom === 'Petty Cash' || p.bankAccountId === 'acc_3';
+                return p.paymentFrom === 'Petty Cash';
             }
             return p.bankAccountId === accountId;
         });

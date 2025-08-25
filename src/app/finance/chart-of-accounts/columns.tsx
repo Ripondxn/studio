@@ -27,11 +27,12 @@ import {
 
 import { Account } from './schema';
 import { TransactionHistoryDialog } from './transaction-history-dialog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { deleteAccount } from './actions';
 import { useRouter } from 'next/navigation';
 import { EditAccountDialog } from './edit-account-dialog';
+import type { UserRole } from '@/app/admin/user-roles/schema';
 
 
 const ActionsCell = ({ row }: { row: { original: Account }}) => {
@@ -41,6 +42,16 @@ const ActionsCell = ({ row }: { row: { original: Account }}) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
+
+    useEffect(() => {
+        const storedProfile = sessionStorage.getItem('userProfile');
+        if (storedProfile) {
+            setCurrentUserRole(JSON.parse(storedProfile).role);
+        }
+    }, []);
+
+    const canManage = currentUserRole === 'Super Admin';
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -94,11 +105,11 @@ const ActionsCell = ({ row }: { row: { original: Account }}) => {
                             <Eye className="mr-2 h-4 w-4" /> View Transactions
                         </DropdownMenuItem>
                     </TransactionHistoryDialog>
-                    <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                    <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)} disabled={!canManage}>
                         <Pencil className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+                    <DropdownMenuItem className="text-destructive" onClick={() => setIsDeleteDialogOpen(true)} disabled={!canManage}>
                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
                 </DropdownMenuContent>

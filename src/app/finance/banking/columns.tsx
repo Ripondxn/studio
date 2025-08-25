@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, Banknote, Edit, Landmark, MoreVertical, Trash2, Wallet, History } from 'lucide-react';
 import {
@@ -45,6 +45,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { TransactionHistoryDialog } from './transaction-history-dialog';
+import type { UserRole } from '@/app/admin/user-roles/schema';
 
 type BankAccountFormData = Omit<BankAccount, 'id'> & { id?: string };
 
@@ -137,7 +138,17 @@ const ActionsCell = ({ row, onAccountUpdate }: { row: { original: BankAccount },
     const account = row.original;
     const { toast } = useToast();
     const [isDeleting, setIsDeleting] = useState(false);
+    const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
+
+    useEffect(() => {
+        const storedProfile = sessionStorage.getItem('userProfile');
+        if (storedProfile) {
+            setCurrentUserRole(JSON.parse(storedProfile).role);
+        }
+    }, []);
+
     const isPettyCash = account.id === 'acc_3';
+    const canManage = currentUserRole === 'Super Admin';
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -164,13 +175,13 @@ const ActionsCell = ({ row, onAccountUpdate }: { row: { original: BankAccount },
                     </DropdownMenuItem>
                 </TransactionHistoryDialog>
                 <BankAccountDialog account={account} onSave={onAccountUpdate}>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={isPettyCash}>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={isPettyCash && !canManage}>
                         <Edit className="mr-2 h-4 w-4"/> Edit
                     </DropdownMenuItem>
                 </BankAccountDialog>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                         <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} disabled={isPettyCash}>
+                         <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} disabled={isPettyCash && !canManage}>
                             <Trash2 className="mr-2 h-4 w-4"/> Delete
                         </DropdownMenuItem>
                     </AlertDialogTrigger>
