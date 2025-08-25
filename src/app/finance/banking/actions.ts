@@ -166,9 +166,11 @@ export async function getAllTransactions(): Promise<Payment[]> {
 
 export async function getTransactionsForAccount(accountId: string): Promise<Payment[]> {
      try {
-        const allTransactions = await getAllTransactions();
+        const allTransactions = await readAllPayments();
         
         const accountPayments = allTransactions.filter((p: Payment) => {
+            if (p.currentStatus !== 'POSTED') return false; // Only show posted transactions
+            
             if (accountId === 'acc_3') { // Petty Cash account
                 return p.paymentFrom === 'Petty Cash';
             }
