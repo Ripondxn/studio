@@ -25,8 +25,12 @@ export function FloorCard({ floor }: FloorCardProps) {
   }
   
   const status = floor.occupancyStatus;
-  const variant = status === 'Vacant' ? 'default' : status === 'Partially Occupied' ? 'secondary' : 'destructive';
-  const color = status === 'Vacant' ? 'bg-green-500/20 text-green-700' : status === 'Partially Occupied' ? 'bg-yellow-500/20 text-yellow-700' : 'bg-red-500/20 text-red-700';
+  const statusConfig = {
+    'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
+    'Fully Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700' },
+    'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700' }
+  };
+  const config = statusConfig[status as keyof typeof statusConfig] || { variant: 'secondary', color: '' };
   const Icon = status === 'Vacant' ? UserCheck : status === 'Partially Occupied' ? Users : UserX;
 
   return (
@@ -43,7 +47,7 @@ export function FloorCard({ floor }: FloorCardProps) {
               <CardDescription>{floor.floorCode}</CardDescription>
               <CardTitle>{floor.floorName}</CardTitle>
             </div>
-            <Badge variant={variant} className={cn('gap-1', color, 'border-transparent')}>
+            <Badge variant={config.variant as any} className={cn('gap-1', config.color, 'border-transparent')}>
                 <Icon className="h-3 w-3" />
                 {status}
             </Badge>
@@ -61,10 +65,10 @@ export function FloorCard({ floor }: FloorCardProps) {
             </span>
           </div>
         </CardContent>
-        <CardFooter className="gap-2">
+        <CardFooter className="flex gap-2">
           <Button asChild className="w-full" variant="outline">
             <Link href={`/tenancy/contract?propertyCode=${floor.propertyCode}`}>
-              <FilePlus2 className="mr-2 h-4 w-4" /> Booking
+               Booking
             </Link>
           </Button>
           <Button variant="secondary" className="w-full" onClick={() => setIsEditDialogOpen(true)}>

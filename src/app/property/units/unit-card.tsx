@@ -75,7 +75,7 @@ export function UnitCard({ unit }: UnitCardProps) {
              <div className="flex gap-2 w-full">
                 <Button asChild className="flex-1 min-w-0">
                     <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
-                        <FilePlus2 className="mr-2 h-4 w-4" /> Booking
+                        Booking
                     </Link>
                 </Button>
                 <Button variant="outline" className="flex-1 min-w-0" onClick={() => setIsEditDialogOpen(true)}>
