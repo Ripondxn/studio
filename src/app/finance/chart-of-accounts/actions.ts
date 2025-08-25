@@ -55,8 +55,13 @@ export async function getAccounts(): Promise<Account[]> {
     });
 
     // 2. Calculate Cash and Bank from bank accounts and petty cash
-    const totalBankBalance = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
-    const totalCashAndBank = totalBankBalance + (pettyCash.balance || 0);
+    const allTransactionsForUndeposited = await getTransactionsForAccount('1110');
+    const totalCashAndBank = allTransactionsForUndeposited.reduce((sum, tx) => {
+        if(tx.type === 'Receipt') return sum + tx.amount;
+        if(tx.type === 'Payment') return sum - tx.amount;
+        return sum;
+    }, 0);
+
     if (accountMap.has('1110')) {
         accountMap.get('1110')!.balance = totalCashAndBank;
     }
@@ -248,22 +253,50 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
 
     for (const code of codesToFetch) {
          switch(code) {
-            case '1110': // Cash and Bank
-                 transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED'));
-                break;
-            case '3110': // Capital Account
-            case '3120': // Drawings
-                 const equityTransactions: any[] = await readData(equityTransactionsFilePath);
-                 transactions.push(...equityTransactions.map(t => ({
+            case '1110': // Undeposited Fund
+                 const allEquityTransactions: any[] = await readData(equityTransactionsFilePath);
+                 const equityAsPayments = allEquityTransactions.map(t => ({
                     id: t.id,
                     type: t.type === 'Contribution' ? 'Receipt' : 'Payment',
                     date: t.date,
                     partyType: 'Customer', // Simplified for display
                     partyName: 'Owner',
                     amount: t.amount,
-                    paymentMethod: 'Cash', // Simplified
+                    paymentMethod: t.accountId === 'acc_3' ? 'Cash' : 'Bank Transfer',
+                    bankAccountId: t.accountId,
                     referenceNo: t.remarks || 'Equity Transaction',
                     status: t.type === 'Contribution' ? 'Received' : 'Paid',
+                    currentStatus: 'POSTED',
+                 }));
+                 transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED'), ...equityAsPayments);
+                break;
+            case '3110': // Capital Account
+                 const contributionTransactions: any[] = (await readData(equityTransactionsFilePath)).filter(t => t.type === 'Contribution');
+                 transactions.push(...contributionTransactions.map(t => ({
+                    id: t.id,
+                    type: 'Receipt',
+                    date: t.date,
+                    partyType: 'Customer', // Simplified for display
+                    partyName: 'Owner',
+                    amount: t.amount,
+                    paymentMethod: 'Cash', // Simplified
+                    referenceNo: t.remarks || 'Equity Transaction',
+                    status: 'Received',
+                    currentStatus: 'POSTED',
+                 })));
+                 break;
+             case '3120': // Drawings
+                const withdrawalTransactions: any[] = (await readData(equityTransactionsFilePath)).filter(t => t.type === 'Withdrawal');
+                 transactions.push(...withdrawalTransactions.map(t => ({
+                    id: t.id,
+                    type: 'Payment',
+                    date: t.date,
+                    partyType: 'Customer', // Simplified for display
+                    partyName: 'Owner',
+                    amount: t.amount,
+                    paymentMethod: 'Cash', // Simplified
+                    referenceNo: t.remarks || 'Equity Transaction',
+                    status: 'Paid',
                     currentStatus: 'POSTED',
                  })));
                  break;
@@ -287,4 +320,5 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
     
     return uniqueTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
+
 
