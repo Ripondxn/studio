@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -8,13 +7,16 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { type Payment } from '@/app/finance/payment/schema';
 import type { Role, Status } from './types';
+import { type BankAccount } from '@/app/finance/banking/schema';
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
+const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
 
-async function readPayments(): Promise<Payment[]> {
+async function readData(filePath: string): Promise<any[]> {
     try {
-        await fs.access(paymentsFilePath);
-        const data = await fs.readFile(paymentsFilePath, 'utf-8');
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -24,8 +26,31 @@ async function readPayments(): Promise<Payment[]> {
     }
 }
 
+async function writeData(filePath: string, data: any[]) {
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+
+async function readPayments(): Promise<Payment[]> {
+    return await readData(paymentsFilePath);
+}
 async function writePayments(data: Payment[]) {
-    await fs.writeFile(paymentsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    await writeData(paymentsFilePath, data);
+}
+
+async function readBankAccounts(): Promise<BankAccount[]> {
+    return await readData(bankAccountsFilePath);
+}
+async function writeBankAccounts(data: BankAccount[]) {
+    await writeData(bankAccountsFilePath, data);
+}
+
+async function readPettyCash(): Promise<{ balance: number }> {
+    const data = await readData(pettyCashFilePath);
+    return data.length === 0 ? { balance: 0 } : data;
+}
+async function writePettyCash(data: { balance: number }) {
+    await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 
@@ -114,9 +139,38 @@ async function updateTransactionWorkflow(
             currentStatus: newStatus,
             approvalHistory: [...(transaction.approvalHistory || []), newHistoryEntry],
         };
+        
+        // If the transaction is now posted, update the financial accounts
+        if (newStatus === 'POSTED' && previousStatus !== 'POSTED') {
+            const { type, amount, bankAccountId, paymentFrom } = allPayments[transactionIndex];
+
+            if (paymentFrom === 'Petty Cash' || bankAccountId === 'acc_3') {
+                const pettyCash = await readPettyCash();
+                if (type === 'Payment') {
+                    pettyCash.balance -= amount;
+                } else { // Receipt
+                    pettyCash.balance += amount;
+                }
+                await writePettyCash(pettyCash);
+            } else if (bankAccountId) {
+                const allBankAccounts = await readBankAccounts();
+                const accountIndex = allBankAccounts.findIndex(acc => acc.id === bankAccountId);
+                if (accountIndex !== -1) {
+                    if (type === 'Payment') {
+                        allBankAccounts[accountIndex].balance -= amount;
+                    } else { // Receipt
+                        allBankAccounts[accountIndex].balance += amount;
+                    }
+                    await writeBankAccounts(allBankAccounts);
+                }
+            }
+        }
+
 
         await writePayments(allPayments);
         revalidatePath('/workflow');
+        revalidatePath('/finance/banking');
+        revalidatePath('/finance/chart-of-accounts');
         return { success: true };
 
     } catch (error) {

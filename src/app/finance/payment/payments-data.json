@@ -331,5 +331,58 @@
         "comments": ""
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-26",
+    "partyType": "Vendor",
+    "partyName": "V001",
+    "amount": 480,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "referenceType": "Bill",
+    "referenceNo": "BL-0001",
+    "description": "Payment for Bill: BL-0001 - Total: $480.00",
+    "remarks": "Vendor Refund",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "billAllocations": [
+      {
+        "billId": "BILL-1756106624407",
+        "amount": 0
+      }
+    ],
+    "id": "PAY-1756114169133",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-25T09:29:29.133Z",
+        "comments": "Initial Draft"
+      },
+      {
+        "action": "Submitted for Approval",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-25T09:31:07.295Z",
+        "comments": ""
+      },
+      {
+        "action": "Approved by Admin",
+        "actorId": "ripondxn@gmail.com",
+        "actorRole": "Admin",
+        "timestamp": "2025-08-25T09:31:22.208Z",
+        "comments": ""
+      },
+      {
+        "action": "Final Approval & Posted",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-25T09:32:56.091Z",
+        "comments": ""
+      }
+    ]
   }
 ]
