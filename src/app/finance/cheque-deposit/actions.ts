@@ -58,6 +58,23 @@ async function writeBankAccounts(data: BankAccount[]) {
     await fs.writeFile(bankAccountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+async function readPayments(): Promise<Payment[]> {
+    try {
+        await fs.access(paymentsFilePath);
+        const data = await fs.readFile(paymentsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+async function writePayments(data: Payment[]) {
+     await fs.writeFile(paymentsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
 
 export async function getCheques() {
     const cheques = await readCheques();
@@ -89,9 +106,11 @@ export async function addCheque(data: Omit<Cheque, 'id'>) {
 }
 
 
-export async function updateChequeStatus(chequeId: string, status: Cheque['status'], date: string) {
+export async function updateChequeStatus(chequeId: string, status: Cheque['status'], date: string, user: { email: string, name: string, role: string }) {
     try {
         const allCheques = await readCheques();
+        const allPayments = await readPayments();
+
         const chequeIndex = allCheques.findIndex(c => c.id === chequeId);
 
         if (chequeIndex === -1) {
@@ -103,24 +122,53 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         
         if(status === 'Deposited') {
             updatedCheque.depositDate = date;
-        } else if (status === 'Cleared' || status === 'Bounced') {
+        } else if (status === 'Cleared') {
             updatedCheque.clearanceDate = date;
+        } else if (status === 'Bounced') {
+            updatedCheque.clearanceDate = date; // Use clearanceDate for bounced date as well
         }
 
         allCheques[chequeIndex] = updatedCheque;
+        
+        // For statuses that affect financials, create a transaction and send to workflow
+        if (status === 'Cleared' || status === 'Bounced') {
+            
+            const paymentType = originalCheque.type === 'Incoming' ? 'Receipt' : 'Payment';
+            const remarks = status === 'Bounced' ? `Cheque Bounced: ${originalCheque.chequeNo}` : `Cleared Cheque: ${originalCheque.chequeNo}`;
+            
+            const newPayment: Payment = {
+                id: `PAY-${Date.now()}`,
+                type: paymentType,
+                date: date,
+                partyType: originalCheque.type === 'Incoming' ? 'Tenant' : 'Landlord', // Simplification
+                partyName: originalCheque.partyName,
+                amount: originalCheque.amount,
+                paymentMethod: 'Cheque',
+                bankAccountId: originalCheque.bankAccountId,
+                referenceNo: originalCheque.chequeNo,
+                property: originalCheque.property,
+                status: paymentType === 'Receipt' ? 'Received' : 'Paid',
+                currentStatus: 'PENDING_ADMIN_APPROVAL',
+                createdByUser: user.name,
+                remarks,
+                approvalHistory: [{
+                    action: 'Created & Submitted',
+                    actorId: user.email,
+                    actorRole: user.role,
+                    timestamp: new Date().toISOString(),
+                    comments: `Status updated to ${status}`
+                }]
+            };
 
-        if (status === 'Cleared' && updatedCheque.bankAccountId) {
-            const allBankAccounts = await readBankAccounts();
-            const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === updatedCheque.bankAccountId);
-
-            if (bankAccountIndex !== -1) {
-                 if (updatedCheque.type === 'Incoming') {
-                    allBankAccounts[bankAccountIndex].balance += updatedCheque.amount;
-                } else { // Outgoing
-                    allBankAccounts[bankAccountIndex].balance -= updatedCheque.amount;
-                }
-                await writeBankAccounts(allBankAccounts);
+            // If bounced, this should be a negative receipt or a payment (debit). Let's treat it as a payment against the party for now.
+             if (status === 'Bounced') {
+                newPayment.type = 'Payment';
+                newPayment.status = 'Paid'; // To represent a charge-back
             }
+
+            allPayments.push(newPayment);
+            await writePayments(allPayments);
+            revalidatePath('/workflow');
         }
         
         await writeCheques(allCheques);

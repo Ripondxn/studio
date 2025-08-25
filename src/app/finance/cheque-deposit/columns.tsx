@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Pencil, Banknote, Trash2, CheckCircle, XCircle, Hourglass, Calendar, Library, Landmark, Building2, User, CornerUpLeft } from 'lucide-react';
 import { format, isBefore, startOfToday, parseISO } from 'date-fns';
@@ -45,6 +45,7 @@ import { Cheque } from './schema';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 const statusConfig: {
   [key in Cheque['status']]: {
@@ -68,11 +69,23 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
     const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const { toast } = useToast();
     const router = useRouter();
+    const [currentUser, setCurrentUser] = useState<{ email: string; name: string; role: UserRole['role'] } | null>(null);
+
+    useEffect(() => {
+        const storedProfile = sessionStorage.getItem('userProfile');
+        if (storedProfile) {
+            setCurrentUser(JSON.parse(storedProfile));
+        }
+    }, []);
 
     const handleUpdate = async () => {
-        const result = await updateChequeStatus(cheque.id, status, date);
+        if (!currentUser) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not identify current user. Please log in again.'});
+            return;
+        }
+        const result = await updateChequeStatus(cheque.id, status, date, currentUser);
         if (result.success) {
-            toast({ title: 'Status Updated', description: `Cheque ${cheque.chequeNo} status updated to ${status}.` });
+            toast({ title: 'Status Updated', description: `Cheque ${cheque.chequeNo} status updated to ${status}. A new entry may have been created in the workflow for approval.` });
             onUpdate();
             setIsOpen(false);
         } else {
@@ -256,14 +269,10 @@ export const columns: ColumnDef<Cheque>[] = [
   {
     accessorKey: 'amount',
     header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const amount = parseFloat(row.getValue('amount'));
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
-
-      return <div className="text-right font-medium">{formatted}</div>;
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
   },
    {

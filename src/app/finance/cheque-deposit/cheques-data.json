@@ -4,12 +4,13 @@
     "chequeDate": "2025-08-25",
     "amount": 15000,
     "bankName": "ADCB",
-    "status": "In Hand",
+    "status": "Deposited",
     "type": "Incoming",
     "partyName": "Tanvir Ahmed",
     "property": "LT-C38",
     "contractNo": "TC-0002",
     "remarks": "",
-    "id": "CHQ-1756139851557"
+    "id": "CHQ-1756139851557",
+    "depositDate": "2025-08-25"
   }
 ]
