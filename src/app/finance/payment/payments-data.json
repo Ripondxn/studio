@@ -108,13 +108,15 @@
     ]
   },
   {
-    "id": "PAY-1756143498009",
+    "id": "PAY-1756146247296",
     "type": "Receipt",
-    "date": "2025-08-25",
+    "date": "2025-08-30",
     "partyType": "Tenant",
     "partyName": "Tanvir Ahmed",
     "amount": 15000,
     "paymentMethod": "Cheque",
+    "bankAccountId": "acc_1756122907621",
+    "paymentFrom": "Bank",
     "referenceNo": "123456",
     "property": "LT-C38",
     "status": "Received",
@@ -126,21 +128,21 @@
         "action": "Created & Submitted",
         "actorId": "super.admin@propvue.com",
         "actorRole": "Super Admin",
-        "timestamp": "2025-08-25T17:38:18.009Z",
+        "timestamp": "2025-08-25T18:24:07.296Z",
         "comments": "Status updated to Cleared"
       },
       {
         "action": "Approved by Admin",
         "actorId": "ripondxn@gmail.com",
         "actorRole": "Admin",
-        "timestamp": "2025-08-25T17:39:25.561Z",
+        "timestamp": "2025-08-25T18:25:04.219Z",
         "comments": ""
       },
       {
         "action": "Final Approval & Posted",
         "actorId": "super.admin@propvue.com",
         "actorRole": "Super Admin",
-        "timestamp": "2025-08-25T17:40:31.230Z",
+        "timestamp": "2025-08-25T18:25:41.474Z",
         "comments": ""
       }
     ]

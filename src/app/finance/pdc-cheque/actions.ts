@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -50,9 +51,14 @@ export async function addPdcCheque(data: Omit<PdcCheque, 'id'>) {
 
     try {
         const allCheques = await readPdcCheques();
+        const chequeExists = allCheques.some(c => c.chequeNo === data.chequeNo);
+        if (chequeExists) {
+            console.log(`PDC Cheque with number ${data.chequeNo} already exists. Skipping.`);
+            return { success: true, data: allCheques.find(c => c.chequeNo === data.chequeNo) };
+        }
         const newCheque: PdcCheque = {
             ...validation.data,
-            id: `CHQ-${Date.now()}`,
+            id: `PDC-${Date.now()}`,
         };
 
         allCheques.push(newCheque);

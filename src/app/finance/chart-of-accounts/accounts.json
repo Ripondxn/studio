@@ -19,7 +19,7 @@
   },
   {
     "code": "1110",
-    "name": "Undiposited Fund",
+    "name": "Cash and Bank",
     "type": "Asset",
     "status": "Active",
     "balance": 0,
