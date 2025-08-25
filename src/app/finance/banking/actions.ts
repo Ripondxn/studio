@@ -185,10 +185,10 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         const allTransactions = await getAllTransactions();
         
         const accountPayments = allTransactions.filter((p: Payment) => {
-             if (accountId === 'acc_3') {
-                return p.paymentFrom === 'Petty Cash';
+            if (accountId === 'acc_3') {
+                return p.paymentFrom === 'Petty Cash' || p.bankAccountId === 'acc_3';
             }
-            return p.bankAccountId === accountId
+            return p.bankAccountId === accountId;
         });
 
         return accountPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
