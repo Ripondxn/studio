@@ -20,10 +20,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2, Banknote } from 'lucide-react';
-import { batchDepositCheques, getLookups } from './actions';
+import { createDepositVoucher, getLookups } from './actions';
 import { format } from 'date-fns';
 import { type Cheque } from './schema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 interface DepositChequesDialogProps {
     cheques: Cheque[];
@@ -38,6 +39,14 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
     const [depositDate, setDepositDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [bankAccountId, setBankAccountId] = useState<string>('');
     const [bankAccounts, setBankAccounts] = useState<{ value: string, label: string }[]>([]);
+    const [currentUser, setCurrentUser] = useState<{ email: string, name: string, role: UserRole['role'] } | null>(null);
+
+    useEffect(() => {
+        const storedProfile = sessionStorage.getItem('userProfile');
+        if (storedProfile) {
+            setCurrentUser(JSON.parse(storedProfile));
+        }
+    }, []);
 
     useEffect(() => {
         if(isOpen) {
@@ -81,10 +90,15 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
             toast({ variant: 'destructive', title: 'No bank account selected', description: 'Please select a bank account to deposit into.' });
             return;
         }
+         if (!currentUser) {
+            toast({ variant: 'destructive', title: 'User not found', description: 'Please log in again to perform this action.' });
+            return;
+        }
+
         setIsSaving(true);
-        const result = await batchDepositCheques(selectedChequeIds, depositDate, bankAccountId);
+        const result = await createDepositVoucher(selectedChequeIds, depositDate, bankAccountId, currentUser);
         if (result.success) {
-            toast({ title: 'Cheques Deposited', description: `${result.count} cheques have been marked as deposited.` });
+            toast({ title: 'Deposit Voucher Created', description: `${result.count} cheques have been submitted for approval.` });
             onDeposit();
             setIsOpen(false);
             setSelectedChequeIds([]);
@@ -103,9 +117,9 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
             </DialogTrigger>
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>Create Bank Deposit</DialogTitle>
+                    <DialogTitle>Create Bank Deposit Voucher</DialogTitle>
                     <DialogDescription>
-                        Select the cheques you want to deposit into the bank.
+                        Select cheques to create a deposit voucher for approval.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -117,7 +131,7 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
                                 type="date"
                                 value={depositDate}
                                 onChange={(e) => setDepositDate(e.target.value)}
-                                className="w-[180px]"
+                                className="w-full"
                             />
                         </div>
                         <div className="space-y-2">
@@ -180,7 +194,7 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
                     </DialogClose>
                      <Button onClick={handleSubmit} disabled={isSaving}>
                         {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Confirm Deposit
+                        Submit For Approval
                     </Button>
                 </DialogFooter>
             </DialogContent>

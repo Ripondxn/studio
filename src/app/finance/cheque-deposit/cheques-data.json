@@ -1,2 +1,17 @@
-
-[]
+[
+  {
+    "chequeNo": "123456",
+    "chequeDate": "2025-08-25",
+    "amount": 15000,
+    "bankName": "ADCB",
+    "status": "Deposited",
+    "type": "Incoming",
+    "partyName": "Tanvir Ahmed",
+    "property": "LT-C38",
+    "contractNo": "TC-0002",
+    "remarks": "",
+    "id": "CHQ-1756139311134",
+    "depositDate": "2025-08-25",
+    "bankAccountId": "acc_1756122907621"
+  }
+]

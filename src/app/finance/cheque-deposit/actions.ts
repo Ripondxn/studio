@@ -12,6 +12,7 @@ import { type Contract as TenancyContract, type PaymentInstallment as TenancyPay
 import { type LeaseContract, type PaymentInstallment as LeasePaymentInstallment } from '@/app/lease/contract/schema';
 import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO, isBefore, startOfToday } from 'date-fns';
 import { type BankAccount } from '../banking/schema';
+import { type Payment } from '../payment/schema';
 
 const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
@@ -19,6 +20,7 @@ const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-d
 const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
+const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 
 
 async function readCheques(): Promise<Cheque[]> {
@@ -59,7 +61,7 @@ async function writeBankAccounts(data: BankAccount[]) {
 
 export async function getCheques() {
     const cheques = await readCheques();
-    return cheques.sort((a,b) => new Date(b.chequeDate).getTime() - new Date(a.chequeDate).getTime());
+    return cheques.sort((a,b) => new Date(b.chequeDate).getTime() - new Date(a.date).getTime());
 }
 
 export async function addCheque(data: Omit<Cheque, 'id'>) {
@@ -219,36 +221,79 @@ export async function getSummary() {
     return summary;
 }
 
-export async function batchDepositCheques(chequeIds: string[], depositDate: string, bankAccountId: string) {
-    try {
-        const allCheques = await readCheques();
-        let updatedCount = 0;
-        
-        const updatedCheques = allCheques.map(cheque => {
-            if (chequeIds.includes(cheque.id) && cheque.status === 'In Hand') {
-                updatedCount++;
-                return {
-                    ...cheque,
-                    status: 'Deposited' as const,
-                    depositDate: depositDate,
-                    bankAccountId: bankAccountId,
-                };
-            }
-            return cheque;
-        });
+export async function createDepositVoucher(
+  chequeIds: string[],
+  depositDate: string,
+  bankAccountId: string,
+  user: { email: string; name: string; role: string }
+) {
+  try {
+    const allCheques = await readCheques();
+    const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
 
-        if (updatedCount === 0) {
-            return { success: false, error: "No valid 'In Hand' cheques were selected for deposit." };
-        }
+    const selectedCheques = allCheques.filter(c => chequeIds.includes(c.id) && c.status === 'In Hand');
 
-        await writeCheques(updatedCheques);
-        revalidatePath('/finance/cheque-deposit');
-        return { success: true, count: updatedCount };
-
-    } catch (error) {
-        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    if (selectedCheques.length === 0) {
+      return { success: false, error: "No valid 'In Hand' cheques were selected." };
     }
+
+    const totalAmount = selectedCheques.reduce((sum, c) => sum + c.amount, 0);
+    const chequeNumbers = selectedCheques.map(c => c.chequeNo).join(', ');
+
+    const newPayment: Payment = {
+      id: `PAY-${Date.now()}`,
+      type: 'Receipt',
+      date: depositDate,
+      partyType: 'Customer', // Simplified for deposit voucher
+      partyName: `Cheque Deposit - ${depositDate}`,
+      amount: totalAmount,
+      paymentMethod: 'Cheque',
+      paymentFrom: 'Bank',
+      bankAccountId: bankAccountId,
+      referenceNo: `DEP-${Date.now()}`,
+      description: `Deposit of ${selectedCheques.length} cheques: ${chequeNumbers}`,
+      remarks: `Cheque IDs: ${chequeIds.join(', ')}`,
+      status: 'Received', // Final status upon posting
+      createdByUser: user.name,
+      currentStatus: 'PENDING_ADMIN_APPROVAL', // Start of workflow
+      approvalHistory: [
+        {
+          action: 'Created & Submitted',
+          actorId: user.email,
+          actorRole: user.role,
+          timestamp: new Date().toISOString(),
+          comments: 'Cheque deposit voucher created.',
+        },
+      ],
+    };
+
+    allPayments.push(newPayment);
+    await fs.writeFile(paymentsFilePath, JSON.stringify(allPayments, null, 2), 'utf-8');
+
+    // Mark cheques as pending deposit
+    const updatedCheques = allCheques.map(cheque => {
+      if (chequeIds.includes(cheque.id)) {
+        return {
+          ...cheque,
+          status: 'Deposited', // Optimistically update status
+          depositDate,
+          bankAccountId,
+        };
+      }
+      return cheque;
+    });
+
+    await writeCheques(updatedCheques);
+
+    revalidatePath('/finance/cheque-deposit');
+    revalidatePath('/workflow');
+    return { success: true, count: selectedCheques.length };
+
+  } catch (error) {
+    return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+  }
 }
+
 
 export async function returnCheque(chequeIds: string[]) {
     try {

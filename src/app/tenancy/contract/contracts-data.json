@@ -49,9 +49,34 @@
     "terminationDate": "",
     "rentBasedOn": "Monthly",
     "paymentFrequency": "Monthly",
-    "numberOfPayments": 1,
+    "numberOfPayments": 3,
     "gracePeriod": 0,
-    "paymentSchedule": [],
+    "paymentSchedule": [
+      {
+        "installment": 1,
+        "dueDate": "2025-08-25",
+        "amount": 15000,
+        "status": "unpaid",
+        "chequeNo": "123456",
+        "bankName": "ADCB"
+      },
+      {
+        "installment": 2,
+        "dueDate": "2025-09-25",
+        "amount": 15000,
+        "status": "unpaid",
+        "chequeNo": "123457",
+        "bankName": "ADCB"
+      },
+      {
+        "installment": 3,
+        "dueDate": "2025-10-25",
+        "amount": 15000,
+        "status": "unpaid",
+        "chequeNo": "123458",
+        "bankName": "ADCB"
+      }
+    ],
     "terms": "",
     "tawtheeqRegistrationNo": "",
     "tawtheeqStatus": "Not Registered",
