@@ -1,2 +1,27 @@
-
-[]
+[
+  {
+    "billNo": "BL-0001",
+    "vendorCode": "V001",
+    "vendorName": "Md Ripon Ahmed",
+    "billDate": "2025-08-25",
+    "dueDate": "2025-08-25",
+    "items": [
+      {
+        "id": "item-1756104771444",
+        "description": "Consulting Services",
+        "quantity": 1,
+        "unitPrice": 480,
+        "total": 0
+      }
+    ],
+    "subTotal": 480,
+    "taxType": "inclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 480,
+    "status": "Draft",
+    "notes": "",
+    "id": "BILL-1756104742682",
+    "amountPaid": 0
+  }
+]

@@ -32,6 +32,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
+import { getBillsForVendor } from '@/app/vendors/bill/actions';
+import { type Bill } from '@/app/vendors/bill/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
@@ -57,9 +59,10 @@ interface AddPaymentDialogProps {
   setIsOpen?: (open: boolean) => void;
   defaultValues?: Partial<PaymentFormData>;
   customerInvoices?: Invoice[];
+  vendorBills?: Bill[];
 }
 
-export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpen, setIsOpen: setExternalOpen, defaultValues, customerInvoices = [] }: AddPaymentDialogProps) {
+export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpen, setIsOpen: setExternalOpen, defaultValues, customerInvoices = [], vendorBills = [] }: AddPaymentDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = externalOpen ?? internalOpen;
   const setIsOpen = setExternalOpen ?? setInternalOpen;
@@ -81,9 +84,13 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     resolver: zodResolver(paymentSchema),
   });
   
-  const { fields, append, remove } = useFieldArray({
+  const { fields: invoiceFields, append: appendInvoice, remove: removeInvoice } = useFieldArray({
     control,
     name: "invoiceAllocations"
+  });
+  const { fields: billFields, append: appendBill, remove: removeBill } = useFieldArray({
+    control,
+    name: "billAllocations"
   });
 
 
@@ -95,9 +102,11 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
   const paymentFrom = watch('paymentFrom');
-  const watchedAllocations = watch('invoiceAllocations');
+  const watchedInvoiceAllocations = watch('invoiceAllocations');
+  const watchedBillAllocations = watch('billAllocations');
 
   const [invoicesForCustomer, setInvoicesForCustomer] = useState<Invoice[]>(customerInvoices);
+  const [billsForVendor, setBillsForVendor] = useState<Bill[]>(vendorBills);
   
   useEffect(() => {
     const userProfile = sessionStorage.getItem('userProfile');
@@ -107,11 +116,19 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   }, []);
 
   useEffect(() => {
-    if (watchedAllocations) {
-        const totalAllocated = watchedAllocations.reduce((sum, current) => sum + (current.amount || 0), 0);
+    if (watchedInvoiceAllocations) {
+        const totalAllocated = watchedInvoiceAllocations.reduce((sum, current) => sum + (current.amount || 0), 0);
         setValue('amount', totalAllocated);
     }
-  }, [watchedAllocations, setValue]);
+  }, [watchedInvoiceAllocations, setValue]);
+  
+   useEffect(() => {
+    if (watchedBillAllocations) {
+        const totalAllocated = watchedBillAllocations.reduce((sum, current) => sum + (current.amount || 0), 0);
+        setValue('amount', totalAllocated);
+    }
+  }, [watchedBillAllocations, setValue]);
+
 
   useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties })));
@@ -125,11 +142,9 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
             const defaultAllocs = defaultValues?.invoiceAllocations || [];
             const currentAllocs = watch('invoiceAllocations') || [];
 
-            // If we have default allocations, set them.
             if(defaultAllocs.length > 0) {
                  setValue('invoiceAllocations', defaultAllocs);
             } else if (currentAllocs.length === 0) {
-                // Otherwise, populate with all open invoices for this customer
                 setValue('invoiceAllocations', data
                     .filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled')
                     .map(inv => ({ invoiceId: inv.id, amount: 0}))
@@ -138,6 +153,24 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
         });
      } else {
         setInvoicesForCustomer([]);
+     }
+
+     if(partyType === 'Vendor' && partyName) {
+         getBillsForVendor(partyName).then(data => {
+            setBillsForVendor(data);
+            const defaultAllocs = defaultValues?.billAllocations || [];
+            const currentAllocs = watch('billAllocations') || [];
+             if(defaultAllocs.length > 0) {
+                 setValue('billAllocations', defaultAllocs);
+            } else if (currentAllocs.length === 0) {
+                setValue('billAllocations', data
+                    .filter(bill => bill.status !== 'Paid' && bill.status !== 'Cancelled')
+                    .map(bill => ({ billId: bill.id, amount: 0}))
+                );
+            }
+         })
+     } else {
+         setBillsForVendor([]);
      }
    }, [partyType, partyName, defaultValues, setValue, watch]);
    
@@ -189,6 +222,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
             paymentFrom: 'Bank',
             status: 'Received',
             invoiceAllocations: [],
+            billAllocations: [],
         };
         reset(initialValues);
       }
@@ -260,16 +294,29 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
         }
         setValue('description', `Payment for ${referenceType}: ${selectedRef.label}`);
 
-        // Auto-fill property details if available
         if (selectedRef.propertyCode) {
             setValue('property', selectedRef.propertyCode);
-            // Wait for units to be fetched before setting them
             setTimeout(() => {
                 if(selectedRef.unitCode) setValue('unitCode', selectedRef.unitCode);
                 if(selectedRef.roomCode) setValue('roomCode', selectedRef.roomCode);
             }, 200);
         }
     }
+  }
+
+  const referenceTypeOptions = () => {
+      switch(partyType) {
+        case 'Tenant': return <SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem>;
+        case 'Landlord': return <SelectItem value="Lease Contract">Lease Contract</SelectItem>;
+        case 'Customer': return <SelectItem value="Invoice">Invoice</SelectItem>;
+        case 'Vendor': return (
+            <>
+                <SelectItem value="Bill">Bill</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+            </>
+        );
+        default: return <SelectItem value="Other">Other</SelectItem>;
+      }
   }
 
   return (
@@ -367,7 +414,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                     <CardHeader><CardTitle className="flex items-center space-x-2"><FileText className="h-5 w-5 text-primary" /><span>Reference Information (Optional)</span></CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <div className="space-y-2"><Label>Reference Type</Label><Controller name="referenceType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select reference type" /></SelectTrigger><SelectContent><SelectItem value="Invoice">Invoice</SelectItem><SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem><SelectItem value="Lease Contract">Lease Contract</SelectItem><SelectItem value="Utility Bill">Utility Bill</SelectItem><SelectItem value="Maintenance Bill">Maintenance Bill</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select>)} /></div>
+                           <div className="space-y-2"><Label>Reference Type</Label><Controller name="referenceType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select reference type" /></SelectTrigger><SelectContent>{referenceTypeOptions()}</SelectContent></Select>)} /></div>
                            <div className="space-y-2"><Label>Reference Number</Label><Controller name="referenceNo" control={control} render={({ field }) => (<Combobox options={lookups.references} value={field.value || ''} onSelect={handleReferenceSelect} placeholder="Enter or select a reference" />)} /></div>
                         </div>
                         <div className="space-y-2"><Label>Description</Label><Textarea placeholder="Additional notes or description" rows={3} {...register('description')} /></div>
@@ -392,8 +439,8 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         </TableHeader>
                         <TableBody>
                           {invoicesForCustomer.map((invoice, index) => {
-                            const fieldIndex = fields.findIndex(f => f.invoiceId === invoice.id);
-                            if (fieldIndex === -1) return null; // Should not happen if logic is correct
+                            const fieldIndex = invoiceFields.findIndex(f => f.invoiceId === invoice.id);
+                            if (fieldIndex === -1) return null;
                             return (
                                 <TableRow key={invoice.id}>
                                   <TableCell>{invoice.invoiceNo}</TableCell>
@@ -423,7 +470,55 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                     </CardContent>
                   </Card>
                 )}
-
+                {paymentType === 'Payment' && partyType === 'Vendor' && billsForVendor.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Bill Allocations</CardTitle>
+                      <CardDescription>Allocate this payment to open bills.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Bill #</TableHead>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead className="text-right">Balance Due</TableHead>
+                            <TableHead className="text-right">Allocation</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {billsForVendor.map((bill, index) => {
+                            const fieldIndex = billFields.findIndex(f => f.billId === bill.id);
+                            if (fieldIndex === -1) return null;
+                            return (
+                                <TableRow key={bill.id}>
+                                  <TableCell>{bill.billNo}</TableCell>
+                                  <TableCell>{format(new Date(bill.dueDate), 'PP')}</TableCell>
+                                  <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(bill.remainingBalance || 0)}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Controller
+                                      control={control}
+                                      name={`billAllocations.${fieldIndex}.amount`}
+                                      defaultValue={0}
+                                      render={({ field }) => (
+                                        <Input
+                                          type="number"
+                                          {...field}
+                                          className="text-right"
+                                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                                          max={bill.remainingBalance}
+                                        />
+                                      )}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
             </div>
             <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleReset}><X className="mr-2 h-4 w-4"/>Clear</Button>

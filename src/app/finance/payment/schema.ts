@@ -8,10 +8,15 @@ export const invoiceAllocationSchema = z.object({
   amount: z.number(),
 });
 
+export const billAllocationSchema = z.object({
+  billId: z.string(),
+  amount: z.number(),
+});
+
 export const approvalHistorySchema = z.object({
   action: z.string(),
   actorId: z.string(),
-  actorRole: z.string(), // Using string to avoid circular dependency issues, validation at runtime
+  actorRole: z.string(), 
   timestamp: z.string(),
   comments: z.string().optional(),
 });
@@ -39,7 +44,7 @@ export const paymentSchema = z.object({
   agentCode: z.string().optional(),
   createdByUser: z.string().optional(),
   invoiceAllocations: z.array(invoiceAllocationSchema).optional(),
-  // Workflow fields
+  billAllocations: z.array(billAllocationSchema).optional(),
   currentStatus: z.enum(['DRAFT', 'PENDING_ADMIN_APPROVAL', 'PENDING_SUPER_ADMIN_APPROVAL', 'POSTED', 'REJECTED']).optional(),
   approvalHistory: z.array(approvalHistorySchema).optional(),
 });

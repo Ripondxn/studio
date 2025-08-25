@@ -16,6 +16,8 @@ import { applyPaymentToInvoices } from '@/app/tenancy/customer/invoice/actions';
 import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema';
 import { type LeaseContract } from '@/app/lease/contract/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { type Bill } from '@/app/vendors/bill/schema';
+import { applyPaymentToBills } from '@/app/vendors/bill/actions';
 
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -28,6 +30,7 @@ const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/pett
 const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 
 
 async function readData(filePath: string) {
@@ -80,7 +83,6 @@ export async function getPayments(user: { email: string; role: string; name?: st
         return allPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
     
-    // Default to only showing the user's own transactions if they are not an admin
     const userPayments = allPayments.filter(p => p.createdByUser === user.name);
 
     return userPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -105,7 +107,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
               {
                 action: 'Created Transaction',
                 actorId: paymentData.createdByUser || 'System',
-                actorRole: 'User', // Placeholder, ideally get user's role
+                actorRole: 'User',
                 timestamp: new Date().toISOString(),
                 comments: 'Initial Draft',
               },
@@ -114,6 +116,10 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
         
         if (newPayment.type === 'Receipt' && newPayment.invoiceAllocations && newPayment.invoiceAllocations.length > 0) {
             await applyPaymentToInvoices(newPayment.invoiceAllocations, newPayment.partyName);
+        }
+
+        if (newPayment.type === 'Payment' && newPayment.billAllocations && newPayment.billAllocations.length > 0) {
+            await applyPaymentToBills(newPayment.billAllocations, newPayment.partyName);
         }
 
         allPayments.push(newPayment);
@@ -125,7 +131,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
         revalidatePath('/vendors/agents');
         revalidatePath('/workflow');
         revalidatePath(`/tenancy/customer/add?code=${newPayment.partyName}`);
-        revalidatePath('/vendors/add');
+        revalidatePath(`/vendors/add?code=${newPayment.partyName}`);
         return { success: true, data: newPayment };
 
     } catch (error) {
@@ -142,9 +148,8 @@ export async function deletePayment(paymentId: string) {
             return { success: false, error: 'Payment not found.' };
         }
         
-        // Reverse financial impact if the payment was posted.
         if(paymentToDelete.currentStatus === 'POSTED') {
-            if (paymentToDelete.type === 'Payment') { // If it was a payment, add money back
+            if (paymentToDelete.type === 'Payment') {
                 if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
                     const pettyCash = await readPettyCash();
                     pettyCash.balance += paymentToDelete.amount;
@@ -157,7 +162,7 @@ export async function deletePayment(paymentId: string) {
                         await writeBankAccounts(allBankAccounts);
                     }
                 }
-            } else { // If it was a receipt, subtract money
+            } else {
                  if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
                     const pettyCash = await readPettyCash();
                     pettyCash.balance -= paymentToDelete.amount;
@@ -173,7 +178,6 @@ export async function deletePayment(paymentId: string) {
             }
         }
         
-        // Reverse invoice allocations
         if (paymentToDelete.type === 'Receipt' && paymentToDelete.invoiceAllocations && paymentToDelete.invoiceAllocations.length > 0) {
             const allInvoices = await readInvoices();
             
@@ -182,7 +186,6 @@ export async function deletePayment(paymentId: string) {
                 if (invoiceIndex !== -1) {
                     allInvoices[invoiceIndex].amountPaid = (allInvoices[invoiceIndex].amountPaid || 0) - allocation.amount;
                     
-                    // Revert status if it was paid
                     if (allInvoices[invoiceIndex].status === 'Paid') {
                         const dueDate = parseISO(allInvoices[invoiceIndex].dueDate);
                         allInvoices[invoiceIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
@@ -191,7 +194,6 @@ export async function deletePayment(paymentId: string) {
             });
             await writeInvoices(allInvoices);
         }
-
 
         const updatedPayments = allPayments.filter(p => p.id !== paymentId);
         await writePayments(updatedPayments);
@@ -202,7 +204,6 @@ export async function deletePayment(paymentId: string) {
         revalidatePath('/vendors/agents');
         revalidatePath('/workflow');
         revalidatePath(`/tenancy/customer/add?code=${paymentToDelete.partyName}`);
-
 
         return { success: true };
     } catch (error) {
@@ -221,7 +222,7 @@ export async function getLookups() {
     return {
         tenants: tenants.map(t => ({ value: t.tenantData.code, label: t.tenantData.name })),
         landlords: landlords.map(l => ({ value: l.landlordData.code, label: l.landlordData.name })),
-        vendors: vendors.map(v => ({ value: v.vendorData.name, label: v.vendorData.name })),
+        vendors: vendors.map(v => ({ value: v.vendorData.code, label: v.vendorData.name })),
         customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
         bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`}))
     }
@@ -242,7 +243,7 @@ export async function getPartyNameLookups(): Promise<Record<string, string>> {
         if(l.landlordData.code) lookups[l.landlordData.code] = l.landlordData.name;
     });
     vendors.forEach(v => {
-        if(v.vendorData.name) lookups[v.vendorData.name] = v.vendorData.name;
+        if(v.vendorData.code) lookups[v.vendorData.code] = v.vendorData.name;
     });
     customers.forEach(c => {
         if(c.customerData.code) lookups[c.customerData.code] = c.customerData.name;
@@ -264,7 +265,7 @@ export async function getSummary() {
     };
 
     for (const payment of payments) {
-        if(payment.currentStatus !== 'POSTED') continue; // Only count posted transactions
+        if(payment.currentStatus !== 'POSTED') continue; 
 
         const paymentDate = parseISO(payment.date);
         if (isWithinInterval(paymentDate, { start: startOfThisMonth, end: endOfThisMonth })) {
@@ -302,7 +303,6 @@ export async function getReferences(partyType: string, partyCode: string, refere
                             propertyCode: contract.property,
                             unitCode: contract.unitCode,
                             roomCode: contract.roomCode,
-                            partitionCode: contract.partitionCode,
                         });
                     }
                 }
@@ -343,7 +343,23 @@ export async function getReferences(partyType: string, partyCode: string, refere
                         propertyCode: i.property,
                         unitCode: i.unitCode,
                         roomCode: i.roomCode,
-                        partitionCode: i.partitionCode,
+                    };
+                });
+        }
+         case 'Bill': {
+            if (partyType !== 'Vendor') return [];
+            const bills: Bill[] = await readData(billsFilePath);
+            return bills
+                .filter(b => b.vendorCode === partyCode && b.status !== 'Paid' && b.status !== 'Cancelled')
+                .map(b => {
+                    const remainingBalance = b.total - (b.amountPaid || 0);
+                    return {
+                        value: b.billNo,
+                        label: `${b.billNo} - Bal: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingBalance)}`,
+                        amount: remainingBalance,
+                        propertyCode: b.property,
+                        unitCode: b.unitCode,
+                        roomCode: b.roomCode,
                     };
                 });
         }
@@ -351,5 +367,3 @@ export async function getReferences(partyType: string, partyCode: string, refere
             return [];
     }
 }
-
-    
