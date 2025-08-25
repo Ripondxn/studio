@@ -5,8 +5,10 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
+import { type Payment } from '../finance/payment/schema';
 
 const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
+const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 
 async function getVendors() {
     try {
@@ -119,5 +121,30 @@ export async function deleteVendorData(vendorCode: string) {
     } catch (error) {
         console.error('Failed to delete vendor data:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
+}
+
+async function readPayments(): Promise<Payment[]> {
+    try {
+        const paymentsData = await fs.readFile(paymentsFilePath, 'utf-8');
+        return JSON.parse(paymentsData);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        console.error('Failed to read payments file:', error);
+        return [];
+    }
+}
+
+export async function getPaymentsForVendor(vendorName: string): Promise<Payment[]> {
+    try {
+        const allPayments = await readPayments();
+        // Vendors are identified by name in payments
+        const vendorPayments = allPayments.filter(p => p.partyName === vendorName && p.partyType === 'Vendor');
+        return vendorPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } catch (error) {
+        console.error('Failed to get payments for vendor:', error);
+        return [];
     }
 }

@@ -12,7 +12,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
+  CardDescription
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +51,7 @@ import { saveVendorData, findVendorData, deleteVendorData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { vendorSchema, type Vendor } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { VendorTransactionHistory } from '../vendor-transaction-history';
 
 
 type Attachment = {
@@ -308,6 +309,7 @@ export default function VendorPage() {
         <TabsList>
             <TabsTrigger value="vendor-info">Vendor Info</TabsTrigger>
             <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
+            <TabsTrigger value="billing" disabled={isNewRecord}>Billing & Refund</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="vendor-info">
@@ -425,6 +427,12 @@ export default function VendorPage() {
                     />
                 </CardContent>
             </Card>
+        </TabsContent>
+        <TabsContent value="billing">
+            <VendorTransactionHistory
+                vendorName={form.watch('name')}
+                onRefresh={() => handleFindClick(form.watch('code'))}
+            />
         </TabsContent>
         <TabsContent value="attachments">
              <Card>
