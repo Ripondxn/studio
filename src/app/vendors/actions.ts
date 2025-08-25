@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -137,11 +136,11 @@ async function readPayments(): Promise<Payment[]> {
     }
 }
 
-export async function getPaymentsForVendor(vendorName: string): Promise<Payment[]> {
+export async function getPaymentsForVendor(vendorCode: string): Promise<Payment[]> {
     try {
         const allPayments = await readPayments();
-        // Vendors are identified by name in payments. Fetch both Payments and Receipts.
-        const vendorPayments = allPayments.filter(p => p.partyName === vendorName && p.partyType === 'Vendor');
+        // Vendors are identified by code. Fetch both Payments to and Receipts (refunds) from them.
+        const vendorPayments = allPayments.filter(p => p.partyName === vendorCode && p.partyType === 'Vendor');
         return vendorPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (error) {
         console.error('Failed to get payments for vendor:', error);
