@@ -39,7 +39,8 @@ import {
   ChevronDown,
   UserSquare,
   PanelLeft,
-  ChevronRight
+  ChevronRight,
+  BadgeDollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -121,6 +122,7 @@ const navLinks = [
             { href: '/admin/communication', label: 'Communication' },
             { href: '/admin/backup', label: 'Backup & Restore' },
             { href: '/admin/notification', label: 'Notifications' },
+            { href: '/admin/currency', label: 'Currency' },
         ]
     },
 ];

@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { transferFunds } from './actions';
 import { type BankAccount } from './schema';
+import { useCurrency } from '@/context/currency-context';
 
 const fundTransferSchema = z.object({
     fromAccountId: z.string().min(1, 'From account is required.'),
@@ -49,6 +50,7 @@ interface FundTransferDialogProps {
 export function FundTransferDialog({ children, bankAccounts, onTransaction }: FundTransferDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const {
     register,
@@ -114,7 +116,7 @@ export function FundTransferDialog({ children, bankAccounts, onTransaction }: Fu
                                 <SelectContent>
                                     {bankAccounts.map(account => (
                                         <SelectItem key={account.id} value={account.id}>
-                                            {account.accountName} ({new Intl.NumberFormat('en-US', { style: 'currency', currency: 'AED' }).format(account.balance)})
+                                            {account.accountName} ({formatCurrency(account.balance)})
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

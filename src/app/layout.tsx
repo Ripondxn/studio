@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AppLayout } from '@/app/app-layout';
 import { Toaster } from '@/components/ui/toaster';
+import { CurrencyProvider } from '@/context/currency-context';
 
 export const metadata: Metadata = {
   title: 'Trust Famous Real Estate',
@@ -24,7 +25,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <AppLayout>{children}</AppLayout>
+        <CurrencyProvider>
+            <AppLayout>{children}</AppLayout>
+        </CurrencyProvider>
         <Toaster />
       </body>
     </html>

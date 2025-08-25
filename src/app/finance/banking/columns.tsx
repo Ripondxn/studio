@@ -46,6 +46,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { TransactionHistoryDialog } from './transaction-history-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
+import { useCurrency } from '@/context/currency-context';
 
 type BankAccountFormData = Omit<BankAccount, 'id'> & { id?: string };
 
@@ -239,14 +240,11 @@ export const columns = ({ onAccountUpdate }: { onAccountUpdate: () => void }): C
   {
     accessorKey: 'balance',
     header: () => <div className="text-right">Balance</div>,
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const amount = parseFloat(row.getValue('balance'));
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'AED',
-      }).format(amount);
-
-      return <div className="text-right font-medium font-mono">{formatted}</div>;
+      
+      return <div className="text-right font-medium font-mono">{formatCurrency(amount)}</div>;
     },
   },
   {

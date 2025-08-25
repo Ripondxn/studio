@@ -26,6 +26,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type PaymentInstallment as TenancyPaymentInstallment } from '@/app/tenancy/contract/schema';
 import { type PaymentInstallment as LeasePaymentInstallment } from '@/app/lease/contract/schema';
+import { useCurrency } from '@/context/currency-context';
 
 type ChequeFormData = Omit<Cheque, 'id'>;
 const chequeFormSchema = chequeSchema.omit({ id: true });
@@ -50,6 +51,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], tenancyContracts: [], leaseContracts: [] });
+  const { formatCurrency } = useCurrency();
 
   const {
     register,
@@ -233,7 +235,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                             <SelectContent>
                                 {selectedContract.paymentSchedule.map((item, index) => (
                                     <SelectItem key={index} value={String(index)}>
-                                        Installment {item.installment} - {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.amount)} - Due: {item.dueDate}
+                                        Installment {item.installment} - {formatCurrency(item.amount)} - Due: {item.dueDate}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

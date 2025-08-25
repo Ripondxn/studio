@@ -45,6 +45,7 @@ import { FundTransferDialog } from './fund-transfer-dialog';
 import { DataTable } from './data-table';
 import { columns } from './columns';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/context/currency-context';
 
 type BankAccountFormData = Omit<BankAccount, 'id'> & { id?: string };
 
@@ -136,6 +137,7 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
   const [accounts, setAccounts] = useState(initialAccounts);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const totalBalance = useMemo(() => {
     return accounts.reduce((sum, acc) => sum + acc.balance, 0);
@@ -190,7 +192,7 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
             </CardHeader>
             <CardContent>
                  <div className="text-2xl font-bold">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'AED' }).format(totalBalance)}
+                    {formatCurrency(totalBalance)}
                  </div>
                  <p className="text-xs text-muted-foreground">Aggregated balance from all accounts.</p>
             </CardContent>

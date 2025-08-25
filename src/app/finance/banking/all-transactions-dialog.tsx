@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -43,6 +44,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { useCurrency } from '@/context/currency-context';
 
 
 // Extend jsPDF type to include autoTable from the plugin
@@ -62,6 +64,7 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
   const { toast } = useToast();
   const [filters, setFilters] = useState({ fromDate: '', toDate: '', type: 'all', party: '' });
   const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     const storedProfile = sessionStorage.getItem('userProfile');
@@ -125,7 +128,7 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
         tx.unitCode || 'N/A',
         tx.roomCode || 'N/A',
         tx.referenceNo,
-        `${tx.type === 'Receipt' ? '+' : '-'}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}`
+        `${tx.type === 'Receipt' ? '+' : '-'}${formatCurrency(tx.amount)}`
     ]);
 
     (doc as any).autoTable({
@@ -254,7 +257,7 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
                     <TableCell>{tx.referenceNo}</TableCell>
                     <TableCell className={cn("text-right font-medium", tx.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
                       {tx.type === 'Receipt' ? '+' : '-'}
-                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
+                      {formatCurrency(tx.amount)}
                     </TableCell>
                      <TableCell className="text-right">
                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTx(tx)} disabled={!canDelete(tx)}>
