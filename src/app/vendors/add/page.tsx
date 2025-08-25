@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -95,13 +95,13 @@ export default function VendorPage() {
     defaultValues: initialVendorData,
   });
 
-   const fetchBills = async (vendorCode: string) => {
+   const fetchBills = useCallback(async (vendorCode: string) => {
     if (!vendorCode) return;
     setIsLoadingBills(true);
     const data = await getBillsForVendor(vendorCode);
     setBills(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
     setIsLoadingBills(false);
-  };
+  }, []);
   
   useEffect(() => {
     return () => {
@@ -113,6 +113,49 @@ export default function VendorPage() {
     };
   }, [attachments]);
 
+  const handleFindClick = useCallback(async (code?: string) => {
+    const codeToFind = code || form.getValues('code');
+    if (!codeToFind) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter a Vendor Code to find.',
+      });
+      return;
+    }
+    
+    try {
+      const result = await findVendorData(codeToFind);
+      if (result.success && result.data) {
+        const fullVendorData = { ...initialVendorData, ...(result.data.vendorData || {}) };
+        form.reset(fullVendorData);
+        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
+        
+        if (codeToFind !== 'new') {
+            setIsNewRecord(false);
+            setIsEditing(false);
+            fetchBills(result.data.vendorData.code);
+        } else {
+            setIsNewRecord(true);
+            setIsEditing(true);
+        }
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Not Found',
+          description: `No record found for Vendor Code: ${codeToFind}. You can create a new one.`,
+        });
+        handleFindClick('new');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: (error as Error).message || 'Failed to find vendor data.',
+      });
+    }
+  }, [form, toast, fetchBills]);
+
   useEffect(() => {
     const vendorCode = searchParams.get('code');
     if (vendorCode) {
@@ -123,7 +166,7 @@ export default function VendorPage() {
         setIsEditing(true); 
         handleFindClick('new');
     }
-  }, [searchParams]);
+  }, [searchParams, handleFindClick]);
 
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
@@ -219,49 +262,6 @@ export default function VendorPage() {
         setIsEditing(false);
      }
   }
-
-  const handleFindClick = async (code: string) => {
-    const codeToFind = code || form.getValues('code');
-    if (!codeToFind) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter a Vendor Code to find.',
-      });
-      return;
-    }
-    
-    try {
-      const result = await findVendorData(codeToFind);
-      if (result.success && result.data) {
-        const fullVendorData = { ...initialVendorData, ...(result.data.vendorData || {}) };
-        form.reset(fullVendorData);
-        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
-        
-        if (codeToFind !== 'new') {
-            setIsNewRecord(false);
-            setIsEditing(false);
-            fetchBills(result.data.vendorData.code);
-        } else {
-            setIsNewRecord(true);
-            setIsEditing(true);
-        }
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Not Found',
-          description: `No record found for Vendor Code: ${codeToFind}. You can create a new one.`,
-        });
-        handleFindClick('new');
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: (error as Error).message || 'Failed to find vendor data.',
-      });
-    }
-  };
 
   const handleDelete = async () => {
     const code = form.getValues('code');
@@ -485,7 +485,7 @@ export default function VendorPage() {
            <VendorTransactionHistory
                 vendorName={form.watch('name')}
                 onRefresh={() => {
-                    handleFindClick(form.watch('code'))
+                    fetchBills(form.watch('code'))
                 }}
             />
         </TabsContent>
