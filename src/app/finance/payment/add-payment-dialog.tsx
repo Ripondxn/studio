@@ -305,18 +305,15 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   }
 
   const referenceTypeOptions = () => {
-      switch(partyType) {
-        case 'Tenant': return <SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem>;
-        case 'Landlord': return <SelectItem value="Lease Contract">Lease Contract</SelectItem>;
-        case 'Customer': return <SelectItem value="Invoice">Invoice</SelectItem>;
-        case 'Vendor': return (
-            <>
-                <SelectItem value="Bill">Bill</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-            </>
-        );
-        default: return <SelectItem value="Other">Other</SelectItem>;
-      }
+    return (
+        <>
+            <SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem>
+            <SelectItem value="Lease Contract">Lease Contract</SelectItem>
+            <SelectItem value="Invoice">Invoice</SelectItem>
+            <SelectItem value="Bill">Bill</SelectItem>
+            <SelectItem value="Other">Other</SelectItem>
+        </>
+    );
   }
 
   return (
