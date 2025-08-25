@@ -1,2 +1,336 @@
 
-[]
+[
+  {
+    "code": "1000",
+    "name": "Assets",
+    "type": "Header",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": ""
+  },
+  {
+    "code": "1100",
+    "name": "Current Assets",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": "1000"
+  },
+  {
+    "code": "1110",
+    "name": "Cash & Bank",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "1100"
+  },
+  {
+    "code": "1120",
+    "name": "Accounts Receivable",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "1100"
+  },
+  {
+    "code": "1130",
+    "name": "Prepaid Expenses",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "1100"
+  },
+  {
+    "code": "1200",
+    "name": "Fixed Assets",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": "1000"
+  },
+  {
+    "code": "1210",
+    "name": "Furniture & Fixtures",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "1200"
+  },
+  {
+    "code": "1220",
+    "name": "Office Equipment",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "1200"
+  },
+  {
+    "code": "1230",
+    "name": "Vehicles",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "1200"
+  },
+  {
+    "code": "2000",
+    "name": "Liabilities",
+    "type": "Header",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": ""
+  },
+  {
+    "code": "2100",
+    "name": "Current Liabilities",
+    "type": "Liability",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": "2000"
+  },
+  {
+    "code": "2110",
+    "name": "Accounts Payable",
+    "type": "Liability",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "2100"
+  },
+  {
+    "code": "2120",
+    "name": "Accrued Expenses",
+    "type": "Liability",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "2100"
+  },
+  {
+    "code": "2130",
+    "name": "VAT Payable",
+    "type": "Liability",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "2100"
+  },
+  {
+    "code": "2200",
+    "name": "Long Term Liabilities",
+    "type": "Liability",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": "2000"
+  },
+  {
+    "code": "2210",
+    "name": "Bank Loans",
+    "type": "Liability",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "2200"
+  },
+  {
+    "code": "3000",
+    "name": "Equity",
+    "type": "Header",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": ""
+  },
+  {
+    "code": "3100",
+    "name": "Owner's Equity",
+    "type": "Equity",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": "3000"
+  },
+  {
+    "code": "3110",
+    "name": "Capital Account",
+    "type": "Equity",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "3100"
+  },
+  {
+    "code": "3120",
+    "name": "Drawings",
+    "type": "Equity",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "3100"
+  },
+  {
+    "code": "4000",
+    "name": "Revenue",
+    "type": "Header",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": ""
+  },
+  {
+    "code": "4100",
+    "name": "Operating Revenue",
+    "type": "Revenue",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": "4000"
+  },
+  {
+    "code": "4110",
+    "name": "Rental Income",
+    "type": "Revenue",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "4100"
+  },
+  {
+    "code": "4120",
+    "name": "Service Charges",
+    "type": "Revenue",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "4100"
+  },
+  {
+    "code": "4130",
+    "name": "Other Income",
+    "type": "Revenue",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "4100"
+  },
+  {
+    "code": "5000",
+    "name": "Expenses",
+    "type": "Header",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": ""
+  },
+  {
+    "code": "5100",
+    "name": "Operating Expenses",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": "5000"
+  },
+  {
+    "code": "5110",
+    "name": "Salaries & Wages",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5100"
+  },
+  {
+    "code": "5120",
+    "name": "Rent Expense",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5100"
+  },
+  {
+    "code": "5130",
+    "name": "Utilities",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5100"
+  },
+  {
+    "code": "5140",
+    "name": "Maintenance & Repairs",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5100"
+  },
+  {
+    "code": "5150",
+    "name": "DEWA",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5100"
+  },
+  {
+    "code": "5160",
+    "name": "Ejari Expense",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5100"
+  },
+  {
+    "code": "5170",
+    "name": "Agent Fee",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5100"
+  },
+  {
+    "code": "5200",
+    "name": "Administrative Expenses",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": true,
+    "parentCode": "5000"
+  },
+  {
+    "code": "5210",
+    "name": "Office Supplies",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5200"
+  },
+  {
+    "code": "5220",
+    "name": "Bank Charges",
+    "type": "Expense",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "5200"
+  }
+]

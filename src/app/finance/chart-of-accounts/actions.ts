@@ -46,7 +46,7 @@ export async function getAccounts(): Promise<Account[]> {
     const accountMap = new Map<string, Account>(accounts.map(acc => [acc.code, { ...acc, balance: acc.isGroup ? 0 : acc.balance, children: [] as Account[] }]));
 
     // 1. Reset all non-group account balances that are calculated dynamically
-    const dynamicAccountCodes = ['1110', '4100', '5110', '5120', '5130', '5140', '3000'];
+    const dynamicAccountCodes = ['1110', '3110', '3120', '4110', '4120', '4130', '5110', '5120', '5130', '5140', '5150', '5160', '5170', '5210', '5220'];
     dynamicAccountCodes.forEach(code => {
         const acc = accountMap.get(code);
         if(acc && !acc.isGroup) {
@@ -65,37 +65,36 @@ export async function getAccounts(): Promise<Account[]> {
     payments.forEach(payment => {
         if (payment.type === 'Payment') {
             if (payment.agentCode) { // Agent Fee
-                if (accountMap.has('5140')) {
-                    accountMap.get('5140')!.balance += payment.amount;
+                if (accountMap.has('5170')) {
+                    accountMap.get('5170')!.balance += payment.amount;
                 }
             } else if (payment.partyType === 'Vendor') { // Generic vendor payment, assume maintenance for now
-                 if (accountMap.has('5110')) {
-                    accountMap.get('5110')!.balance += payment.amount;
+                 if (accountMap.has('5140')) {
+                    accountMap.get('5140')!.balance += payment.amount;
                 }
             }
-             // Other payment types could be routed here, e.g. to utilities '5120'
+             // Other payment types could be routed here
         } else if (payment.type === 'Receipt') { // Rental Income
-            if (accountMap.has('4100')) {
-                accountMap.get('4100')!.balance += payment.amount;
+            if (accountMap.has('4110')) {
+                accountMap.get('4110')!.balance += payment.amount;
             }
         }
     });
     
     // 4. Calculate Equity
-    // In a real system, this would be opening balance + profit/loss + contributions - withdrawals
-    // For now, let's use a base and adjust for transactions.
-    let totalEquity = 475000; // Base/opening equity from original JSON
+    let capital = 0;
+    let drawings = 0;
     equityTransactions.forEach(t => {
         if (t.type === 'Contribution') {
-            totalEquity += t.amount;
+            capital += t.amount;
         } else if (t.type === 'Withdrawal') {
-            totalEquity -= t.amount;
+            drawings += t.amount;
         }
     });
 
-    if(accountMap.has('3000')) {
-      accountMap.get('3000')!.balance = totalEquity;
-    }
+    if(accountMap.has('3110')) accountMap.get('3110')!.balance = capital;
+    if(accountMap.has('3120')) accountMap.get('3120')!.balance = drawings;
+
 
     // 5. Build tree structure for balance recalculation
     const rootAccounts: Account[] = [];
@@ -235,7 +234,8 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
             case '1110': // Cash and Bank
                  transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED'));
                 break;
-            case '3000': { // Equity
+            case '3110': // Capital Account
+            case '3120': // Drawings
                  const equityTransactions: any[] = await readData(equityTransactionsFilePath);
                  transactions.push(...equityTransactions.map(t => ({
                     id: t.id,
@@ -250,14 +250,13 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
                     currentStatus: 'POSTED',
                  })));
                  break;
-            }
-            case '4100': // Rental Income
+            case '4110': // Rental Income
                 transactions.push(...allPayments.filter(p => p.type === 'Receipt' && p.currentStatus === 'POSTED'));
                 break;
-            case '5110': // Maintenance & Repairs
+            case '5140': // Maintenance & Repairs
                 transactions.push(...allPayments.filter(p => p.type === 'Payment' && p.partyType === 'Vendor' && !p.agentCode && p.currentStatus === 'POSTED'));
                 break;
-            case '5140': // Agent Fee
+            case '5170': // Agent Fee
                 transactions.push(...allPayments.filter(p => p.type === 'Payment' && !!p.agentCode && p.currentStatus === 'POSTED'));
                 break;
             default:
