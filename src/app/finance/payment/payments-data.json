@@ -272,7 +272,7 @@
       }
     ],
     "id": "PAY-1756106032346",
-    "currentStatus": "DRAFT",
+    "currentStatus": "PENDING_ADMIN_APPROVAL",
     "approvalHistory": [
       {
         "action": "Created Transaction",
@@ -280,6 +280,13 @@
         "actorRole": "User",
         "timestamp": "2025-08-25T07:13:52.346Z",
         "comments": "Initial Draft"
+      },
+      {
+        "action": "Submitted for Approval",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-25T07:27:38.405Z",
+        "comments": ""
       }
     ]
   }

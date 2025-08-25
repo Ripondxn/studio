@@ -31,7 +31,7 @@ import {
   ArrowUp,
 } from 'lucide-react';
 import Link from 'next/link';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, format } from 'date-fns';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { Unit } from '@/app/property/units/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
@@ -296,7 +296,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                                 <TableRow key={cheque.id}>
                                     <TableCell>{cheque.partyName}</TableCell>
                                     <TableCell>{cheque.chequeNo}</TableCell>
-                                    <TableCell>{parseISO(cheque.chequeDate).toLocaleDateString()}</TableCell>
+                                    <TableCell>{format(parseISO(cheque.chequeDate), 'PP')}</TableCell>
                                     <TableCell className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cheque.amount)}</TableCell>
                                 </TableRow>
                             ))}
