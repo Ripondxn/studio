@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -36,6 +37,21 @@ export async function getBillsForVendor(vendorCode: string) {
     }));
 }
 
+export async function getNextBillNumber() {
+    const allBills = await readBills();
+    let maxNum = 0;
+    allBills.forEach(i => {
+        const match = i.billNo.match(/^BL-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `BL-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
 export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: string }) {
     const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(data);
 
@@ -48,22 +64,9 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
         const isNew = !data.id;
 
         if (isNew) {
-             let maxNum = 0;
-            allBills.forEach(i => {
-                const match = i.billNo.match(/^BL-(\d+)$/);
-                if (match) {
-                    const num = parseInt(match[1], 10);
-                    if (num > maxNum) {
-                        maxNum = num;
-                    }
-                }
-            });
-            const newBillNo = `BL-${(maxNum + 1).toString().padStart(4, '0')}`;
-
             const newBill: Bill = {
                 ...validation.data,
                 id: `BILL-${Date.now()}`,
-                billNo: newBillNo,
                 amountPaid: 0,
             };
             allBills.push(newBill);
@@ -99,3 +102,4 @@ export async function deleteBill(billId: string) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+

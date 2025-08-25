@@ -31,10 +31,13 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveBill } from './actions';
+import { saveBill, getNextBillNumber } from './actions';
 import { billSchema, billItemSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
+import { Combobox } from '@/components/ui/combobox';
+import { Switch } from '@/components/ui/switch';
 
 const formSchema = billSchema.omit({ id: true });
 type BillFormData = z.infer<typeof formSchema>;
@@ -52,6 +55,13 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const [isPropertyInvoice, setIsPropertyInvoice] = useState(true);
+
+  const [lookups, setLookups] = useState<{
+    properties: {value: string, label: string}[],
+    units: {value: string, label: string}[],
+    rooms: {value: string, label: string}[]
+  }>({ properties: [], units: [], rooms: [] });
 
   const {
     register,
@@ -73,7 +83,38 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   const watchedItems = watch('items');
   const watchedTaxRate = watch('taxRate');
   const watchedTaxType = watch('taxType');
-  
+  const watchedProperty = watch('property');
+  const watchedUnit = watch('unitCode');
+
+  useEffect(() => {
+    getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
+  }, []);
+
+  useEffect(() => {
+    const fetchUnits = async () => {
+        if (watchedProperty) {
+            const units = await getUnitsForProperty(watchedProperty);
+            setLookups(prev => ({...prev, units}));
+        } else {
+            setLookups(prev => ({...prev, units: []}));
+        }
+    }
+    fetchUnits();
+  }, [watchedProperty]);
+
+  useEffect(() => {
+    const fetchSubUnits = async () => {
+        if (watchedProperty && watchedUnit) {
+            const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
+            setLookups(prev => ({...prev, rooms}));
+        } else {
+            setLookups(prev => ({...prev, rooms: []}));
+        }
+    }
+    fetchSubUnits();
+  }, [watchedProperty, watchedUnit]);
+
+
   useEffect(() => {
     if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
@@ -99,26 +140,43 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
   
   useEffect(() => {
+    if (!isPropertyInvoice) {
+        setValue('property', '');
+        setValue('unitCode', '');
+        setValue('roomCode', '');
+    }
+  }, [isPropertyInvoice, setValue]);
+
+  useEffect(() => {
+    const initializeForm = async () => {
+        if (bill) {
+            setIsPropertyInvoice(!!bill.property);
+            reset(bill);
+        } else {
+            setIsPropertyInvoice(true);
+            const newBillNo = await getNextBillNumber();
+            reset({
+                billNo: newBillNo,
+                vendorCode: vendor.code,
+                vendorName: vendor.name,
+                property: '',
+                unitCode: '',
+                roomCode: '',
+                billDate: format(new Date(), 'yyyy-MM-dd'),
+                dueDate: format(new Date(), 'yyyy-MM-dd'),
+                items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
+                subTotal: 0,
+                tax: 0,
+                taxType: 'exclusive',
+                taxRate: 0,
+                total: 0,
+                notes: '',
+                status: 'Draft',
+            });
+        }
+    };
     if (isOpen) {
-      if (bill) {
-        reset(bill);
-      } else {
-        reset({
-            billNo: '', // Will be set by the server
-            vendorCode: vendor.code,
-            vendorName: vendor.name,
-            billDate: format(new Date(), 'yyyy-MM-dd'),
-            dueDate: format(new Date(), 'yyyy-MM-dd'),
-            items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
-            subTotal: 0,
-            tax: 0,
-            taxType: 'exclusive',
-            taxRate: 0,
-            total: 0,
-            notes: '',
-            status: 'Draft',
-        });
-      }
+      initializeForm();
     }
   }, [isOpen, bill, reset, vendor]);
 
@@ -190,6 +248,74 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
               <div><Label>Bill Date</Label><Input type="date" {...register('billDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
             </div>
+
+            <div className="flex items-center space-x-2 mb-4">
+                <Switch 
+                    id="property-invoice-switch" 
+                    checked={isPropertyInvoice} 
+                    onCheckedChange={setIsPropertyInvoice}
+                />
+                <Label htmlFor="property-invoice-switch">Property-Related Invoice</Label>
+            </div>
+
+            {isPropertyInvoice && (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4 p-4 border rounded-md bg-muted/50">
+                  <div>
+                      <Label>Property</Label>
+                      <Controller
+                          name="property"
+                          control={control}
+                          render={({ field }) => (
+                              <Combobox
+                                  options={lookups.properties}
+                                  value={field.value || ''}
+                                  onSelect={(value) => {
+                                      field.onChange(value);
+                                      setValue('unitCode', '');
+                                      setValue('roomCode', '');
+                                  }}
+                                  placeholder="Select Property"
+                              />
+                          )}
+                      />
+                  </div>
+                  <div>
+                      <Label>Unit</Label>
+                      <Controller
+                          name="unitCode"
+                          control={control}
+                          render={({ field }) => (
+                              <Combobox
+                                  options={lookups.units}
+                                  value={field.value || ''}
+                                  onSelect={(value) => {
+                                      field.onChange(value);
+                                      setValue('roomCode', '');
+                                  }}
+                                  placeholder="Select Unit"
+                                  disabled={!watchedProperty}
+                              />
+                          )}
+                      />
+                  </div>
+                  <div>
+                      <Label>Room</Label>
+                      <Controller
+                          name="roomCode"
+                          control={control}
+                          render={({ field }) => (
+                              <Combobox
+                                  options={lookups.rooms}
+                                  value={field.value || ''}
+                                  onSelect={field.onChange}
+                                  placeholder="Select Room"
+                                  disabled={!watchedUnit || lookups.rooms.length === 0}
+                              />
+                          )}
+                      />
+                  </div>
+              </div>
+            )}
 
             <Table>
               <TableHeader>
