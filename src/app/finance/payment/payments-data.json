@@ -50,5 +50,33 @@
         "comments": ""
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-25",
+    "partyType": "Vendor",
+    "partyName": "V001",
+    "amount": 1200,
+    "paymentMethod": "Cheque",
+    "paymentFrom": "Bank",
+    "bankAccountId": "acc_1756122907621",
+    "referenceType": "Bill",
+    "referenceNo": "BL-0002",
+    "description": "Payment for Bill: BL-0002 - Total: $1,200.00",
+    "remarks": "Vendor Refund",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "billAllocations": [],
+    "id": "PAY-1756125481096",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-25T12:38:01.096Z",
+        "comments": "Initial Draft"
+      }
+    ]
   }
 ]

@@ -112,7 +112,11 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
             const bankAccountIndex = allBankAccounts.findIndex(acc => acc.id === updatedCheque.bankAccountId);
 
             if (bankAccountIndex !== -1) {
-                allBankAccounts[bankAccountIndex].balance += updatedCheque.amount;
+                 if (updatedCheque.type === 'Incoming') {
+                    allBankAccounts[bankAccountIndex].balance += updatedCheque.amount;
+                } else { // Outgoing
+                    allBankAccounts[bankAccountIndex].balance -= updatedCheque.amount;
+                }
                 await writeBankAccounts(allBankAccounts);
             }
         }
