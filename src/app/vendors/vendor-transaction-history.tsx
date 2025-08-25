@@ -1,8 +1,9 @@
 
 'use client';
 
+import * as React from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Trash2, Printer, MoreHorizontal, Edit, Plus, Minus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
