@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Account } from './schema';
+import { useCurrency } from '@/context/currency-context';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -57,6 +58,7 @@ export function DataTable<TData extends Account, TValue>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const { formatCurrency } = useCurrency();
 
   const table = useReactTable({
     data,
@@ -94,10 +96,7 @@ export function DataTable<TData extends Account, TValue>({
             acc.name,
             acc.type,
             acc.status,
-            new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-            }).format(acc.balance)
+            formatCurrency(acc.balance)
         ]),
         startY: 20,
         styles: {
@@ -267,4 +266,3 @@ export function DataTable<TData extends Account, TValue>({
     </div>
   );
 }
-

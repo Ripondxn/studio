@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useCurrency } from '@/context/currency-context';
 
 type Summary = {
     totalReceivedThisMonth: number;
@@ -27,7 +28,8 @@ export function PaymentsClient() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [summary, setSummary] = useState<Summary>({ totalReceivedThisMonth: 0, totalPaidThisMonth: 0});
   const [isLoading, setIsLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<{ email: string, role: UserRole['role'] } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ email: string, name: string, role: UserRole['role'] } | null>(null);
+  const { formatCurrency } = useCurrency();
 
   const searchParams = useSearchParams();
   const accountIdFilter = searchParams.get('accountId');
@@ -39,7 +41,7 @@ export function PaymentsClient() {
         const storedProfile = sessionStorage.getItem('userProfile');
         if (storedProfile) {
             const profile = JSON.parse(storedProfile);
-            setCurrentUser({ email: profile.email, role: profile.role });
+            setCurrentUser(profile);
         } else {
             router.push('/login');
         }
@@ -126,7 +128,7 @@ export function PaymentsClient() {
             <ArrowDownLeft className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.totalReceivedThisMonth)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalReceivedThisMonth)}</div>
             <p className="text-xs text-muted-foreground">from tenants</p>
           </CardContent>
         </Card>
@@ -136,7 +138,7 @@ export function PaymentsClient() {
             <ArrowUpRight className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.totalPaidThisMonth)}</div>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(summary.totalPaidThisMonth)}</div>
             <p className="text-xs text-muted-foreground">to landlords & vendors</p>
           </CardContent>
         </Card>

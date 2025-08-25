@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { TransactionHistoryDialog } from './transaction-history-dialog';
+import { useCurrency } from '@/context/currency-context';
 
 
 const ActionsCell = ({ row, onRecordPayment }: { row: { original: Agent }, onRecordPayment: (agent: Agent) => void }) => {
@@ -158,7 +159,8 @@ export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agen
   {
     accessorKey: 'commissionRate',
     header: () => <div className="text-right">Commission</div>,
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const agent = row.original;
       const commissionRate = agent.commissionRate || 0;
       const totalPaid = agent.totalCommissionPaid || 0;
@@ -179,7 +181,7 @@ export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agen
       return (
         <div className="text-right font-medium flex flex-col items-end">
             <span>
-                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalPaid)} / {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(commissionRate)}
+                {formatCurrency(totalPaid)} / {formatCurrency(commissionRate)}
             </span>
             {status !== 'N/A' && <Badge variant="secondary" className={cn("mt-1", badgeClass)}>{status}</Badge>}
         </div>

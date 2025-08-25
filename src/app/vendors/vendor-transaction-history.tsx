@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useCurrency } from '@/context/currency-context';
 
 
 interface VendorTransactionHistoryProps {
@@ -50,6 +51,7 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
     const router = useRouter();
     const { toast } = useToast();
+    const { formatCurrency } = useCurrency();
 
     const fetchPaymentData = useCallback(async () => {
         if (!vendorCode) return;
@@ -132,7 +134,7 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
                 p.type === 'Receipt' ? 'Refund' : 'Payment',
                 p.referenceNo || 'N/A',
                 p.paymentMethod,
-                `${p.type === 'Receipt' ? '+' : '-'}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(p.amount)}`
+                `${p.type === 'Receipt' ? '+' : '-'}${formatCurrency(p.amount)}`
             ]),
             startY: 22,
         });
@@ -183,15 +185,15 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
                      <div className="grid grid-cols-3 gap-4 text-center mt-4 border rounded-lg p-4">
                         <div>
                             <p className="text-sm text-muted-foreground">Total Paid</p>
-                            <p className="text-xl font-bold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalPaid)}</p>
+                            <p className="text-xl font-bold text-red-600">{formatCurrency(financialSummary.totalPaid)}</p>
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Total Refunds</p>
-                            <p className="text-xl font-bold text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalRefunds)}</p>
+                            <p className="text-xl font-bold text-green-600">{formatCurrency(financialSummary.totalRefunds)}</p>
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Net Paid</p>
-                            <p className="text-xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalPaid - financialSummary.totalRefunds)}</p>
+                            <p className="text-xl font-bold">{formatCurrency(financialSummary.totalPaid - financialSummary.totalRefunds)}</p>
                         </div>
                     </div>
                 </CardHeader>
@@ -230,7 +232,7 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
                                             <TableCell><Badge variant="outline">{payment.paymentMethod}</Badge></TableCell>
                                             <TableCell className={cn("text-right font-medium", payment.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
                                                 {payment.type === 'Receipt' ? '+' : '-'}
-                                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payment.amount)}
+                                                {formatCurrency(payment.amount)}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <DropdownMenu>
@@ -238,7 +240,7 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
                                                         <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent>
-                                                        <DropdownMenuItem onSelect={() => handleEditPayment(payment)}>
+                                                        <DropdownMenuItem onSelect={() => toast({title: "Coming Soon", description: "Edit functionality will be available in a future update."})}>
                                                             <Edit className="mr-2 h-4 w-4" /> Edit
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem className="text-destructive" onSelect={() => setSelectedPayment(payment)}>

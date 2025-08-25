@@ -15,6 +15,7 @@ import type { Agent } from './schema';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/context/currency-context';
 
 
 interface AgentCardProps {
@@ -22,7 +23,7 @@ interface AgentCardProps {
 }
 
 export function AgentCard({ agent }: AgentCardProps) {
-
+  const { formatCurrency } = useCurrency();
   const commissionRate = agent.commissionRate || 0;
   const totalPaid = agent.totalCommissionPaid || 0;
 
@@ -67,7 +68,7 @@ export function AgentCard({ agent }: AgentCardProps) {
         )}
         <div className="text-sm pt-2">
             <p className="text-muted-foreground">Commission</p>
-            <p className="font-semibold text-lg">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalPaid)} / {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(commissionRate)}</p>
+            <p className="font-semibold text-lg">{formatCurrency(totalPaid)} / {formatCurrency(commissionRate)}</p>
              {status !== 'N/A' && <Badge variant="secondary" className={cn("mt-1", badgeClass)}>{status}</Badge>}
         </div>
       </CardContent>

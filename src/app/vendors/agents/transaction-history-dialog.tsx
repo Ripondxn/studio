@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCurrency } from '@/context/currency-context';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -60,6 +61,7 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
   const [filters, setFilters] = useState({ fromDate: '', toDate: '' });
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
@@ -112,9 +114,8 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
         tx.property || 'N/A',
         tx.unitCode || 'N/A',
         tx.roomCode || 'N/A',
-        tx.partitionCode || 'N/A',
         tx.referenceNo,
-        `-${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}`
+        `-${formatCurrency(tx.amount)}`
     ]);
 
     (doc as any).autoTable({
@@ -132,7 +133,6 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
         'Property': tx.property || 'N/A',
         'Unit': tx.unitCode || 'N/A',
         'Room': tx.roomCode || 'N/A',
-        'Partition': tx.partitionCode || 'N/A',
         'Reference': tx.referenceNo,
         'Amount': -tx.amount,
     }));
@@ -202,7 +202,6 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
                   <TableHead>Property</TableHead>
                   <TableHead>Unit</TableHead>
                   <TableHead>Room</TableHead>
-                  <TableHead>Partition</TableHead>
                   <TableHead>Reference</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -215,13 +214,12 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
                     <TableCell>{tx.property || 'N/A'}</TableCell>
                     <TableCell>{tx.unitCode || 'N/A'}</TableCell>
                     <TableCell>{tx.roomCode || 'N/A'}</TableCell>
-                    <TableCell>{tx.partitionCode || 'N/A'}</TableCell>
                     <TableCell>{tx.referenceNo}</TableCell>
                     <TableCell className={cn("text-right font-medium", 'text-red-600')}>
-                      -{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
+                      -{formatCurrency(tx.amount)}
                     </TableCell>
                      <TableCell className="text-right">
-                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTxId(tx.id)}>
+                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTxId(tx.id!)}>
                             <Trash2 className="h-4 w-4" />
                          </Button>
                       </TableCell>

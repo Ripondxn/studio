@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -35,6 +34,7 @@ import { deleteUnit } from './actions';
 import { EditUnitDialog } from './edit-unit-dialog';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useCurrency } from '@/context/currency-context';
 
 const ActionsCell = ({ row }: { row: { original: Unit } }) => {
     const unit = row.original;
@@ -170,13 +170,11 @@ export const columns: ColumnDef<Unit>[] = [
   {
     accessorKey: 'annualRent',
     header: () => <div className="text-right">Annual Rent</div>,
-     cell: ({ row }) => {
+     cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const amount = parseFloat(String(row.getValue('annualRent')));
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
-      return <div className="text-right font-medium">{formatted}</div>;
+      
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
   },
   {

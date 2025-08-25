@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { deleteContract } from '../contract/actions';
 import { Contract } from '../contract/schema';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/context/currency-context';
 
 const ActionsCell = ({ row }: { row: { original: Contract } }) => {
   const contract = row.original;
@@ -260,13 +261,11 @@ export const columns: ColumnDef<Contract>[] = [
   {
     accessorKey: 'totalRent',
     header: () => <div className="text-right">Rent Amount</div>,
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const amount = parseFloat(row.getValue('totalRent'));
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
-      return <div className="text-right font-medium">{formatted}</div>;
+      
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
   },
   {

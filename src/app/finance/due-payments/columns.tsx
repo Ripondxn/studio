@@ -13,6 +13,7 @@ import { DuePayment } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { useRouter } from 'next/navigation';
+import { useCurrency } from '@/context/currency-context';
 
 const statusConfig: { [key in DuePayment['status']]: { label: string, className: string }} = {
     'Upcoming': { label: 'Upcoming', className: 'bg-gray-500/20 text-gray-700' },
@@ -125,14 +126,11 @@ export const columns: ColumnDef<DuePayment>[] = [
   {
     accessorKey: 'amount',
     header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const amount = parseFloat(row.getValue('amount'));
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
-
-      return <div className="text-right font-medium">{formatted}</div>;
+      
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
   },
   {

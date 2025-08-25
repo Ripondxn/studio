@@ -10,6 +10,7 @@ import { ArrowDown, ArrowUp, AlertTriangle, RefreshCw } from 'lucide-react';
 import { type DuePayment } from './schema';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/context/currency-context';
 
 type Summary = {
     totalReceivable: number;
@@ -22,6 +23,7 @@ export function DuePaymentsClient({ initialPayments, initialSummary }: { initial
   const [payments, setPayments] = useState(initialPayments);
   const [summary, setSummary] = useState(initialSummary);
   const [isLoading, setIsLoading] = useState(false);
+  const { formatCurrency } = useCurrency();
 
   const refreshData = async () => {
     setIsLoading(true);
@@ -58,7 +60,7 @@ export function DuePaymentsClient({ initialPayments, initialSummary }: { initial
             <ArrowDown className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.totalReceivable)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalReceivable)}</div>
             <p className="text-xs text-muted-foreground">All upcoming payments from tenants</p>
           </CardContent>
         </Card>
@@ -68,7 +70,7 @@ export function DuePaymentsClient({ initialPayments, initialSummary }: { initial
             <ArrowUp className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.totalPayable)}</div>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(summary.totalPayable)}</div>
             <p className="text-xs text-muted-foreground">All upcoming payments to landlords</p>
           </CardContent>
         </Card>
@@ -78,7 +80,7 @@ export function DuePaymentsClient({ initialPayments, initialSummary }: { initial
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.overdueReceivable)}</div>
+            <div className="text-2xl font-bold text-destructive">{formatCurrency(summary.overdueReceivable)}</div>
             <p className="text-xs text-muted-foreground">Receivables past their due date</p>
           </CardContent>
         </Card>
@@ -88,7 +90,7 @@ export function DuePaymentsClient({ initialPayments, initialSummary }: { initial
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.overduePayable)}</div>
+            <div className="text-2xl font-bold text-destructive">{formatCurrency(summary.overduePayable)}</div>
             <p className="text-xs text-muted-foreground">Payables past their due date</p>
           </CardContent>
         </Card>

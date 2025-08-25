@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign } from 'lucide-react';
@@ -13,6 +13,7 @@ import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { useCurrency } from '@/context/currency-context';
 
 interface InvoiceListProps {
     customerCode: string;
@@ -29,6 +30,7 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
+    const { formatCurrency } = useCurrency();
     
     const handleCreateClick = () => {
         setSelectedInvoice(null);
@@ -101,15 +103,15 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
                  <div className="grid grid-cols-3 gap-4 text-center mt-4 border rounded-lg p-4">
                     <div>
                         <p className="text-sm text-muted-foreground">Total Billed</p>
-                        <p className="text-xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalBilled)}</p>
+                        <p className="text-xl font-bold">{formatCurrency(financialSummary.totalBilled)}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Total Paid</p>
-                        <p className="text-xl font-bold text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalPaid)}</p>
+                        <p className="text-xl font-bold text-green-600">{formatCurrency(financialSummary.totalPaid)}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Balance Due</p>
-                        <p className="text-xl font-bold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalBilled - financialSummary.totalPaid)}</p>
+                        <p className="text-xl font-bold text-red-600">{formatCurrency(financialSummary.totalBilled - financialSummary.totalPaid)}</p>
                     </div>
                 </div>
             </CardHeader>

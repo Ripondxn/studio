@@ -38,6 +38,7 @@ import { InvoiceView } from './invoice-view';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
+import { useCurrency } from '@/context/currency-context';
 
 const formSchema = invoiceSchema.omit({ id: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
@@ -56,6 +57,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const [isPropertyInvoice, setIsPropertyInvoice] = useState(true);
+  const { formatCurrency } = useCurrency();
 
   const [lookups, setLookups] = useState<{
     properties: {value: string, label: string}[],
@@ -339,7 +341,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                           <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} /></TableCell>
                           <TableCell><Input type="number" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
                           <TableCell className="text-right">
-                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
+                            {formatCurrency((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                           </TableCell>
                           <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
                       </TableRow>
@@ -354,7 +356,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                   <div className="w-full max-w-sm space-y-2">
                       <div className="flex justify-between items-center">
                           <Label>Subtotal</Label>
-                          <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('subTotal') || 0)}</span>
+                          <span className="font-medium">{formatCurrency(watch('subTotal') || 0)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                           <Label>Tax</Label>
@@ -382,11 +384,11 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                       </div>
                       <div className="flex justify-between items-center">
                           <Label>Tax Amount</Label>
-                          <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('tax') || 0)}</span>
+                          <span className="font-medium">{formatCurrency(watch('tax') || 0)}</span>
                       </div>
                       <div className="flex justify-between border-t pt-2 mt-2">
                           <Label className="text-lg font-bold">Total</Label>
-                          <span className="font-bold text-lg">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('total') || 0)}</span>
+                          <span className="font-bold text-lg">{formatCurrency(watch('total') || 0)}</span>
                       </div>
                   </div>
               </div>

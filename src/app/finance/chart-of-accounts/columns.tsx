@@ -33,6 +33,7 @@ import { deleteAccount } from './actions';
 import { useRouter } from 'next/navigation';
 import { EditAccountDialog } from './edit-account-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
+import { useCurrency } from '@/context/currency-context';
 
 
 const ActionsCell = ({ row }: { row: { original: Account }}) => {
@@ -189,14 +190,11 @@ export const columns: ColumnDef<Account>[] = [
   {
     accessorKey: 'balance',
     header: () => <div className="text-right">Balance</div>,
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const amount = parseFloat(row.getValue('balance'));
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
 
-      return <div className="text-right font-medium font-code">{formatted}</div>;
+      return <div className="text-right font-medium font-mono">{formatCurrency(amount)}</div>;
     },
   },
   {

@@ -14,6 +14,7 @@ import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { getBillsForVendor } from './actions';
+import { useCurrency } from '@/context/currency-context';
 
 interface BillListProps {
     vendorCode: string;
@@ -29,6 +30,7 @@ export function BillList({ vendorCode, vendorName }: BillListProps) {
     const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
+    const { formatCurrency } = useCurrency();
 
     const fetchBills = useCallback(async () => {
         if (!vendorCode) return;
@@ -113,15 +115,15 @@ export function BillList({ vendorCode, vendorName }: BillListProps) {
                  <div className="grid grid-cols-3 gap-4 text-center mt-4 border rounded-lg p-4">
                     <div>
                         <p className="text-sm text-muted-foreground">Total Billed</p>
-                        <p className="text-xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalBilled)}</p>
+                        <p className="text-xl font-bold">{formatCurrency(financialSummary.totalBilled)}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Total Paid</p>
-                        <p className="text-xl font-bold text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalPaid)}</p>
+                        <p className="text-xl font-bold text-green-600">{formatCurrency(financialSummary.totalPaid)}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Balance Due</p>
-                        <p className="text-xl font-bold text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(financialSummary.totalBilled - financialSummary.totalPaid)}</p>
+                        <p className="text-xl font-bold text-red-600">{formatCurrency(financialSummary.totalBilled - financialSummary.totalPaid)}</p>
                     </div>
                 </div>
             </CardHeader>

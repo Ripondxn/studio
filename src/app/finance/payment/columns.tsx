@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { deletePayment } from './actions';
 import { useRouter } from 'next/navigation';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { useCurrency } from '@/context/currency-context';
 
 
 const partyTypeConfig: {
@@ -176,14 +177,11 @@ export const columns: ColumnDef<Payment>[] = [
   {
     accessorKey: 'amount',
     header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const amount = parseFloat(row.getValue('amount'));
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
 
-      return <div className="text-right font-medium">{formatted}</div>;
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
   },
    {

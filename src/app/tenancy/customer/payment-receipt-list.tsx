@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, Printer } from 'lucide-react';
+import { Loader2, Trash2, Printer, MoreHorizontal, Edit, Plus, Minus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -33,11 +33,13 @@ import {
   DialogClose,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { MoreHorizontal, Edit } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PrintablePaymentHistory } from './printable-payment-history';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCurrency } from '@/context/currency-context';
+import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface PaymentReceiptListProps {
     customerCode: string;
@@ -55,7 +57,10 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
     const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
     const [invoicesForPrinting, setInvoicesForPrinting] = useState<Invoice[]>([]);
     const { toast } = useToast();
+    const { formatCurrency } = useCurrency();
     const printRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
+
 
     const fetchPaymentData = useCallback(async () => {
         if (!customerCode) return;
@@ -173,7 +178,7 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
                                     </TableCell>
                                     <TableCell>{invoice.invoiceNo}</TableCell>
                                     <TableCell>{format(new Date(invoice.invoiceDate), 'PP')}</TableCell>
-                                    <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(invoice.total)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -226,7 +231,7 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
                                         <TableCell>{format(new Date(payment.date), 'PP')}</TableCell>
                                         <TableCell>{payment.referenceNo}</TableCell>
                                         <TableCell><Badge variant="outline">{payment.paymentMethod}</Badge></TableCell>
-                                        <TableCell className="text-right font-medium text-green-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payment.amount)}</TableCell>
+                                        <TableCell className="text-right font-medium text-green-600">{formatCurrency(payment.amount)}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

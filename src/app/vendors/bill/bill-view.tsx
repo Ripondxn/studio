@@ -5,8 +5,10 @@ import { type Bill } from './schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Building2 } from 'lucide-react';
+import { useCurrency } from '@/context/currency-context';
 
 export function BillView({ bill }: { bill: Bill }) {
+    const { formatCurrency } = useCurrency();
     return (
         <div className="p-8 bg-white text-black max-w-4xl mx-auto my-4 border rounded-sm shadow-sm">
             <header className="flex justify-between items-start pb-6 mb-6 border-b">
@@ -57,8 +59,8 @@ export function BillView({ bill }: { bill: Bill }) {
                         <TableRow key={item.id}>
                             <TableCell className="font-medium">{item.description}</TableCell>
                             <TableCell className="text-center">{item.quantity}</TableCell>
-                            <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.unitPrice)}</TableCell>
-                            <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.quantity * item.unitPrice)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -68,23 +70,23 @@ export function BillView({ bill }: { bill: Bill }) {
                 <div className="w-full max-w-sm space-y-2 text-sm">
                     <div className="flex justify-between">
                         <span className="text-gray-600">Subtotal:</span>
-                        <span className="font-medium text-gray-800">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(bill.subTotal)}</span>
+                        <span className="font-medium text-gray-800">{formatCurrency(bill.subTotal)}</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-gray-600">Tax ({bill.tax > 0 && bill.subTotal > 0 ? (bill.tax/bill.subTotal * 100).toFixed(0) : 0}%):</span>
-                        <span className="font-medium text-gray-800">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(bill.tax)}</span>
+                        <span className="font-medium text-gray-800">{formatCurrency(bill.tax)}</span>
                     </div>
                      <div className="flex justify-between">
                         <span className="text-gray-600">Total:</span>
-                        <span className="font-medium text-gray-800">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(bill.total)}</span>
+                        <span className="font-medium text-gray-800">{formatCurrency(bill.total)}</span>
                     </div>
                      <div className="flex justify-between">
                         <span className="text-gray-600">Amount Paid:</span>
-                        <span className="font-medium text-gray-800">-{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(bill.amountPaid || 0)}</span>
+                        <span className="font-medium text-gray-800">-{formatCurrency(bill.amountPaid || 0)}</span>
                     </div>
                      <div className="flex justify-between border-t pt-2 mt-2">
                         <span className="font-bold text-gray-800 text-base">Balance Due:</span>
-                        <span className="font-bold text-gray-800 text-base">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(bill.remainingBalance || 0)}</span>
+                        <span className="font-bold text-gray-800 text-base">{formatCurrency(bill.remainingBalance || 0)}</span>
                     </div>
                 </div>
             </div>

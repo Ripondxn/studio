@@ -46,6 +46,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { useCurrency } from '@/context/currency-context';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -62,6 +63,7 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
   const [filters, setFilters] = useState({ fromDate: '', toDate: '', type: 'all', party: '' });
   const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
 
@@ -135,7 +137,7 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
         tx.unitCode || 'N/A',
         tx.roomCode || 'N/A',
         tx.referenceNo,
-        `${tx.type === 'Receipt' ? '+' : '-'}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}`
+        `${tx.type === 'Receipt' ? '+' : '-'}${formatCurrency(tx.amount)}`
     ]);
 
     (doc as any).autoTable({
@@ -264,7 +266,7 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
                     <TableCell>{tx.referenceNo}</TableCell>
                     <TableCell className={cn("text-right font-medium", tx.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
                       {tx.type === 'Receipt' ? '+' : '-'}
-                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
+                      {formatCurrency(tx.amount)}
                     </TableCell>
                     <TableCell className="text-right">
                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTxId(tx.id)} disabled={currentUserRole !== 'Super Admin'}>

@@ -15,6 +15,7 @@ import {
   TableFooter
 } from '@/components/ui/table';
 import { Building2 } from 'lucide-react';
+import { useCurrency } from '@/context/currency-context';
 
 interface PrintablePaymentHistoryProps {
   payments: Payment[];
@@ -24,6 +25,7 @@ interface PrintablePaymentHistoryProps {
 
 export const PrintablePaymentHistory = React.forwardRef<HTMLDivElement, PrintablePaymentHistoryProps>(
   ({ payments, invoices, customerName }, ref) => {
+    const { formatCurrency } = useCurrency();
     
     const paymentsByInvoice = payments.reduce((acc, p) => {
         if (p.invoiceAllocations && p.invoiceAllocations.length > 0) {
@@ -80,11 +82,11 @@ export const PrintablePaymentHistory = React.forwardRef<HTMLDivElement, Printabl
                             </TableRow>
                              <TableRow>
                                 <TableCell className="font-semibold">Amount</TableCell>
-                                <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}</TableCell>
+                                <TableCell>{formatCurrency(invoice.total)}</TableCell>
                             </TableRow>
                              <TableRow>
                                 <TableCell className="font-semibold">Balance</TableCell>
-                                <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</TableCell>
+                                <TableCell>{formatCurrency(invoice.remainingBalance || 0)}</TableCell>
                             </TableRow>
                         </tbody>
                     </table>
@@ -107,7 +109,7 @@ export const PrintablePaymentHistory = React.forwardRef<HTMLDivElement, Printabl
                                         <TableCell>{index + 1}</TableCell>
                                         <TableCell>{format(new Date(p.date), 'dd/M/yyyy')}</TableCell>
                                         <TableCell>{p.id}</TableCell>
-                                        <TableCell>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(p.allocatedAmount)}</TableCell>
+                                        <TableCell>{formatCurrency(p.allocatedAmount)}</TableCell>
                                         <TableCell>{p.referenceNo}</TableCell>
                                         <TableCell>{p.status}</TableCell>
                                     </TableRow>
@@ -122,7 +124,7 @@ export const PrintablePaymentHistory = React.forwardRef<HTMLDivElement, Printabl
                             <TableRow>
                                 <TableCell colSpan={3} className="text-right font-bold">Total Amount Received =</TableCell>
                                 <TableCell className="font-bold">
-                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.amountPaid || 0)}
+                                    {formatCurrency(invoice.amountPaid || 0)}
                                 </TableCell>
                                 <TableCell colSpan={2}></TableCell>
                             </TableRow>

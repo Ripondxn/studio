@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -24,6 +25,7 @@ import { deleteBill } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/context/currency-context';
 
 export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (bill: Bill) => void, onView: (bill: Bill) => void, onRecordPayment: (bill: Bill) => void }): ColumnDef<Bill>[] => {
   
@@ -117,17 +119,26 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (bill: Bi
       {
           accessorKey: 'total',
           header: () => <div className="text-right">Total</div>,
-          cell: ({ row }) => <div className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.original.total)}</div>
+          cell: function Cell({ row }) {
+            const { formatCurrency } = useCurrency();
+            return <div className="text-right font-medium">{formatCurrency(row.original.total)}</div>
+          }
       },
       {
           accessorKey: 'amountPaid',
           header: () => <div className="text-right">Amount Paid</div>,
-          cell: ({ row }) => <div className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.original.amountPaid || 0)}</div>
+          cell: function Cell({ row }) {
+            const { formatCurrency } = useCurrency();
+            return <div className="text-right font-medium">{formatCurrency(row.original.amountPaid || 0)}</div>
+          }
       },
        {
           accessorKey: 'remainingBalance',
           header: () => <div className="text-right">Balance</div>,
-          cell: ({ row }) => <div className="text-right font-medium text-red-600">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.original.remainingBalance || 0)}</div>
+          cell: function Cell({ row }) {
+            const { formatCurrency } = useCurrency();
+            return <div className="text-right font-medium text-red-600">{formatCurrency(row.original.remainingBalance || 0)}</div>
+          }
       },
       {
           accessorKey: 'status',

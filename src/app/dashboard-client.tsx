@@ -36,6 +36,7 @@ import { Contract } from '@/app/tenancy/contract/schema';
 import { Unit } from '@/app/property/units/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
 import { type Cheque } from '@/app/finance/cheque-deposit/schema';
+import { useCurrency } from '@/context/currency-context';
 
 
 type DashboardClientProps = {
@@ -48,6 +49,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
   const [expiringCurrentPage, setExpiringCurrentPage] = useState(1);
   const [vacantCurrentPage, setVacantCurrentPage] = useState(1);
   const [landlordPaymentsPage, setLandlordPaymentsPage] = useState(1);
+  const { formatCurrency } = useCurrency();
 
   const expiringItemsPerPage = 10;
   const vacantItemsPerPage = 5;
@@ -239,7 +241,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                       <TableRow key={`${item.propertyCode}-${item.unitCode}`}>
                         <TableCell>{item.propertyCode}</TableCell>
                         <TableCell>{item.unitCode}</TableCell>
-                        <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.annualRent)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.annualRent)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -297,7 +299,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                                     <TableCell>{cheque.partyName}</TableCell>
                                     <TableCell>{cheque.chequeNo}</TableCell>
                                     <TableCell>{format(parseISO(cheque.chequeDate), 'PP')}</TableCell>
-                                    <TableCell className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cheque.amount)}</TableCell>
+                                    <TableCell className="text-right font-medium">{formatCurrency(cheque.amount)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
