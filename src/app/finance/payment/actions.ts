@@ -280,7 +280,7 @@ export async function getSummary() {
     return summary;
 }
 
-export async function getReferences(partyType: string, partyCode: string, referenceType: string) {
+export async function getReferences(partyType: string, partyCode: string, referenceType: string, paymentType?: 'Payment' | 'Receipt') {
     if (!partyType || !partyCode || !referenceType) return [];
     
     const allPayments: Payment[] = await readPayments();
@@ -349,14 +349,22 @@ export async function getReferences(partyType: string, partyCode: string, refere
          case 'Bill': {
             if (partyType !== 'Vendor') return [];
             const bills: Bill[] = await readData(billsFilePath);
+
+            // If it's a refund (Receipt), show paid bills. If it's a payment, show unpaid bills.
+            const filterCondition = paymentType === 'Receipt'
+                ? (b: Bill) => b.vendorCode === partyCode && b.status === 'Paid'
+                : (b: Bill) => b.vendorCode === partyCode && b.status !== 'Paid' && b.status !== 'Cancelled';
+
             return bills
-                .filter(b => b.vendorCode === partyCode && b.status !== 'Paid' && b.status !== 'Cancelled')
+                .filter(filterCondition)
                 .map(b => {
                     const remainingBalance = b.total - (b.amountPaid || 0);
+                     // For refunds, the amount to potentially refund is the total of the bill
+                    const amountForReference = paymentType === 'Receipt' ? b.total : remainingBalance;
                     return {
                         value: b.billNo,
-                        label: `${b.billNo} - Bal: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingBalance)}`,
-                        amount: remainingBalance,
+                        label: `${b.billNo} - Total: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(b.total)}`,
+                        amount: amountForReference,
                         propertyCode: b.property,
                         unitCode: b.unitCode,
                         roomCode: b.roomCode,

@@ -136,57 +136,58 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   }, [])
   
    useEffect(() => {
-    if (isOpen) {
+    const fetchInvoicesAndBills = async () => {
         if(partyType === 'Customer' && partyName) {
-            getInvoicesForCustomer(partyName).then(data => {
-                setInvoicesForCustomer(data);
-                const defaultAllocs = defaultValues?.invoiceAllocations || [];
-                const currentAllocs = watch('invoiceAllocations') || [];
+            const data = await getInvoicesForCustomer(partyName);
+            setInvoicesForCustomer(data);
+            const defaultAllocs = defaultValues?.invoiceAllocations || [];
+            const currentAllocs = watch('invoiceAllocations') || [];
 
-                if(defaultAllocs.length > 0) {
-                    setValue('invoiceAllocations', defaultAllocs);
-                } else if (currentAllocs.length === 0) {
-                    setValue('invoiceAllocations', data
-                        .filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled')
-                        .map(inv => ({ invoiceId: inv.id, amount: 0}))
-                    );
-                }
-            });
+            if(defaultAllocs.length > 0) {
+                setValue('invoiceAllocations', defaultAllocs);
+            } else if (currentAllocs.length === 0) {
+                setValue('invoiceAllocations', data
+                    .filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled')
+                    .map(inv => ({ invoiceId: inv.id, amount: 0}))
+                );
+            }
         } else {
             setInvoicesForCustomer([]);
         }
 
         if(partyType === 'Vendor' && partyName) {
-            getBillsForVendor(partyName).then(data => {
-                setBillsForVendor(data);
-                const defaultAllocs = defaultValues?.billAllocations || [];
-                const currentAllocs = watch('billAllocations') || [];
-                if(defaultAllocs.length > 0) {
-                    setValue('billAllocations', defaultAllocs);
-                } else if (currentAllocs.length === 0) {
-                    setValue('billAllocations', data
-                        .filter(bill => bill.status !== 'Paid' && bill.status !== 'Cancelled')
-                        .map(bill => ({ billId: bill.id, amount: 0}))
-                    );
-                }
-            })
+            const data = await getBillsForVendor(partyName);
+            setBillsForVendor(data);
+            const defaultAllocs = defaultValues?.billAllocations || [];
+            const currentAllocs = watch('billAllocations') || [];
+            if(defaultAllocs.length > 0) {
+                setValue('billAllocations', defaultAllocs);
+            } else if (currentAllocs.length === 0) {
+                setValue('billAllocations', data
+                    .filter(bill => bill.status !== 'Paid' && bill.status !== 'Cancelled')
+                    .map(bill => ({ billId: bill.id, amount: 0}))
+                );
+            }
         } else {
             setBillsForVendor([]);
         }
+    };
+    if (isOpen) {
+        fetchInvoicesAndBills();
     }
    }, [isOpen, partyType, partyName, setValue, watch, defaultValues]);
    
    useEffect(() => {
     const fetchReferences = async () => {
         if (partyType && partyName && referenceType) {
-            const data = await getReferences(partyType, partyName, referenceType);
+            const data = await getReferences(partyType, partyName, referenceType, paymentType);
             setLookups(prev => ({...prev, references: data}));
         } else {
             setLookups(prev => ({...prev, references: []}));
         }
     };
     fetchReferences();
-   }, [partyType, partyName, referenceType]);
+   }, [partyType, partyName, referenceType, paymentType]);
 
 
    useEffect(() => {
@@ -309,23 +310,19 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   }
 
   const referenceTypeOptions = () => {
-    if (paymentType === 'Receipt' && partyType === 'Vendor') {
-      return (
-        <>
-          <SelectItem value="Bill">Bill</SelectItem>
-          <SelectItem value="Other">Other</SelectItem>
-        </>
-      )
+    if (partyType === 'Vendor') {
+      return <SelectItem value="Bill">Bill</SelectItem>
     }
-    return (
-        <>
-            <SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem>
-            <SelectItem value="Lease Contract">Lease Contract</SelectItem>
-            <SelectItem value="Invoice">Invoice</SelectItem>
-            <SelectItem value="Bill">Bill</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
-        </>
-    );
+    if (partyType === 'Customer') {
+       return <SelectItem value="Invoice">Invoice</SelectItem>
+    }
+    if (partyType === 'Tenant') {
+       return <SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem>
+    }
+     if (partyType === 'Landlord') {
+       return <SelectItem value="Lease Contract">Lease Contract</SelectItem>
+    }
+    return null;
   }
 
   return (
@@ -423,7 +420,22 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                     <CardHeader><CardTitle className="flex items-center space-x-2"><FileText className="h-5 w-5 text-primary" /><span>Reference Information (Optional)</span></CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <div className="space-y-2"><Label>Reference Type</Label><Controller name="referenceType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select reference type" /></SelectTrigger><SelectContent>{referenceTypeOptions()}</SelectContent></Select>)} /></div>
+                           <div className="space-y-2">
+                                <Label>Reference Type</Label>
+                                <Controller 
+                                    name="referenceType" 
+                                    control={control} 
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger><SelectValue placeholder="Select reference type" /></SelectTrigger>
+                                            <SelectContent>
+                                                {referenceTypeOptions()}
+                                                <SelectItem value="Other">Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )} 
+                                />
+                           </div>
                            <div className="space-y-2"><Label>Reference Number</Label><Controller name="referenceNo" control={control} render={({ field }) => (<Combobox options={lookups.references} value={field.value || ''} onSelect={handleReferenceSelect} placeholder="Enter or select a reference" />)} /></div>
                         </div>
                         <div className="space-y-2"><Label>Description</Label><Textarea placeholder="Additional notes or description" rows={3} {...register('description')} /></div>

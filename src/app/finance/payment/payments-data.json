@@ -331,36 +331,5 @@
         "comments": ""
       }
     ]
-  },
-  {
-    "type": "Receipt",
-    "date": "2025-08-26",
-    "partyType": "Vendor",
-    "partyName": "V001",
-    "amount": 480,
-    "paymentMethod": "Cash",
-    "paymentFrom": "Bank",
-    "referenceType": "Bill",
-    "description": "Refund payment for not received the servics or goods",
-    "remarks": "Vendor Refund",
-    "status": "Received",
-    "createdByUser": "Super Admin",
-    "billAllocations": [
-      {
-        "billId": "BILL-1756106624407",
-        "amount": 0
-      }
-    ],
-    "id": "PAY-1756108325565",
-    "currentStatus": "DRAFT",
-    "approvalHistory": [
-      {
-        "action": "Created Transaction",
-        "actorId": "Super Admin",
-        "actorRole": "User",
-        "timestamp": "2025-08-25T07:52:05.565Z",
-        "comments": "Initial Draft"
-      }
-    ]
   }
 ]
