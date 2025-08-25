@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Minus, MoreHorizontal, Edit, Trash2, Printer } from 'lucide-react';
+import { Loader2, Trash2, Printer } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -33,6 +33,7 @@ import {
 import { deletePayment } from '@/app/finance/payment/actions';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { MoreHorizontal, Edit, Plus, Minus } from 'lucide-react';
 
 
 interface VendorTransactionHistoryProps {
