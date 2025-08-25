@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Minus } from 'lucide-react';
+import { Loader2, Plus, Minus, MoreHorizontal, Edit, Trash2, Printer } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -13,6 +13,27 @@ import { type Payment } from '@/app/finance/payment/schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { deletePayment } from '@/app/finance/payment/actions';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 
 interface VendorTransactionHistoryProps {
     vendorCode: string;
@@ -24,7 +45,10 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
     const [isLoading, setIsLoading] = useState(true);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>({});
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
     const router = useRouter();
+    const { toast } = useToast();
 
     const fetchPaymentData = useCallback(async () => {
         if (!vendorCode) return;
@@ -75,8 +99,53 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
         }, { totalPaid: 0, totalRefunds: 0 });
     }, [payments]);
 
+    const handleDelete = async () => {
+        if (!selectedPaymentId) return;
+        setIsDeleting(true);
+        const result = await deletePayment(selectedPaymentId);
+        if (result.success) {
+            toast({ title: 'Payment Deleted' });
+            fetchPaymentData();
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        }
+        setIsDeleting(false);
+        setSelectedPaymentId(null);
+    };
+
+    const handlePrint = () => {
+        const doc = new jsPDF();
+        doc.text(`Transaction History for ${vendorName}`, 14, 16);
+        (doc as any).autoTable({
+            head: [['Date', 'Type', 'Reference', 'Method', 'Amount']],
+            body: payments.map(p => [
+                format(new Date(p.date), 'PP'),
+                p.type === 'Receipt' ? 'Refund' : 'Payment',
+                p.referenceNo || 'N/A',
+                p.paymentMethod,
+                `${p.type === 'Receipt' ? '+' : '-'}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(p.amount)}`
+            ]),
+            startY: 22,
+        });
+        doc.save(`vendor-history-${vendorCode}.pdf`);
+    };
+
     return (
         <>
+            <AlertDialog open={!!selectedPaymentId} onOpenChange={(open) => !open && setSelectedPaymentId(null)}>
+                <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>This will permanently delete the payment and reverse its financial impact. This action cannot be undone.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <AddPaymentDialog
                 isOpen={isPaymentDialogOpen}
                 setIsOpen={setIsPaymentDialogOpen}
@@ -91,6 +160,9 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
                             <CardDescription>A record of payments made to and refunds received from {vendorName}.</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={handlePrint}>
+                                <Printer className="mr-2 h-4 w-4" /> Print
+                            </Button>
                             <Button variant="outline" onClick={handleRecordRefund}>
                                 <Plus className="mr-2 h-4 w-4" /> Record Refund
                             </Button>
@@ -128,12 +200,13 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
                                     <TableHead>Reference</TableHead>
                                     <TableHead>Method</TableHead>
                                     <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {payments.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">No transactions found.</TableCell>
+                                        <TableCell colSpan={6} className="h-24 text-center">No transactions found.</TableCell>
                                     </TableRow>
                                 ) : (
                                     payments.map(payment => (
@@ -149,6 +222,21 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
                                             <TableCell className={cn("text-right font-medium", payment.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
                                                 {payment.type === 'Receipt' ? '+' : '-'}
                                                 {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payment.amount)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent>
+                                                        <DropdownMenuItem onSelect={() => toast({title: "Coming Soon", description: "Edit functionality will be available in a future update."})}>
+                                                            <Edit className="mr-2 h-4 w-4" /> Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-destructive" onSelect={() => setSelectedPaymentId(payment.id!)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     ))
