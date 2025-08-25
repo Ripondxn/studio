@@ -131,10 +131,10 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         allCheques[chequeIndex] = updatedCheque;
         
         // For statuses that affect financials, create a transaction and send to workflow
-        if (status === 'Cleared' || status === 'Bounced') {
+        if (status === 'Cleared') {
             
             const paymentType = originalCheque.type === 'Incoming' ? 'Receipt' : 'Payment';
-            const remarks = status === 'Bounced' ? `Cheque Bounced: ${originalCheque.chequeNo}` : `Cleared Cheque: ${originalCheque.chequeNo}`;
+            const remarks = `Cleared Cheque: ${originalCheque.chequeNo}`;
             
             const newPayment: Payment = {
                 id: `PAY-${Date.now()}`,
@@ -159,13 +159,6 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
                     comments: `Status updated to ${status}`
                 }]
             };
-
-            // If bounced, this should be a negative receipt or a payment (debit). Let's treat it as a payment against the party for now.
-             if (status === 'Bounced') {
-                newPayment.type = 'Payment';
-                newPayment.status = 'Paid'; // To represent a charge-back
-            }
-
             allPayments.push(newPayment);
             await writePayments(allPayments);
             revalidatePath('/workflow');
