@@ -11,7 +11,7 @@ import { type Unit } from '@/app/property/units/schema';
 import { type Floor } from '@/app/property/floors/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
-import { addPdcCheque } from '@/app/finance/pdc-cheque/actions';
+import { addCheque } from '@/app/finance/cheque-deposit/actions';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
@@ -62,7 +62,7 @@ async function createChequesFromContract(contract: Contract) {
 
     for (const installment of contract.paymentSchedule) {
         if (installment.chequeNo) {
-            await addPdcCheque({
+            await addCheque({
                 chequeNo: installment.chequeNo,
                 chequeDate: installment.dueDate,
                 amount: installment.amount,
@@ -113,7 +113,7 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
         await createChequesFromContract(savedContract);
         
         revalidatePath('/tenancy/contracts');
-        revalidatePath('/finance/pdc-cheque');
+        revalidatePath('/finance/cheque-deposit');
         revalidatePath(`/tenancy/contract?id=${data.id}`);
         return { success: true, data: savedContract };
 

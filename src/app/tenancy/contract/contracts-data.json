@@ -29,9 +29,9 @@
     "tawtheeqRegistrationDate": ""
   },
   {
-    "id": "CON-1756118823368",
+    "id": "CON-1756147555712",
     "contractNo": "TC-0002",
-    "contractDate": "2025-08-25",
+    "contractDate": "2025-08-24",
     "property": "LT-C38",
     "unitCode": "F201",
     "roomCode": "",
@@ -40,10 +40,10 @@
     "mobile": "0509231340",
     "email": "tahmed.3386@gmail.com",
     "address": "1 Hazza ' Bin Zayed The First Street",
-    "startDate": "2025-08-25",
+    "startDate": "2025-08-24",
     "endDate": "2025-09-24",
     "totalRent": 45000,
-    "paymentMode": "cash",
+    "paymentMode": "cheque",
     "status": "New",
     "renewalCount": 0,
     "terminationDate": "",
@@ -54,27 +54,27 @@
     "paymentSchedule": [
       {
         "installment": 1,
-        "dueDate": "2025-08-25",
+        "dueDate": "2025-08-24",
         "amount": 15000,
         "status": "unpaid",
         "chequeNo": "123456",
-        "bankName": "ADCB"
+        "bankName": "NBD"
       },
       {
         "installment": 2,
-        "dueDate": "2025-09-25",
+        "dueDate": "2025-09-24",
         "amount": 15000,
         "status": "unpaid",
         "chequeNo": "123457",
-        "bankName": "ADCB"
+        "bankName": "NBD"
       },
       {
         "installment": 3,
-        "dueDate": "2025-10-25",
+        "dueDate": "2025-10-24",
         "amount": 15000,
         "status": "unpaid",
         "chequeNo": "123458",
-        "bankName": "ADCB"
+        "bankName": "NBD"
       }
     ],
     "terms": "",
