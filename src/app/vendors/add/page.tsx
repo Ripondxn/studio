@@ -93,6 +93,7 @@ export default function VendorPage() {
   });
 
   const vendorCode = form.watch('code');
+  const vendorName = form.watch('name');
 
   useEffect(() => {
     return () => {
@@ -451,13 +452,14 @@ export default function VendorPage() {
         </TabsContent>
         <TabsContent value="bills">
              <BillList
-                vendorCode={form.watch('code')}
-                vendorName={form.watch('name')}
+                vendorCode={vendorCode}
+                vendorName={vendorName}
             />
         </TabsContent>
         <TabsContent value="payment-history">
            <VendorTransactionHistory
-                vendorName={form.watch('name')}
+                vendorCode={vendorCode}
+                vendorName={vendorName}
             />
         </TabsContent>
         <TabsContent value="attachments">

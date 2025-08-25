@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Plus, Minus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,10 +15,11 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 interface VendorTransactionHistoryProps {
+    vendorCode: string;
     vendorName: string;
 }
 
-export function VendorTransactionHistory({ vendorName }: VendorTransactionHistoryProps) {
+export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTransactionHistoryProps) {
     const [payments, setPayments] = useState<Payment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -26,12 +27,12 @@ export function VendorTransactionHistory({ vendorName }: VendorTransactionHistor
     const router = useRouter();
 
     const fetchPaymentData = useCallback(async () => {
-        if (!vendorName) return;
+        if (!vendorCode) return;
         setIsLoading(true);
-        const paymentsData = await getPaymentsForVendor(vendorName);
+        const paymentsData = await getPaymentsForVendor(vendorCode);
         setPayments(paymentsData);
         setIsLoading(false);
-    }, [vendorName]);
+    }, [vendorCode]);
 
     useEffect(() => {
         fetchPaymentData();
@@ -41,7 +42,7 @@ export function VendorTransactionHistory({ vendorName }: VendorTransactionHistor
         setPaymentDefaultValues({
             type: 'Payment',
             partyType: 'Vendor',
-            partyName: vendorName,
+            partyName: vendorCode,
             status: 'Paid',
         });
         setIsPaymentDialogOpen(true);
@@ -51,7 +52,7 @@ export function VendorTransactionHistory({ vendorName }: VendorTransactionHistor
         setPaymentDefaultValues({
             type: 'Receipt',
             partyType: 'Vendor',
-            partyName: vendorName,
+            partyName: vendorCode,
             status: 'Received',
             remarks: 'Vendor Refund',
         });
