@@ -37,6 +37,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Trash2, FileText, FileSpreadsheet } from 'lucide-react';
 import { getTransactionsForAccount } from './actions';
 import { deleteEquityTransaction } from '../equity/actions';
+import { deletePayment } from '../payment/actions';
 import { type Account } from './schema';
 import { type Payment } from '../payment/schema';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -61,6 +63,14 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
   const { toast } = useToast();
   const [filters, setFilters] = useState({ fromDate: '', toDate: '', type: 'all', party: '' });
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
+
+  useEffect(() => {
+    const storedProfile = sessionStorage.getItem('userProfile');
+    if (storedProfile) {
+        setCurrentUserRole(JSON.parse(storedProfile).role);
+    }
+  }, []);
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -89,12 +99,21 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
     }
   }, [isOpen, account.code]);
 
-  const handleDeleteEquity = async () => {
+  const handleDelete = async () => {
     if(!selectedTxId) return;
     setIsDeleting(true);
-    const result = await deleteEquityTransaction(selectedTxId);
+
+    let result;
+    const isEquityTx = selectedTxId.startsWith('EQT-');
+
+    if (isEquityTx) {
+      result = await deleteEquityTransaction(selectedTxId);
+    } else {
+      result = await deletePayment(selectedTxId);
+    }
+
     if(result.success) {
-      toast({ title: 'Success', description: 'Equity transaction has been deleted.' });
+      toast({ title: 'Success', description: 'Transaction has been deleted.' });
       fetchTransactions(); // Refresh the list
     } else {
       toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to delete transaction.' });
@@ -107,7 +126,7 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
     const doc = new jsPDF();
     doc.text(`Transaction History: ${account.name} (${account.code})`, 14, 16);
     
-    const head = [['Date', 'Type', 'Party', 'Property', 'Unit', 'Room', 'Partition', 'Reference', 'Amount']];
+    const head = [['Date', 'Type', 'Party', 'Property', 'Unit', 'Room', 'Reference', 'Amount']];
     const body = filteredTransactions.map(tx => [
         format(new Date(tx.date), 'PP'),
         tx.type,
@@ -115,7 +134,6 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
         tx.property || 'N/A',
         tx.unitCode || 'N/A',
         tx.roomCode || 'N/A',
-        tx.partitionCode || 'N/A',
         tx.referenceNo,
         `${tx.type === 'Receipt' ? '+' : '-'}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}`
     ]);
@@ -137,7 +155,6 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
         'Property': tx.property || 'N/A',
         'Unit': tx.unitCode || 'N/A',
         'Room': tx.roomCode || 'N/A',
-        'Partition': tx.partitionCode || 'N/A',
         'Reference': tx.referenceNo,
         'Amount': (tx.type === 'Receipt' ? 1 : -1) * tx.amount,
     }));
@@ -157,11 +174,11 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>This will permanently delete the equity transaction and reverse its financial impact. This action cannot be undone.</AlertDialogDescription>
+                <AlertDialogDescription>This will permanently delete the transaction and reverse its financial impact. This action cannot be undone.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteEquity} disabled={isDeleting}>
+                <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -227,11 +244,9 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
                   <TableHead>Party</TableHead>
                   <TableHead>Property</TableHead>
                   <TableHead>Unit</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Partition</TableHead>
                   <TableHead>Reference</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
-                  {account.code === '3000' && <TableHead className="text-right">Action</TableHead>}
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -246,20 +261,16 @@ export function TransactionHistoryDialog({ account, children }: { account: Accou
                     <TableCell>{tx.partyName}</TableCell>
                     <TableCell>{tx.property || 'N/A'}</TableCell>
                     <TableCell>{tx.unitCode || 'N/A'}</TableCell>
-                    <TableCell>{tx.roomCode || 'N/A'}</TableCell>
-                    <TableCell>{tx.partitionCode || 'N/A'}</TableCell>
                     <TableCell>{tx.referenceNo}</TableCell>
                     <TableCell className={cn("text-right font-medium", tx.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
                       {tx.type === 'Receipt' ? '+' : '-'}
                       {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
                     </TableCell>
-                    {account.code === '3000' && (
-                      <TableCell className="text-right">
-                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTxId(tx.id)}>
-                            <Trash2 className="h-4 w-4" />
-                         </Button>
-                      </TableCell>
-                    )}
+                    <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTxId(tx.id)} disabled={currentUserRole !== 'Super Admin'}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

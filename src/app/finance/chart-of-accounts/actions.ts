@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -246,6 +247,7 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
                     paymentMethod: 'Cash', // Simplified
                     referenceNo: t.remarks || 'Equity Transaction',
                     status: t.type === 'Contribution' ? 'Received' : 'Paid',
+                    currentStatus: 'POSTED',
                  })));
                  break;
             }

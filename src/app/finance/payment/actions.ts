@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -57,7 +58,7 @@ async function readBankAccounts(): Promise<BankAccount[]> {
     return await readData(bankAccountsFilePath);
 }
 async function writeBankAccounts(data: BankAccount[]) {
-    await fs.writeFile(bankAccountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    await writeData(bankAccountsFilePath, data);
 }
 
 async function readPettyCash() {
