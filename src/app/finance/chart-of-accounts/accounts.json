@@ -1,4 +1,3 @@
-
 [
   {
     "code": "1000",
@@ -20,7 +19,7 @@
   },
   {
     "code": "1110",
-    "name": "Cash & Bank",
+    "name": "Undiposited Fund",
     "type": "Asset",
     "status": "Active",
     "balance": 0,

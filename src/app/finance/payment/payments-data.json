@@ -1,2 +1,54 @@
-
-[]
+[
+  {
+    "type": "Payment",
+    "date": "2025-08-25",
+    "partyType": "Vendor",
+    "partyName": "V001",
+    "amount": 1200,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "referenceType": "Bill",
+    "referenceNo": "BL-0002",
+    "description": "Payment for Bill: BL-0002 - Total: $1,200.00",
+    "status": "Paid",
+    "createdByUser": "Super Admin",
+    "billAllocations": [
+      {
+        "billId": "BILL-1756106624407",
+        "amount": 1200
+      }
+    ],
+    "id": "PAY-1756124382236",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-25T12:19:42.236Z",
+        "comments": "Initial Draft"
+      },
+      {
+        "action": "Submitted for Approval",
+        "actorId": "ripondxn@gmail.com",
+        "actorRole": "Admin",
+        "timestamp": "2025-08-25T12:20:45.562Z",
+        "comments": ""
+      },
+      {
+        "action": "Approved by Admin",
+        "actorId": "ripondxn@gmail.com",
+        "actorRole": "Admin",
+        "timestamp": "2025-08-25T12:20:52.890Z",
+        "comments": ""
+      },
+      {
+        "action": "Final Approval & Posted",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-25T12:22:11.055Z",
+        "comments": ""
+      }
+    ]
+  }
+]

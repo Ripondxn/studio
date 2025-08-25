@@ -63,6 +63,8 @@ export async function getAccounts(): Promise<Account[]> {
 
     // 3. Aggregate payments into expense and revenue accounts
     payments.forEach(payment => {
+        if (payment.currentStatus !== 'POSTED') return; // Only consider posted transactions
+
         if (payment.type === 'Payment') {
             if (payment.agentCode) { // Agent Fee
                 if (accountMap.has('5170')) {
@@ -185,7 +187,22 @@ export async function updateAccount(data: z.infer<typeof updateAccountFormSchema
 export async function deleteAccount(code: string) {
     try {
         const allAccounts = await readData(accountsFilePath);
-        const updatedAccounts = allAccounts.filter((acc: Account) => acc.code !== code && acc.parentCode !== code);
+        
+        // Find all child codes recursively to delete them as well
+        const codesToDelete = new Set<string>([code]);
+        const findChildren = (parentCode: string) => {
+            allAccounts.forEach((acc: Account) => {
+                if (acc.parentCode === parentCode) {
+                    codesToDelete.add(acc.code);
+                    if (acc.isGroup) {
+                        findChildren(acc.code);
+                    }
+                }
+            });
+        };
+        findChildren(code);
+
+        const updatedAccounts = allAccounts.filter((acc: Account) => !codesToDelete.has(acc.code));
 
         if (allAccounts.length === updatedAccounts.length) {
             return { success: false, error: 'Account not found or no changes made.' };
@@ -270,3 +287,4 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
     
     return uniqueTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
+
