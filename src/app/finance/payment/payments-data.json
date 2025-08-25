@@ -106,43 +106,5 @@
         "comments": ""
       }
     ]
-  },
-  {
-    "id": "PAY-1756141084116",
-    "type": "Receipt",
-    "date": "2025-08-25",
-    "partyType": "Tenant",
-    "partyName": "Tanvir Ahmed",
-    "amount": 15000,
-    "paymentMethod": "Cheque",
-    "referenceNo": "123456",
-    "property": "LT-C38",
-    "status": "Received",
-    "currentStatus": "POSTED",
-    "createdByUser": "Super Admin",
-    "remarks": "Cleared Cheque: 123456",
-    "approvalHistory": [
-      {
-        "action": "Created & Submitted",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-25T16:58:04.116Z",
-        "comments": "Status updated to Cleared"
-      },
-      {
-        "action": "Approved by Admin",
-        "actorId": "ripondxn@gmail.com",
-        "actorRole": "Admin",
-        "timestamp": "2025-08-25T16:59:59.037Z",
-        "comments": ""
-      },
-      {
-        "action": "Final Approval & Posted",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-25T17:04:26.878Z",
-        "comments": ""
-      }
-    ]
   }
 ]

@@ -19,6 +19,7 @@ import { type LeaseContract } from '@/app/lease/contract/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { type Bill } from '@/app/vendors/bill/schema';
 import { applyPaymentToBills } from '@/app/vendors/bill/actions';
+import { type Cheque } from '../cheque-deposit/schema';
 
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -32,6 +33,7 @@ const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contr
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
+const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 
 
 async function readData(filePath: string) {
@@ -46,6 +48,11 @@ async function readData(filePath: string) {
         throw error;
     }
 }
+
+async function writeData(filePath: string, data: any) {
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
 
 async function readPayments(): Promise<Payment[]> {
     return await readData(paymentsFilePath);
@@ -74,6 +81,12 @@ async function readInvoices(): Promise<Invoice[]> {
 }
 async function writeInvoices(data: Invoice[]) {
     await fs.writeFile(invoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+async function readCheques(): Promise<Cheque[]> {
+    return await readData(chequesFilePath);
+}
+async function writeCheques(data: Cheque[]) {
+    await writeData(chequesFilePath, data);
 }
 
 
@@ -149,6 +162,7 @@ export async function deletePayment(paymentId: string) {
             return { success: false, error: 'Payment not found.' };
         }
         
+        // Reverse financial impact if it was posted
         if(paymentToDelete.currentStatus === 'POSTED') {
             if (paymentToDelete.paymentFrom === 'Petty Cash') {
                 const pettyCash = await readPettyCash();
@@ -172,6 +186,7 @@ export async function deletePayment(paymentId: string) {
             }
         }
         
+        // Reverse invoice allocations if applicable
         if (paymentToDelete.type === 'Receipt' && paymentToDelete.invoiceAllocations && paymentToDelete.invoiceAllocations.length > 0) {
             const allInvoices = await readInvoices();
             
@@ -187,6 +202,18 @@ export async function deletePayment(paymentId: string) {
                 }
             });
             await writeInvoices(allInvoices);
+        }
+
+        // Reverse cheque status if the payment was from a cheque clearance
+        if (paymentToDelete.paymentMethod === 'Cheque' && paymentToDelete.referenceNo) {
+            const allCheques = await readCheques();
+            const chequeIndex = allCheques.findIndex(c => c.chequeNo === paymentToDelete.referenceNo);
+            if (chequeIndex !== -1 && allCheques[chequeIndex].status === 'Cleared') {
+                allCheques[chequeIndex].status = 'In Hand'; // Revert to a non-cleared state
+                allCheques[chequeIndex].clearanceDate = undefined;
+                await writeCheques(allCheques);
+                revalidatePath('/finance/cheque-deposit');
+            }
         }
 
         const updatedPayments = allPayments.filter(p => p.id !== paymentId);
