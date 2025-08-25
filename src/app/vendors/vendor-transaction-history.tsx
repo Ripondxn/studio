@@ -16,10 +16,9 @@ import { useRouter } from 'next/navigation';
 
 interface VendorTransactionHistoryProps {
     vendorName: string;
-    onRefresh: () => void;
 }
 
-export function VendorTransactionHistory({ vendorName, onRefresh }: VendorTransactionHistoryProps) {
+export function VendorTransactionHistory({ vendorName }: VendorTransactionHistoryProps) {
     const [payments, setPayments] = useState<Payment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -65,10 +64,7 @@ export function VendorTransactionHistory({ vendorName, onRefresh }: VendorTransa
                 isOpen={isPaymentDialogOpen}
                 setIsOpen={setIsPaymentDialogOpen}
                 defaultValues={paymentDefaultValues}
-                onPaymentAdded={() => {
-                    fetchPaymentData();
-                    onRefresh();
-                }}
+                onPaymentAdded={() => fetchPaymentData()}
             />
             <Card>
                 <CardHeader>

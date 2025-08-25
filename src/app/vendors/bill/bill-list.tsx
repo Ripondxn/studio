@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign } from 'lucide-react';
@@ -13,22 +13,34 @@ import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { getBillsForVendor } from './actions';
 
 interface BillListProps {
     vendorCode: string;
     vendorName: string;
-    bills: Bill[];
-    isLoading: boolean;
-    onRefresh: () => void;
 }
 
-export function BillList({ vendorCode, vendorName, bills, isLoading, onRefresh }: BillListProps) {
+export function BillList({ vendorCode, vendorName }: BillListProps) {
+    const [bills, setBills] = useState<Bill[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isBillDialogOpen, setIsBillDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
+
+    const fetchBills = useCallback(async () => {
+        if (!vendorCode) return;
+        setIsLoading(true);
+        const data = await getBillsForVendor(vendorCode);
+        setBills(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
+        setIsLoading(false);
+    }, [vendorCode]);
+    
+    useEffect(() => {
+        fetchBills();
+    }, [fetchBills]);
     
     const handleCreateClick = () => {
         setSelectedBill(null);
@@ -67,7 +79,7 @@ export function BillList({ vendorCode, vendorName, bills, isLoading, onRefresh }
     }
 
     const handleSuccess = () => {
-        onRefresh();
+        fetchBills();
     }
     
     const financialSummary = useMemo(() => {

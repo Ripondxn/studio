@@ -53,8 +53,6 @@ import { vendorSchema, type Vendor } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { VendorTransactionHistory } from '../vendor-transaction-history';
 import { BillList } from '../bill/bill-list';
-import { type Bill } from '../bill/schema';
-import { getBillsForVendor } from '../bill/actions';
 
 
 type Attachment = {
@@ -87,22 +85,12 @@ export default function VendorPage() {
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [isLoadingBills, setIsLoadingBills] = useState(true);
   
   const form = useForm<Vendor>({
     resolver: zodResolver(vendorSchema),
     defaultValues: initialVendorData,
   });
 
-   const fetchBills = useCallback(async (vendorCode: string) => {
-    if (!vendorCode) return;
-    setIsLoadingBills(true);
-    const data = await getBillsForVendor(vendorCode);
-    setBills(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
-    setIsLoadingBills(false);
-  }, []);
-  
   useEffect(() => {
     return () => {
       attachments.forEach(attachment => {
@@ -134,7 +122,6 @@ export default function VendorPage() {
         if (codeToFind !== 'new') {
             setIsNewRecord(false);
             setIsEditing(false);
-            fetchBills(result.data.vendorData.code);
         } else {
             setIsNewRecord(true);
             setIsEditing(true);
@@ -154,7 +141,7 @@ export default function VendorPage() {
         description: (error as Error).message || 'Failed to find vendor data.',
       });
     }
-  }, [form, toast, fetchBills]);
+  }, [form, toast]);
 
   useEffect(() => {
     const vendorCode = searchParams.get('code');
@@ -476,17 +463,11 @@ export default function VendorPage() {
              <BillList
                 vendorCode={form.watch('code')}
                 vendorName={form.watch('name')}
-                bills={bills}
-                isLoading={isLoadingBills}
-                onRefresh={() => fetchBills(form.watch('code'))}
             />
         </TabsContent>
         <TabsContent value="payment-history">
            <VendorTransactionHistory
                 vendorName={form.watch('name')}
-                onRefresh={() => {
-                    fetchBills(form.watch('code'))
-                }}
             />
         </TabsContent>
         <TabsContent value="attachments">
