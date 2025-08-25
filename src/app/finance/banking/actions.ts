@@ -38,6 +38,7 @@ export async function readPettyCash() {
     try {
         await fs.access(pettyCashFilePath);
         const data = await fs.readFile(pettyCashFilePath, 'utf-8');
+        if (!data) return { balance: 0 };
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -103,14 +104,15 @@ export async function saveBankAccount(data: z.infer<typeof bankAccountSchema>, i
 
 export async function deleteBankAccount(accountId: string) {
      try {
+        if (accountId === 'acc_3') {
+            return { success: true }; // Silently succeed for petty cash
+        }
+        
         const allAccounts = await readAccounts();
         const updatedAccounts = allAccounts.filter(acc => acc.id !== accountId);
         
         if (allAccounts.length === updatedAccounts.length) {
-            // Check if it's the petty cash account, which isn't in the file.
-            if (accountId !== 'acc_3') {
-                 return { success: false, error: 'Account not found.' };
-            }
+            return { success: false, error: 'Account not found.' };
         }
 
         await writeAccounts(updatedAccounts);
@@ -164,7 +166,7 @@ export async function getAllTransactions(): Promise<Payment[]> {
             id: c.id,
             type: c.type === 'Incoming' ? 'Receipt' : 'Payment',
             date: c.clearanceDate!,
-            partyType: c.type === 'Incoming' ? 'Tenant' : 'Landlord',
+            partyType: c.type === 'Incoming' ? 'Tenant' : 'Landlord', // This is a simplification, may need a better way to determine party type
             partyName: c.partyName,
             amount: c.amount,
             paymentMethod: 'Cheque',
@@ -172,6 +174,7 @@ export async function getAllTransactions(): Promise<Payment[]> {
             referenceNo: c.chequeNo,
             property: c.property,
             status: c.type === 'Incoming' ? 'Received' : 'Paid',
+            currentStatus: 'POSTED', // Treat cleared cheques as posted
             remarks: `Cleared cheque from ${c.bankName}`
         }));
     
@@ -185,7 +188,7 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         const allTransactions = await getAllTransactions();
         
         const accountPayments = allTransactions.filter((p: Payment) => {
-            if (accountId === 'acc_3') {
+            if (accountId === 'acc_3') { // Petty Cash account
                 return p.paymentFrom === 'Petty Cash';
             }
             return p.bankAccountId === accountId;
@@ -230,13 +233,10 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
             return { success: false, error: "One or both accounts not found." };
         }
         
-        // Check balance
         if(fromAccount.balance < amount) {
              return { success: false, error: `Insufficient funds in ${fromAccount.accountName}.` };
         }
 
-        // Perform transfer
-        // Debit from account
         if (fromAccountId === 'acc_3') {
             pettyCash.balance -= amount;
         } else {
@@ -244,7 +244,6 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
             allAccounts[fromIndex].balance -= amount;
         }
         
-        // Credit to account
         if (toAccountId === 'acc_3') {
             pettyCash.balance += amount;
         } else {
@@ -255,36 +254,35 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
         await writeAccounts(allAccounts);
         await writePettyCash(pettyCash);
         
-        // Log the transaction
         const allPayments = await readAllPayments();
         const referenceNo = `TRF-${Date.now()}`;
         
-        // Payment from source
         const paymentRecord: Payment = {
             id: `PAY-${Date.now()}-OUT`,
             type: 'Payment',
             date: date,
-            partyType: 'Vendor', // Internal Transfer
+            partyType: 'Vendor',
             partyName: `Transfer to ${toAccount.accountName}`,
             amount: amount,
             paymentMethod: fromAccountId === 'acc_3' ? 'Cash' : 'Bank Transfer',
             bankAccountId: fromAccountId,
+            paymentFrom: fromAccountId === 'acc_3' ? 'Petty Cash' : 'Bank',
             referenceNo,
             remarks,
             status: 'Paid',
             currentStatus: 'POSTED',
         };
 
-        // Receipt to destination
          const receiptRecord: Payment = {
             id: `PAY-${Date.now()}-IN`,
             type: 'Receipt',
             date: date,
-            partyType: 'Customer', // Internal Transfer
+            partyType: 'Customer',
             partyName: `Transfer from ${fromAccount.accountName}`,
             amount: amount,
             paymentMethod: toAccountId === 'acc_3' ? 'Cash' : 'Bank Transfer',
             bankAccountId: toAccountId,
+            paymentFrom: toAccountId === 'acc_3' ? 'Petty Cash' : 'Bank',
             referenceNo,
             remarks,
             status: 'Received',
