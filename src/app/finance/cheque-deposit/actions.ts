@@ -144,7 +144,8 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
                 partyName: originalCheque.partyName,
                 amount: originalCheque.amount,
                 paymentMethod: 'Cheque',
-                bankAccountId: originalCheque.bankAccountId,
+                bankAccountId: originalCheque.bankAccountId, // Pass the bank account ID
+                paymentFrom: 'Bank',
                 referenceNo: originalCheque.chequeNo,
                 property: originalCheque.property,
                 status: paymentType === 'Receipt' ? 'Received' : 'Paid',
