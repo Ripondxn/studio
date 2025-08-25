@@ -64,7 +64,7 @@ export function FloorCard({ floor }: FloorCardProps) {
         <CardFooter className="gap-2">
           <Button asChild className="w-full" variant="outline">
             <Link href={`/tenancy/contract?propertyCode=${floor.propertyCode}`}>
-              <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
+              <FilePlus2 className="mr-2 h-4 w-4" /> Booking
             </Link>
           </Button>
           <Button variant="secondary" className="w-full" onClick={() => setIsEditDialogOpen(true)}>

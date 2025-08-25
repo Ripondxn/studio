@@ -70,16 +70,16 @@ export function RoomCard({ room }: RoomCardProps) {
         </CardContent>
         <CardFooter className="flex gap-2 mt-auto">
            {room.occupancyStatus === 'Vacant' ? (
-              <>
-                <Button asChild className="flex-shrink min-w-0">
+              <div className='flex gap-2 w-full'>
+                <Button asChild className="flex-1 min-w-0">
                     <Link href={`/tenancy/contract?propertyCode=${room.propertyCode}&unitCode=${room.unitCode}&roomCode=${room.roomCode}`}>
-                        <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
+                        <FilePlus2 className="mr-2 h-4 w-4" /> Booking
                     </Link>
                 </Button>
-                <Button variant="outline" className="flex-shrink min-w-0" onClick={() => setIsEditDialogOpen(true)}>
+                <Button variant="outline" className="flex-1 min-w-0" onClick={() => setIsEditDialogOpen(true)}>
                     Edit Room
                 </Button>
-              </>
+              </div>
             ) : (
                  <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
                     Edit Room
