@@ -43,6 +43,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 
 // Extend jsPDF type to include autoTable from the plugin
@@ -57,9 +58,17 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
   const [transactions, setTransactions] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
+  const [selectedTx, setSelectedTx] = useState<Payment | null>(null);
   const { toast } = useToast();
   const [filters, setFilters] = useState({ fromDate: '', toDate: '', type: 'all', party: '' });
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
+
+  useEffect(() => {
+    const storedProfile = sessionStorage.getItem('userProfile');
+    if (storedProfile) {
+        setCurrentUserRole(JSON.parse(storedProfile).role);
+    }
+  }, []);
 
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -89,9 +98,9 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
   }, [isOpen, fetchTransactions]);
   
   const handleDeletePayment = async () => {
-    if(!selectedTxId) return;
+    if(!selectedTx?.id) return;
     setIsDeleting(true);
-    const result = await deletePayment(selectedTxId);
+    const result = await deletePayment(selectedTx.id);
     if(result.success) {
       toast({ title: 'Success', description: 'Transaction has been deleted.' });
       fetchTransactions(); // Refresh the list
@@ -99,14 +108,14 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
       toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to delete transaction.' });
     }
     setIsDeleting(false);
-    setSelectedTxId(null);
+    setSelectedTx(null);
   }
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
     doc.text(`Transaction History: ${account.accountName}`, 14, 16);
     
-    const head = [['Date', 'Type', 'Party', 'Property', 'Unit', 'Room', 'Partition', 'Reference', 'Amount']];
+    const head = [['Date', 'Type', 'Party', 'Property', 'Unit', 'Room', 'Reference', 'Amount']];
     const body = filteredTransactions.map(tx => [
         format(new Date(tx.date), 'PP'),
         tx.type,
@@ -114,7 +123,6 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
         tx.property || 'N/A',
         tx.unitCode || 'N/A',
         tx.roomCode || 'N/A',
-        tx.partitionCode || 'N/A',
         tx.referenceNo,
         `${tx.type === 'Receipt' ? '+' : '-'}${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}`
     ]);
@@ -136,7 +144,6 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
         'Property': tx.property || 'N/A',
         'Unit': tx.unitCode || 'N/A',
         'Room': tx.roomCode || 'N/A',
-        'Partition': tx.partitionCode || 'N/A',
         'Reference': tx.referenceNo,
         'Amount': (tx.type === 'Receipt' ? 1 : -1) * tx.amount,
     }));
@@ -146,6 +153,10 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
     XLSX.writeFile(wb, `transactions-${account.id}.xlsx`);
   };
 
+  const canDelete = (tx: Payment): boolean => {
+    if (currentUserRole === 'Super Admin') return true;
+    return tx.currentStatus !== 'POSTED';
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -153,7 +164,7 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
         {children}
       </DialogTrigger>
       <DialogContent className="max-w-6xl">
-        <AlertDialog open={!!selectedTxId} onOpenChange={(open) => !open && setSelectedTxId(null)}>
+        <AlertDialog open={!!selectedTx} onOpenChange={(open) => !open && setSelectedTx(null)}>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -224,10 +235,6 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
                   <TableHead>Date</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Party</TableHead>
-                  <TableHead>Property</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Partition</TableHead>
                   <TableHead>Reference</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -243,17 +250,13 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
                       </Badge>
                     </TableCell>
                     <TableCell>{tx.partyName}</TableCell>
-                    <TableCell>{tx.property || 'N/A'}</TableCell>
-                    <TableCell>{tx.unitCode || 'N/A'}</TableCell>
-                    <TableCell>{tx.roomCode || 'N/A'}</TableCell>
-                    <TableCell>{tx.partitionCode || 'N/A'}</TableCell>
                     <TableCell>{tx.referenceNo}</TableCell>
                     <TableCell className={cn("text-right font-medium", tx.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
                       {tx.type === 'Receipt' ? '+' : '-'}
                       {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
                     </TableCell>
                     <TableCell className="text-right">
-                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTxId(tx.id)}>
+                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTx(tx)} disabled={!canDelete(tx)}>
                             <Trash2 className="h-4 w-4" />
                          </Button>
                       </TableCell>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, User, Building, Wrench, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { deletePayment } from './actions';
 import { useRouter } from 'next/navigation';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 
 const partyTypeConfig: {
@@ -50,8 +51,16 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
     const payment = row.original;
     const { toast } = useToast();
     const router = useRouter();
-    const [isDeleting, setIsDeleting] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
+
+    useEffect(() => {
+        const storedProfile = sessionStorage.getItem('userProfile');
+        if (storedProfile) {
+            setCurrentUserRole(JSON.parse(storedProfile).role);
+        }
+    }, []);
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -64,6 +73,11 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
         }
         setIsDeleting(false);
         setIsDeleteDialogOpen(false);
+    }
+    
+    const canDelete = (): boolean => {
+        if (currentUserRole === 'Super Admin') return true;
+        return payment.currentStatus !== 'POSTED';
     }
     
     return (
@@ -94,7 +108,7 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
                         <Edit className="mr-2 h-4 w-4"/> Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)} disabled={payment.currentStatus !== 'DRAFT'}>
+                    <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)} disabled={!canDelete()}>
                         <Trash2 className="mr-2 h-4 w-4"/> Delete
                     </DropdownMenuItem>
                 </DropdownMenuContent>

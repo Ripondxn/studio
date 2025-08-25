@@ -62,7 +62,7 @@ async function writeBankAccounts(data: BankAccount[]) {
 
 async function readPettyCash() {
     const data = await readData(pettyCashFilePath);
-    if (data.length === 0) return { balance: 0 };
+    if (!data || (Array.isArray(data) && data.length === 0)) return { balance: 0 };
     return data;
 }
 async function writePettyCash(data: { balance: number }) {
@@ -149,32 +149,25 @@ export async function deletePayment(paymentId: string) {
         }
         
         if(paymentToDelete.currentStatus === 'POSTED') {
-            if (paymentToDelete.type === 'Payment') {
-                if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
-                    const pettyCash = await readPettyCash();
+            if (paymentToDelete.paymentFrom === 'Petty Cash') {
+                const pettyCash = await readPettyCash();
+                if (paymentToDelete.type === 'Payment') {
                     pettyCash.balance += paymentToDelete.amount;
-                    await writePettyCash(pettyCash);
-                } else if (paymentToDelete.bankAccountId) {
-                    const allBankAccounts = await readBankAccounts();
-                    const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
-                    if (accountIndex !== -1) {
-                        allBankAccounts[accountIndex].balance += paymentToDelete.amount;
-                        await writeBankAccounts(allBankAccounts);
-                    }
-                }
-            } else {
-                 if (paymentToDelete.paymentFrom === 'Petty Cash' || paymentToDelete.bankAccountId === 'acc_3') {
-                    const pettyCash = await readPettyCash();
+                } else { // Receipt
                     pettyCash.balance -= paymentToDelete.amount;
-                    await writePettyCash(pettyCash);
-                } else if (paymentToDelete.bankAccountId) {
-                    const allBankAccounts = await readBankAccounts();
-                    const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
-                    if (accountIndex !== -1) {
-                        allBankAccounts[accountIndex].balance -= paymentToDelete.amount;
-                        await writeBankAccounts(allBankAccounts);
-                    }
                 }
+                await writePettyCash(pettyCash);
+            } else if (paymentToDelete.bankAccountId) {
+                 const allBankAccounts = await readBankAccounts();
+                 const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
+                 if (accountIndex !== -1) {
+                    if (paymentToDelete.type === 'Payment') {
+                        allBankAccounts[accountIndex].balance += paymentToDelete.amount;
+                    } else { // Receipt
+                        allBankAccounts[accountIndex].balance -= paymentToDelete.amount;
+                    }
+                    await writeBankAccounts(allBankAccounts);
+                 }
             }
         }
         
