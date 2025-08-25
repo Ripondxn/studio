@@ -158,27 +158,8 @@ async function readAllCheques(): Promise<Cheque[]> {
 
 export async function getAllTransactions(): Promise<Payment[]> {
     const payments = await readAllPayments();
-    const cheques = await readAllCheques();
-
-    const chequeTransactions: Payment[] = cheques
-        .filter(c => c.status === 'Cleared' && c.clearanceDate)
-        .map(c => ({
-            id: c.id,
-            type: c.type === 'Incoming' ? 'Receipt' : 'Payment',
-            date: c.clearanceDate!,
-            partyType: c.type === 'Incoming' ? 'Tenant' : 'Landlord', // This is a simplification, may need a better way to determine party type
-            partyName: c.partyName,
-            amount: c.amount,
-            paymentMethod: 'Cheque',
-            bankAccountId: c.bankAccountId,
-            referenceNo: c.chequeNo,
-            property: c.property,
-            status: c.type === 'Incoming' ? 'Received' : 'Paid',
-            currentStatus: 'POSTED', // Treat cleared cheques as posted
-            remarks: `Cleared cheque from ${c.bankName}`
-        }));
     
-    const allTransactions = [...payments, ...chequeTransactions].filter(p => p.currentStatus === 'POSTED');
+    const allTransactions = [...payments].filter(p => p.currentStatus === 'POSTED');
 
     return allTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }

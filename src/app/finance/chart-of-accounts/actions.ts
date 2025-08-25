@@ -55,13 +55,7 @@ export async function getAccounts(): Promise<Account[]> {
     });
 
     // 2. Calculate Cash and Bank from bank accounts and petty cash
-    const allTransactionsForUndeposited = await getTransactionsForAccount('1110');
-    const totalCashAndBank = allTransactionsForUndeposited.reduce((sum, tx) => {
-        if(tx.type === 'Receipt') return sum + tx.amount;
-        if(tx.type === 'Payment') return sum - tx.amount;
-        return sum;
-    }, 0);
-
+    const totalCashAndBank = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0) + pettyCash.balance;
     if (accountMap.has('1110')) {
         accountMap.get('1110')!.balance = totalCashAndBank;
     }
@@ -253,8 +247,15 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
 
     for (const code of codesToFetch) {
          switch(code) {
-            case '1110': // Undeposited Fund
+            case '1110': // This account is now an aggregate, pull from banking.
+                 const allBankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
+                 const pettyCash: { balance: number } = await readData(pettyCashFilePath) || { balance: 0 };
                  const allEquityTransactions: any[] = await readData(equityTransactionsFilePath);
+                 
+                 // Combine bank transactions and petty cash transactions.
+                 // This logic might need to become more sophisticated, for now we will show all posted transactions
+                 transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED'));
+                 
                  const equityAsPayments = allEquityTransactions.map(t => ({
                     id: t.id,
                     type: t.type === 'Contribution' ? 'Receipt' : 'Payment',
@@ -268,7 +269,8 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
                     status: t.type === 'Contribution' ? 'Received' : 'Paid',
                     currentStatus: 'POSTED',
                  }));
-                 transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED'), ...equityAsPayments);
+                 transactions.push(...equityAsPayments);
+
                 break;
             case '3110': // Capital Account
                  const contributionTransactions: any[] = (await readData(equityTransactionsFilePath)).filter(t => t.type === 'Contribution');
@@ -320,5 +322,3 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
     
     return uniqueTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
-
-
