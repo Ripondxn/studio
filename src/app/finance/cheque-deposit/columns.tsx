@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { useCurrency } from '@/context/currency-context';
 
 const statusConfig: {
   [key in Cheque['status']]: {
