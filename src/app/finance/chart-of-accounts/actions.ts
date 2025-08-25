@@ -233,7 +233,7 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
     for (const code of codesToFetch) {
          switch(code) {
             case '1110': // Cash and Bank
-                transactions.push(...allPayments);
+                 transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED'));
                 break;
             case '3000': { // Equity
                  const equityTransactions: any[] = await readData(equityTransactionsFilePath);
@@ -252,13 +252,13 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
                  break;
             }
             case '4100': // Rental Income
-                transactions.push(...allPayments.filter(p => p.type === 'Receipt'));
+                transactions.push(...allPayments.filter(p => p.type === 'Receipt' && p.currentStatus === 'POSTED'));
                 break;
             case '5110': // Maintenance & Repairs
-                transactions.push(...allPayments.filter(p => p.type === 'Payment' && p.partyType === 'Vendor' && !p.agentCode));
+                transactions.push(...allPayments.filter(p => p.type === 'Payment' && p.partyType === 'Vendor' && !p.agentCode && p.currentStatus === 'POSTED'));
                 break;
             case '5140': // Agent Fee
-                transactions.push(...allPayments.filter(p => p.type === 'Payment' && !!p.agentCode));
+                transactions.push(...allPayments.filter(p => p.type === 'Payment' && !!p.agentCode && p.currentStatus === 'POSTED'));
                 break;
             default:
                 // For other accounts, no specific transaction logic is defined yet.
