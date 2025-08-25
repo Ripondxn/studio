@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -33,6 +34,7 @@ import { Room } from './schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useCurrency } from '@/context/currency-context';
 
 const ActionsCell = ({ row }: { row: { original: Room } }) => {
     const room = row.original;
@@ -166,15 +168,12 @@ export const columns: ColumnDef<Room>[] = [
   {
     accessorKey: 'rentAmount',
     header: () => <div className="text-right">Rent</div>,
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
       const amount = parseFloat(row.getValue('rentAmount') || '0');
       const frequency = row.original.rentFrequency;
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
 
-      return <div className="text-right font-medium">{formatted} <span className="text-xs text-muted-foreground">{frequency ? `/${frequency.slice(0,2)}` : ''}</span></div>;
+      return <div className="text-right font-medium">{formatCurrency(amount)} <span className="text-xs text-muted-foreground">{frequency ? `/${frequency.slice(0,2)}` : ''}</span></div>;
     },
   },
   {

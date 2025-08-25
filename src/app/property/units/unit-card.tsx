@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useCurrency } from '@/context/currency-context';
 
 interface UnitCardProps {
   unit: Unit;
@@ -19,6 +20,7 @@ interface UnitCardProps {
 export function UnitCard({ unit }: UnitCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const router = useRouter();
+  const { formatCurrency } = useCurrency();
 
   const handleSuccess = () => {
     router.refresh();
@@ -61,12 +63,7 @@ export function UnitCard({ unit }: UnitCardProps) {
            <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground flex items-center gap-2"><Tag className="h-4 w-4" /> Annual Rent</span>
             <span className="font-semibold font-mono">
-              {new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              }).format(unit.annualRent)}
+              {formatCurrency(unit.annualRent)}
             </span>
           </div>
         </CardContent>

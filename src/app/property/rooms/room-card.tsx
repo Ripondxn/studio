@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useCurrency } from '@/context/currency-context';
 
 interface RoomCardProps {
   room: Room;
@@ -19,6 +20,7 @@ interface RoomCardProps {
 export function RoomCard({ room }: RoomCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const router = useRouter();
+  const { formatCurrency } = useCurrency();
 
   const handleSuccess = () => {
     router.refresh();
@@ -57,12 +59,7 @@ export function RoomCard({ room }: RoomCardProps) {
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground flex items-center gap-2"><Tag className="h-4 w-4" /> Rent</span>
               <span className="font-semibold font-mono text-base">
-                 {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                }).format(room.rentAmount)}
+                 {formatCurrency(room.rentAmount)}
                 <span className="text-xs text-muted-foreground font-sans normal-case">/{room.rentFrequency?.slice(0,2)}</span>
               </span>
             </div>
