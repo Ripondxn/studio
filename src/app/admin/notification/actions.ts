@@ -46,7 +46,7 @@ export async function getRecipients() {
 
     const recipientList = [
         ...tenants.map((t: any) => {
-            const contract = tenancyContracts.find((c: any) => c.tenantCode === t.tenantData.code);
+            const contract = tenancyContracts.find((c: any) => c.tenantCode === t.tenantData.code && (c.status === 'New' || c.status === 'Renew'));
             const duePayment = contract ? duePaymentsMap.get(contract.contractNo) : null;
             return { 
                 value: t.tenantData.email, 
@@ -127,6 +127,9 @@ export async function sendNotificationEmail(data: z.infer<typeof formSchema>) {
 
     } catch (error) {
         console.error("Email sending failed:", error);
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+             return { success: false, error: 'Communication settings not found. Please configure them first.' };
+        }
         return { success: false, error: (error as Error).message || 'Failed to send email.' };
     }
 }
