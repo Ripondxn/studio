@@ -70,15 +70,15 @@ export function UnitCard({ unit }: UnitCardProps) {
             </span>
           </div>
         </CardContent>
-        <CardFooter className="gap-2">
+        <CardFooter className="flex gap-2">
           {unit.occupancyStatus !== 'Occupied' ? (
              <>
-                <Button asChild className="flex-1">
+                <Button asChild className="flex-shrink min-w-0">
                     <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
                         <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
                     </Link>
                 </Button>
-                <Button variant="outline" className="flex-1" onClick={() => setIsEditDialogOpen(true)}>
+                <Button variant="outline" className="flex-shrink min-w-0" onClick={() => setIsEditDialogOpen(true)}>
                     Edit
                 </Button>
              </>
