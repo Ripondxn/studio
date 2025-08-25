@@ -44,6 +44,7 @@ import { updatePdcChequeStatus, deletePdcCheque } from './actions';
 import { PdcCheque } from './schema';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const statusConfig: {
   [key in PdcCheque['status']]: {
@@ -99,9 +100,16 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: PdcCheque, onUpdate:
                 <div className="py-4 space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="status">New Status</Label>
-                        <select id="status" value={status} onChange={(e) => setStatus(e.target.value as PdcCheque['status'])} className="w-full p-2 border rounded-md">
-                            {Object.keys(statusConfig).map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
+                        <Select onValueChange={(value: PdcCheque['status']) => setStatus(value)} value={status}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.keys(statusConfig).map(s => (
+                                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     {relevantDateLabel && (
                          <div className="space-y-2">
