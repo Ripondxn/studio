@@ -315,7 +315,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                                 onValueChange={field.onChange}
                                 value={field.value}
                                 className="flex space-x-6"
-                                disabled={paymentType === 'Receipt'}
                                 >
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="Bank" id="bank" />
@@ -338,7 +337,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                                         <Select
                                             onValueChange={field.onChange}
                                             value={field.value}
-                                            disabled={paymentType === 'Receipt'}
                                         >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select bank account"/>
@@ -366,11 +364,11 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                 </Card>
 
                  <Card>
-                    <CardHeader><CardTitle className="flex items-center space-x-2"><FileText className="h-5 w-5 text-primary" /><span>Reference Information</span></CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="flex items-center space-x-2"><FileText className="h-5 w-5 text-primary" /><span>Reference Information (Optional)</span></CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div className="space-y-2"><Label>Reference Type</Label><Controller name="referenceType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select reference type" /></SelectTrigger><SelectContent><SelectItem value="Invoice">Invoice</SelectItem><SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem><SelectItem value="Lease Contract">Lease Contract</SelectItem><SelectItem value="Utility Bill">Utility Bill</SelectItem><SelectItem value="Maintenance Bill">Maintenance Bill</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select>)} /></div>
-                           <div className="space-y-2"><Label>Reference Number</Label><Controller name="referenceNo" control={control} render={({ field }) => (<Combobox options={lookups.references} value={field.value || ''} onSelect={handleReferenceSelect} placeholder="Enter reference number" />)} /></div>
+                           <div className="space-y-2"><Label>Reference Number</Label><Controller name="referenceNo" control={control} render={({ field }) => (<Combobox options={lookups.references} value={field.value || ''} onSelect={handleReferenceSelect} placeholder="Enter or select a reference" />)} /></div>
                         </div>
                         <div className="space-y-2"><Label>Description</Label><Textarea placeholder="Additional notes or description" rows={3} {...register('description')} /></div>
                     </CardContent>

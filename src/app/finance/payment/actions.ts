@@ -58,7 +58,9 @@ async function writeBankAccounts(data: BankAccount[]) {
 }
 
 async function readPettyCash() {
-    return await readData(pettyCashFilePath);
+    const data = await readData(pettyCashFilePath);
+    if (data.length === 0) return { balance: 0 };
+    return data;
 }
 async function writePettyCash(data: { balance: number }) {
     await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
@@ -114,35 +116,6 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
             await applyPaymentToInvoices(newPayment.invoiceAllocations, newPayment.partyName);
         }
 
-        if (newPayment.type === 'Payment') {
-            if (newPayment.paymentFrom === 'Petty Cash') {
-                const pettyCash = await readPettyCash();
-                pettyCash.balance -= newPayment.amount;
-                await writePettyCash(pettyCash);
-            } else if (newPayment.bankAccountId) {
-                const allBankAccounts = await readBankAccounts();
-                const accountIndex = allBankAccounts.findIndex(acc => acc.id === newPayment.bankAccountId);
-                if (accountIndex !== -1) {
-                    allBankAccounts[accountIndex].balance -= newPayment.amount;
-                    await writeBankAccounts(allBankAccounts);
-                }
-            }
-        } else { // Receipt
-            if (newPayment.paymentFrom === 'Petty Cash') {
-                const pettyCash = await readPettyCash();
-                pettyCash.balance += newPayment.amount;
-                await writePettyCash(pettyCash);
-            } else if (newPayment.bankAccountId) {
-                const allBankAccounts = await readBankAccounts();
-                const accountIndex = allBankAccounts.findIndex(acc => acc.id === newPayment.bankAccountId);
-                if (accountIndex !== -1) {
-                    allBankAccounts[accountIndex].balance += newPayment.amount;
-                    await writeBankAccounts(allBankAccounts);
-                }
-            }
-        }
-
-
         allPayments.push(newPayment);
         await writePayments(allPayments);
         
@@ -152,6 +125,7 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
         revalidatePath('/vendors/agents');
         revalidatePath('/workflow');
         revalidatePath(`/tenancy/customer/add?code=${newPayment.partyName}`);
+        revalidatePath('/vendors/add');
         return { success: true, data: newPayment };
 
     } catch (error) {
@@ -268,7 +242,7 @@ export async function getPartyNameLookups(): Promise<Record<string, string>> {
         if(l.landlordData.code) lookups[l.landlordData.code] = l.landlordData.name;
     });
     vendors.forEach(v => {
-        if(v.vendorData.code) lookups[v.vendorData.name] = v.vendorData.name;
+        if(v.vendorData.name) lookups[v.vendorData.name] = v.vendorData.name;
     });
     customers.forEach(c => {
         if(c.customerData.code) lookups[c.customerData.code] = c.customerData.name;

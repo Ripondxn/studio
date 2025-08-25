@@ -41,7 +41,7 @@ export async function readPettyCash() {
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return { balance: 55000 };
+            return { balance: 0 };
         }
         throw error;
     }
@@ -175,7 +175,7 @@ export async function getAllTransactions(): Promise<Payment[]> {
             remarks: `Cleared cheque from ${c.bankName}`
         }));
     
-    const allTransactions = [...payments, ...chequeTransactions];
+    const allTransactions = [...payments, ...chequeTransactions].filter(p => p.currentStatus === 'POSTED');
 
     return allTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
@@ -186,7 +186,7 @@ export async function getTransactionsForAccount(accountId: string): Promise<Paym
         
         const accountPayments = allTransactions.filter((p: Payment) => {
              if (accountId === 'acc_3') {
-                return p.paymentMethod === 'Cash';
+                return p.paymentFrom === 'Petty Cash';
             }
             return p.bankAccountId === accountId
         });
