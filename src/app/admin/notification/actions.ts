@@ -54,17 +54,6 @@ export async function sendNotificationEmail(data: z.infer<typeof formSchema>) {
     if (!validation.success) {
         return { success: false, error: 'Invalid data provided.' };
     }
-
-    // In a real app, this is where you'd call the email service API.
-    // We will simulate a successful send after a short delay.
-    console.log('--- SIMULATING EMAIL SEND VIA GMAIL ---');
-    console.log('To:', validation.data.recipient);
-    console.log('Subject:', validation.data.subject);
-    console.log('Body:', validation.data.body);
-    console.log('------------------------------------');
-
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Check if communication settings are configured
     try {
@@ -76,25 +65,25 @@ export async function sendNotificationEmail(data: z.infer<typeof formSchema>) {
         }
 
         // Placeholder for actual Nodemailer API call
-        // const transporter = nodemailer.createTransport({
-        //   service: 'gmail',
-        //   auth: {
-        //     user: settings.gmailUser,
-        //     pass: settings.gmailAppPassword,
-        //   },
-        // });
-        // const mailOptions = {
-        //   from: settings.gmailUser,
-        //   to: validation.data.recipient,
-        //   subject: validation.data.subject,
-        //   html: validation.data.body.replace(/\\n/g, '<br>'),
-        // };
-        // await transporter.sendMail(mailOptions);
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: settings.gmailUser,
+            pass: settings.gmailAppPassword,
+          },
+        });
+        const mailOptions = {
+          from: settings.gmailUser,
+          to: validation.data.recipient,
+          subject: validation.data.subject,
+          html: validation.data.body.replace(/\\n/g, '<br>'),
+        };
+        await transporter.sendMail(mailOptions);
 
         return { success: true };
 
     } catch (error) {
-        console.error("Email sending simulation failed:", error);
+        console.error("Email sending failed:", error);
         return { success: false, error: (error as Error).message || 'Failed to send email.' };
     }
 }
