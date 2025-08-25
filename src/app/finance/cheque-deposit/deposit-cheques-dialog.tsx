@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { type Cheque } from './schema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { useCurrency } from '@/context/currency-context';
 
 interface DepositChequesDialogProps {
     cheques: Cheque[];
@@ -40,6 +41,7 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
     const [bankAccountId, setBankAccountId] = useState<string>('');
     const [bankAccounts, setBankAccounts] = useState<{ value: string, label: string }[]>([]);
     const [currentUser, setCurrentUser] = useState<{ email: string, name: string, role: UserRole['role'] } | null>(null);
+    const { formatCurrency } = useCurrency();
 
     useEffect(() => {
         const storedProfile = sessionStorage.getItem('userProfile');
@@ -178,14 +180,14 @@ export function DepositChequesDialog({ cheques, onDeposit }: DepositChequesDialo
                                         <TableCell>{cheque.chequeNo}</TableCell>
                                         <TableCell>{format(new Date(cheque.chequeDate), 'PP')}</TableCell>
                                         <TableCell>{cheque.partyName}</TableCell>
-                                        <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cheque.amount)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(cheque.amount)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                     </ScrollArea>
                     <div className="flex justify-end font-bold">
-                        Total Selected: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedTotal)}
+                        Total Selected: {formatCurrency(selectedTotal)}
                     </div>
                 </div>
                 <DialogFooter>

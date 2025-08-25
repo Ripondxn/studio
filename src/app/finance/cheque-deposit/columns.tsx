@@ -40,13 +40,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { updateChequeStatus, deleteCheque } from './actions';
+import { updateChequeStatus, deleteCheque, getBankAccounts } from './actions';
 import { Cheque } from './schema';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useCurrency } from '@/context/currency-context';
+import { type BankAccount } from '../banking/schema';
+
 
 const statusConfig: {
   [key in Cheque['status']]: {
@@ -68,6 +70,8 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
     const [isOpen, setIsOpen] = useState(false);
     const [status, setStatus] = useState<Cheque['status']>(cheque.status);
     const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    const [bankAccountId, setBankAccountId] = useState(cheque.bankAccountId || '');
+    const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
     const { toast } = useToast();
     const router = useRouter();
     const [currentUser, setCurrentUser] = useState<{ email: string; name: string; role: UserRole['role'] } | null>(null);
@@ -77,14 +81,22 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
         if (storedProfile) {
             setCurrentUser(JSON.parse(storedProfile));
         }
-    }, []);
+        if(isOpen) {
+            getBankAccounts().then(setBankAccounts);
+        }
+    }, [isOpen]);
 
     const handleUpdate = async () => {
         if (!currentUser) {
             toast({ variant: 'destructive', title: 'Error', description: 'Could not identify current user. Please log in again.'});
             return;
         }
-        const result = await updateChequeStatus(cheque.id, status, date, currentUser);
+        if ((status === 'Deposited' || status === 'Cleared') && !bankAccountId) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please select a bank account to deposit to.'});
+            return;
+        }
+
+        const result = await updateChequeStatus(cheque.id, status, date, currentUser, bankAccountId);
         if (result.success) {
             toast({ title: 'Status Updated', description: `Cheque ${cheque.chequeNo} status updated to ${status}. A new entry may have been created in the workflow for approval.` });
             onUpdate();
@@ -129,6 +141,21 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
                          <div className="space-y-2">
                             <Label htmlFor="date">{relevantDateLabel}</Label>
                             <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                        </div>
+                    )}
+                     {(status === 'Deposited' || status === 'Cleared') && (
+                         <div className="space-y-2">
+                            <Label htmlFor="bankAccount">Deposit to Bank Account</Label>
+                            <Select onValueChange={setBankAccountId} value={bankAccountId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a bank" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {bankAccounts.map(acc => (
+                                        <SelectItem key={acc.id} value={acc.id}>{acc.accountName} ({acc.bankName})</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     )}
                 </div>

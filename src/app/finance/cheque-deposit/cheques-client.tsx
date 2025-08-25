@@ -22,6 +22,7 @@ import { format } from 'date-fns';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { getPayments } from '@/app/finance/payment/actions';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { useCurrency } from '@/context/currency-context';
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -50,6 +51,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<{ email: string, role: UserRole['role'] } | null>(null);
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     const storedProfile = sessionStorage.getItem('userProfile');
@@ -100,7 +102,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             // @ts-ignore
             const value = cheque[col.accessorKey as keyof Cheque];
             if (col.accessorKey === 'amount') {
-                 return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value as number);
+                 return formatCurrency(value as number);
             }
             if (col.accessorKey === 'chequeDate' && value) {
                 return format(new Date(value as string), 'PP');
@@ -171,7 +173,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             <Hourglass className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.inHandTotal)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary.inHandTotal)}</div>
             <p className="text-xs text-muted-foreground">{summary.inHandCount} cheques pending deposit</p>
           </CardContent>
         </Card>
@@ -181,7 +183,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.dueThisWeekTotal)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary.dueThisWeekTotal)}</div>
             <p className="text-xs text-muted-foreground">{summary.dueThisWeekCount} cheques to be deposited</p>
           </CardContent>
         </Card>
@@ -191,7 +193,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
                 <AlertTriangle className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.overdueTotal)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(summary.overdueTotal)}</div>
                 <p className="text-xs text-destructive/80">{summary.overdueCount} cheques require immediate attention</p>
             </CardContent>
         </Card>
@@ -201,7 +203,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.depositedTotal)}</div>
+             <div className="text-2xl font-bold">{formatCurrency(summary.depositedTotal)}</div>
             <p className="text-xs text-muted-foreground">{summary.depositedCount} cheques awaiting clearance</p>
           </CardContent>
         </Card>
@@ -211,7 +213,7 @@ export function ChequesClient({ initialCheques, initialSummary }: { initialChequ
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             <div className="text-2xl font-bold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(summary.clearedThisMonthTotal)}</div>
+             <div className="text-2xl font-bold">{formatCurrency(summary.clearedThisMonthTotal)}</div>
             <p className="text-xs text-muted-foreground">{summary.clearedThisMonthCount} cheques cleared</p>
           </CardContent>
         </Card>

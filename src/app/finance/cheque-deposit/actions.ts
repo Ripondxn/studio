@@ -41,7 +41,7 @@ async function writeCheques(data: Cheque[]) {
     await fs.writeFile(chequesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-async function readBankAccounts(): Promise<BankAccount[]> {
+export async function getBankAccounts(): Promise<BankAccount[]> {
     try {
         await fs.access(bankAccountsFilePath);
         const data = await fs.readFile(bankAccountsFilePath, 'utf-8');
@@ -106,7 +106,7 @@ export async function addCheque(data: Omit<Cheque, 'id'>) {
 }
 
 
-export async function updateChequeStatus(chequeId: string, status: Cheque['status'], date: string, user: { email: string, name: string, role: string }) {
+export async function updateChequeStatus(chequeId: string, status: Cheque['status'], date: string, user: { email: string, name: string, role: string }, bankAccountId?: string) {
     try {
         const allCheques = await readCheques();
         const allPayments = await readPayments();
@@ -120,18 +120,22 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         const originalCheque = allCheques[chequeIndex];
         const updatedCheque = { ...originalCheque, status };
         
-        if(status === 'Deposited') {
+        if(status === 'Deposited' && bankAccountId) {
             updatedCheque.depositDate = date;
-        } else if (status === 'Cleared') {
+            updatedCheque.bankAccountId = bankAccountId;
+        } else if (status === 'Cleared' && bankAccountId) {
             updatedCheque.clearanceDate = date;
+            updatedCheque.bankAccountId = bankAccountId;
         } else if (status === 'Bounced') {
-            updatedCheque.clearanceDate = date; // Use clearanceDate for bounced date as well
+            updatedCheque.clearanceDate = date;
         }
 
         allCheques[chequeIndex] = updatedCheque;
         
-        // For statuses that affect financials, create a transaction and send to workflow
         if (status === 'Cleared') {
+            if (!bankAccountId) {
+                 return { success: false, error: 'Bank account is required to clear a cheque.' };
+            }
             
             const paymentType = originalCheque.type === 'Incoming' ? 'Receipt' : 'Payment';
             const remarks = `Cleared Cheque: ${originalCheque.chequeNo}`;
@@ -140,11 +144,11 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
                 id: `PAY-${Date.now()}`,
                 type: paymentType,
                 date: date,
-                partyType: originalCheque.type === 'Incoming' ? 'Tenant' : 'Landlord', // Simplification
+                partyType: originalCheque.type === 'Incoming' ? 'Tenant' : 'Landlord',
                 partyName: originalCheque.partyName,
                 amount: originalCheque.amount,
                 paymentMethod: 'Cheque',
-                bankAccountId: originalCheque.bankAccountId, // Pass the bank account ID
+                bankAccountId: bankAccountId,
                 paymentFrom: 'Bank',
                 referenceNo: originalCheque.chequeNo,
                 property: originalCheque.property,
@@ -317,7 +321,7 @@ export async function createDepositVoucher(
       if (chequeIds.includes(cheque.id)) {
         return {
           ...cheque,
-          status: 'Deposited', // Optimistically update status
+          status: 'Deposited' as const,
           depositDate,
           bankAccountId,
         };
