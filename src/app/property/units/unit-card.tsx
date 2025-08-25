@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -42,7 +41,7 @@ export function UnitCard({ unit }: UnitCardProps) {
         setIsOpen={setIsEditDialogOpen}
         onUnitUpdated={handleSuccess}
       />
-      <Card>
+      <Card className="flex flex-col">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
@@ -54,7 +53,7 @@ export function UnitCard({ unit }: UnitCardProps) {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 flex-1">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground flex items-center gap-2"><Home className="h-4 w-4" /> Floor</span>
             <span className="font-medium">{unit.floor}</span>
@@ -72,16 +71,22 @@ export function UnitCard({ unit }: UnitCardProps) {
           </div>
         </CardContent>
         <CardFooter className="gap-2">
-          {unit.occupancyStatus !== 'Occupied' && (
-             <Button asChild className="w-full">
-                <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
-                    <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
-                </Link>
-             </Button>
+          {unit.occupancyStatus !== 'Occupied' ? (
+             <>
+                <Button asChild className="flex-1">
+                    <Link href={`/tenancy/contract?propertyCode=${unit.propertyCode}&unitCode=${unit.unitCode}`}>
+                        <FilePlus2 className="mr-2 h-4 w-4" /> Create Tenancy
+                    </Link>
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={() => setIsEditDialogOpen(true)}>
+                    Edit
+                </Button>
+             </>
+          ) : (
+             <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
+                Edit Unit
+            </Button>
           )}
-          <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
-              Edit Unit
-          </Button>
         </CardFooter>
       </Card>
     </>
