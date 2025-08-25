@@ -1,14 +1,15 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, Printer } from 'lucide-react';
+import { Loader2, Trash2, Printer, MoreHorizontal, Edit, Plus, Minus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { getPaymentsForVendor } from './actions';
+import { deletePayment } from '@/app/finance/payment/actions';
 import { type Payment } from '@/app/finance/payment/schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { cn } from '@/lib/utils';
@@ -30,10 +31,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { deletePayment } from '@/app/finance/payment/actions';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { MoreHorizontal, Edit, Plus, Minus } from 'lucide-react';
 
 
 interface VendorTransactionHistoryProps {
@@ -45,9 +44,9 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
     const [payments, setPayments] = useState<Payment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-    const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>({});
+    const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const [isDeleting, setIsDeleting] = useState(false);
-    const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+    const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
     const router = useRouter();
     const { toast } = useToast();
 
@@ -64,6 +63,7 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
     }, [fetchPaymentData]);
     
     const handleRecordPayment = () => {
+        setSelectedPayment(null);
         setPaymentDefaultValues({
             type: 'Payment',
             partyType: 'Vendor',
@@ -74,6 +74,7 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
     }
     
      const handleRecordRefund = () => {
+        setSelectedPayment(null);
         setPaymentDefaultValues({
             type: 'Receipt',
             partyType: 'Vendor',
@@ -83,13 +84,19 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
         });
         setIsPaymentDialogOpen(true);
     }
+    
+    const handleEditPayment = (payment: Payment) => {
+        setSelectedPayment(payment);
+        setPaymentDefaultValues(payment);
+        setIsPaymentDialogOpen(true);
+    };
 
     const handleSuccess = () => {
         fetchPaymentData();
         router.refresh();
     };
     
-    const financialSummary = useMemo(() => {
+    const financialSummary = React.useMemo(() => {
         return payments.reduce((acc, p) => {
             if (p.type === 'Payment') {
                 acc.totalPaid += p.amount;
@@ -101,9 +108,9 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
     }, [payments]);
 
     const handleDelete = async () => {
-        if (!selectedPaymentId) return;
+        if (!selectedPayment?.id) return;
         setIsDeleting(true);
-        const result = await deletePayment(selectedPaymentId);
+        const result = await deletePayment(selectedPayment.id);
         if (result.success) {
             toast({ title: 'Payment Deleted' });
             fetchPaymentData();
@@ -111,7 +118,7 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
             toast({ variant: 'destructive', title: 'Error', description: result.error });
         }
         setIsDeleting(false);
-        setSelectedPaymentId(null);
+        setSelectedPayment(null);
     };
 
     const handlePrint = () => {
@@ -133,14 +140,14 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
 
     return (
         <>
-            <AlertDialog open={!!selectedPaymentId} onOpenChange={(open) => !open && setSelectedPaymentId(null)}>
+            <AlertDialog open={!!selectedPayment && !isPaymentDialogOpen} onOpenChange={(open) => !open && setSelectedPayment(null)}>
                 <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>This will permanently delete the payment and reverse its financial impact. This action cannot be undone.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel onClick={() => setSelectedPayment(null)}>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
                     {isDeleting ? 'Deleting...' : 'Delete'}
                     </AlertDialogAction>
@@ -230,10 +237,10 @@ export function VendorTransactionHistory({ vendorCode, vendorName }: VendorTrans
                                                         <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent>
-                                                        <DropdownMenuItem onSelect={() => toast({title: "Coming Soon", description: "Edit functionality will be available in a future update."})}>
+                                                        <DropdownMenuItem onSelect={() => handleEditPayment(payment)}>
                                                             <Edit className="mr-2 h-4 w-4" /> Edit
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-destructive" onSelect={() => setSelectedPaymentId(payment.id!)}>
+                                                        <DropdownMenuItem className="text-destructive" onSelect={() => setSelectedPayment(payment)}>
                                                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
