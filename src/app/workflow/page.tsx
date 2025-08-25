@@ -85,6 +85,7 @@ import { PrintableReport } from './printable-report';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { approveTransaction, rejectTransaction, submitTransaction, addCommentToTransaction } from './actions';
+import { useCurrency } from '@/context/currency-context';
 
 
 // Extend jsPDF type to include autoTable from the plugin
@@ -175,6 +176,7 @@ const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHi
 
 const TransactionDetailsDialog = ({ transaction }: { transaction: Payment }) => {
     const statusInfo = transaction.currentStatus ? statusConfig[transaction.currentStatus] : statusConfig.DRAFT;
+    const { formatCurrency } = useCurrency();
     return (
         <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -190,7 +192,7 @@ const TransactionDetailsDialog = ({ transaction }: { transaction: Payment }) => 
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Amount</p>
-                        <p className="text-2xl font-bold">${transaction.amount.toLocaleString()}</p>
+                        <p className="text-2xl font-bold">{formatCurrency(transaction.amount)}</p>
                     </div>
                      <div className="ml-auto flex items-center gap-2 text-sm font-medium">
                        {statusInfo.icon}
@@ -310,6 +312,7 @@ export default function WorkflowPage() {
   const router = useRouter();
   const printableRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [currentActionInfo, setCurrentActionInfo] = useState<{
@@ -656,7 +659,7 @@ export default function WorkflowPage() {
                         {columnVisibility.roomCode && <TableCell>{t.roomCode || '-'}</TableCell>}
                         {columnVisibility.referenceNo && <TableCell>{t.referenceNo || '-'}</TableCell>}
                         {columnVisibility.amount && <TableCell className="font-medium">
-                            ${t.amount.toLocaleString()}
+                            {formatCurrency(t.amount)}
                         </TableCell>}
                         {columnVisibility.createdByUser && <TableCell>{t.createdByUser}</TableCell>}
                         {columnVisibility.date && <TableCell>
@@ -732,5 +735,3 @@ export default function WorkflowPage() {
     </div>
   );
 }
-
-    

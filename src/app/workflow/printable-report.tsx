@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { type Status } from './types';
 import { Building2 } from 'lucide-react';
+import { useCurrency } from '@/context/currency-context';
 
 interface PrintableReportProps {
   transactions: Payment[];
@@ -29,7 +31,7 @@ interface PrintableReportProps {
 
 export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportProps>(
   ({ transactions, filters, partyNameLookups }, ref) => {
-    
+    const { formatCurrency } = useCurrency();
     const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
 
     return (
@@ -41,7 +43,8 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                 margin: 1cm 0.25in;
             }
             body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
-            .printable-area { display: flex; flex-direction: column; justify-content: space-between; min-height: 24cm; width: 100%; }
+            .printable-area { display: block; }
+            .page-break-before { page-break-before: always; }
             .printable-table, .printable-table th, .printable-table td { border: 1px solid #e5e7eb !important; padding: 4px 6px; font-size: 9pt; }
             .printable-table th { background-color: #f9fafb !important; }
             .no-print { display: none !important; }
@@ -95,7 +98,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                                 <TableCell className="border border-gray-300">{t.unitCode || '-'}</TableCell>
                                 <TableCell className="border border-gray-300">{t.roomCode || '-'}</TableCell>
                                 <TableCell className="text-right font-medium border border-gray-300">
-                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(t.amount)}
+                                    {formatCurrency(t.amount)}
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -106,7 +109,7 @@ export const PrintableReport = React.forwardRef<HTMLDivElement, PrintableReportP
                     <div className="w-full max-w-xs space-y-2">
                         <div className="flex justify-between border-t-2 border-gray-800 pt-2">
                             <span className="font-bold text-gray-800 text-base">Total Amount:</span>
-                            <span className="font-bold text-gray-800 text-base">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalAmount)}</span>
+                            <span className="font-bold text-gray-800 text-base">{formatCurrency(totalAmount)}</span>
                         </div>
                     </div>
                 </div>
