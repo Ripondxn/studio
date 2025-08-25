@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,7 +26,19 @@ const formSchema = z.object({
 
 type NotificationFormData = z.infer<typeof formSchema>;
 
-export function NotificationClient({ recipients }: { recipients: { value: string, label: string }[] }) {
+type Recipient = {
+    value: string,
+    label: string,
+    data: {
+        name: string;
+        propertyAddress?: string;
+        contractEndDate?: string;
+        dueAmount?: number;
+        dueDate?: string;
+    }
+}
+
+export function NotificationClient({ recipients }: { recipients: Recipient[] }) {
   const { toast } = useToast();
   const [isSending, setIsSending] = useState(false);
 
@@ -38,16 +50,44 @@ export function NotificationClient({ recipients }: { recipients: { value: string
       body: ''
     }
   });
-  
-  const handleTemplateSelect = (templateId: string) => {
+
+  const getRecipientData = useCallback((email: string) => {
+    return recipients.find(r => r.value === email)?.data;
+  }, [recipients]);
+
+  const populateTemplate = useCallback((templateId: string, recipientEmail: string) => {
     const template = templates.find(t => t.id === templateId);
-    if(template) {
+    const recipientData = getRecipientData(recipientEmail);
+    
+    if (template && recipientData) {
+      form.setValue('subject', template.subject);
+      let newBody = template.body;
+      newBody = newBody.replace(/\[Recipient Name\]/g, recipientData.name || '[Recipient Name]');
+      newBody = newBody.replace(/\[Property\/Service\]/g, recipientData.propertyAddress || '[Property/Service]');
+      newBody = newBody.replace(/\[Property Address\]/g, recipientData.propertyAddress || '[Property Address]');
+      newBody = newBody.replace(/\[Amount\]/g, recipientData.dueAmount ? String(recipientData.dueAmount) : '[Amount]');
+      newBody = newBody.replace(/\[Due Date\]/g, recipientData.dueDate || '[Due Date]');
+      newBody = newBody.replace(/\[End Date\]/g, recipientData.contractEndDate || '[End Date]');
+      form.setValue('body', newBody);
+    } else if (template) {
         form.setValue('subject', template.subject);
-        const recipientName = form.watch('recipient') ? (recipients.find(r => r.value === form.watch('recipient'))?.label || '[Recipient Name]') : '[Recipient Name]';
-        const personalizedBody = template.body.replace('[Recipient Name]', recipientName);
-        form.setValue('body', personalizedBody);
+        form.setValue('body', template.body);
     }
+  }, [form, getRecipientData]);
+
+  const handleTemplateSelect = (templateId: string) => {
+    const recipientEmail = form.getValues('recipient');
+    populateTemplate(templateId, recipientEmail);
   }
+  
+  const handleRecipientSelect = (email: string) => {
+    form.setValue('recipient', email);
+    const templateId = templates.find(t => t.subject === form.getValues('subject'))?.id;
+    if (templateId) {
+        populateTemplate(templateId, email);
+    }
+  };
+
 
   const onSubmit = async (data: NotificationFormData) => {
     setIsSending(true);
@@ -84,9 +124,9 @@ export function NotificationClient({ recipients }: { recipients: { value: string
                                     control={form.control}
                                     render={({ field }) => (
                                         <Combobox
-                                            options={recipients}
+                                            options={recipients.map(r => ({ value: r.value, label: r.label }))}
                                             value={field.value}
-                                            onSelect={field.onChange}
+                                            onSelect={handleRecipientSelect}
                                             placeholder="Select a recipient..."
                                         />
                                     )}

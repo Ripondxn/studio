@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
 import nodemailer from 'nodemailer';
+import { parseISO, differenceInDays } from 'date-fns';
 
 // This file contains a placeholder for email sending logic.
 // In a real application, you would integrate a service like SendGrid, AWS SES, or similar.
@@ -22,17 +23,58 @@ async function readData(filePath: string) {
     }
 }
 
-export async function getRecipients(): Promise<{ value: string, label: string }[]> {
+export async function getRecipients() {
     const tenants = await readData(path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json'));
     const landlords = await readData(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'));
     const customers = await readData(path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json'));
     const vendors = await readData(path.join(process.cwd(), 'src/app/vendors/vendors-data.json'));
+    const tenancyContracts = await readData(path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json'));
+
+    // Find the next due payment for each tenancy contract
+    const duePaymentsMap = new Map();
+    tenancyContracts.forEach((contract: any) => {
+        if (!contract.paymentSchedule) return;
+        const nextDue = contract.paymentSchedule
+            .filter((p: any) => p.status === 'unpaid')
+            .sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+            [0];
+        
+        if (nextDue) {
+            duePaymentsMap.set(contract.contractNo, nextDue);
+        }
+    });
 
     const recipientList = [
-        ...tenants.map((t: any) => ({ value: t.tenantData.email, label: `${t.tenantData.name} (Tenant)` })),
-        ...landlords.map((l: any) => ({ value: l.landlordData.email, label: `${l.landlordData.name} (Landlord)` })),
-        ...customers.map((c: any) => ({ value: c.customerData.email, label: `${c.customerData.name} (Customer)` })),
-        ...vendors.map((v: any) => ({ value: v.vendorData.email, label: `${v.vendorData.name} (Vendor)` })),
+        ...tenants.map((t: any) => {
+            const contract = tenancyContracts.find((c: any) => c.tenantCode === t.tenantData.code);
+            const duePayment = contract ? duePaymentsMap.get(contract.contractNo) : null;
+            return { 
+                value: t.tenantData.email, 
+                label: `${t.tenantData.name} (Tenant)`,
+                data: {
+                    name: t.tenantData.name,
+                    propertyAddress: contract?.property || '[Property Address]',
+                    contractEndDate: contract?.endDate || '[End Date]',
+                    dueAmount: duePayment?.amount || '[Amount]',
+                    dueDate: duePayment?.dueDate || '[Due Date]',
+                }
+            }
+        }),
+        ...landlords.map((l: any) => ({ 
+            value: l.landlordData.email, 
+            label: `${l.landlordData.name} (Landlord)`,
+            data: { name: l.landlordData.name } 
+        })),
+        ...customers.map((c: any) => ({ 
+            value: c.customerData.email, 
+            label: `${c.customerData.name} (Customer)`,
+            data: { name: c.customerData.name } 
+        })),
+        ...vendors.map((v: any) => ({ 
+            value: v.vendorData.email, 
+            label: `${v.vendorData.name} (Vendor)`,
+            data: { name: v.vendorData.name } 
+        })),
     ];
     
     // Filter out recipients without a valid email and remove duplicates
@@ -64,7 +106,6 @@ export async function sendNotificationEmail(data: z.infer<typeof formSchema>) {
             return { success: false, error: 'Gmail user and App Password are not configured. Please add them in Communication Settings.' };
         }
 
-        // Placeholder for actual Nodemailer API call
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
@@ -72,12 +113,14 @@ export async function sendNotificationEmail(data: z.infer<typeof formSchema>) {
             pass: settings.gmailAppPassword,
           },
         });
+
         const mailOptions = {
           from: settings.gmailUser,
           to: validation.data.recipient,
           subject: validation.data.subject,
-          html: validation.data.body.replace(/\\n/g, '<br>'),
+          html: validation.data.body.replace(/\n/g, '<br>'),
         };
+
         await transporter.sendMail(mailOptions);
 
         return { success: true };
