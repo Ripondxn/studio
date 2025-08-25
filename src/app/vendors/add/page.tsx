@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -23,6 +22,7 @@ import {
   Plus,
   Pencil,
   Loader2,
+  Search,
   X,
   FileUp,
   Link2
@@ -101,25 +101,15 @@ export default function VendorPage() {
     };
   }, [attachments]);
 
-  const handleFindClick = useCallback(async (code?: string) => {
-    const codeToFind = code || form.getValues('code');
-    if (!codeToFind) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter a Vendor Code to find.',
-      });
-      return;
-    }
-    
+  const handleFindClick = useCallback(async (code: string) => {
     try {
-      const result = await findVendorData(codeToFind);
+      const result = await findVendorData(code);
       if (result.success && result.data) {
         const fullVendorData = { ...initialVendorData, ...(result.data.vendorData || {}) };
         form.reset(fullVendorData);
         setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
         
-        if (codeToFind !== 'new') {
+        if (code !== 'new') {
             setIsNewRecord(false);
             setIsEditing(false);
         } else {
@@ -130,7 +120,7 @@ export default function VendorPage() {
         toast({
           variant: 'destructive',
           title: 'Not Found',
-          description: `No record found for Vendor Code: ${codeToFind}. You can create a new one.`,
+          description: `No record found for Vendor Code: ${code}. You can create a new one.`,
         });
         handleFindClick('new');
       }
@@ -146,12 +136,9 @@ export default function VendorPage() {
   useEffect(() => {
     const vendorCode = searchParams.get('code');
     if (vendorCode) {
-      setIsNewRecord(false);
       handleFindClick(vendorCode);
     } else {
-        setIsNewRecord(true);
-        setIsEditing(true); 
-        handleFindClick('new');
+      handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
 
@@ -554,3 +541,4 @@ export default function VendorPage() {
     </div>
   );
 }
+
