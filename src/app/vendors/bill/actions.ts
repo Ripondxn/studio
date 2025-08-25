@@ -50,7 +50,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
         if (isNew) {
              let maxNum = 0;
             allBills.forEach(i => {
-                const match = i.billNo.match(/^BILL-(\d+)$/);
+                const match = i.billNo.match(/^BL-(\d+)$/);
                 if (match) {
                     const num = parseInt(match[1], 10);
                     if (num > maxNum) {
@@ -58,7 +58,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
                     }
                 }
             });
-            const newBillNo = `BILL-${(maxNum + 1).toString().padStart(4, '0')}`;
+            const newBillNo = `BL-${(maxNum + 1).toString().padStart(4, '0')}`;
 
             const newBill: Bill = {
                 ...validation.data,
