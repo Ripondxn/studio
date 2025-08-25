@@ -251,5 +251,36 @@
         "comments": "Part of checkout CO-1756051372971"
       }
     ]
+  },
+  {
+    "type": "Payment",
+    "date": "2025-08-25",
+    "partyType": "Vendor",
+    "partyName": "V001",
+    "amount": 480,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "referenceType": "Bill",
+    "referenceNo": "BL-0001",
+    "description": "Payment for Bill: BL-0001 - Bal: $480.00",
+    "status": "Paid",
+    "createdByUser": "Super Admin",
+    "billAllocations": [
+      {
+        "billId": "BILL-1756104742682",
+        "amount": 480
+      }
+    ],
+    "id": "PAY-1756106032346",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-25T07:13:52.346Z",
+        "comments": "Initial Draft"
+      }
+    ]
   }
 ]

@@ -140,7 +140,7 @@ async function readPayments(): Promise<Payment[]> {
 export async function getPaymentsForVendor(vendorName: string): Promise<Payment[]> {
     try {
         const allPayments = await readPayments();
-        // Vendors are identified by name in payments
+        // Vendors are identified by name in payments. Fetch both Payments and Receipts.
         const vendorPayments = allPayments.filter(p => p.partyName === vendorName && p.partyType === 'Vendor');
         return vendorPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (error) {

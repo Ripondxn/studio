@@ -19,9 +19,9 @@
     "taxRate": 0,
     "tax": 0,
     "total": 480,
-    "status": "Draft",
+    "status": "Paid",
     "notes": "",
     "id": "BILL-1756104742682",
-    "amountPaid": 0
+    "amountPaid": 480
   }
 ]

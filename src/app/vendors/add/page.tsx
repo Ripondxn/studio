@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -91,6 +92,8 @@ export default function VendorPage() {
     defaultValues: initialVendorData,
   });
 
+  const vendorCode = form.watch('code');
+
   useEffect(() => {
     return () => {
       attachments.forEach(attachment => {
@@ -134,9 +137,9 @@ export default function VendorPage() {
   }, [form, toast]);
 
   useEffect(() => {
-    const vendorCode = searchParams.get('code');
-    if (vendorCode) {
-      handleFindClick(vendorCode);
+    const vendorCodeParam = searchParams.get('code');
+    if (vendorCodeParam) {
+      handleFindClick(vendorCodeParam);
     } else {
       handleFindClick('new');
     }
@@ -541,4 +544,3 @@ export default function VendorPage() {
     </div>
   );
 }
-

@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Minus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -47,6 +47,22 @@ export function VendorTransactionHistory({ vendorName }: VendorTransactionHistor
         setIsPaymentDialogOpen(true);
     }
     
+     const handleRecordRefund = () => {
+        setPaymentDefaultValues({
+            type: 'Receipt',
+            partyType: 'Vendor',
+            partyName: vendorName,
+            status: 'Received',
+            remarks: 'Vendor Refund',
+        });
+        setIsPaymentDialogOpen(true);
+    }
+
+    const handleSuccess = () => {
+        fetchPaymentData();
+        router.refresh();
+    };
+    
     const financialSummary = useMemo(() => {
         return payments.reduce((acc, p) => {
             if (p.type === 'Payment') {
@@ -64,18 +80,23 @@ export function VendorTransactionHistory({ vendorName }: VendorTransactionHistor
                 isOpen={isPaymentDialogOpen}
                 setIsOpen={setIsPaymentDialogOpen}
                 defaultValues={paymentDefaultValues}
-                onPaymentAdded={() => fetchPaymentData()}
+                onPaymentAdded={handleSuccess}
             />
             <Card>
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <div>
                             <CardTitle>Billing & Refund History</CardTitle>
-                            <CardDescription>A record of payments made to {vendorName}.</CardDescription>
+                            <CardDescription>A record of payments made to and refunds received from {vendorName}.</CardDescription>
                         </div>
-                        <Button onClick={handleRecordPayment}>
-                            <Plus className="mr-2 h-4 w-4" /> Record Payment
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" onClick={handleRecordRefund}>
+                                <Plus className="mr-2 h-4 w-4" /> Record Refund
+                            </Button>
+                             <Button onClick={handleRecordPayment}>
+                                <Minus className="mr-2 h-4 w-4" /> Record Payment
+                            </Button>
+                        </div>
                     </div>
                      <div className="grid grid-cols-3 gap-4 text-center mt-4 border rounded-lg p-4">
                         <div>
@@ -119,12 +140,15 @@ export function VendorTransactionHistory({ vendorName }: VendorTransactionHistor
                                             <TableCell>{format(new Date(payment.date), 'PP')}</TableCell>
                                             <TableCell>
                                                 <Badge variant={payment.type === 'Receipt' ? 'secondary' : 'outline'} className={cn(payment.type === 'Receipt' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800', 'border-transparent')}>
-                                                    {payment.type}
+                                                    {payment.type === 'Receipt' ? 'Refund' : 'Payment'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>{payment.referenceNo}</TableCell>
                                             <TableCell><Badge variant="outline">{payment.paymentMethod}</Badge></TableCell>
-                                            <TableCell className="text-right font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payment.amount)}</TableCell>
+                                            <TableCell className={cn("text-right font-medium", payment.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
+                                                {payment.type === 'Receipt' ? '+' : '-'}
+                                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payment.amount)}
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 )}
