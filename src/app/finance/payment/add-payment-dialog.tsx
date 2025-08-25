@@ -136,52 +136,56 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   }, [])
   
    useEffect(() => {
-     if(partyType === 'Customer' && partyName) {
-        getInvoicesForCustomer(partyName).then(data => {
-            setInvoicesForCustomer(data);
-            const defaultAllocs = defaultValues?.invoiceAllocations || [];
-            const currentAllocs = watch('invoiceAllocations') || [];
+    if (isOpen) {
+        if(partyType === 'Customer' && partyName) {
+            getInvoicesForCustomer(partyName).then(data => {
+                setInvoicesForCustomer(data);
+                const defaultAllocs = defaultValues?.invoiceAllocations || [];
+                const currentAllocs = watch('invoiceAllocations') || [];
 
-            if(defaultAllocs.length > 0) {
-                 setValue('invoiceAllocations', defaultAllocs);
-            } else if (currentAllocs.length === 0) {
-                setValue('invoiceAllocations', data
-                    .filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled')
-                    .map(inv => ({ invoiceId: inv.id, amount: 0}))
-                );
-            }
-        });
-     } else {
-        setInvoicesForCustomer([]);
-     }
+                if(defaultAllocs.length > 0) {
+                    setValue('invoiceAllocations', defaultAllocs);
+                } else if (currentAllocs.length === 0) {
+                    setValue('invoiceAllocations', data
+                        .filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled')
+                        .map(inv => ({ invoiceId: inv.id, amount: 0}))
+                    );
+                }
+            });
+        } else {
+            setInvoicesForCustomer([]);
+        }
 
-     if(partyType === 'Vendor' && partyName) {
-         getBillsForVendor(partyName).then(data => {
-            setBillsForVendor(data);
-            const defaultAllocs = defaultValues?.billAllocations || [];
-            const currentAllocs = watch('billAllocations') || [];
-             if(defaultAllocs.length > 0) {
-                 setValue('billAllocations', defaultAllocs);
-            } else if (currentAllocs.length === 0) {
-                setValue('billAllocations', data
-                    .filter(bill => bill.status !== 'Paid' && bill.status !== 'Cancelled')
-                    .map(bill => ({ billId: bill.id, amount: 0}))
-                );
-            }
-         })
-     } else {
-         setBillsForVendor([]);
-     }
-   }, [partyType, partyName, defaultValues, setValue, watch]);
+        if(partyType === 'Vendor' && partyName) {
+            getBillsForVendor(partyName).then(data => {
+                setBillsForVendor(data);
+                const defaultAllocs = defaultValues?.billAllocations || [];
+                const currentAllocs = watch('billAllocations') || [];
+                if(defaultAllocs.length > 0) {
+                    setValue('billAllocations', defaultAllocs);
+                } else if (currentAllocs.length === 0) {
+                    setValue('billAllocations', data
+                        .filter(bill => bill.status !== 'Paid' && bill.status !== 'Cancelled')
+                        .map(bill => ({ billId: bill.id, amount: 0}))
+                    );
+                }
+            })
+        } else {
+            setBillsForVendor([]);
+        }
+    }
+   }, [isOpen, partyType, partyName, setValue, watch, defaultValues]);
    
    useEffect(() => {
-    if (partyType && partyName && referenceType) {
-        getReferences(partyType, partyName, referenceType).then(data => {
+    const fetchReferences = async () => {
+        if (partyType && partyName && referenceType) {
+            const data = await getReferences(partyType, partyName, referenceType);
             setLookups(prev => ({...prev, references: data}));
-        });
-    } else {
-        setLookups(prev => ({...prev, references: []}));
-    }
+        } else {
+            setLookups(prev => ({...prev, references: []}));
+        }
+    };
+    fetchReferences();
    }, [partyType, partyName, referenceType]);
 
 
