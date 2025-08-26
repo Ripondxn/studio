@@ -39,8 +39,9 @@ export async function getAllLeaseContracts() {
     return await readContracts();
 }
 
-export async function saveLeaseContractData(data: LeaseContract, isNewRecord: boolean) {
-    const validation = leaseContractSchema.safeParse(data);
+export async function saveLeaseContractData(data: Omit<LeaseContract, 'id'> & { id?: string, isAutoContractNo?: boolean }, isNewRecord: boolean) {
+    const { isAutoContractNo, ...contractData } = data;
+    const validation = leaseContractSchema.omit({id: true}).safeParse(contractData);
 
     if (!validation.success) {
         const errors = validation.error.errors.map(e => e.message).join(', ');
@@ -50,14 +51,22 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
     try {
         const allContracts = await readContracts();
         let savedContract: LeaseContract;
+        const validatedData = validation.data;
         
         if (isNewRecord) {
-             const contractExists = allContracts.some(c => c.contractNo === data.contractNo);
-             if (contractExists) {
-                return { success: false, error: `Lease Contract with number "${data.contractNo}" already exists.`};
+             let newContractNo = validatedData.contractNo;
+             if (isAutoContractNo || !newContractNo) {
+                newContractNo = await getNextContractNumber();
+             } else {
+                 const contractExists = allContracts.some(c => c.contractNo === newContractNo);
+                 if (contractExists) {
+                    return { success: false, error: `A contract with number "${newContractNo}" already exists.`};
+                 }
              }
+
              const newContract: LeaseContract = {
-                ...validation.data,
+                ...validatedData,
+                contractNo: newContractNo,
                 id: `LCON-${Date.now()}`,
             };
             allContracts.push(newContract);
@@ -65,8 +74,8 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
         } else {
             const index = allContracts.findIndex(c => c.id === data.id);
             if (index !== -1) {
-                allContracts[index] = validation.data;
-                savedContract = validation.data;
+                allContracts[index] = validatedData as LeaseContract;
+                savedContract = validatedData as LeaseContract;
             } else {
                  return { success: false, error: `Lease Contract with ID "${data.id}" not found.` };
             }
@@ -76,7 +85,7 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
 
         revalidatePath('/lease/contracts');
         revalidatePath('/finance/pdc-cheque');
-        revalidatePath(`/lease/contract?id=${data.id}`);
+        revalidatePath(`/lease/contract?id=${savedContract.id}`);
         revalidatePath('/'); // Revalidate dashboard
         return { success: true, data: savedContract };
 
@@ -86,23 +95,28 @@ export async function saveLeaseContractData(data: LeaseContract, isNewRecord: bo
     }
 }
 
+async function getNextContractNumber() {
+    const allContracts = await readContracts();
+    let maxNum = 0;
+    allContracts.forEach(c => {
+        const match = c.contractNo.match(/^LA-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `LA-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
 export async function findLeaseContract(query: { contractId?: string; contractNo?: string }): Promise<{ success: boolean; data?: LeaseContract; error?: string }> {
     try {
         const allContracts = await readContracts();
         let foundContract: LeaseContract | undefined;
 
         if (query.contractId === 'new') {
-            let maxNum = 0;
-            allContracts.forEach(c => {
-                const match = c.contractNo.match(/^LA-(\d+)$/);
-                if (match) {
-                    const num = parseInt(match[1], 10);
-                    if (num > maxNum) {
-                        maxNum = num;
-                    }
-                }
-            });
-            const newContractNo = `LA-${(maxNum + 1).toString().padStart(4, '0')}`;
+            const newContractNo = await getNextContractNumber();
             return { success: true, data: { ...initialContractState, contractNo: newContractNo } };
         }
         
@@ -166,7 +180,7 @@ export async function deleteLeaseContract(contractId: string) {
 
 async function readLandlords() {
     try {
-        const data = await fs.readFile(landlordsFilePath, 'utf-8');
+        const data = await fs.readFile(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'), 'utf-8');
         return JSON.parse(data);
     } catch(e) {
         return [];

@@ -38,6 +38,7 @@ import { type LeaseContract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
+import { Switch } from '@/components/ui/switch';
 
 type LookupData = {
     landlords: {value: string, label: string}[];
@@ -75,6 +76,7 @@ export default function LeaseContractPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
+  const [isAutoContractNo, setIsAutoContractNo] = useState(true);
 
   const [contract, setContract] = useState<LeaseContract>(initialContractState);
   const [initialContract, setInitialContract] = useState<LeaseContract>(initialContractState);
@@ -97,6 +99,7 @@ export default function LeaseContractPage() {
                     setIsNewRecord(false);
                     setIsEditing(false);
                     setEditedInstallmentIndexes(new Set());
+                    setIsAutoContractNo(false);
                 } else {
                     toast({ variant: 'destructive', title: 'Error', description: result.error || "Contract not found" });
                     router.push('/lease/contracts');
@@ -268,7 +271,7 @@ export default function LeaseContractPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    const result = await saveLeaseContractData(contract, isNewRecord);
+    const result = await saveLeaseContractData({ ...contract, isAutoContractNo }, isNewRecord);
     if (result.success && result.data) {
       toast({
         title: 'Lease Contract Saved',
@@ -408,10 +411,19 @@ export default function LeaseContractPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
             <div>
                 <Label htmlFor="leaseContractNo">Lease Contract No</Label>
-                 <Input id="leaseContractNo" value={contract.contractNo} disabled />
+                 <Input id="leaseContractNo" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={isAutoContractNo || !isEditing}/>
+            </div>
+            <div className="flex items-center space-x-2 pt-6">
+                <Switch
+                    id="auto-contract-no-switch"
+                    checked={isAutoContractNo}
+                    onCheckedChange={setIsAutoContractNo}
+                    disabled={!isNewRecord || !isEditing}
+                />
+                <Label htmlFor="auto-contract-no-switch">Auto-generate</Label>
             </div>
             <div>
               <Label htmlFor="contract-date">Date</Label>
