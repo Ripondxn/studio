@@ -121,17 +121,15 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         
         const originalCheque = allCheques[chequeIndex];
         
-        const existingClearedPayment = allPayments.find(p => p.referenceNo === originalCheque.chequeNo && p.status !== 'Cancelled');
-        const existingCashReturnPayment = allPayments.find(p => 
-            p.referenceNo === `CASH-FOR-${originalCheque.chequeNo}` ||
-            p.referenceNo === `CASH-FOR-${originalCheque.id}` // Legacy check
+        // Prevent creating duplicate financial transactions for the same cheque action
+        const cashReturnRef = `CASH-FOR-${originalCheque.chequeNo}`;
+        const hasExistingTransaction = allPayments.some(p => 
+            p.status !== 'Cancelled' && 
+            (p.referenceNo === originalCheque.chequeNo || p.referenceNo === cashReturnRef)
         );
 
-        if (status === 'Cleared' && (existingClearedPayment || existingCashReturnPayment)) {
-            return { success: false, error: `A payment transaction for cheque #${originalCheque.chequeNo} already exists.` };
-        }
-        if (status === 'Returned with Cash' && (existingClearedPayment || existingCashReturnPayment)) {
-             return { success: false, error: `A payment transaction for cheque #${originalCheque.chequeNo} already exists.` };
+        if (hasExistingTransaction && (status === 'Cleared' || status === 'Returned with Cash')) {
+             return { success: false, error: `A financial transaction for cheque #${originalCheque.chequeNo} already exists. Cannot create another.` };
         }
         
         const updatedCheque = { ...originalCheque, status, bankAccountId };
@@ -142,18 +140,22 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
             updatedCheque.clearanceDate = date;
         } else if (status === 'Bounced') {
             updatedCheque.clearanceDate = date;
-        } else if (status === 'Returned with Cash') {
+        } 
+        
+        allCheques[chequeIndex] = updatedCheque;
+        
+        if (status === 'Returned with Cash') {
             const newPayment: Payment = {
                 id: `PAY-${Date.now()}`,
                 type: 'Receipt',
                 date: date,
-                partyType: originalCheque.type === 'Incoming' ? 'Tenant' : 'Landlord',
+                partyType: 'Tenant',
                 partyName: originalCheque.partyName,
                 amount: originalCheque.amount,
                 paymentMethod: 'Cash',
                 bankAccountId: bankAccountId,
                 paymentFrom: bankAccountId ? 'Bank' : 'Petty Cash',
-                referenceNo: `CASH-FOR-${originalCheque.chequeNo}`,
+                referenceNo: cashReturnRef,
                 property: originalCheque.property,
                 unitCode: originalCheque.unitCode,
                 description: `Cash received for returned cheque #${originalCheque.chequeNo}`,
@@ -171,11 +173,7 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
             allPayments.push(newPayment);
             await writePayments(allPayments);
             revalidatePath('/workflow');
-        }
-
-        allCheques[chequeIndex] = updatedCheque;
-        
-        if (status === 'Cleared') {
+        } else if (status === 'Cleared') {
             if (!bankAccountId) {
                  return { success: false, error: 'Bank account is required to clear a cheque.' };
             }
@@ -503,5 +501,3 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
-
-    
