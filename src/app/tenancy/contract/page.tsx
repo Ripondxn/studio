@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -39,6 +40,7 @@ import { addMonths, format as formatDate, differenceInDays, differenceInMonths, 
 import { Combobox } from '@/components/ui/combobox';
 import { type Tenant } from '../tenants/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 
 const initialContractState: Contract = {
     id: '',
@@ -84,6 +86,7 @@ export default function TenancyContractPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
+  const [isAutoContractNo, setIsAutoContractNo] = useState(true);
 
   const [contract, setContract] = useState<Contract>(initialContractState);
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
@@ -103,6 +106,7 @@ export default function TenancyContractPage() {
             setIsNewRecord(false);
             setIsEditing(false);
             setEditedInstallmentIndexes(new Set());
+            setIsAutoContractNo(false);
 
             if (fetchedContract.property) {
                 const units = await getUnitsForProperty(fetchedContract.property);
@@ -391,7 +395,7 @@ export default function TenancyContractPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    const result = await saveContractData(contract, isNewRecord);
+    const result = await saveContractData({...contract, isAutoContractNo}, isNewRecord);
     if (result.success && result.data) {
       toast({
         title: 'Contract Saved',
@@ -543,12 +547,21 @@ export default function TenancyContractPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="contract-no">Tenancy Contract No</Label>
-                                    <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled/>
+                                    <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={isAutoContractNo || !isEditing}/>
                                 </div>
                                 <div>
                                     <Label htmlFor="contract-date">Date</Label>
                                     <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
                                 </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Switch
+                                    id="auto-contract-no-switch"
+                                    checked={isAutoContractNo}
+                                    onCheckedChange={setIsAutoContractNo}
+                                    disabled={!isNewRecord || !isEditing}
+                                />
+                                <Label htmlFor="auto-contract-no-switch">Auto-generate Contract No</Label>
                             </div>
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div>

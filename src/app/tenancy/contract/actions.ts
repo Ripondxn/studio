@@ -78,8 +78,9 @@ async function createChequesFromContract(contract: Contract) {
     }
 }
 
-export async function saveContractData(data: Contract, isNewRecord: boolean) {
-    const validation = contractSchema.safeParse(data);
+export async function saveContractData(data: Omit<Contract, 'id'> & { id?: string, isAutoContractNo?: boolean }, isNewRecord: boolean) {
+    const { isAutoContractNo, ...contractData } = data;
+    const validation = contractSchema.omit({id: true}).safeParse(contractData);
 
     if (!validation.success) {
         const errors = validation.error.errors.map(e => e.message).join(', ');
@@ -91,8 +92,19 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
         let savedContract: Contract;
         
         if (isNewRecord) {
+             let newContractNo = validation.data.contractNo;
+             if (isAutoContractNo || !newContractNo) {
+                newContractNo = await getNextContractNumber();
+             } else {
+                const contractExists = allContracts.some(c => c.contractNo === newContractNo);
+                if (contractExists) {
+                    return { success: false, error: `A contract with number "${newContractNo}" already exists.`};
+                }
+             }
+
              const newContract: Contract = {
                 ...validation.data,
+                contractNo: newContractNo,
                 id: `CON-${Date.now()}`,
             };
             allContracts.push(newContract);
@@ -100,8 +112,8 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
         } else {
             const index = allContracts.findIndex(c => c.id === data.id);
             if (index !== -1) {
-                allContracts[index] = validation.data;
-                savedContract = validation.data;
+                allContracts[index] = validation.data as Contract;
+                savedContract = validation.data as Contract;
             } else {
                  return { success: false, error: `Contract with ID "${data.id}" not found.` };
             }
@@ -109,7 +121,6 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
         
         await writeContracts(allContracts);
         
-        // After successfully saving contract, create cheques
         await createChequesFromContract(savedContract);
         
         revalidatePath('/tenancy/contracts');
@@ -123,23 +134,28 @@ export async function saveContractData(data: Contract, isNewRecord: boolean) {
     }
 }
 
+async function getNextContractNumber() {
+    const allContracts = await readContracts();
+    let maxNum = 0;
+    allContracts.forEach(c => {
+        const match = c.contractNo.match(/^TC-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `TC-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
 export async function findContract(query: { unitCode?: string, tenantName?: string, contractId?: string }): Promise<{ success: boolean; data?: Contract; error?: string }> {
     try {
         const allContracts = await readContracts();
         let foundContract: Contract | undefined;
         
         if (query.contractId === 'new') {
-            let maxNum = 0;
-            allContracts.forEach(c => {
-                const match = c.contractNo.match(/^TC-(\d+)$/);
-                if (match) {
-                    const num = parseInt(match[1], 10);
-                    if (num > maxNum) {
-                        maxNum = num;
-                    }
-                }
-            });
-            const newContractNo = `TC-${(maxNum + 1).toString().padStart(4, '0')}`;
+            const newContractNo = await getNextContractNumber();
             return { success: true, data: { ...initialContractState, contractNo: newContractNo } };
         }
 
