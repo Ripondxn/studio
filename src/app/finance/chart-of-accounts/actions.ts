@@ -268,8 +268,7 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
                  const allEquityTransactions: any[] = await readData(equityTransactionsFilePath);
                  
                  // This logic shows all posted transactions for any asset/bank account.
-                 // It could be refined to match specific payments to specific asset accounts.
-                 transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED'));
+                 transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED' && (p.paymentFrom === 'Bank' || p.paymentFrom === 'Petty Cash')));
                  
                  const equityAsPayments = allEquityTransactions.map(t => ({
                     id: t.id,
