@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -92,8 +93,8 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
             toast({ variant: 'destructive', title: 'Error', description: 'Could not identify current user. Please log in again.'});
             return;
         }
-        if ((status === 'Deposited' || status === 'Cleared') && !bankAccountId) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Please select a bank account to deposit to.'});
+        if ((status === 'Deposited' || status === 'Cleared' || status === 'Returned with Cash') && !bankAccountId) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please select a bank account.'});
             return;
         }
 
@@ -111,6 +112,7 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
         if (status === 'Deposited') return 'Deposit Date';
         if (status === 'Cleared') return 'Clearance Date';
         if (status === 'Bounced') return 'Bounce Date';
+        if (status === 'Returned with Cash') return 'Return Date';
         return null;
     }, [status]);
 
@@ -144,9 +146,9 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
                             <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                         </div>
                     )}
-                     {(status === 'Deposited' || status === 'Cleared') && (
+                     {(status === 'Deposited' || status === 'Cleared' || status === 'Returned with Cash') && (
                          <div className="space-y-2">
-                            <Label htmlFor="bankAccount">Deposit to Bank Account</Label>
+                            <Label htmlFor="bankAccount">{status === 'Returned with Cash' ? 'Cash From' : 'Deposit to'} Bank Account</Label>
                             <Select onValueChange={setBankAccountId} value={bankAccountId}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a bank" />

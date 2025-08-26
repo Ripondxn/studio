@@ -128,6 +128,34 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
             updatedCheque.clearanceDate = date;
         } else if (status === 'Bounced') {
             updatedCheque.clearanceDate = date;
+        } else if (status === 'Returned with Cash') {
+            // This is the key change: create a RECEIPT transaction.
+            const newPayment: Payment = {
+                id: `PAY-${Date.now()}`,
+                type: 'Receipt',
+                date: date,
+                partyType: originalCheque.type === 'Incoming' ? 'Tenant' : 'Landlord',
+                partyName: originalCheque.partyName,
+                amount: originalCheque.amount,
+                paymentMethod: 'Cash',
+                bankAccountId: bankAccountId,
+                paymentFrom: bankAccountId ? 'Bank' : 'Petty Cash',
+                referenceNo: `CASH-FOR-${originalCheque.chequeNo}`,
+                description: `Cash received for returned cheque #${originalCheque.chequeNo}`,
+                status: 'Received',
+                currentStatus: 'PENDING_ADMIN_APPROVAL',
+                createdByUser: user.name,
+                approvalHistory: [{
+                    action: 'Created & Submitted',
+                    actorId: user.email,
+                    actorRole: user.role,
+                    timestamp: new Date().toISOString(),
+                    comments: `Status updated to ${status}`
+                }]
+            };
+            allPayments.push(newPayment);
+            await writePayments(allPayments);
+            revalidatePath('/workflow');
         }
 
         allCheques[chequeIndex] = updatedCheque;
