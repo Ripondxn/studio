@@ -125,12 +125,13 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         
         const originalCheque = allCheques[chequeIndex];
         
-        // Prevent creating duplicate financial transactions for the same cheque action
         const cashReturnRef = `CASH-FOR-${originalCheque.chequeNo}`;
         const hasExistingTransaction = allPayments.some(p => 
             p.status !== 'Cancelled' && 
+            p.referenceNo &&
             (p.referenceNo === originalCheque.chequeNo || p.referenceNo === cashReturnRef)
         );
+        
 
         if (hasExistingTransaction && (status === 'Cleared' || status === 'Returned with Cash')) {
              return { success: false, error: `A financial transaction for cheque #${originalCheque.chequeNo} already exists. Cannot create another.` };
