@@ -269,6 +269,23 @@ export const columns: ColumnDef<Cheque>[] = [
     }
   },
   {
+    accessorKey: 'partyName',
+    header: 'Party',
+    cell: ({ row }) => {
+        return (
+            <div className="flex flex-col">
+                <span className="font-medium flex items-center gap-1"><User className="h-3 w-3" />{row.original.partyName}</span>
+                {row.original.property && <span className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="h-3 w-3" />{row.original.property}</span>}
+                {row.original.contractNo && <span className="text-xs text-muted-foreground flex items-center gap-1"><Library className="h-3 w-3" />{row.original.contractNo}</span>}
+            </div>
+        )
+    }
+  },
+  {
+    accessorKey: 'bankName',
+    header: 'Bank Name',
+  },
+  {
     accessorKey: 'chequeNo',
     header: ({ column }) => (
       <Button
@@ -284,10 +301,6 @@ export const columns: ColumnDef<Cheque>[] = [
             <span className="font-medium">{row.original.chequeNo}</span>
         )
     }
-  },
-  {
-    accessorKey: 'bankName',
-    header: 'Bank Name',
   },
   {
     accessorKey: 'chequeDate',
@@ -306,19 +319,6 @@ export const columns: ColumnDef<Cheque>[] = [
       const amount = parseFloat(row.getValue('amount'));
       return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
-  },
-   {
-    accessorKey: 'partyName',
-    header: 'Party',
-    cell: ({ row }) => {
-        return (
-            <div className="flex flex-col">
-                <span className="font-medium flex items-center gap-1"><User className="h-3 w-3" />{row.original.partyName}</span>
-                {row.original.property && <span className="text-xs text-muted-foreground flex items-center gap-1"><Building2 className="h-3 w-3" />{row.original.property}</span>}
-                {row.original.contractNo && <span className="text-xs text-muted-foreground flex items-center gap-1"><Library className="h-3 w-3" />{row.original.contractNo}</span>}
-            </div>
-        )
-    }
   },
   {
     accessorKey: 'status',
