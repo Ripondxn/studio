@@ -40,55 +40,5 @@
         "comments": ""
       }
     ]
-  },
-  {
-    "type": "Payment",
-    "date": "2025-08-26",
-    "partyType": "Agent",
-    "partyName": "A001",
-    "amount": 500,
-    "paymentMethod": "Cash",
-    "paymentFrom": "Bank",
-    "property": "LT-C38",
-    "unitCode": "F101",
-    "roomCode": "Room-1/B",
-    "referenceType": "Other",
-    "description": "",
-    "remarks": "Commission payment for agent Abdur Rahim (A001)",
-    "status": "Paid",
-    "createdByUser": "Super Admin",
-    "billAllocations": [],
-    "id": "PAY-1756215327067",
-    "currentStatus": "POSTED",
-    "approvalHistory": [
-      {
-        "action": "Created Transaction",
-        "actorId": "Super Admin",
-        "actorRole": "User",
-        "timestamp": "2025-08-26T13:35:27.067Z",
-        "comments": "Initial Draft"
-      },
-      {
-        "action": "Submitted for Approval",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T13:36:22.123Z",
-        "comments": ""
-      },
-      {
-        "action": "Approved by Admin",
-        "actorId": "ripondxn@gmail.com",
-        "actorRole": "Admin",
-        "timestamp": "2025-08-26T13:37:57.068Z",
-        "comments": ""
-      },
-      {
-        "action": "Final Approval & Posted",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T13:39:40.729Z",
-        "comments": ""
-      }
-    ]
   }
 ]
