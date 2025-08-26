@@ -40,7 +40,7 @@ export async function getAccounts(): Promise<Account[]> {
     const accounts: Account[] = await readData(accountsFilePath);
     const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
     const pettyCashData = await readData(pettyCashFilePath);
-    const pettyCash = pettyCashData.length > 0 ? pettyCashData[0] : { balance: 0 };
+    const pettyCash = pettyCashData.balance || 0;
     const payments: Payment[] = await readData(paymentsFilePath);
     const equityTransactions: any[] = await readData(equityTransactionsFilePath);
     const assets = await getAssets();
@@ -58,7 +58,7 @@ export async function getAccounts(): Promise<Account[]> {
     });
 
     // 2. Calculate Cash and Bank from bank accounts and petty cash
-    const totalCashAndBank = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0) + (pettyCash.balance || 0);
+    const totalCashAndBank = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0) + (pettyCash || 0);
     if (accountMap.has('1110')) {
         accountMap.get('1110')!.balance = totalCashAndBank;
     }
@@ -259,21 +259,21 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
 
     for (const code of codesToFetch) {
          switch(code) {
-            case '1110': // This account is now an aggregate, pull from banking.
-                 const allBankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
-                 const pettyCashData = await readData(pettyCashFilePath);
-                 const pettyCash = pettyCashData.length > 0 ? pettyCashData[0] : { balance: 0 };
+            case '1110': // Cash and Bank
+            case '1210': // Furniture & Fixtures
+            case '1220': // Office Equipment
+            case '1230': // Vehicles
                  const allEquityTransactions: any[] = await readData(equityTransactionsFilePath);
                  
-                 // Combine bank transactions and petty cash transactions.
-                 // This logic might need to become more sophisticated, for now we will show all posted transactions
+                 // This logic shows all posted transactions for any asset/bank account.
+                 // It could be refined to match specific payments to specific asset accounts.
                  transactions.push(...allPayments.filter(p => p.currentStatus === 'POSTED'));
                  
                  const equityAsPayments = allEquityTransactions.map(t => ({
                     id: t.id,
                     type: t.type === 'Contribution' ? 'Receipt' : 'Payment',
                     date: t.date,
-                    partyType: 'Customer', // Simplified for display
+                    partyType: 'Customer',
                     partyName: 'Owner',
                     amount: t.amount,
                     paymentMethod: t.accountId === 'acc_3' ? 'Cash' : 'Bank Transfer',
