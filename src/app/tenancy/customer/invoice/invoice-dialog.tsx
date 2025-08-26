@@ -353,8 +353,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                                 placeholder="Select or type item..."
                              />
                           </TableCell>
-                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} /></TableCell>
-                          <TableCell><Input type="number" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
+                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} /></TableCell>
+                          <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
                           <TableCell className="text-right">
                             {formatCurrency((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                           </TableCell>
