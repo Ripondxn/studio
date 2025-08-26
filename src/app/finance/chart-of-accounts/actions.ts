@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -110,8 +109,8 @@ export async function getAccounts(): Promise<Account[]> {
     // 6. Build tree structure for balance recalculation
     const roots: Account[] = [];
     accountMap.forEach(acc => {
-        if (acc.parentCode && accountMap.has(acc.parentCode)) {
-            const parent = accountMap.get(acc.parentCode)!;
+        const parent = acc.parentCode ? accountMap.get(acc.parentCode) : null;
+        if (parent) {
             if (!parent.children) {
                 parent.children = [];
             }
@@ -338,3 +337,5 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
     
     return uniqueTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
+
+    
