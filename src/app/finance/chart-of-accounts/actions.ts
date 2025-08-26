@@ -48,7 +48,7 @@ export async function getAccounts(): Promise<Account[]> {
     // Create a map for easy access and modification
     const accountMap = new Map<string, Account>(accounts.map(acc => [acc.code, { ...acc, balance: 0, children: [] as Account[] }]));
 
-    // 1. Reset all non-group account balances that are calculated dynamically
+    // 1. Reset all non-group account balances
      accountMap.forEach(acc => {
         if (!acc.isGroup) {
             acc.balance = 0;
@@ -108,40 +108,36 @@ export async function getAccounts(): Promise<Account[]> {
 
 
     // 6. Build tree structure for balance recalculation
-    const rootAccounts: Account[] = [];
+    const roots: Account[] = [];
+    const childrenMap = new Map<string, Account[]>();
+
     accountMap.forEach(acc => {
-        const parentCode = acc.parentCode;
-        if (parentCode && accountMap.has(parentCode)) {
-            const parent = accountMap.get(parentCode)!;
-            // @ts-ignore
-            if (parent.children) {
-                 // @ts-ignore
-                parent.children.push(acc);
-            } else {
-                 // @ts-ignore
-                parent.children = [acc];
+        if (acc.parentCode && accountMap.has(acc.parentCode)) {
+            if (!childrenMap.has(acc.parentCode)) {
+                childrenMap.set(acc.parentCode, []);
             }
+            childrenMap.get(acc.parentCode)!.push(acc);
         } else {
-            rootAccounts.push(acc);
+            roots.push(acc);
         }
     });
 
-    // 7. Recalculate parent balances from the bottom up
+    // 7. Recalculate parent balances from the bottom up using a post-order traversal
     function calculateParentBalances(account: Account): number {
         if (!account.isGroup) {
             return account.balance;
         }
-        // @ts-ignore
-        const children: Account[] = account.children || [];
+
+        const children = childrenMap.get(account.code) || [];
         const sum = children.reduce((acc, child) => {
-            const childAccount = accountMap.get(child.code)!;
-            return acc + calculateParentBalances(childAccount);
+            return acc + calculateParentBalances(child);
         }, 0);
+        
         account.balance = sum;
         return sum;
     }
     
-    rootAccounts.forEach(calculateParentBalances);
+    roots.forEach(calculateParentBalances);
 
     return Array.from(accountMap.values());
 }
