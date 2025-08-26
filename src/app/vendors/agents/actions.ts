@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -102,20 +103,24 @@ export async function findAgentData(agentCode: string) {
 }
 
 export async function saveAgentData(data: Agent, isNewRecord: boolean) {
-    const validation = agentSchema.safeParse(data);
-    if (!validation.success) {
-        return { success: false, error: 'Invalid data format for agent.' };
-    }
     try {
         const allAgents = await readAgents();
 
         if (isNewRecord) {
              const newAgent: Agent = {
-                ...validation.data,
+                ...data,
                 id: `AGENT-${Date.now()}`,
             };
-            allAgents.push(newAgent);
+             const validation = agentSchema.safeParse(newAgent);
+             if (!validation.success) {
+                return { success: false, error: 'Invalid data format for agent.' };
+            }
+            allAgents.push(validation.data);
         } else {
+             const validation = agentSchema.safeParse(data);
+             if (!validation.success) {
+                return { success: false, error: 'Invalid data format for agent.' };
+            }
             const index = allAgents.findIndex(a => a.id === data.id);
             if (index !== -1) {
                 allAgents[index] = { ...allAgents[index], ...validation.data };
@@ -127,7 +132,8 @@ export async function saveAgentData(data: Agent, isNewRecord: boolean) {
         await writeAgents(allAgents);
         revalidatePath('/vendors/agents');
 
-        return { success: true, data: validation.data };
+        const savedData = isNewRecord ? allAgents[allAgents.length - 1] : data;
+        return { success: true, data: savedData };
     } catch (error) {
         console.error('Failed to save agent data:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
