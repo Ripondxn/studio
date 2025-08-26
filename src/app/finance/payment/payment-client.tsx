@@ -90,9 +90,10 @@ export function PaymentsClient() {
 
   const filteredPayments = useMemo(() => {
     if (!accountIdFilter) {
-      return payments;
+      return payments.filter(p => p.status !== 'Cancelled');
     }
     return payments.filter(p => {
+        if (p.status === 'Cancelled') return false;
         if (p.paymentFrom === 'Petty Cash' && accountIdFilter === 'acc_3') {
             return true;
         }
