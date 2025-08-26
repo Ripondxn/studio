@@ -82,49 +82,49 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
           </TableHeader>
           <TableBody>
             {permissions.map((feature, featureIndex) => (
-              <Collapsible asChild key={feature.feature}>
-                <tbody>
-                  <TableRow className="bg-muted/50 font-bold">
-                    <TableCell colSpan={4}>
-                      <CollapsibleTrigger className="flex w-full items-center justify-between">
-                        <span>{feature.feature}</span>
-                        <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
-                      </CollapsibleTrigger>
-                    </TableCell>
-                  </TableRow>
-                  <CollapsibleContent asChild>
+                <Collapsible asChild key={feature.feature}>
                     <React.Fragment>
-                      {feature.actions.map((action, actionIndex) => (
-                        <TableRow key={action.action}>
-                          <TableCell></TableCell>
-                          <TableCell className="font-medium capitalize">{action.action.replace(/_/g, ' ')}</TableCell>
-                          <TableCell className="text-muted-foreground">{action.description}</TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">{action.allowedRoles.length} Role(s)</Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuLabel>Select Roles</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                {roles.map((role) => (
-                                  <DropdownMenuCheckboxItem
-                                    key={role}
-                                    checked={action.allowedRoles.includes(role)}
-                                    onCheckedChange={(checked) => handleRoleChange(featureIndex, actionIndex, role, !!checked)}
-                                    disabled={role === 'Super Admin'}
-                                  >
-                                    {role}
-                                  </DropdownMenuCheckboxItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
+                        <TableRow className="bg-muted/50 font-bold">
+                            <TableCell colSpan={4}>
+                                <CollapsibleTrigger className="flex w-full items-center justify-between">
+                                <span>{feature.feature}</span>
+                                <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                                </CollapsibleTrigger>
+                            </TableCell>
                         </TableRow>
-                      ))}
+                        <CollapsibleContent asChild>
+                            <React.Fragment>
+                            {feature.actions.map((action, actionIndex) => (
+                                <TableRow key={action.action}>
+                                <TableCell></TableCell>
+                                <TableCell className="font-medium capitalize">{action.action.replace(/_/g, ' ')}</TableCell>
+                                <TableCell className="text-muted-foreground">{action.description}</TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm">{action.allowedRoles.length} Role(s)</Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuLabel>Select Roles</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        {roles.map((role) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={role}
+                                            checked={action.allowedRoles.includes(role)}
+                                            onCheckedChange={(checked) => handleRoleChange(featureIndex, actionIndex, role, !!checked)}
+                                            disabled={role === 'Super Admin'}
+                                        >
+                                            {role}
+                                        </DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                                </TableRow>
+                            ))}
+                            </React.Fragment>
+                        </CollapsibleContent>
                     </React.Fragment>
-                  </CollapsibleContent>
-                </tbody>
               </Collapsible>
             ))}
           </TableBody>
