@@ -1,11 +1,10 @@
 
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 import { AssetList } from './asset-list';
+import { getAssets } from './actions';
+import { AddAssetDialog } from './add-asset-dialog';
 
 export default async function AssetManagementPage() {
-  // In the future, we'll fetch assets here.
-  const assets: any[] = [];
+  const assets = await getAssets();
 
   return (
     <div className="container mx-auto py-10">
@@ -16,9 +15,7 @@ export default async function AssetManagementPage() {
             Track and manage your company's long-term and short-term assets.
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add New Asset
-        </Button>
+        <AddAssetDialog onAssetAdded={() => {}} />
       </div>
       <AssetList initialAssets={assets} />
     </div>

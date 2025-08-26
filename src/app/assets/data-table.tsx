@@ -54,7 +54,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div>
+    <div className="rounded-md border p-4">
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter by asset name..."
