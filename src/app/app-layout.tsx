@@ -124,6 +124,7 @@ const navLinks = [
             { href: '/admin/notification', label: 'Notifications' },
             { href: '/admin/currency', label: 'Currency' },
             { href: '/admin/payment-gateway', label: 'Payment Gateway' },
+            { href: '/admin/access-control', label: 'Access Control' },
         ]
     },
 ];
