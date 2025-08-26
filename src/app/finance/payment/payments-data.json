@@ -43,7 +43,7 @@
   },
   {
     "type": "Payment",
-    "date": "2025-08-13",
+    "date": "2025-08-06",
     "partyType": "Agent",
     "partyName": "A001",
     "amount": 500,
@@ -52,41 +52,40 @@
     "property": "LT-C38",
     "unitCode": "F101",
     "roomCode": "Room-1/B",
-    "referenceType": "Other",
     "description": "",
     "remarks": "Commission payment for agent Abdur Rahim (A001)",
     "status": "Paid",
     "createdByUser": "Super Admin",
     "billAllocations": [],
-    "id": "PAY-1756226997631",
+    "id": "PAY-1756227897410",
     "currentStatus": "POSTED",
     "approvalHistory": [
       {
         "action": "Created Transaction",
         "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-08-26T16:49:57.631Z",
+        "timestamp": "2025-08-26T17:04:57.410Z",
         "comments": "Initial Draft"
       },
       {
         "action": "Submitted for Approval",
         "actorId": "super.admin@propvue.com",
         "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T16:50:53.422Z",
+        "timestamp": "2025-08-26T17:05:14.956Z",
         "comments": ""
       },
       {
         "action": "Approved by Admin",
         "actorId": "ripondxn@gmail.com",
         "actorRole": "Admin",
-        "timestamp": "2025-08-26T16:51:04.030Z",
+        "timestamp": "2025-08-26T17:05:50.280Z",
         "comments": ""
       },
       {
         "action": "Final Approval & Posted",
         "actorId": "super.admin@propvue.com",
         "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T16:51:36.453Z",
+        "timestamp": "2025-08-26T17:06:34.008Z",
         "comments": ""
       }
     ]
