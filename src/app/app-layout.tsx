@@ -123,6 +123,7 @@ const navLinks = [
             { href: '/admin/backup', label: 'Backup & Restore' },
             { href: '/admin/notification', label: 'Notifications' },
             { href: '/admin/currency', label: 'Currency' },
+            { href: '/admin/payment-gateway', label: 'Payment Gateway' },
         ]
     },
 ];
