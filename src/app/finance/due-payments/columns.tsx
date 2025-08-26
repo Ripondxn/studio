@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, ArrowDown, ArrowUp, User, Building, MoreHorizontal, Pencil } from 'lucide-react';
+import { ArrowUpDown, ArrowDown, ArrowUp, User, Building, MoreHorizontal, Pencil, LinkIcon } from 'lucide-react';
 import { format, isBefore, startOfToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,9 @@ import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
+import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 
 const statusConfig: { [key in DuePayment['status']]: { label: string, className: string }} = {
     'Upcoming': { label: 'Upcoming', className: 'bg-gray-500/20 text-gray-700' },
@@ -24,6 +27,7 @@ const statusConfig: { [key in DuePayment['status']]: { label: string, className:
 
 const ActionsCell = ({ row }: { row: { original: DuePayment } }) => {
     const router = useRouter();
+    const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const duePayment = row.original;
 
@@ -41,6 +45,15 @@ const ActionsCell = ({ row }: { row: { original: DuePayment } }) => {
         remarks: `Payment for installment ${duePayment.id}`,
         status: duePayment.type === 'Receivable' ? 'Received' : 'Paid',
     };
+    
+    const handleShare = () => {
+        const paymentUrl = `${window.location.origin}/pay?invoice=${duePayment.id}&amount=${duePayment.amount}&description=${encodeURIComponent(`Payment for ${duePayment.id}`)}`;
+        navigator.clipboard.writeText(paymentUrl).then(() => {
+            toast({ title: "Link Copied", description: "Payment link copied to clipboard." });
+        }, (err) => {
+            toast({ variant: 'destructive', title: "Error", description: "Could not copy link."});
+        });
+    }
 
     return (
         <>
@@ -49,11 +62,22 @@ const ActionsCell = ({ row }: { row: { original: DuePayment } }) => {
                 setIsOpen={setIsDialogOpen}
                 onPaymentAdded={() => router.refresh()}
                 defaultValues={defaultValues}
-            >
-                <Button variant="outline" size="sm" disabled={duePayment.status === 'Paid'} onClick={() => setIsDialogOpen(true)}>
-                    Record Payment
-                </Button>
-            </AddPaymentDialog>
+            />
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => setIsDialogOpen(true)} disabled={duePayment.status === 'Paid'}>
+                        Record Payment
+                    </DropdownMenuItem>
+                    {duePayment.type === 'Receivable' && (
+                        <DropdownMenuItem onClick={handleShare} disabled={duePayment.status === 'Paid'}>
+                            <LinkIcon className="mr-2 h-4 w-4" /> Get Payment Link
+                        </DropdownMenuItem>
+                    )}
+                </DropdownMenuContent>
+            </DropdownMenu>
         </>
     )
 }
