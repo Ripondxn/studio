@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -109,7 +110,7 @@ export function TransactionHistoryDialog({ agent, isOpen, setIsOpen }: Transacti
     const doc = new jsPDF();
     doc.text(`Commission History: ${agent.name}`, 14, 16);
     
-    const head = [['Date', 'Property', 'Unit', 'Room', 'Partition', 'Reference', 'Amount']];
+    const head = [['Date', 'Property', 'Unit', 'Room', 'Reference', 'Amount']];
     const body = filteredTransactions.map(tx => [
         format(new Date(tx.date), 'PP'),
         tx.property || 'N/A',

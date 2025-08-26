@@ -10,6 +10,7 @@ import { paymentSchema, type Payment } from './schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Landlord } from '@/app/landlord/schema';
 import { type Vendor } from '@/app/vendors/schema';
+import { type Agent } from '@/app/vendors/agents/schema';
 import { type Customer } from '@/app/tenancy/customer/schema';
 import { type BankAccount } from '@/app/finance/banking/schema';
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO, isBefore } from 'date-fns';
@@ -26,6 +27,7 @@ const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payme
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
 const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
+const agentsFilePath = path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json');
 const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
@@ -322,6 +324,7 @@ export async function getLookups() {
     const tenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
     const landlords: {landlordData: Landlord}[] = await readData(landlordsFilePath);
     const vendors: {vendorData: Vendor}[] = await readData(vendorsFilePath);
+    const agents: Agent[] = await readData(agentsFilePath);
     const customers: {customerData: Customer}[] = await readData(customersFilePath);
     const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
 
@@ -329,6 +332,7 @@ export async function getLookups() {
         tenants: tenants.map(t => ({ value: t.tenantData.code, label: t.tenantData.name })),
         landlords: landlords.map(l => ({ value: l.landlordData.code, label: l.landlordData.name })),
         vendors: vendors.map(v => ({ value: v.vendorData.code, label: v.vendorData.name })),
+        agents: agents.map(a => ({ value: a.code, label: a.name })),
         customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
         bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`}))
     }
@@ -338,6 +342,7 @@ export async function getPartyNameLookups(): Promise<Record<string, string>> {
     const tenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
     const landlords: {landlordData: Landlord}[] = await readData(landlordsFilePath);
     const vendors: {vendorData: Vendor}[] = await readData(vendorsFilePath);
+    const agents: Agent[] = await readData(agentsFilePath);
     const customers: {customerData: Customer}[] = await readData(customersFilePath);
 
     const lookups: Record<string, string> = {};
@@ -350,6 +355,9 @@ export async function getPartyNameLookups(): Promise<Record<string, string>> {
     });
     vendors.forEach(v => {
         if(v.vendorData.code) lookups[v.vendorData.code] = v.vendorData.name;
+    });
+     agents.forEach(a => {
+        if(a.code) lookups[a.code] = a.name;
     });
     customers.forEach(c => {
         if(c.customerData.code) lookups[c.customerData.code] = c.customerData.name;
