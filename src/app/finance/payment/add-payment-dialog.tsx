@@ -36,6 +36,7 @@ import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
 import { getBillsForVendor } from '@/app/vendors/bill/actions';
 import { type Bill } from '@/app/vendors/bill/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { type Agent } from '@/app/vendors/agents/schema';
 
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
@@ -44,7 +45,7 @@ type Lookups = {
     tenants: { value: string, label: string }[];
     landlords: { value: string, label: string }[];
     vendors: { value: string, label: string }[];
-    agents: { value: string, label: string }[];
+    agents: (Agent & { value: string, label: string })[];
     customers: { value: string, label: string }[];
     bankAccounts: { value: string, label: string }[];
     properties: {value: string, label: string}[];
@@ -312,6 +313,18 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     }
   }
 
+  const handlePartySelect = (partyCode: string) => {
+    setValue('partyName', partyCode);
+
+    if (partyType === 'Agent') {
+        const selectedAgent = lookups.agents.find(agent => agent.value === partyCode);
+        if (selectedAgent) {
+            setValue('amount', selectedAgent.commissionRate || 0);
+            setValue('agentCode', selectedAgent.code);
+        }
+    }
+  };
+
   const referenceTypeOptions = () => {
     if (partyType === 'Vendor') {
       return <SelectItem value="Bill">Bill</SelectItem>
@@ -354,7 +367,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         <div className="space-y-2"><Label>Payment Type *</Label><Controller name="type" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select payment type"/></SelectTrigger><SelectContent><SelectItem value="Receipt">Receipt (Incoming)</SelectItem><SelectItem value="Payment">Payment (Outgoing)</SelectItem></SelectContent></Select>)} /></div>
                         <div className="space-y-2"><Label>Payment Date *</Label><Controller name="date" control={control} render={({ field }) => ( <Popover><PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')} initialFocus /></PopoverContent></Popover>)} /></div>
                         <div className="space-y-2"><Label>Party Type *</Label><Controller name="partyType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select party type"/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Landlord">Landlord</SelectItem><SelectItem value="Vendor">Vendor</SelectItem><SelectItem value="Agent">Agent</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></div>
-                        <div className="space-y-2"><Label>Party Name *</Label><Controller name="partyName" control={control} render={({ field }) => (<Combobox options={partyOptions} value={field.value || ''} onSelect={field.onChange} placeholder="Select party"/>)} /></div>
+                        <div className="space-y-2"><Label>Party Name *</Label><Controller name="partyName" control={control} render={({ field }) => (<Combobox options={partyOptions} value={field.value || ''} onSelect={handlePartySelect} placeholder="Select party"/>)} /></div>
                         <div className="space-y-2"><Label>Amount *</Label><Input type="number" placeholder="0.00" {...register('amount', { valueAsNumber: true })} /></div>
                         <div className="space-y-2"><Label>Payment Method *</Label><Controller name="paymentMethod" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select payment method"/></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></div>
                     </CardContent>
