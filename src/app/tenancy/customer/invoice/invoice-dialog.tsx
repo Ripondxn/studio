@@ -39,7 +39,7 @@ import { useCurrency } from '@/context/currency-context';
 import { getProducts } from '@/app/products/actions';
 import { type Product } from '@/app/products/schema';
 
-const formSchema = invoiceSchema.omit({ id: true });
+const formSchema = invoiceSchema.omit({ id: true, invoiceNo: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
 
 interface InvoiceDialogProps {
@@ -158,7 +158,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
       } else {
         setIsPropertyInvoice(true);
         reset({
-            invoiceNo: '', // Will be set by the server
             customerCode: customer.code,
             customerName: customer.name,
             property: '',
@@ -259,7 +258,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
           <div className="max-h-[60vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled/></div>
+              <div><Label>Invoice #</Label><Input value={invoice?.invoiceNo || 'Auto-generated'} disabled/></div>
               <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>

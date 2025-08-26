@@ -37,8 +37,8 @@ export async function getInvoicesForCustomer(customerCode: string) {
     }));
 }
 
-export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string }) {
-    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(data);
+export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'invoiceNo'> & { id?: string, invoiceNo?: string }) {
+    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true, invoiceNo: true}).safeParse(data);
 
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -73,7 +73,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
             if (index === -1) {
                 return { success: false, error: 'Invoice not found.' };
             }
-            allInvoices[index] = { ...allInvoices[index], ...validation.data };
+            allInvoices[index] = { ...allInvoices[index], ...validation.data, invoiceNo: allInvoices[index].invoiceNo };
         }
 
         await writeInvoices(allInvoices);
