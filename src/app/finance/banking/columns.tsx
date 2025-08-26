@@ -50,7 +50,7 @@ import { useCurrency } from '@/context/currency-context';
 
 type BankAccountFormData = Omit<BankAccount, 'id'> & { id?: string };
 
-const BankAccountDialog = ({ account, onSave, children }: { account?: BankAccount, onSave: () => void, children: React.ReactNode }) => {
+const BankAccountDialog = ({ account, onSave, children, disabled }: { account?: BankAccount, onSave: () => void, children: React.ReactNode, disabled?: boolean }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
 
@@ -90,7 +90,7 @@ const BankAccountDialog = ({ account, onSave, children }: { account?: BankAccoun
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogTrigger asChild disabled={disabled}>{children}</DialogTrigger>
             <DialogContent>
                  <form onSubmit={handleSubmit(handleSave)}>
                     <DialogHeader>
@@ -175,14 +175,14 @@ const ActionsCell = ({ row, onAccountUpdate }: { row: { original: BankAccount },
                         <History className="mr-2 h-4 w-4"/> View Transactions
                     </DropdownMenuItem>
                 </TransactionHistoryDialog>
-                <BankAccountDialog account={account} onSave={onAccountUpdate}>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={isPettyCash && !canManage}>
+                <BankAccountDialog account={account} onSave={onAccountUpdate} disabled={!canManage}>
+                    <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
                         <Edit className="mr-2 h-4 w-4"/> Edit
-                    </DropdownMenuItem>
+                    </div>
                 </BankAccountDialog>
                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                         <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} disabled={isPettyCash && !canManage}>
+                    <AlertDialogTrigger asChild disabled={!canManage}>
+                         <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} disabled={!canManage}>
                             <Trash2 className="mr-2 h-4 w-4"/> Delete
                         </DropdownMenuItem>
                     </AlertDialogTrigger>

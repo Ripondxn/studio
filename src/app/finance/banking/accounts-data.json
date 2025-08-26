@@ -1,17 +1,17 @@
 [
   {
-    "id": "acc_1756122907621",
-    "accountName": "Main-Trust Famous",
-    "bankName": "Janata Bank Limited",
-    "accountNumber": "5117",
-    "balance": 15000,
-    "currency": "AED"
-  },
-  {
     "id": "acc_1756122990669",
     "accountName": "Client-Trust Famous",
     "bankName": "ADCB",
     "accountNumber": "20001",
+    "balance": 0,
+    "currency": "AED"
+  },
+  {
+    "id": "acc_1756197739796",
+    "accountName": "Main-Trust Famous",
+    "bankName": "Janata Bank Limited",
+    "accountNumber": "5117",
     "balance": 0,
     "currency": "AED"
   }
