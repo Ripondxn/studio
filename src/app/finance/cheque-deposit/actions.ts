@@ -192,12 +192,9 @@ export async function deleteCheque(chequeId: string) {
             const linkedPaymentIndex = allPayments.findIndex(p => p.referenceNo === paymentToDelete.chequeNo);
             
             if (linkedPaymentIndex !== -1) {
-                // If the payment has been posted, it should not be deleted from here.
-                // A reversal process should be used instead. For now, we prevent deletion.
                 if (allPayments[linkedPaymentIndex].currentStatus === 'POSTED') {
                     return { success: false, error: 'Cannot delete a cheque linked to a posted payment. Please reverse the payment first.' };
                 }
-                // Delete the associated payment if it's not posted
                 allPayments.splice(linkedPaymentIndex, 1);
                 await writePayments(allPayments);
             }
@@ -416,6 +413,36 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
                         actorRole: paymentDetails.user.role,
                         timestamp: new Date().toISOString(),
                         comments: 'Cheque returned with cash payment.',
+                    }],
+                };
+                allPayments.push(newPayment);
+            }
+            await writePayments(allPayments);
+            revalidatePath('/workflow');
+        } else if (!returnWithCash && paymentDetails) { // Logic for 'Returned' status
+             for (const cheque of selectedCheques) {
+                 const newPayment: Payment = {
+                    id: `PAY-${Date.now()}-${cheque.id}`,
+                    type: 'Payment',
+                    date: format(new Date(), 'yyyy-MM-dd'),
+                    partyType: 'Tenant', // Assuming return is always to tenant
+                    partyName: cheque.partyName,
+                    amount: cheque.amount,
+                    paymentMethod: 'Cash', // Or another appropriate method
+                    paymentFrom: paymentDetails.paymentFrom,
+                    bankAccountId: paymentDetails.bankAccountId,
+                    referenceNo: `RTRN-${cheque.chequeNo}`,
+                    description: `Reversal for returned Cheque #${cheque.chequeNo}`,
+                    remarks: `Cheque returned.`,
+                    status: 'Paid',
+                    createdByUser: paymentDetails.user.name,
+                    currentStatus: 'PENDING_ADMIN_APPROVAL',
+                    approvalHistory: [{
+                        action: 'Created & Submitted',
+                        actorId: paymentDetails.user.email,
+                        actorRole: paymentDetails.user.role,
+                        timestamp: new Date().toISOString(),
+                        comments: 'Cheque returned.',
                     }],
                 };
                 allPayments.push(newPayment);

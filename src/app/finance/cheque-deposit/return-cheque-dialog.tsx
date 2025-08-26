@@ -96,11 +96,11 @@ export function ReturnChequeDialog({ cheques, onReturn }: ReturnChequeDialogProp
         const result = await returnCheque({
             chequeIds: selectedChequeIds,
             returnWithCash,
-            paymentDetails: returnWithCash ? {
+            paymentDetails: {
                 paymentFrom,
                 bankAccountId,
                 user: currentUser
-            } : undefined
+            }
         });
 
         if (result.success) {
@@ -138,11 +138,11 @@ export function ReturnChequeDialog({ cheques, onReturn }: ReturnChequeDialogProp
                                 onCheckedChange={setReturnWithCash}
                             />
                             <Label htmlFor="return-with-cash" className="text-base font-semibold">
-                                Return with Cash?
+                                Settle with Cash?
                             </Label>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            If you are giving cash back to the tenant/customer in exchange for the cheque, enable this option. A payment voucher will be created for approval.
+                            If you are giving cash back to the tenant/customer in exchange for the cheque, enable this option. A payment voucher will be created for approval. If disabled, the cheque will simply be marked "Returned".
                         </p>
                         {returnWithCash && (
                              <div className="grid grid-cols-2 gap-4 pt-2">
