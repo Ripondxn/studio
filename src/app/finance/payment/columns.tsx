@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,7 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Payment } from './schema';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { deletePayment } from './actions';
+import { cancelPayment, restorePayment } from './actions';
 import { useRouter } from 'next/navigation';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useCurrency } from '@/context/currency-context';
@@ -53,7 +54,7 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
     const { toast } = useToast();
     const router = useRouter();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
     const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
 
     useEffect(() => {
@@ -63,21 +64,37 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
         }
     }, []);
 
-    const handleDelete = async () => {
-        setIsDeleting(true);
-        const result = await deletePayment(payment.id!);
+    const handleCancel = async () => {
+        setIsCancelling(true);
+        const result = await cancelPayment(payment.id!);
         if(result.success) {
-            toast({ title: "Success", description: "Payment has been deleted."});
+            const { id } = toast({ 
+                title: "Payment Cancelled",
+                description: "The transaction has been cancelled.",
+                action: (
+                    <Button variant="outline" size="sm" onClick={async () => {
+                       const restoreResult = await restorePayment(payment.id!);
+                       if(restoreResult.success) {
+                           toast({ title: 'Undo Successful', description: 'The payment has been restored.'});
+                           router.refresh();
+                       } else {
+                           toast({ variant: 'destructive', title: 'Undo Failed', description: restoreResult.error});
+                       }
+                       id && toast({id}).dismiss();
+                    }}>Undo</Button>
+                )
+            });
             router.refresh(); // Refresh data on the page
         } else {
-            toast({ variant: 'destructive', title: "Error", description: result.error || 'Failed to delete payment.'});
+             toast({ variant: 'destructive', title: "Error", description: result.error || 'Failed to cancel payment.'});
         }
-        setIsDeleting(false);
+        setIsCancelling(false);
         setIsDeleteDialogOpen(false);
     }
     
     const canDelete = (): boolean => {
         if (currentUserRole === 'Super Admin') return true;
+        // Allow cancelling posted transactions, but permanent deletion only for drafts
         return payment.currentStatus !== 'POSTED';
     }
     
@@ -88,13 +105,13 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the payment and reverse its financial impact.
+                            This will cancel the payment and reverse its financial impact. You can undo this action from the toast notification.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                            {isDeleting ? 'Deleting...' : 'Delete'}
+                        <AlertDialogAction onClick={handleCancel} disabled={isCancelling} className="bg-destructive hover:bg-destructive/90">
+                            {isCancelling ? 'Cancelling...' : 'Confirm Cancellation'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -110,7 +127,7 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)} disabled={!canDelete()}>
-                        <Trash2 className="mr-2 h-4 w-4"/> Delete
+                        <Trash2 className="mr-2 h-4 w-4"/> Cancel Transaction
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

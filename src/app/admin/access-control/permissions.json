@@ -147,8 +147,7 @@
         "action": "manage_banking",
         "description": "Add/Edit/Delete bank accounts",
         "allowedRoles": [
-          "Super Admin",
-          "Admin"
+          "Super Admin"
         ]
       },
       {

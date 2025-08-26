@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -92,11 +93,14 @@ async function writeCheques(data: Cheque[]) {
 export async function getPayments(user: { email: string; role: string; name?: string; }) {
     const allPayments = await readPayments();
     
+    // Filter out cancelled payments from the main view
+    const activePayments = allPayments.filter(p => p.status !== 'Cancelled');
+    
     if (user.role === 'Admin' || user.role === 'Super Admin') {
-        return allPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return activePayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
     
-    const userPayments = allPayments.filter(p => p.createdByUser === user.name);
+    const userPayments = activePayments.filter(p => p.createdByUser === user.name);
 
     return userPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
@@ -152,6 +156,132 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
     }
 }
 
+async function reverseFinancialImpact(payment: Payment) {
+    if (payment.paymentFrom === 'Petty Cash') {
+        const pettyCash = await readPettyCash();
+        if (payment.type === 'Payment') {
+            pettyCash.balance += payment.amount;
+        } else { // Receipt
+            pettyCash.balance -= payment.amount;
+        }
+        await writePettyCash(pettyCash);
+    } else if (payment.bankAccountId) {
+            const allBankAccounts = await readBankAccounts();
+            const accountIndex = allBankAccounts.findIndex(acc => acc.id === payment.bankAccountId);
+            if (accountIndex !== -1) {
+            if (payment.type === 'Payment') {
+                allBankAccounts[accountIndex].balance += payment.amount;
+            } else { // Receipt
+                allBankAccounts[accountIndex].balance -= payment.amount;
+            }
+            await writeBankAccounts(allBankAccounts);
+            }
+    }
+    
+    // Reverse invoice allocations if applicable
+    if (payment.type === 'Receipt' && payment.invoiceAllocations && payment.invoiceAllocations.length > 0) {
+        const allInvoices = await readInvoices();
+        payment.invoiceAllocations.forEach(allocation => {
+            const invoiceIndex = allInvoices.findIndex(inv => inv.id === allocation.invoiceId);
+            if (invoiceIndex !== -1) {
+                allInvoices[invoiceIndex].amountPaid = (allInvoices[invoiceIndex].amountPaid || 0) - allocation.amount;
+                if (allInvoices[invoiceIndex].status === 'Paid') {
+                    const dueDate = parseISO(allInvoices[invoiceIndex].dueDate);
+                    allInvoices[invoiceIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
+                }
+            }
+        });
+        await writeInvoices(allInvoices);
+    }
+}
+
+async function applyFinancialImpact(payment: Payment) {
+    if (payment.paymentFrom === 'Petty Cash') {
+        const pettyCash = await readPettyCash();
+        if (payment.type === 'Payment') {
+            pettyCash.balance -= payment.amount;
+        } else {
+            pettyCash.balance += payment.amount;
+        }
+        await writePettyCash(pettyCash);
+    } else if (payment.bankAccountId) {
+        const allBankAccounts = await readBankAccounts();
+        const accountIndex = allBankAccounts.findIndex(acc => acc.id === payment.bankAccountId);
+        if (accountIndex !== -1) {
+            if (payment.type === 'Payment') {
+                allBankAccounts[accountIndex].balance -= payment.amount;
+            } else {
+                allBankAccounts[accountIndex].balance += payment.amount;
+            }
+            await writeBankAccounts(allBankAccounts);
+        }
+    }
+     if (payment.type === 'Receipt' && payment.invoiceAllocations && payment.invoiceAllocations.length > 0) {
+        await applyPaymentToInvoices(payment.invoiceAllocations, payment.partyName);
+    }
+}
+
+
+export async function cancelPayment(paymentId: string) {
+    try {
+        const allPayments = await readPayments();
+        const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+
+        if (paymentIndex === -1) {
+            return { success: false, error: 'Payment not found.' };
+        }
+        
+        const paymentToCancel = allPayments[paymentIndex];
+
+        if(paymentToCancel.status === 'Cancelled') {
+            return { success: false, error: 'Payment is already cancelled.'};
+        }
+        
+        if(paymentToCancel.currentStatus === 'POSTED') {
+           await reverseFinancialImpact(paymentToCancel);
+        }
+        
+        allPayments[paymentIndex].status = 'Cancelled';
+        await writePayments(allPayments);
+
+        revalidateAllPaths(paymentToCancel);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function restorePayment(paymentId: string) {
+    try {
+        const allPayments = await readPayments();
+        const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+
+        if (paymentIndex === -1) {
+            return { success: false, error: 'Payment not found.' };
+        }
+        
+        const paymentToRestore = allPayments[paymentIndex];
+
+        if(paymentToRestore.status !== 'Cancelled') {
+            return { success: false, error: 'Payment is not cancelled.'};
+        }
+        
+        if(paymentToRestore.currentStatus === 'POSTED') {
+           await applyFinancialImpact(paymentToRestore);
+        }
+        
+        // Restore to a sensible previous state
+        allPayments[paymentIndex].status = paymentToRestore.type === 'Payment' ? 'Paid' : 'Received';
+        await writePayments(allPayments);
+
+        revalidateAllPaths(paymentToRestore);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+// Keeping this function for hard deletes (e.g. of draft transactions) if needed later
 export async function deletePayment(paymentId: string) {
     try {
         const allPayments = await readPayments();
@@ -161,74 +291,30 @@ export async function deletePayment(paymentId: string) {
             return { success: false, error: 'Payment not found.' };
         }
         
-        // Reverse financial impact if it was posted
         if(paymentToDelete.currentStatus === 'POSTED') {
-            if (paymentToDelete.paymentFrom === 'Petty Cash') {
-                const pettyCash = await readPettyCash();
-                if (paymentToDelete.type === 'Payment') {
-                    pettyCash.balance += paymentToDelete.amount;
-                } else { // Receipt
-                    pettyCash.balance -= paymentToDelete.amount;
-                }
-                await writePettyCash(pettyCash);
-            } else if (paymentToDelete.bankAccountId) {
-                 const allBankAccounts = await readBankAccounts();
-                 const accountIndex = allBankAccounts.findIndex(acc => acc.id === paymentToDelete.bankAccountId);
-                 if (accountIndex !== -1) {
-                    if (paymentToDelete.type === 'Payment') {
-                        allBankAccounts[accountIndex].balance += paymentToDelete.amount;
-                    } else { // Receipt
-                        allBankAccounts[accountIndex].balance -= paymentToDelete.amount;
-                    }
-                    await writeBankAccounts(allBankAccounts);
-                 }
-            }
+            return { success: false, error: 'Cannot permanently delete a posted transaction. Please use the cancel function.'};
         }
         
-        // Reverse invoice allocations if applicable
-        if (paymentToDelete.type === 'Receipt' && paymentToDelete.invoiceAllocations && paymentToDelete.invoiceAllocations.length > 0) {
-            const allInvoices = await readInvoices();
-            
-            paymentToDelete.invoiceAllocations.forEach(allocation => {
-                const invoiceIndex = allInvoices.findIndex(inv => inv.id === allocation.invoiceId);
-                if (invoiceIndex !== -1) {
-                    allInvoices[invoiceIndex].amountPaid = (allInvoices[invoiceIndex].amountPaid || 0) - allocation.amount;
-                    
-                    if (allInvoices[invoiceIndex].status === 'Paid') {
-                        const dueDate = parseISO(allInvoices[invoiceIndex].dueDate);
-                        allInvoices[invoiceIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
-                    }
-                }
-            });
-            await writeInvoices(allInvoices);
-        }
-
-        // Reverse cheque status if the payment was from a cheque clearance
-        if (paymentToDelete.paymentMethod === 'Cheque' && paymentToDelete.referenceNo) {
-            const allCheques = await readCheques();
-            const chequeIndex = allCheques.findIndex(c => c.chequeNo === paymentToDelete.referenceNo);
-            if (chequeIndex !== -1 && allCheques[chequeIndex].status === 'Cleared') {
-                allCheques[chequeIndex].status = 'In Hand'; // Revert to a non-cleared state
-                allCheques[chequeIndex].clearanceDate = undefined;
-                await writeCheques(allCheques);
-                revalidatePath('/finance/cheque-deposit');
-            }
-        }
-
         const updatedPayments = allPayments.filter(p => p.id !== paymentId);
         await writePayments(updatedPayments);
 
-        revalidatePath('/finance/payment');
-        revalidatePath('/finance/banking');
-        revalidatePath('/finance/chart-of-accounts');
-        revalidatePath('/vendors/agents');
-        revalidatePath('/workflow');
-        revalidatePath(`/tenancy/customer/add?code=${paymentToDelete.partyName}`);
+       revalidateAllPaths(paymentToDelete);
 
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
+}
+
+
+function revalidateAllPaths(payment: Payment) {
+    revalidatePath('/finance/payment');
+    revalidatePath('/finance/banking');
+    revalidatePath('/finance/chart-of-accounts');
+    revalidatePath('/vendors/agents');
+    revalidatePath('/workflow');
+    revalidatePath(`/tenancy/customer/add?code=${payment.partyName}`);
+    revalidatePath(`/vendors/add?code=${payment.partyName}`);
 }
 
 
@@ -395,5 +481,3 @@ export async function getReferences(partyType: string, partyCode: string, refere
             return [];
     }
 }
-
-    
