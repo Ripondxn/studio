@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +6,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash, FileText, DollarSign } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash, FileText, DollarSign, Share2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +47,16 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
     }
 
     const isPaidOrCancelled = row.original.status === 'Paid' || row.original.status === 'Cancelled';
+    
+    const handleShare = () => {
+        const invoice = row.original;
+        const paymentUrl = `${window.location.origin}/pay?invoice=${invoice.invoiceNo}&amount=${invoice.remainingBalance}&description=${encodeURIComponent(`Payment for Invoice ${invoice.invoiceNo}`)}`;
+        navigator.clipboard.writeText(paymentUrl).then(() => {
+            toast({ title: "Link Copied", description: "Payment link copied to clipboard." });
+        }, (err) => {
+            toast({ variant: 'destructive', title: "Error", description: "Could not copy link."});
+        });
+    }
 
     return (
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -65,6 +74,9 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
                     </DropdownMenuItem>
                      <DropdownMenuItem onClick={() => onRecordPayment(row.original)} disabled={isPaidOrCancelled}>
                         <DollarSign className="mr-2 h-4 w-4" /> Record Payment
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleShare} disabled={isPaidOrCancelled}>
+                        <Share2 className="mr-2 h-4 w-4" /> Share Payment Link
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <AlertDialogTrigger asChild>
