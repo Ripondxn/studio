@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -147,7 +148,8 @@ async function updateTransactionWorkflow(
         
         // If the transaction is now posted, update the financial accounts
         if (newStatus === 'POSTED' && previousStatus !== 'POSTED') {
-            const { type, amount, bankAccountId, paymentFrom } = allPayments[transactionIndex];
+            const { type, amount, bankAccountId, paymentFrom, partyType, agentCode } = allPayments[transactionIndex];
+            const isAgentCommission = partyType === 'Agent' || !!agentCode;
 
             if (paymentFrom === 'Petty Cash') {
                 const pettyCash = await readPettyCash();
