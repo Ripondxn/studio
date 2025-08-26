@@ -10,9 +10,10 @@ import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Landlord } from '@/app/landlord/schema';
 import { type Contract as TenancyContract, type PaymentInstallment as TenancyPaymentInstallment } from '@/app/tenancy/contract/schema';
 import { type LeaseContract, type PaymentInstallment as LeasePaymentInstallment } from '@/app/lease/contract/schema';
-import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO, isBefore, startOfToday } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO, isBefore, startOfToday, format } from 'date-fns';
 import { type BankAccount } from '../banking/schema';
 import { type Payment } from '../payment/schema';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
@@ -118,14 +119,12 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         }
         
         const originalCheque = allCheques[chequeIndex];
-        const updatedCheque = { ...originalCheque, status };
+        const updatedCheque = { ...originalCheque, status, bankAccountId };
         
         if(status === 'Deposited' && bankAccountId) {
             updatedCheque.depositDate = date;
-            updatedCheque.bankAccountId = bankAccountId;
         } else if (status === 'Cleared' && bankAccountId) {
             updatedCheque.clearanceDate = date;
-            updatedCheque.bankAccountId = bankAccountId;
         } else if (status === 'Bounced') {
             updatedCheque.clearanceDate = date;
         }
@@ -340,25 +339,70 @@ export async function createDepositVoucher(
   }
 }
 
+interface ReturnChequeParams {
+    chequeIds: string[];
+    returnWithCash: boolean;
+    paymentDetails?: {
+        paymentFrom: 'Petty Cash' | 'Bank';
+        bankAccountId?: string;
+        user: { email: string, name: string, role: UserRole['role'] };
+    }
+}
 
-export async function returnCheque(chequeIds: string[]) {
+export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }: ReturnChequeParams) {
     try {
         const allCheques = await readCheques();
+        const allPayments = await readPayments();
         let updatedCount = 0;
-        
+        const newStatus = returnWithCash ? 'Returned with Cash' : 'Returned';
+
+        const selectedCheques = allCheques.filter(c => chequeIds.includes(c.id) && c.status === 'In Hand');
+
+        if (selectedCheques.length === 0) {
+            return { success: false, error: "No valid 'In Hand' cheques were selected to return." };
+        }
+
         const updatedCheques = allCheques.map(cheque => {
             if (chequeIds.includes(cheque.id) && cheque.status === 'In Hand') {
                 updatedCount++;
                 return {
                     ...cheque,
-                    status: 'Returned' as const,
+                    status: newStatus,
                 };
             }
             return cheque;
         });
 
-        if (updatedCount === 0) {
-            return { success: false, error: "No valid 'In Hand' cheques were selected to return." };
+        if (returnWithCash && paymentDetails) {
+            for (const cheque of selectedCheques) {
+                 const newPayment: Payment = {
+                    id: `PAY-${Date.now()}-${cheque.id}`,
+                    type: 'Payment',
+                    date: format(new Date(), 'yyyy-MM-dd'),
+                    partyType: 'Tenant', // Assuming return is always to tenant
+                    partyName: cheque.partyName,
+                    amount: cheque.amount,
+                    paymentMethod: 'Cash',
+                    paymentFrom: paymentDetails.paymentFrom,
+                    bankAccountId: paymentDetails.bankAccountId,
+                    referenceNo: `RTRN-${cheque.chequeNo}`,
+                    description: `Cash return for Cheque #${cheque.chequeNo}`,
+                    remarks: `Cheque returned with cash settlement.`,
+                    status: 'Paid',
+                    createdByUser: paymentDetails.user.name,
+                    currentStatus: 'PENDING_ADMIN_APPROVAL',
+                    approvalHistory: [{
+                        action: 'Created & Submitted',
+                        actorId: paymentDetails.user.email,
+                        actorRole: paymentDetails.user.role,
+                        timestamp: new Date().toISOString(),
+                        comments: 'Cheque returned with cash payment.',
+                    }],
+                };
+                allPayments.push(newPayment);
+            }
+            await writePayments(allPayments);
+            revalidatePath('/workflow');
         }
 
         await writeCheques(updatedCheques);

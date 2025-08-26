@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,9 +18,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CornerUpLeft } from 'lucide-react';
-import { returnCheque } from './actions';
+import { returnCheque, getBankAccounts } from './actions';
 import { format } from 'date-fns';
 import { type Cheque } from './schema';
+import { useCurrency } from '@/context/currency-context';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { type BankAccount } from '../banking/schema';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 interface ReturnChequeDialogProps {
     cheques: Cheque[];
@@ -32,12 +38,29 @@ export function ReturnChequeDialog({ cheques, onReturn }: ReturnChequeDialogProp
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
     const [selectedChequeIds, setSelectedChequeIds] = useState<string[]>([]);
+    const [returnWithCash, setReturnWithCash] = useState(false);
+    const [paymentFrom, setPaymentFrom] = useState<'Petty Cash' | 'Bank'>('Petty Cash');
+    const [bankAccountId, setBankAccountId] = useState<string | undefined>();
+    const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+    const [currentUser, setCurrentUser] = useState<{ email: string, name: string, role: UserRole['role'] } | null>(null);
+
+    const { formatCurrency } = useCurrency();
     
     const selectedTotal = useMemo(() => {
         return cheques
             .filter(c => selectedChequeIds.includes(c.id))
             .reduce((sum, c) => sum + c.amount, 0);
     }, [selectedChequeIds, cheques]);
+    
+     useEffect(() => {
+        const storedProfile = sessionStorage.getItem('userProfile');
+        if (storedProfile) {
+            setCurrentUser(JSON.parse(storedProfile));
+        }
+        if(isOpen) {
+            getBankAccounts().then(setBankAccounts);
+        }
+    }, [isOpen]);
 
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
@@ -60,14 +83,32 @@ export function ReturnChequeDialog({ cheques, onReturn }: ReturnChequeDialogProp
             toast({ variant: 'destructive', title: 'No cheques selected', description: 'Please select at least one cheque to return.' });
             return;
         }
+        if (returnWithCash && paymentFrom === 'Bank' && !bankAccountId) {
+            toast({ variant: 'destructive', title: 'Bank Account Required', description: 'Please select a bank account for the cash payment.' });
+            return;
+        }
+         if (!currentUser) {
+            toast({ variant: 'destructive', title: 'User not found', description: 'Could not identify current user.' });
+            return;
+        }
         
         setIsSaving(true);
-        const result = await returnCheque(selectedChequeIds);
+        const result = await returnCheque({
+            chequeIds: selectedChequeIds,
+            returnWithCash,
+            paymentDetails: returnWithCash ? {
+                paymentFrom,
+                bankAccountId,
+                user: currentUser
+            } : undefined
+        });
+
         if (result.success) {
-            toast({ title: 'Cheques Returned', description: `${result.count} cheques have been marked as returned.` });
+            toast({ title: 'Cheques Returned', description: `${result.count} cheques have been processed.` });
             onReturn();
             setIsOpen(false);
             setSelectedChequeIds([]);
+            setReturnWithCash(false);
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error });
         }
@@ -89,6 +130,42 @@ export function ReturnChequeDialog({ cheques, onReturn }: ReturnChequeDialogProp
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                     <div className="space-y-4 rounded-lg border p-4">
+                        <div className="flex items-center space-x-2">
+                           <Switch
+                                id="return-with-cash"
+                                checked={returnWithCash}
+                                onCheckedChange={setReturnWithCash}
+                            />
+                            <Label htmlFor="return-with-cash" className="text-base font-semibold">
+                                Return with Cash?
+                            </Label>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            If you are giving cash back to the tenant/customer in exchange for the cheque, enable this option. A payment voucher will be created for approval.
+                        </p>
+                        {returnWithCash && (
+                             <div className="grid grid-cols-2 gap-4 pt-2">
+                                <Select value={paymentFrom} onValueChange={(value: 'Petty Cash' | 'Bank') => setPaymentFrom(value)}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Petty Cash">From Petty Cash</SelectItem>
+                                        <SelectItem value="Bank">From Bank</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {paymentFrom === 'Bank' && (
+                                     <Select value={bankAccountId} onValueChange={setBankAccountId}>
+                                        <SelectTrigger><SelectValue placeholder="Select Bank Account..." /></SelectTrigger>
+                                        <SelectContent>
+                                            {bankAccounts.map(acc => (
+                                                <SelectItem key={acc.id} value={acc.id}>{acc.accountName} ({acc.bankName})</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <ScrollArea className="h-72 rounded-md border">
                         <Table>
                              <TableHeader>
@@ -117,14 +194,14 @@ export function ReturnChequeDialog({ cheques, onReturn }: ReturnChequeDialogProp
                                         <TableCell>{cheque.chequeNo}</TableCell>
                                         <TableCell>{format(new Date(cheque.chequeDate), 'PP')}</TableCell>
                                         <TableCell>{cheque.partyName}</TableCell>
-                                        <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cheque.amount)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(cheque.amount)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                     </ScrollArea>
                     <div className="flex justify-end font-bold">
-                        Total Selected: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(selectedTotal)}
+                        Total Selected: {formatCurrency(selectedTotal)}
                     </div>
                 </div>
                 <DialogFooter>

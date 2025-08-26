@@ -63,6 +63,7 @@ const statusConfig: {
   'Bounced': { variant: 'destructive', icon: <XCircle className="h-3 w-3" /> },
   'Cancelled': { variant: 'destructive', icon: <XCircle className="h-3 w-3" />, className: 'bg-gray-500/20 text-gray-700 border-transparent hover:bg-gray-500/30' },
   'Returned': { variant: 'destructive', icon: <CornerUpLeft className="h-3 w-3" />, className: 'bg-orange-500/20 text-orange-700 border-transparent hover:bg-orange-500/30' },
+  'Returned with Cash': { variant: 'destructive', icon: <CornerUpLeft className="h-3 w-3" />, className: 'bg-purple-500/20 text-purple-700 border-transparent hover:bg-purple-500/30' },
 };
 
 
