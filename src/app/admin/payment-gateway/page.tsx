@@ -8,13 +8,10 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, CreditCard, ExternalLink } from 'lucide-react';
 import { getPaymentGatewaySettings, savePaymentGatewaySettings } from './actions';
-import type { z } from 'zod';
 
-const paymentGatewaySettingsSchema = z.object({
-    ziinaApiKey: z.string().optional(),
-});
-
-type PaymentGatewaySettings = z.infer<typeof paymentGatewaySettingsSchema>;
+type PaymentGatewaySettings = {
+    ziinaApiKey?: string;
+};
 
 export default function PaymentGatewayPage() {
     const { toast } = useToast();
