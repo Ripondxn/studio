@@ -53,8 +53,9 @@ export async function getNextBillNumber() {
     return `BL-${(maxNum + 1).toString().padStart(4, '0')}`;
 }
 
-export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: string }) {
-    const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(data);
+export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: string, isAutoBillNo?: boolean }) {
+    const { isAutoBillNo, ...billData } = data;
+    const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(billData);
 
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -63,10 +64,22 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
     try {
         const allBills = await readBills();
         const isNew = !data.id;
+        const validatedData = validation.data;
 
         if (isNew) {
+            let newBillNo = validatedData.billNo;
+            if (isAutoBillNo || !newBillNo) {
+                 newBillNo = await getNextBillNumber();
+            } else {
+                const billExists = allBills.some(bill => bill.billNo === newBillNo);
+                if (billExists) {
+                    return { success: false, error: `A bill with number "${newBillNo}" already exists.`};
+                }
+            }
+
             const newBill: Bill = {
-                ...validation.data,
+                ...validatedData,
+                billNo: newBillNo,
                 id: `BILL-${Date.now()}`,
                 amountPaid: 0,
             };
@@ -76,7 +89,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
             if (index === -1) {
                 return { success: false, error: 'Bill not found.' };
             }
-            allBills[index] = { ...allBills[index], ...validation.data };
+            allBills[index] = { ...allBills[index], ...validatedData };
         }
 
         await writeBills(allBills);

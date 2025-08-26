@@ -56,6 +56,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const [isPropertyInvoice, setIsPropertyInvoice] = useState(true);
+  const [isAutoBillNo, setIsAutoBillNo] = useState(true);
   const { formatCurrency } = useCurrency();
 
   const [lookups, setLookups] = useState<{
@@ -154,10 +155,12 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
     const initializeForm = async () => {
         if (bill) {
             setIsPropertyInvoice(!!bill.property);
+            setIsAutoBillNo(false);
             reset(bill);
         } else {
-            setIsPropertyInvoice(true);
             const newBillNo = await getNextBillNumber();
+            setIsPropertyInvoice(true);
+            setIsAutoBillNo(true);
             reset({
                 billNo: newBillNo,
                 vendorCode: vendor.code,
@@ -185,7 +188,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
 
   const onSubmit = async (data: BillFormData) => {
     setIsSaving(true);
-    const result = await saveBill({ ...data, id: bill?.id });
+    const result = await saveBill({ ...data, id: bill?.id, isAutoBillNo });
     if(result.success) {
         toast({ title: 'Success', description: 'Bill saved successfully.'});
         onSuccess();
@@ -211,7 +214,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
         }
     }
   }
-
+  
   const handleItemSelect = (index: number, productCode: string) => {
     const product = lookups.products.find(p => p.itemCode === productCode);
     if(product) {
@@ -254,10 +257,19 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
 
           <div className="max-h-[60vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-              <div><Label>Bill #</Label><Input {...register('billNo')} disabled/></div>
+              <div><Label>Bill #</Label><Input {...register('billNo')} disabled={isAutoBillNo} /></div>
               <div><Label>Vendor</Label><Input value={vendor.name} disabled/></div>
               <div><Label>Bill Date</Label><Input type="date" {...register('billDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
+            </div>
+             <div className="flex items-center space-x-2 mb-4">
+                <Switch 
+                    id="auto-bill-no-switch"
+                    checked={isAutoBillNo}
+                    onCheckedChange={setIsAutoBillNo}
+                    disabled={!!bill} // Disable toggle when editing
+                />
+                <Label htmlFor="auto-bill-no-switch">Auto-generate Bill No</Label>
             </div>
 
             <div className="flex items-center space-x-2 mb-4">
