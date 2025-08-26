@@ -80,10 +80,9 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
               <TableHead className="text-right">Allowed Roles</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
             {permissions.map((feature, featureIndex) => (
-                <Collapsible asChild key={feature.feature}>
-                    <React.Fragment>
+                <Collapsible asChild key={feature.feature} className="w-full">
+                    <TableBody>
                         <TableRow className="bg-muted/50 font-bold">
                             <TableCell colSpan={4}>
                                 <CollapsibleTrigger className="flex w-full items-center justify-between">
@@ -124,10 +123,9 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
                             ))}
                             </React.Fragment>
                         </CollapsibleContent>
-                    </React.Fragment>
+                    </TableBody>
               </Collapsible>
             ))}
-          </TableBody>
         </Table>
         <div className="p-4 border-t flex justify-end">
             <Button onClick={handleSaveChanges} disabled={isSaving}>
