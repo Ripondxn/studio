@@ -4,7 +4,7 @@
     "chequeDate": "2025-08-24",
     "amount": 15000,
     "bankName": "ABC",
-    "status": "Returned with Cash",
+    "status": "In Hand",
     "type": "Incoming",
     "partyName": "Tanvir Ahmed",
     "property": "LT-C38",

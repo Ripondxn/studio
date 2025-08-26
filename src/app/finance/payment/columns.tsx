@@ -31,7 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Payment } from './schema';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { cancelPayment, restorePayment } from './actions';
+import { cancelPayment, restorePayment, deletePayment } from './actions';
 import { useRouter } from 'next/navigation';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useCurrency } from '@/context/currency-context';
@@ -55,6 +55,8 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
     const router = useRouter();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [actionType, setActionType] = useState<'cancel' | 'delete' | null>(null);
     const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
 
     useEffect(() => {
@@ -80,15 +82,28 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
                        } else {
                            toast({ variant: 'destructive', title: 'Undo Failed', description: restoreResult.error});
                        }
-                       id && toast({id}).dismiss();
+                       toast({id}).dismiss();
                     }}>Undo</Button>
                 )
             });
-            router.refresh(); // Refresh data on the page
+            router.refresh();
         } else {
              toast({ variant: 'destructive', title: "Error", description: result.error || 'Failed to cancel payment.'});
         }
         setIsCancelling(false);
+        setIsDeleteDialogOpen(false);
+    }
+    
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        const result = await deletePayment(payment.id!);
+         if(result.success) {
+            toast({ title: "Payment Deleted", description: "The transaction has been permanently deleted." });
+            router.refresh();
+        } else {
+             toast({ variant: 'destructive', title: "Error", description: result.error || 'Failed to delete payment.'});
+        }
+        setIsDeleting(false);
         setIsDeleteDialogOpen(false);
     }
     
@@ -105,13 +120,20 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will cancel the payment and reverse its financial impact. You can undo this action from the toast notification.
+                          {actionType === 'cancel'
+                            ? "This will cancel the payment and reverse its financial impact. You can undo this action from the toast notification."
+                            : "This will permanently delete the transaction and cannot be undone."
+                          }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCancel} disabled={isCancelling} className="bg-destructive hover:bg-destructive/90">
-                            {isCancelling ? 'Cancelling...' : 'Confirm Cancellation'}
+                        <AlertDialogAction 
+                          onClick={actionType === 'cancel' ? handleCancel : handleDelete} 
+                          disabled={isCancelling || isDeleting} 
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                            {isCancelling ? 'Cancelling...' : isDeleting ? 'Deleting...' : 'Confirm'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -126,9 +148,14 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
                         <Edit className="mr-2 h-4 w-4"/> Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)} disabled={!canDelete()}>
-                        <Trash2 className="mr-2 h-4 w-4"/> Cancel Transaction
+                    <DropdownMenuItem className="text-destructive" onSelect={() => { setActionType('cancel'); setIsDeleteDialogOpen(true); }} disabled={payment.status === 'Cancelled'}>
+                        <X className="mr-2 h-4 w-4"/> Cancel Transaction
                     </DropdownMenuItem>
+                    {canDelete() && (
+                        <DropdownMenuItem className="text-destructive" onSelect={() => { setActionType('delete'); setIsDeleteDialogOpen(true); }}>
+                            <Trash2 className="mr-2 h-4 w-4"/> Delete Permanently
+                        </DropdownMenuItem>
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
         </>

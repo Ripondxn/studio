@@ -160,14 +160,14 @@ export function BankingClient({ initialAccounts }: { initialAccounts: BankAccoun
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <div>
-            <h1 className="text-3xl font-bold font-headline">Banking</h1>
+            <h1 className="text-3xl font-bold font-headline">Banking & Reconciliation</h1>
             <p className="text-muted-foreground">
-                Manage bank accounts, reconciliations, and transactions.
+                Manage bank accounts, view transaction history, and reconcile your books.
             </p>
         </div>
         <div className="flex items-center gap-2">
             <AllTransactionsDialog>
-              <Button variant="outline"><History className="mr-2 h-4 w-4"/> + History</Button>
+              <Button variant="outline"><History className="mr-2 h-4 w-4"/> View History</Button>
             </AllTransactionsDialog>
             <FundTransferDialog bankAccounts={accounts} onTransaction={refreshAccounts}>
                 <Button variant="outline"><ArrowRightLeft className="mr-2 h-4 w-4"/> Fund Transfer</Button>

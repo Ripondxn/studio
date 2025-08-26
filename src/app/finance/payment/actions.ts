@@ -292,7 +292,7 @@ export async function deletePayment(paymentId: string) {
         }
         
         if(paymentToDelete.currentStatus === 'POSTED') {
-            return { success: false, error: 'Cannot permanently delete a posted transaction. Please use the cancel function.'};
+            await reverseFinancialImpact(paymentToDelete);
         }
         
         const updatedPayments = allPayments.filter(p => p.id !== paymentId);
