@@ -105,25 +105,25 @@ export async function findAgentData(agentCode: string) {
 export async function saveAgentData(data: Agent, isNewRecord: boolean) {
     try {
         const allAgents = await readAgents();
+        let savedData: Agent;
 
         if (isNewRecord) {
-             const newAgent: Agent = {
-                ...data,
-                id: `AGENT-${Date.now()}`,
-            };
-             const validation = agentSchema.safeParse(newAgent);
-             if (!validation.success) {
-                return { success: false, error: 'Invalid data format for agent.' };
+            const newAgent = { ...data, id: `AGENT-${Date.now()}` };
+            const validation = agentSchema.safeParse(newAgent);
+            if (!validation.success) {
+                return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
             }
             allAgents.push(validation.data);
+            savedData = validation.data;
         } else {
-             const validation = agentSchema.safeParse(data);
-             if (!validation.success) {
-                return { success: false, error: 'Invalid data format for agent.' };
+            const validation = agentSchema.safeParse(data);
+            if (!validation.success) {
+                return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
             }
             const index = allAgents.findIndex(a => a.id === data.id);
             if (index !== -1) {
                 allAgents[index] = { ...allAgents[index], ...validation.data };
+                savedData = allAgents[index];
             } else {
                 return { success: false, error: 'Agent not found.' };
             }
@@ -132,7 +132,6 @@ export async function saveAgentData(data: Agent, isNewRecord: boolean) {
         await writeAgents(allAgents);
         revalidatePath('/vendors/agents');
 
-        const savedData = isNewRecord ? allAgents[allAgents.length - 1] : data;
         return { success: true, data: savedData };
     } catch (error) {
         console.error('Failed to save agent data:', error);

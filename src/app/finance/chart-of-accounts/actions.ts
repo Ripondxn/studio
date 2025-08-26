@@ -109,14 +109,13 @@ export async function getAccounts(): Promise<Account[]> {
 
     // 6. Build tree structure for balance recalculation
     const roots: Account[] = [];
-    const childrenMap = new Map<string, Account[]>();
-
     accountMap.forEach(acc => {
         if (acc.parentCode && accountMap.has(acc.parentCode)) {
-            if (!childrenMap.has(acc.parentCode)) {
-                childrenMap.set(acc.parentCode, []);
+            const parent = accountMap.get(acc.parentCode)!;
+            if (!parent.children) {
+                parent.children = [];
             }
-            childrenMap.get(acc.parentCode)!.push(acc);
+            parent.children.push(acc);
         } else {
             roots.push(acc);
         }
@@ -128,8 +127,7 @@ export async function getAccounts(): Promise<Account[]> {
             return account.balance;
         }
 
-        const children = childrenMap.get(account.code) || [];
-        const sum = children.reduce((acc, child) => {
+        const sum = (account.children || []).reduce((acc, child) => {
             return acc + calculateParentBalances(child);
         }, 0);
         

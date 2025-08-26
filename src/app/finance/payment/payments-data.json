@@ -40,5 +40,54 @@
         "comments": ""
       }
     ]
+  },
+  {
+    "type": "Payment",
+    "date": "2025-08-05",
+    "partyType": "Agent",
+    "partyName": "A0001",
+    "amount": 1000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "",
+    "description": "",
+    "remarks": "Commission payment for agent Abdulla Mohamed Humaid Almheiri (A0001)",
+    "status": "Paid",
+    "createdByUser": "Super Admin",
+    "billAllocations": [],
+    "id": "PAY-1756228865072",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-26T17:21:05.072Z",
+        "comments": "Initial Draft"
+      },
+      {
+        "action": "Submitted for Approval",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-26T17:21:22.431Z",
+        "comments": ""
+      },
+      {
+        "action": "Approved by Admin",
+        "actorId": "ripondxn@gmail.com",
+        "actorRole": "Admin",
+        "timestamp": "2025-08-26T17:22:12.207Z",
+        "comments": ""
+      },
+      {
+        "action": "Final Approval & Posted",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-26T17:23:02.291Z",
+        "comments": ""
+      }
+    ]
   }
 ]
