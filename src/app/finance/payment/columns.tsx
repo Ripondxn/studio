@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, User, Building, Wrench, Edit, Trash2 } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, User, Building, Wrench, Edit, Trash2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   AlertDialog,
