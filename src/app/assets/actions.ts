@@ -5,7 +5,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { assetSchema, type Asset } from './schema';
+import { assetSchema, type Asset, type AssetHistory } from './schema';
 
 const assetsFilePath = path.join(process.cwd(), 'src/app/assets/assets-data.json');
 
@@ -40,7 +40,7 @@ export async function getAssets(): Promise<Asset[]> {
     });
 }
 
-const addAssetFormSchema = assetSchema.omit({ id: true, currentValue: true });
+const addAssetFormSchema = assetSchema.omit({ id: true, currentValue: true, history: true });
 
 export async function saveAsset(data: z.infer<typeof addAssetFormSchema>, id?: string) {
     const validation = addAssetFormSchema.safeParse(data);
@@ -59,6 +59,12 @@ export async function saveAsset(data: z.infer<typeof addAssetFormSchema>, id?: s
             const newAsset: Asset = {
                 ...validation.data,
                 id: `ASSET-${Date.now()}`,
+                history: [{
+                    date: new Date().toISOString(),
+                    status: 'In Stock',
+                    assignedTo: '',
+                    notes: 'Asset created.'
+                }]
             };
             allAssets.push(newAsset);
         }
@@ -129,4 +135,46 @@ function calculateDepreciation(asset: Asset): number {
     }
 
     return Math.min(totalDepreciation, depreciableValue);
+}
+
+const updateStatusSchema = z.object({
+    id: z.string(),
+    status: z.enum(['In Stock', 'Assigned', 'Damaged', 'Out for Repair', 'Retired']),
+    assignedTo: z.string().optional(),
+    notes: z.string().optional(),
+});
+
+export async function updateAssetStatus(data: z.infer<typeof updateStatusSchema>) {
+    const validation = updateStatusSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: 'Invalid data format.' };
+    }
+
+    try {
+        const allAssets = await readAssets();
+        const index = allAssets.findIndex(a => a.id === data.id);
+        if (index === -1) {
+            return { success: false, error: 'Asset not found.' };
+        }
+
+        const newHistoryEntry: AssetHistory = {
+            date: new Date().toISOString(),
+            status: data.status,
+            assignedTo: data.assignedTo,
+            notes: data.notes,
+        };
+
+        allAssets[index] = {
+            ...allAssets[index],
+            status: data.status,
+            assignedTo: data.assignedTo,
+            history: [...(allAssets[index].history || []), newHistoryEntry],
+        };
+
+        await writeAssets(allAssets);
+        revalidatePath('/assets');
+        return { success: true, data: allAssets[index] };
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
 }

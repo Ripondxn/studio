@@ -23,8 +23,9 @@ import { z } from 'zod';
 import { assetSchema, type Asset } from './schema';
 import { saveAsset } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
-const formSchema = assetSchema.omit({ id: true, currentValue: true });
+const formSchema = assetSchema.omit({ id: true, currentValue: true, history: true });
 
 type AssetFormData = z.infer<typeof formSchema>;
 
@@ -68,6 +69,9 @@ export function AddAssetDialog({ asset, onAssetAdded, children, isOpen: external
                 depreciationMethod: 'Straight-Line',
                 usefulLife: 5,
                 salvageValue: 0,
+                status: 'In Stock',
+                assignedTo: '',
+                notes: '',
             });
         }
     }
@@ -183,6 +187,10 @@ export function AddAssetDialog({ asset, onAssetAdded, children, isOpen: external
                             {errors.salvageValue && <p className="text-destructive text-xs mt-1">{errors.salvageValue.message}</p>}
                         </div>
                     </div>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="notes">Initial Notes</Label>
+                    <Textarea id="notes" {...register('notes')} placeholder="e.g., Warranty information, initial condition..." />
                 </div>
             </div>
             <DialogFooter>
