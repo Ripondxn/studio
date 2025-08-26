@@ -160,7 +160,7 @@
     "referenceNo": "CASH-FOR-123456",
     "description": "Cash received for returned cheque #123456",
     "status": "Received",
-    "currentStatus": "PENDING_ADMIN_APPROVAL",
+    "currentStatus": "POSTED",
     "createdByUser": "Super Admin",
     "approvalHistory": [
       {
@@ -169,6 +169,20 @@
         "actorRole": "Super Admin",
         "timestamp": "2025-08-26T06:31:43.692Z",
         "comments": "Status updated to Returned with Cash"
+      },
+      {
+        "action": "Approved by Admin",
+        "actorId": "ripondxn@gmail.com",
+        "actorRole": "Admin",
+        "timestamp": "2025-08-26T06:45:11.810Z",
+        "comments": ""
+      },
+      {
+        "action": "Final Approval & Posted",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-26T06:46:32.984Z",
+        "comments": ""
       }
     ]
   },
@@ -185,7 +199,7 @@
     "referenceNo": "CASH-FOR-123456",
     "description": "Cash received for returned cheque #123456",
     "status": "Received",
-    "currentStatus": "PENDING_ADMIN_APPROVAL",
+    "currentStatus": "REJECTED",
     "createdByUser": "Tanvir Ahmed",
     "approvalHistory": [
       {
@@ -194,6 +208,13 @@
         "actorRole": "User",
         "timestamp": "2025-08-26T06:35:21.276Z",
         "comments": "Status updated to Returned with Cash"
+      },
+      {
+        "action": "Rejected by Admin",
+        "actorId": "ripondxn@gmail.com",
+        "actorRole": "Admin",
+        "timestamp": "2025-08-26T06:45:36.581Z",
+        "comments": "for duplicate transaction"
       }
     ]
   }
