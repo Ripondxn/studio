@@ -20,13 +20,14 @@
     "chequeDate": "2025-08-24",
     "amount": 15000,
     "bankName": "ABC",
-    "status": "In Hand",
+    "status": "Returned with Cash",
     "type": "Incoming",
     "partyName": "Tanvir Ahmed",
     "property": "LT-C38",
     "contractNo": "TC-0002",
     "remarks": "Installment 1",
-    "id": "CHQ-1756148328544"
+    "id": "CHQ-1756148328544",
+    "bankAccountId": ""
   },
   {
     "chequeNo": "123457",
