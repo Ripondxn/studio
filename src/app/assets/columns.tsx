@@ -31,6 +31,7 @@ import { useCurrency } from '@/context/currency-context';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { UpdateStatusDialog } from './update-status-dialog';
+import { AssetHistoryDialog } from './asset-history-dialog';
 
 const statusConfig: { [key: string]: { variant: 'default' | 'secondary' | 'destructive' | 'outline', className: string } } = {
   'In Stock': { variant: 'default', className: 'bg-green-100 text-green-800' },
@@ -44,6 +45,7 @@ const ActionsCell = ({ row, onAssetUpdate }: { row: { original: Asset }, onAsset
     const asset = row.original;
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+    const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const { toast } = useToast();
@@ -77,6 +79,11 @@ const ActionsCell = ({ row, onAssetUpdate }: { row: { original: Asset }, onAsset
                 setIsOpen={setIsStatusDialogOpen}
                 onSuccess={onAssetUpdate}
             />
+            <AssetHistoryDialog 
+                asset={asset}
+                isOpen={isHistoryDialogOpen}
+                setIsOpen={setIsHistoryDialogOpen}
+            />
              <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -103,7 +110,7 @@ const ActionsCell = ({ row, onAssetUpdate }: { row: { original: Asset }, onAsset
                     <DropdownMenuItem onSelect={() => setIsStatusDialogOpen(true)}>
                         <RotateCw className="mr-2 h-4 w-4" /> Update Status
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => alert('History view coming soon!')}>
+                    <DropdownMenuItem onSelect={() => setIsHistoryDialogOpen(true)}>
                         <History className="mr-2 h-4 w-4" /> View History
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
