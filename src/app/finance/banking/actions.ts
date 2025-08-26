@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -38,7 +39,7 @@ export async function readPettyCash() {
     try {
         await fs.access(pettyCashFilePath);
         const data = await fs.readFile(pettyCashFilePath, 'utf-8');
-        if (!data) return { balance: 0 };
+        if (!data || (Array.isArray(data) && data.length === 0)) return { balance: 0 };
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -207,7 +208,7 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
     
     try {
         const allAccounts = await readAccounts();
-        let pettyCash = await readPettyCash();
+        const pettyCash = await readPettyCash();
         
         const fromAccount = fromAccountId === 'acc_3' ? { ...pettyCash, id: 'acc_3', accountName: 'Petty Cash' } : allAccounts.find(acc => acc.id === fromAccountId);
         const toAccount = toAccountId === 'acc_3' ? { ...pettyCash, id: 'acc_3', accountName: 'Petty Cash' } : allAccounts.find(acc => acc.id === toAccountId);

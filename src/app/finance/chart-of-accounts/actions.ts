@@ -38,7 +38,8 @@ async function writeAccounts(data: Account[]) {
 export async function getAccounts(): Promise<Account[]> {
     const accounts: Account[] = await readData(accountsFilePath);
     const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
-    const pettyCash: { balance: number } = (await readData(pettyCashFilePath)) || { balance: 0 };
+    const pettyCashData = await readData(pettyCashFilePath);
+    const pettyCash = pettyCashData.length > 0 ? pettyCashData[0] : { balance: 0 };
     const payments: Payment[] = await readData(paymentsFilePath);
     const equityTransactions: any[] = await readData(equityTransactionsFilePath);
 
@@ -55,7 +56,7 @@ export async function getAccounts(): Promise<Account[]> {
     });
 
     // 2. Calculate Cash and Bank from bank accounts and petty cash
-    const totalCashAndBank = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0) + pettyCash.balance;
+    const totalCashAndBank = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0) + (pettyCash.balance || 0);
     if (accountMap.has('1110')) {
         accountMap.get('1110')!.balance = totalCashAndBank;
     }
@@ -249,7 +250,8 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
          switch(code) {
             case '1110': // This account is now an aggregate, pull from banking.
                  const allBankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
-                 const pettyCash: { balance: number } = await readData(pettyCashFilePath) || { balance: 0 };
+                 const pettyCashData = await readData(pettyCashFilePath);
+                 const pettyCash = pettyCashData.length > 0 ? pettyCashData[0] : { balance: 0 };
                  const allEquityTransactions: any[] = await readData(equityTransactionsFilePath);
                  
                  // Combine bank transactions and petty cash transactions.

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -180,11 +181,29 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
 export async function deleteCheque(chequeId: string) {
     try {
         const allCheques = await readCheques();
-        const updatedCheques = allCheques.filter(c => c.id !== chequeId);
-
-        if (allCheques.length === updatedCheques.length) {
-            return { success: false, error: 'Cheque not found.' };
+        const paymentToDelete = allCheques.find(p => p.id === chequeId);
+        
+        if (!paymentToDelete) {
+             return { success: false, error: 'Cheque not found.' };
         }
+        
+        if (paymentToDelete.status === 'Cleared') {
+            const allPayments = await readPayments();
+            const linkedPaymentIndex = allPayments.findIndex(p => p.referenceNo === paymentToDelete.chequeNo);
+            
+            if (linkedPaymentIndex !== -1) {
+                // If the payment has been posted, it should not be deleted from here.
+                // A reversal process should be used instead. For now, we prevent deletion.
+                if (allPayments[linkedPaymentIndex].currentStatus === 'POSTED') {
+                    return { success: false, error: 'Cannot delete a cheque linked to a posted payment. Please reverse the payment first.' };
+                }
+                // Delete the associated payment if it's not posted
+                allPayments.splice(linkedPaymentIndex, 1);
+                await writePayments(allPayments);
+            }
+        }
+        
+        const updatedCheques = allCheques.filter(c => c.id !== chequeId);
 
         await writeCheques(updatedCheques);
         revalidatePath('/finance/cheque-deposit');
@@ -413,5 +432,3 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
-
-    
