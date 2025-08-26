@@ -1,6 +1,6 @@
 [
   {
-    "id": "PAY-1756191968519",
+    "id": "PAY-1756193070888",
     "type": "Receipt",
     "date": "2025-08-26",
     "partyType": "Tenant",
@@ -9,7 +9,7 @@
     "paymentMethod": "Cash",
     "bankAccountId": "acc_1756122907621",
     "paymentFrom": "Bank",
-    "referenceNo": "CASH-FOR-CHQ-1756143329059",
+    "referenceNo": "CASH-FOR-123456",
     "property": "LT-C38",
     "description": "Cash received for returned cheque #123456",
     "status": "Received",
@@ -20,7 +20,7 @@
         "action": "Created & Submitted",
         "actorId": "super.admin@propvue.com",
         "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T07:06:08.519Z",
+        "timestamp": "2025-08-26T07:24:30.888Z",
         "comments": "Status updated to Returned with Cash"
       }
     ]

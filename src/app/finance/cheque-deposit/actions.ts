@@ -15,6 +15,8 @@ import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO, isBef
 import { type BankAccount } from '../banking/schema';
 import { type Payment } from '../payment/schema';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { type Unit } from '@/app/property/units/schema';
+import { type Room } from '@/app/property/rooms/schema';
 
 const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
@@ -23,6 +25,8 @@ const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contr
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 
 
 async function readCheques(): Promise<Cheque[]> {
@@ -158,6 +162,7 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
                 referenceNo: cashReturnRef,
                 property: originalCheque.property,
                 unitCode: originalCheque.unitCode,
+                roomCode: originalCheque.roomCode,
                 description: `Cash received for returned cheque #${originalCheque.chequeNo}`,
                 status: 'Received',
                 currentStatus: 'PENDING_ADMIN_APPROVAL',
@@ -194,6 +199,7 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
                 referenceNo: originalCheque.chequeNo,
                 property: originalCheque.property,
                 unitCode: originalCheque.unitCode,
+                roomCode: originalCheque.roomCode,
                 status: paymentType === 'Receipt' ? 'Received' : 'Paid',
                 currentStatus: 'PENDING_ADMIN_APPROVAL',
                 createdByUser: user.name,
@@ -258,6 +264,8 @@ export async function getLookups() {
     const tenancyContracts: TenancyContract[] = await fs.readFile(tenancyContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const leaseContracts: LeaseContract[] = await fs.readFile(leaseContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const bankAccounts: BankAccount[] = await fs.readFile(bankAccountsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const units: Unit[] = await fs.readFile(unitsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const rooms: Room[] = await fs.readFile(roomsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
 
     const landlordMap = new Map<string, string>();
     landlords.forEach(l => landlordMap.set(l.landlordData.code, l.landlordData.name));
@@ -265,9 +273,11 @@ export async function getLookups() {
     return {
         tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
         landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
-        tenancyContracts: tenancyContracts.map(c => ({ value: c.contractNo, label: c.contractNo, property: c.property, partyName: c.tenantName, paymentSchedule: c.paymentSchedule })),
+        tenancyContracts: tenancyContracts.map(c => ({ value: c.contractNo, label: c.contractNo, property: c.property, unitCode: c.unitCode, roomCode: c.roomCode, partyName: c.tenantName, paymentSchedule: c.paymentSchedule })),
         leaseContracts: leaseContracts.map(c => ({ value: c.contractNo, label: c.contractNo, property: c.property, partyName: c.landlordCode ? (landlordMap.get(c.landlordCode) || c.landlordCode) : 'Unknown', paymentSchedule: c.paymentSchedule })),
-        bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`}))
+        bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`})),
+        units: units.map(u => ({ value: u.unitCode, label: u.unitCode, propertyCode: u.propertyCode})),
+        rooms: rooms.map(r => ({ value: r.roomCode, label: r.roomCode, unitCode: r.unitCode, propertyCode: r.propertyCode })),
     }
 }
 

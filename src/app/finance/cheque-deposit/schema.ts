@@ -12,6 +12,8 @@ export const chequeSchema = z.object({
   type: z.enum(['Incoming', 'Outgoing']),
   partyName: z.string().min(1, "Party name is required."), // Tenant or Landlord name
   property: z.string().optional(),
+  unitCode: z.string().optional(),
+  roomCode: z.string().optional(),
   contractNo: z.string().optional(),
   remarks: z.string().optional(),
   depositDate: z.string().optional(), // Date it was actually deposited

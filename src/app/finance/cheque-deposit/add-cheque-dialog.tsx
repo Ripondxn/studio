@@ -35,6 +35,8 @@ type ContractLookup = {
     value: string, 
     label: string, 
     property?: string, 
+    unitCode?: string,
+    roomCode?: string,
     partyName?: string,
     paymentSchedule?: (TenancyPaymentInstallment | LeasePaymentInstallment)[],
 };
@@ -44,13 +46,15 @@ type Lookups = {
     landlords: { value: string, label: string }[];
     tenancyContracts: ContractLookup[];
     leaseContracts: ContractLookup[];
+    units: { value: string, label: string, propertyCode: string }[];
+    rooms: { value: string, label: string, unitCode: string, propertyCode: string }[];
 }
 
 export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], tenancyContracts: [], leaseContracts: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], tenancyContracts: [], leaseContracts: [], units: [], rooms: [] });
   const { formatCurrency } = useCurrency();
 
   const {
@@ -72,6 +76,8 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
         type: 'Incoming',
         partyName: '',
         property: '',
+        unitCode: '',
+        roomCode: '',
         contractNo: '',
         remarks: '',
     }
@@ -87,11 +93,13 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
   const chequeType = watch('type');
   const selectedContractNo = watch('contractNo');
   const selectedPartyName = watch('partyName');
+  const selectedProperty = watch('property');
 
   const contractOptions = chequeType === 'Incoming' ? lookups.tenancyContracts : lookups.leaseContracts;
   const partyOptions = chequeType === 'Incoming' ? lookups.tenants : lookups.landlords;
   
   const filteredContracts = contractOptions.filter(c => c.partyName === selectedPartyName);
+  const filteredUnits = lookups.units.filter(u => u.propertyCode === selectedProperty);
 
   const selectedContract = contractOptions.find(c => c.value === selectedContractNo);
   
@@ -100,6 +108,8 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
       const contract = contractOptions.find(c => c.value === contractNo);
       if (contract) {
           setValue('property', contract.property || '');
+          setValue('unitCode', contract.unitCode || '');
+          setValue('roomCode', contract.roomCode || '');
           // Reset installment details when contract changes
           setValue('chequeNo', '');
           setValue('chequeDate', '');
@@ -171,6 +181,8 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                                 setValue('partyName', '');
                                 setValue('contractNo', '');
                                 setValue('property', '');
+                                setValue('unitCode', '');
+                                setValue('roomCode', '');
                             }} value={field.value}>
                                 <SelectTrigger><SelectValue/></SelectTrigger>
                                 <SelectContent>
@@ -220,11 +232,21 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="property">Property</Label>
-                    <Input id="property" {...register('property')} placeholder="Associated property" disabled />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="property">Property</Label>
+                        <Input id="property" {...register('property')} placeholder="Associated property" disabled />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="unitCode">Unit</Label>
+                         <Input id="unitCode" {...register('unitCode')} placeholder="Unit" disabled />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="roomCode">Room</Label>
+                         <Input id="roomCode" {...register('roomCode')} placeholder="Room" disabled />
+                    </div>
                 </div>
-                
+
                 {selectedContract && selectedContract.paymentSchedule && (
                      <div className="space-y-2">
                         <Label>Select Installment to Populate</Label>
