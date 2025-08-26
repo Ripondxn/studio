@@ -148,45 +148,6 @@
     ]
   },
   {
-    "id": "PAY-1756189903691",
-    "type": "Receipt",
-    "date": "2025-08-26",
-    "partyType": "Tenant",
-    "partyName": "Tanvir Ahmed",
-    "amount": 15000,
-    "paymentMethod": "Cash",
-    "bankAccountId": "acc_1756122907621",
-    "paymentFrom": "Bank",
-    "referenceNo": "CASH-FOR-123456",
-    "description": "Cash received for returned cheque #123456",
-    "status": "Received",
-    "currentStatus": "POSTED",
-    "createdByUser": "Super Admin",
-    "approvalHistory": [
-      {
-        "action": "Created & Submitted",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T06:31:43.692Z",
-        "comments": "Status updated to Returned with Cash"
-      },
-      {
-        "action": "Approved by Admin",
-        "actorId": "ripondxn@gmail.com",
-        "actorRole": "Admin",
-        "timestamp": "2025-08-26T06:45:11.810Z",
-        "comments": ""
-      },
-      {
-        "action": "Final Approval & Posted",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T06:46:32.984Z",
-        "comments": ""
-      }
-    ]
-  },
-  {
     "id": "PAY-1756190121276",
     "type": "Receipt",
     "date": "2025-08-26",

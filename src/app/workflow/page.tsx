@@ -23,7 +23,8 @@ import {
   PlusCircle,
   Loader2,
   Printer,
-  Columns
+  Columns,
+  Trash2,
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -73,12 +74,23 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { type Role, type Status } from './types';
 import { format, isAfter, isBefore, parseISO } from 'date-fns';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useRouter } from 'next/navigation';
-import { getPayments, getPartyNameLookups } from '@/app/finance/payment/actions';
+import { getPayments, getPartyNameLookups, deletePayment } from '@/app/finance/payment/actions';
 import { type Payment, type ApprovalHistory } from '@/app/finance/payment/schema';
 import { cn } from '@/lib/utils';
 import { PrintableReport } from './printable-report';
@@ -315,9 +327,12 @@ export default function WorkflowPage() {
   const { formatCurrency } = useCurrency();
 
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedTransactionForDelete, setSelectedTransactionForDelete] = useState<Payment | null>(null);
+
   const [currentActionInfo, setCurrentActionInfo] = useState<{
     transactionId: string;
-    action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
+    action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'REJECT' | 'ADD_COMMENT';
   } | null>(null);
 
   const fetchData = React.useCallback(async (user: { email: string, name: string, role: UserRole['role'] }) => {
@@ -394,6 +409,21 @@ export default function WorkflowPage() {
       handleAction(currentActionInfo.transactionId, currentActionInfo.action, comment);
     }
   }
+
+  const handleDelete = async () => {
+    if (!selectedTransactionForDelete) return;
+    setIsActionProcessing(true);
+    const result = await deletePayment(selectedTransactionForDelete.id!);
+    if (result.success) {
+        toast({ title: "Success", description: "Transaction deleted successfully." });
+        await fetchData(currentUser!);
+    } else {
+        toast({ variant: "destructive", title: "Error", description: result.error });
+    }
+    setIsActionProcessing(false);
+    setIsDeleteDialogOpen(false);
+    setSelectedTransactionForDelete(null);
+  };
 
 
   const filteredTransactions = useMemo(() => {
@@ -525,6 +555,20 @@ export default function WorkflowPage() {
             isProcessing={isActionProcessing}
         />
      )}
+     <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>This action cannot be undone. This will permanently delete transaction {selectedTransactionForDelete?.id}.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} disabled={isActionProcessing}>
+                    {isActionProcessing ? 'Deleting...' : 'Delete'}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+     </AlertDialog>
       <Card>
         <CardHeader>
             <div className="flex justify-between items-start">
@@ -706,6 +750,21 @@ export default function WorkflowPage() {
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         + Add Comment
                                     </DropdownMenuItem>
+                                     {currentUser?.role === 'Super Admin' && (
+                                      <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          className="text-destructive"
+                                          onSelect={() => {
+                                            setSelectedTransactionForDelete(t);
+                                            setIsDeleteDialogOpen(true);
+                                          }}
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          Delete Transaction
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
                                 </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
