@@ -127,3 +127,53 @@ export async function getTransactionsByIds(transactionIds: string[]): Promise<Pa
     const allPayments = await readPayments();
     return allPayments.filter(p => transactionIds.includes(p.id!));
 }
+
+export async function deleteCheckout(checkoutId: string) {
+    try {
+        const allCheckouts = await readCheckouts();
+        const checkoutToDelete = allCheckouts.find(c => c.id === checkoutId);
+
+        if (!checkoutToDelete) {
+            return { success: false, error: 'Checkout voucher not found.' };
+        }
+        
+        // Prevent deletion of posted vouchers
+        if (checkoutToDelete.status === 'POSTED') {
+            return { success: false, error: 'Cannot delete a posted voucher.' };
+        }
+
+        const updatedCheckouts = allCheckouts.filter(c => c.id !== checkoutId);
+        await writeCheckouts(updatedCheckouts);
+
+        // Revert associated transactions back to DRAFT
+        const allPayments = await readPayments();
+        const updatedPayments = allPayments.map(p => {
+            if (checkoutToDelete.transactionIds.includes(p.id!)) {
+                return {
+                    ...p,
+                    currentStatus: 'DRAFT' as const,
+                     approvalHistory: [
+                        ...(p.approvalHistory || []),
+                        {
+                            action: 'Checkout Deleted',
+                            actorId: 'System', // Or get current user
+                            actorRole: 'Admin',
+                            timestamp: new Date().toISOString(),
+                            comments: `Checkout voucher ${checkoutId} was deleted.`
+                        }
+                    ]
+                };
+            }
+            return p;
+        });
+        await writePayments(updatedPayments);
+
+        revalidatePath('/finance/daily-checkout');
+        revalidatePath('/workflow');
+        return { success: true };
+
+    } catch (error) {
+        console.error("Failed to delete checkout voucher:", error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}

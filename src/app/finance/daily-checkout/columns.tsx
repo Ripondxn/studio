@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { MoreHorizontal, CheckCircle, Clock, XCircle, FileCheck2, Eye, Printer, Loader2 } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, Clock, XCircle, FileCheck2, Eye, Printer, Loader2, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,13 +18,33 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { type DailyCheckout } from './schema';
 import { cn } from '@/lib/utils';
-import { getTransactionsByIds } from './actions';
+import { getTransactionsByIds, deleteCheckout } from './actions';
 import { type Payment } from '@/app/finance/payment/schema';
 import { PrintableReport } from '@/app/workflow/printable-report';
 import { getPartyNameLookups } from '@/app/finance/payment/actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const statusConfig = {
   PENDING_ADMIN_APPROVAL: { label: 'Pending Admin Approval', color: 'bg-yellow-500/20 text-yellow-700', icon: <Clock className="h-3 w-3" /> },
@@ -108,13 +128,57 @@ const ViewCheckoutDialog = ({ checkout, isOpen, setIsOpen }: { checkout: DailyCh
 
 const ActionsCell = ({ row }: { row: { original: DailyCheckout } }) => {
     const checkout = row.original;
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        const result = await deleteCheckout(checkout.id);
+        if (result.success) {
+            toast({ title: "Voucher Deleted", description: "The checkout voucher has been deleted." });
+            router.refresh();
+        } else {
+            toast({ variant: "destructive", title: "Error", description: result.error });
+        }
+        setIsDeleting(false);
+        setIsAlertOpen(false);
+    };
+    
     return (
         <div className="text-right">
-            <ViewCheckoutDialog checkout={checkout} isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
-            <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
-                <Eye className="mr-2 h-4 w-4"/> View/Print
-            </Button>
+            <ViewCheckoutDialog checkout={checkout} isOpen={isViewOpen} setIsOpen={setIsViewOpen} />
+             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will delete the checkout voucher. The individual transactions will be reverted to Draft status and will need to be submitted again. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                            {isDeleting ? "Deleting..." : "Delete Voucher"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                     <DropdownMenuItem onSelect={() => setIsViewOpen(true)}>
+                        <Eye className="mr-2 h-4 w-4"/> View/Print
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setIsAlertOpen(true)} className="text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4"/> Delete
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
     )
 }
