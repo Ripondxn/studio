@@ -40,7 +40,8 @@ import {
   UserSquare,
   PanelLeft,
   ChevronRight,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -101,6 +102,11 @@ const navLinks = [
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
+    },
+    {
+        label: 'Asset Management',
+        href: '/assets',
+        icon: <Briefcase />,
     },
     {
         label: 'Maintenance',
