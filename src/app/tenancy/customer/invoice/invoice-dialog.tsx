@@ -28,7 +28,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice } from './actions';
+import { saveInvoice, getNextInvoiceNumber } from './actions';
 import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
@@ -39,7 +39,7 @@ import { useCurrency } from '@/context/currency-context';
 import { getProducts } from '@/app/products/actions';
 import { type Product } from '@/app/products/schema';
 
-const formSchema = invoiceSchema.omit({ id: true, invoiceNo: true });
+const formSchema = invoiceSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
 
 interface InvoiceDialogProps {
@@ -56,6 +56,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const [isPropertyInvoice, setIsPropertyInvoice] = useState(true);
+  const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
 
   const [lookups, setLookups] = useState<{
@@ -90,7 +91,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
   useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
-    getProducts().then(data => setLookups(prev => ({...prev, products: data})));
+     getProducts().then(data => setLookups(prev => ({...prev, products: data})));
   }, []);
 
   useEffect(() => {
@@ -151,36 +152,43 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   }, [isPropertyInvoice, setValue]);
 
   useEffect(() => {
+    const initializeForm = async () => {
+        if (invoice) {
+            setIsPropertyInvoice(!!invoice.property);
+            setIsAutoInvoiceNo(false); // When editing, number is always manual
+            reset(invoice);
+        } else {
+            const newInvoiceNo = await getNextInvoiceNumber();
+            setIsPropertyInvoice(true);
+            setIsAutoInvoiceNo(true);
+            reset({
+                invoiceNo: newInvoiceNo,
+                customerCode: customer.code,
+                customerName: customer.name,
+                property: '',
+                unitCode: '',
+                roomCode: '',
+                invoiceDate: format(new Date(), 'yyyy-MM-dd'),
+                dueDate: format(new Date(), 'yyyy-MM-dd'),
+                items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
+                subTotal: 0,
+                tax: 0,
+                taxType: 'exclusive',
+                taxRate: 0,
+                total: 0,
+                notes: '',
+                status: 'Draft',
+            });
+        }
+    };
     if (isOpen) {
-      if (invoice) {
-        setIsPropertyInvoice(!!invoice.property);
-        reset(invoice);
-      } else {
-        setIsPropertyInvoice(true);
-        reset({
-            customerCode: customer.code,
-            customerName: customer.name,
-            property: '',
-            unitCode: '',
-            roomCode: '',
-            invoiceDate: format(new Date(), 'yyyy-MM-dd'),
-            dueDate: format(new Date(), 'yyyy-MM-dd'),
-            items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
-            subTotal: 0,
-            tax: 0,
-            taxType: 'exclusive',
-            taxRate: 0,
-            total: 0,
-            notes: '',
-            status: 'Draft',
-        });
-      }
+      initializeForm();
     }
   }, [isOpen, invoice, reset, customer]);
 
   const onSubmit = async (data: InvoiceFormData) => {
     setIsSaving(true);
-    const result = await saveInvoice({ ...data, id: invoice?.id });
+    const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo });
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();
@@ -258,10 +266,19 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
           <div className="max-h-[60vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-              <div><Label>Invoice #</Label><Input value={invoice?.invoiceNo || 'Auto-generated'} disabled/></div>
+              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
               <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
+            </div>
+             <div className="flex items-center space-x-2 mb-4">
+                <Switch 
+                    id="auto-invoice-no-switch"
+                    checked={isAutoInvoiceNo}
+                    onCheckedChange={setIsAutoInvoiceNo}
+                    disabled={!!invoice} // Disable toggle when editing
+                />
+                <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
             </div>
 
             <div className="flex items-center space-x-2 mb-4">

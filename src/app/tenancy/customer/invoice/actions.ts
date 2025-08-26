@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -37,8 +36,25 @@ export async function getInvoicesForCustomer(customerCode: string) {
     }));
 }
 
-export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'invoiceNo'> & { id?: string, invoiceNo?: string }) {
-    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true, invoiceNo: true}).safeParse(data);
+export async function getNextInvoiceNumber() {
+    const allInvoices = await readInvoices();
+    let maxNum = 0;
+    allInvoices.forEach(i => {
+        const match = i.invoiceNo.match(/^INV-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `INV-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
+
+export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string, isAutoInvoiceNo?: boolean }) {
+    const { isAutoInvoiceNo, ...invoiceData } = data;
+    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
 
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -47,24 +63,23 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'inv
     try {
         const allInvoices = await readInvoices();
         const isNew = !data.id;
+        const validatedData = validation.data;
 
         if (isNew) {
-             let maxNum = 0;
-            allInvoices.forEach(i => {
-                const match = i.invoiceNo.match(/^INV-(\d+)$/);
-                if (match) {
-                    const num = parseInt(match[1], 10);
-                    if (num > maxNum) {
-                        maxNum = num;
-                    }
+            let newInvoiceNo = validatedData.invoiceNo;
+            if (isAutoInvoiceNo || !newInvoiceNo) {
+                 newInvoiceNo = await getNextInvoiceNumber();
+            } else {
+                const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
+                if (invoiceExists) {
+                    return { success: false, error: `An invoice with number "${newInvoiceNo}" already exists.`};
                 }
-            });
-            const newInvoiceNo = `INV-${(maxNum + 1).toString().padStart(4, '0')}`;
+            }
 
             const newInvoice: Invoice = {
-                ...validation.data,
-                id: `INV-${Date.now()}`,
+                ...validatedData,
                 invoiceNo: newInvoiceNo,
+                id: `INV-${Date.now()}`,
                 amountPaid: 0,
             };
             allInvoices.push(newInvoice);
@@ -73,7 +88,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'inv
             if (index === -1) {
                 return { success: false, error: 'Invoice not found.' };
             }
-            allInvoices[index] = { ...allInvoices[index], ...validation.data, invoiceNo: allInvoices[index].invoiceNo };
+            allInvoices[index] = { ...allInvoices[index], ...validatedData };
         }
 
         await writeInvoices(allInvoices);
