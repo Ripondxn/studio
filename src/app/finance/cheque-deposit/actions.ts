@@ -267,15 +267,37 @@ export async function getLookups() {
     const bankAccounts: BankAccount[] = await fs.readFile(bankAccountsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const units: Unit[] = await fs.readFile(unitsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const rooms: Room[] = await fs.readFile(roomsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const existingCheques = await readCheques();
+    
+    const existingChequeNumbers = new Set(existingCheques.map(c => c.chequeNo));
 
     const landlordMap = new Map<string, string>();
     landlords.forEach(l => landlordMap.set(l.landlordData.code, l.landlordData.name));
 
+    const filterPaymentSchedule = (schedule?: (TenancyPaymentInstallment | LeasePaymentInstallment)[]) => {
+        if (!schedule) return [];
+        return schedule.filter(installment => !installment.chequeNo || !existingChequeNumbers.has(installment.chequeNo));
+    };
+
     return {
         tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
         landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
-        tenancyContracts: tenancyContracts.map(c => ({ value: c.contractNo, label: c.contractNo, property: c.property, unitCode: c.unitCode, roomCode: c.roomCode, partyName: c.tenantName, paymentSchedule: c.paymentSchedule })),
-        leaseContracts: leaseContracts.map(c => ({ value: c.contractNo, label: c.contractNo, property: c.property, partyName: c.landlordCode ? (landlordMap.get(c.landlordCode) || c.landlordCode) : 'Unknown', paymentSchedule: c.paymentSchedule })),
+        tenancyContracts: tenancyContracts.map(c => ({ 
+            value: c.contractNo, 
+            label: c.contractNo, 
+            property: c.property, 
+            unitCode: c.unitCode, 
+            roomCode: c.roomCode, 
+            partyName: c.tenantName, 
+            paymentSchedule: filterPaymentSchedule(c.paymentSchedule) 
+        })),
+        leaseContracts: leaseContracts.map(c => ({ 
+            value: c.contractNo, 
+            label: c.contractNo, 
+            property: c.property, 
+            partyName: c.landlordCode ? (landlordMap.get(c.landlordCode) || c.landlordCode) : 'Unknown', 
+            paymentSchedule: filterPaymentSchedule(c.paymentSchedule) 
+        })),
         bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`})),
         units: units.map(u => ({ value: u.unitCode, label: u.unitCode, propertyCode: u.propertyCode})),
         rooms: rooms.map(r => ({ value: r.roomCode, label: r.roomCode, unitCode: r.unitCode, propertyCode: r.propertyCode })),
