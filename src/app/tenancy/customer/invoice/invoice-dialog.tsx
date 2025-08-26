@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -26,19 +24,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter,
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveInvoice } from './actions';
-import { invoiceSchema, invoiceItemSchema } from './schema';
+import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
+import { getProducts } from '@/app/products/actions';
+import { type Product } from '@/app/products/schema';
 
 const formSchema = invoiceSchema.omit({ id: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
@@ -62,8 +61,9 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const [lookups, setLookups] = useState<{
     properties: {value: string, label: string}[],
     units: {value: string, label: string}[],
-    rooms: {value: string, label: string}[]
-  }>({ properties: [], units: [], rooms: [] });
+    rooms: {value: string, label: string}[],
+    products: Product[]
+  }>({ properties: [], units: [], rooms: [], products: [] });
 
   const {
     register,
@@ -90,6 +90,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
   useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
+    getProducts().then(data => setLookups(prev => ({...prev, products: data})));
   }, []);
 
   useEffect(() => {
@@ -215,6 +216,14 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
         }
     }
   }
+  
+  const handleItemSelect = (index: number, productCode: string) => {
+    const product = lookups.products.find(p => p.itemCode === productCode);
+    if(product) {
+        setValue(`items.${index}.description`, product.itemName);
+        setValue(`items.${index}.unitPrice`, product.salePrice);
+    }
+  }
 
   if (isViewMode && invoice) {
     return (
@@ -327,8 +336,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             <Table>
               <TableHeader>
                   <TableRow>
-                      <TableHead className="w-1/2">Description</TableHead>
-                      <TableHead>Quantity</TableHead>
+                      <TableHead className="w-2/5">Item / Description</TableHead>
+                      <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                       <TableHead></TableHead>
@@ -337,7 +346,14 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
               <TableBody>
                   {fields.map((field, index) => (
                       <TableRow key={field.id}>
-                          <TableCell><Input {...register(`items.${index}.description`)} /></TableCell>
+                          <TableCell>
+                            <Combobox
+                                options={lookups.products.map(p => ({value: p.itemCode, label: p.itemName}))}
+                                value={watchedItems?.[index]?.description}
+                                onSelect={(value) => handleItemSelect(index, value)}
+                                placeholder="Select or type item..."
+                             />
+                          </TableCell>
                           <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} /></TableCell>
                           <TableCell><Input type="number" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
                           <TableCell className="text-right">

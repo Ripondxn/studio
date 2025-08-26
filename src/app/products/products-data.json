@@ -1,0 +1,18 @@
+[
+  {
+    "id": "PROD-1756230948507",
+    "itemCode": "RENT-01",
+    "itemName": "Monthly Rent",
+    "itemType": "Service",
+    "salePrice": 0,
+    "costPrice": 0
+  },
+  {
+    "id": "PROD-1756230976332",
+    "itemCode": "MAINT-01",
+    "itemName": "Standard Maintenance Callout",
+    "itemType": "Service",
+    "salePrice": 150,
+    "costPrice": 50
+  }
+]

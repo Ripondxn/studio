@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -26,18 +24,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter,
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveBill, getNextBillNumber } from './actions';
-import { billSchema, billItemSchema } from './schema';
+import { billSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
+import { getProducts } from '@/app/products/actions';
+import { type Product } from '@/app/products/schema';
+import { useCurrency } from '@/context/currency-context';
 
 const formSchema = billSchema.omit({ id: true });
 type BillFormData = z.infer<typeof formSchema>;
@@ -56,12 +56,14 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const [isPropertyInvoice, setIsPropertyInvoice] = useState(true);
+  const { formatCurrency } = useCurrency();
 
   const [lookups, setLookups] = useState<{
     properties: {value: string, label: string}[],
     units: {value: string, label: string}[],
-    rooms: {value: string, label: string}[]
-  }>({ properties: [], units: [], rooms: [] });
+    rooms: {value: string, label: string}[],
+    products: Product[],
+  }>({ properties: [], units: [], rooms: [], products: [] });
 
   const {
     register,
@@ -88,6 +90,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
 
   useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
+     getProducts().then(data => setLookups(prev => ({...prev, products: data})));
   }, []);
 
   useEffect(() => {
@@ -209,6 +212,14 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
     }
   }
 
+  const handleItemSelect = (index: number, productCode: string) => {
+    const product = lookups.products.find(p => p.itemCode === productCode);
+    if(product) {
+        setValue(`items.${index}.description`, product.itemName);
+        setValue(`items.${index}.unitPrice`, product.costPrice);
+    }
+  }
+
   if (isViewMode && bill) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -255,7 +266,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                     checked={isPropertyInvoice} 
                     onCheckedChange={setIsPropertyInvoice}
                 />
-                <Label htmlFor="property-invoice-switch">Property-Related Invoice</Label>
+                <Label htmlFor="property-invoice-switch">Property-Related Bill</Label>
             </div>
 
             {isPropertyInvoice && (
@@ -320,8 +331,8 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
             <Table>
               <TableHeader>
                   <TableRow>
-                      <TableHead className="w-1/2">Description</TableHead>
-                      <TableHead>Quantity</TableHead>
+                      <TableHead className="w-2/5">Item / Description</TableHead>
+                      <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                       <TableHead></TableHead>
@@ -330,11 +341,18 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
               <TableBody>
                   {fields.map((field, index) => (
                       <TableRow key={field.id}>
-                          <TableCell><Input {...register(`items.${index}.description`)} /></TableCell>
+                          <TableCell>
+                             <Combobox
+                                options={lookups.products.map(p => ({value: p.itemCode, label: p.itemName}))}
+                                value={watchedItems?.[index]?.description}
+                                onSelect={(value) => handleItemSelect(index, value)}
+                                placeholder="Select or type item..."
+                             />
+                          </TableCell>
                           <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} /></TableCell>
                           <TableCell><Input type="number" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
                           <TableCell className="text-right">
-                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
+                            {formatCurrency((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                           </TableCell>
                           <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
                       </TableRow>
@@ -349,7 +367,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                   <div className="w-full max-w-sm space-y-2">
                       <div className="flex justify-between items-center">
                           <Label>Subtotal</Label>
-                          <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('subTotal') || 0)}</span>
+                          <span className="font-medium">{formatCurrency(watch('subTotal') || 0)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                           <Label>Tax</Label>
@@ -377,11 +395,11 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                       </div>
                       <div className="flex justify-between items-center">
                           <Label>Tax Amount</Label>
-                          <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('tax') || 0)}</span>
+                          <span className="font-medium">{formatCurrency(watch('tax') || 0)}</span>
                       </div>
                       <div className="flex justify-between border-t pt-2 mt-2">
                           <Label className="text-lg font-bold">Total</Label>
-                          <span className="font-bold text-lg">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watch('total') || 0)}</span>
+                          <span className="font-bold text-lg">{formatCurrency(watch('total') || 0)}</span>
                       </div>
                   </div>
               </div>

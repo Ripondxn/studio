@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -41,7 +40,8 @@ import {
   PanelLeft,
   ChevronRight,
   BadgeDollarSign,
-  Briefcase
+  Briefcase,
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -102,6 +102,11 @@ const navLinks = [
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
+    },
+     {
+        label: 'Products & Services',
+        href: '/products',
+        icon: <Package />,
     },
     {
         label: 'Asset Management',
