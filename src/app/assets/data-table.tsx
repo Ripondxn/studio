@@ -14,6 +14,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { FileText, FileSpreadsheet } from 'lucide-react';
 
 import {
   Table,
@@ -25,18 +29,28 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useCurrency } from '@/context/currency-context';
+import { type Asset } from './schema';
+
+// Extend jsPDF type to include autoTable from the plugin
+declare module 'jspdf' {
+    interface jsPDF {
+      autoTable: (options: any) => jsPDF;
+    }
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends Asset, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const { formatCurrency } = useCurrency();
 
   const table = useReactTable({
     data,
@@ -52,10 +66,49 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
   });
+  
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableData = table.getFilteredRowModel().rows.map(row => row.original);
+
+    doc.text("Asset Register Report", 14, 16);
+    (doc as any).autoTable({
+        head: [['Code', 'Name', 'Type', 'Purchase Date', 'Cost', 'Current Value']],
+        body: tableData.map(asset => [
+            asset.assetCode,
+            asset.assetName,
+            asset.assetType,
+            asset.purchaseDate,
+            formatCurrency(asset.purchaseCost),
+            formatCurrency(asset.currentValue || 0)
+        ]),
+        startY: 20,
+    });
+    doc.save('asset-report.pdf');
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = table.getFilteredRowModel().rows.map(row => {
+        const asset = row.original;
+        return {
+            'Asset Code': asset.assetCode,
+            'Asset Name': asset.assetName,
+            'Type': asset.assetType,
+            'Purchase Date': asset.purchaseDate,
+            'Purchase Cost': asset.purchaseCost,
+            'Current Value': asset.currentValue || 0,
+        }
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Assets");
+    XLSX.writeFile(wb, "asset-report.xlsx");
+  };
 
   return (
     <div className="rounded-md border p-4">
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 gap-4">
         <Input
           placeholder="Filter by asset name..."
           value={(table.getColumn('assetName')?.getFilterValue() as string) ?? ''}
@@ -64,6 +117,22 @@ export function DataTable<TData, TValue>({
           }
           className="max-w-sm"
         />
+         <Input
+          placeholder="Filter by asset code..."
+          value={(table.getColumn('assetCode')?.getFilterValue() as string) ?? ''}
+          onChange={(event) =>
+            table.getColumn('assetCode')?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+        <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                <FileText className="mr-2 h-4 w-4" /> Export PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
+            </Button>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
