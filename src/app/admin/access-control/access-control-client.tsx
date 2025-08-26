@@ -10,11 +10,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuCheckboxItem,
@@ -29,6 +24,7 @@ import { type FeaturePermission } from './permissions';
 import { savePermissions } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface AccessControlClientProps {
   initialPermissions: FeaturePermission[];
@@ -38,7 +34,19 @@ interface AccessControlClientProps {
 export function AccessControlClient({ initialPermissions, roles }: AccessControlClientProps) {
   const [permissions, setPermissions] = useState<FeaturePermission[]>(initialPermissions);
   const [isSaving, setIsSaving] = useState(false);
+  const [openFeatures, setOpenFeatures] = useState<Record<string, boolean>>(() => {
+    // Initially open all feature sections
+    const initialState: Record<string, boolean> = {};
+    initialPermissions.forEach(p => {
+        initialState[p.feature] = true;
+    });
+    return initialState;
+  });
   const { toast } = useToast();
+  
+  const toggleFeature = (featureName: string) => {
+    setOpenFeatures(prev => ({ ...prev, [featureName]: !prev[featureName] }));
+  };
 
   const handleRoleChange = (
     featureIndex: number,
@@ -79,20 +87,18 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
               <TableHead className="text-right">Allowed Roles</TableHead>
             </TableRow>
           </TableHeader>
-          {permissions.map((feature, featureIndex) => (
-            <TableBody key={feature.feature}>
-              <Collapsible asChild>
-                <React.Fragment>
-                  <TableRow className="bg-muted/50 font-bold">
-                    <TableCell colSpan={4}>
-                      <CollapsibleTrigger className="flex w-full items-center justify-between">
-                        <span>{feature.feature}</span>
-                        <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
-                      </CollapsibleTrigger>
-                    </TableCell>
-                  </TableRow>
-                  <CollapsibleContent>
-                    {feature.actions.map((action, actionIndex) => (
+          <TableBody>
+            {permissions.map((feature, featureIndex) => (
+                <React.Fragment key={feature.feature}>
+                    <TableRow className="bg-muted/50 font-bold hover:bg-muted/60 cursor-pointer" onClick={() => toggleFeature(feature.feature)}>
+                        <TableCell colSpan={4}>
+                            <div className="flex w-full items-center justify-between">
+                                <span>{feature.feature}</span>
+                                <ChevronDown className={cn("h-4 w-4 transition-transform", openFeatures[feature.feature] && "rotate-180")} />
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                     {openFeatures[feature.feature] && feature.actions.map((action, actionIndex) => (
                       <TableRow key={action.action}>
                         <TableCell></TableCell>
                         <TableCell className="font-medium capitalize">{action.action.replace(/_/g, ' ')}</TableCell>
@@ -120,11 +126,9 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
                         </TableCell>
                       </TableRow>
                     ))}
-                  </CollapsibleContent>
                 </React.Fragment>
-              </Collapsible>
-            </TableBody>
-          ))}
+            ))}
+          </TableBody>
         </Table>
         <div className="p-4 border-t flex justify-end">
             <Button onClick={handleSaveChanges} disabled={isSaving}>
