@@ -122,7 +122,10 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         const originalCheque = allCheques[chequeIndex];
         
         const existingClearedPayment = allPayments.find(p => p.referenceNo === originalCheque.chequeNo && p.status !== 'Cancelled');
-        const existingCashReturnPayment = allPayments.find(p => p.referenceNo === `CASH-FOR-${originalCheque.id}`);
+        const existingCashReturnPayment = allPayments.find(p => 
+            p.referenceNo === `CASH-FOR-${originalCheque.chequeNo}` ||
+            p.referenceNo === `CASH-FOR-${originalCheque.id}` // Legacy check
+        );
 
         if (status === 'Cleared' && (existingClearedPayment || existingCashReturnPayment)) {
             return { success: false, error: `A payment transaction for cheque #${originalCheque.chequeNo} already exists.` };
@@ -150,7 +153,7 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
                 paymentMethod: 'Cash',
                 bankAccountId: bankAccountId,
                 paymentFrom: bankAccountId ? 'Bank' : 'Petty Cash',
-                referenceNo: `CASH-FOR-${originalCheque.id}`,
+                referenceNo: `CASH-FOR-${originalCheque.chequeNo}`,
                 property: originalCheque.property,
                 unitCode: originalCheque.unitCode,
                 description: `Cash received for returned cheque #${originalCheque.chequeNo}`,
