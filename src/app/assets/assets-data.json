@@ -1,2 +1,13 @@
-
-[]
+[
+  {
+    "assetCode": "COM-001",
+    "assetName": "Computer",
+    "assetType": "Tangible",
+    "purchaseDate": "2025-08-26",
+    "purchaseCost": 2700,
+    "depreciationMethod": "Declining Balance",
+    "usefulLife": 4,
+    "salvageValue": 0,
+    "id": "ASSET-1756212299560"
+  }
+]

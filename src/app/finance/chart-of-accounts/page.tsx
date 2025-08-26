@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -23,7 +24,7 @@ export default function ChartOfAccountsPage() {
     const storedProfile = sessionStorage.getItem('userProfile');
     if (storedProfile) {
       const profile: { role: UserRole['role'] } = JSON.parse(storedProfile);
-      if (profile.role === 'Admin' || profile.role === 'Super Admin') {
+      if (profile.role === 'Admin' || profile.role === 'Super Admin' || profile.role === 'Accountant') {
         setIsAuthorized(true);
         getAccounts().then(data => {
             setAccounts(data);

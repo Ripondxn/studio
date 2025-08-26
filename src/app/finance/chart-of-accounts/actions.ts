@@ -9,6 +9,7 @@ import { revalidatePath } from 'next/cache';
 import { accountSchema, type Account } from './schema';
 import { type BankAccount } from '../banking/schema';
 import { type Payment } from '../payment/schema';
+import { getAssets } from '@/app/assets/actions';
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
@@ -42,12 +43,13 @@ export async function getAccounts(): Promise<Account[]> {
     const pettyCash = pettyCashData.length > 0 ? pettyCashData[0] : { balance: 0 };
     const payments: Payment[] = await readData(paymentsFilePath);
     const equityTransactions: any[] = await readData(equityTransactionsFilePath);
+    const assets = await getAssets();
 
     // Create a map for easy access and modification
     const accountMap = new Map<string, Account>(accounts.map(acc => [acc.code, { ...acc, balance: acc.isGroup ? 0 : acc.balance, children: [] as Account[] }]));
 
     // 1. Reset all non-group account balances that are calculated dynamically
-    const dynamicAccountCodes = ['1110', '3110', '3120', '4110', '4120', '4130', '5110', '5120', '5130', '5140', '5150', '5160', '5170', '5210', '5220'];
+    const dynamicAccountCodes = ['1110', '1210', '1220', '1230', '3110', '3120', '4110', '4120', '4130', '5110', '5120', '5130', '5140', '5150', '5160', '5170', '5210', '5220'];
     dynamicAccountCodes.forEach(code => {
         const acc = accountMap.get(code);
         if(acc && !acc.isGroup) {
@@ -60,8 +62,17 @@ export async function getAccounts(): Promise<Account[]> {
     if (accountMap.has('1110')) {
         accountMap.get('1110')!.balance = totalCashAndBank;
     }
+    
+    // 3. Aggregate asset values into fixed asset accounts
+    // This is a simplified aggregation. A real system would map asset types to specific accounts.
+    const totalFixedAssets = assets.reduce((sum, asset) => sum + (asset.currentValue || 0), 0);
+    // For now, let's put the total into the 'Office Equipment' account as a representative example.
+    if (accountMap.has('1220')) {
+        accountMap.get('1220')!.balance = totalFixedAssets;
+    }
 
-    // 3. Aggregate payments into expense and revenue accounts
+
+    // 4. Aggregate payments into expense and revenue accounts
     payments.forEach(payment => {
         if (payment.currentStatus !== 'POSTED') return; // Only consider posted transactions
 
@@ -83,7 +94,7 @@ export async function getAccounts(): Promise<Account[]> {
         }
     });
     
-    // 4. Calculate Equity
+    // 5. Calculate Equity
     let capital = 0;
     let drawings = 0;
     equityTransactions.forEach(t => {
@@ -98,7 +109,7 @@ export async function getAccounts(): Promise<Account[]> {
     if(accountMap.has('3120')) accountMap.get('3120')!.balance = drawings;
 
 
-    // 5. Build tree structure for balance recalculation
+    // 6. Build tree structure for balance recalculation
     const rootAccounts: Account[] = [];
     accountMap.forEach(acc => {
         if (acc.parentCode && accountMap.has(acc.parentCode)) {
@@ -109,7 +120,7 @@ export async function getAccounts(): Promise<Account[]> {
         }
     });
 
-    // 6. Recalculate parent balances from the bottom up
+    // 7. Recalculate parent balances from the bottom up
     const recalculateBalances = (account: Account): number => {
         if (!account.isGroup) {
             return account.balance;
