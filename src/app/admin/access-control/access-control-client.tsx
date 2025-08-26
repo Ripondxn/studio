@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -80,52 +79,52 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
               <TableHead className="text-right">Allowed Roles</TableHead>
             </TableRow>
           </TableHeader>
-            {permissions.map((feature, featureIndex) => (
-                <Collapsible asChild key={feature.feature} className="w-full">
-                    <TableBody>
-                        <TableRow className="bg-muted/50 font-bold">
-                            <TableCell colSpan={4}>
-                                <CollapsibleTrigger className="flex w-full items-center justify-between">
-                                <span>{feature.feature}</span>
-                                <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
-                                </CollapsibleTrigger>
-                            </TableCell>
-                        </TableRow>
-                        <CollapsibleContent asChild>
-                            <React.Fragment>
-                            {feature.actions.map((action, actionIndex) => (
-                                <TableRow key={action.action}>
-                                <TableCell></TableCell>
-                                <TableCell className="font-medium capitalize">{action.action.replace(/_/g, ' ')}</TableCell>
-                                <TableCell className="text-muted-foreground">{action.description}</TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" size="sm">{action.allowedRoles.length} Role(s)</Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuLabel>Select Roles</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        {roles.map((role) => (
-                                        <DropdownMenuCheckboxItem
-                                            key={role}
-                                            checked={action.allowedRoles.includes(role)}
-                                            onCheckedChange={(checked) => handleRoleChange(featureIndex, actionIndex, role, !!checked)}
-                                            disabled={role === 'Super Admin'}
-                                        >
-                                            {role}
-                                        </DropdownMenuCheckboxItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                                </TableRow>
-                            ))}
-                            </React.Fragment>
-                        </CollapsibleContent>
-                    </TableBody>
+          {permissions.map((feature, featureIndex) => (
+            <TableBody key={feature.feature}>
+              <Collapsible asChild>
+                <React.Fragment>
+                  <TableRow className="bg-muted/50 font-bold">
+                    <TableCell colSpan={4}>
+                      <CollapsibleTrigger className="flex w-full items-center justify-between">
+                        <span>{feature.feature}</span>
+                        <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                      </CollapsibleTrigger>
+                    </TableCell>
+                  </TableRow>
+                  <CollapsibleContent>
+                    {feature.actions.map((action, actionIndex) => (
+                      <TableRow key={action.action}>
+                        <TableCell></TableCell>
+                        <TableCell className="font-medium capitalize">{action.action.replace(/_/g, ' ')}</TableCell>
+                        <TableCell className="text-muted-foreground">{action.description}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">{action.allowedRoles.length} Role(s)</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuLabel>Select Roles</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {roles.map((role) => (
+                                <DropdownMenuCheckboxItem
+                                  key={role}
+                                  checked={action.allowedRoles.includes(role)}
+                                  onCheckedChange={(checked) => handleRoleChange(featureIndex, actionIndex, role, !!checked)}
+                                  disabled={role === 'Super Admin'}
+                                >
+                                  {role}
+                                </DropdownMenuCheckboxItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </CollapsibleContent>
+                </React.Fragment>
               </Collapsible>
-            ))}
+            </TableBody>
+          ))}
         </Table>
         <div className="p-4 border-t flex justify-end">
             <Button onClick={handleSaveChanges} disabled={isSaving}>
