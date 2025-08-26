@@ -45,6 +45,14 @@ export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, is
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<{name: string} | null>(null);
+
+  useEffect(() => {
+    const storedProfile = sessionStorage.getItem('userProfile');
+    if (storedProfile) {
+        setCurrentUser(JSON.parse(storedProfile));
+    }
+  }, []);
 
   const {
     register,
@@ -67,6 +75,10 @@ export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, is
   }, [user, reset, isOpen]);
 
   const onSubmit = async (data: UserFormData) => {
+    if (!currentUser) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Cannot determine current user. Please log in again.'});
+        return;
+    }
     setIsSaving(true);
     
     // Don't send an empty password to the update function.
@@ -76,7 +88,7 @@ export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, is
       delete dataToSubmit.password;
     }
 
-    const result = await updateUser(dataToSubmit);
+    const result = await updateUser(dataToSubmit, currentUser);
 
     if (result.success) {
       toast({

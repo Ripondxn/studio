@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "id": "PAY-1756202482359",
+    "type": "Receipt",
+    "date": "2025-08-26",
+    "partyType": "Tenant",
+    "partyName": "Tanvir Ahmed",
+    "amount": 15000,
+    "paymentMethod": "Cash",
+    "bankAccountId": "acc_1756197739796",
+    "paymentFrom": "Bank",
+    "referenceNo": "CASH-FOR-123456",
+    "property": "LT-C38",
+    "unitCode": "F201",
+    "roomCode": "",
+    "description": "Cash received for returned cheque #123456",
+    "status": "Received",
+    "currentStatus": "POSTED",
+    "createdByUser": "Super Admin",
+    "approvalHistory": [
+      {
+        "action": "Created & Submitted",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-26T10:01:22.359Z",
+        "comments": "Status updated to Returned with Cash"
+      },
+      {
+        "action": "Approved by Admin",
+        "actorId": "ripondxn@gmail.com",
+        "actorRole": "Admin",
+        "timestamp": "2025-08-26T10:03:21.818Z",
+        "comments": ""
+      },
+      {
+        "action": "Final Approval & Posted",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-26T10:04:14.192Z",
+        "comments": ""
+      }
+    ]
+  }
+]

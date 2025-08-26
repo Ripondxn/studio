@@ -32,7 +32,7 @@ export async function getUsers() {
 
 const addUserFormSchema = userRoleSchema.omit({ id: true, lastLogin: true });
 
-export async function addUser(userData: z.infer<typeof addUserFormSchema>) {
+export async function addUser(userData: z.infer<typeof addUserFormSchema>, creator: { name: string }) {
     const validation = addUserFormSchema.safeParse(userData);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -50,6 +50,8 @@ export async function addUser(userData: z.infer<typeof addUserFormSchema>) {
             ...validation.data,
             id: `USR-${Date.now()}`,
             lastLogin: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            createdBy: creator.name,
         };
 
         allUsers.push(newUser);
@@ -67,7 +69,7 @@ export async function addUser(userData: z.infer<typeof addUserFormSchema>) {
 
 const updateUserFormSchema = userRoleSchema.omit({ lastLogin: true }).partial();
 
-export async function updateUser(userData: z.infer<typeof updateUserFormSchema>) {
+export async function updateUser(userData: z.infer<typeof updateUserFormSchema>, modifier: { name: string }) {
      const validation = userRoleSchema.partial().safeParse(userData);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -96,7 +98,12 @@ export async function updateUser(userData: z.infer<typeof updateUserFormSchema>)
             dataToUpdate.password = allUsers[userIndex].password;
         }
         
-        allUsers[userIndex] = { ...allUsers[userIndex], ...dataToUpdate };
+        allUsers[userIndex] = { 
+            ...allUsers[userIndex], 
+            ...dataToUpdate,
+            modifiedAt: new Date().toISOString(),
+            modifiedBy: modifier.name,
+        };
         
         await writeUsers(allUsers);
         

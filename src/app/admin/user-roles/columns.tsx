@@ -3,8 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, ShieldQuestion } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, ShieldQuestion, UserPlus } from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
@@ -125,18 +125,22 @@ const ActionsCell = ({ row }: { row: { original: UserRole } }) => {
     );
 };
 
-const LastLoginCell = ({ dateString }: { dateString: string }) => {
+const DateCell = ({ dateString, prefix }: { dateString?: string; prefix: string; }) => {
     const [formattedDate, setFormattedDate] = useState('');
 
     useEffect(() => {
+        if(!dateString) {
+            setFormattedDate('N/A');
+            return;
+        }
         try {
-            setFormattedDate(format(new Date(dateString), 'PPp'));
+            setFormattedDate(`${prefix} ${formatDistanceToNow(new Date(dateString), { addSuffix: true })}`);
         } catch (e) {
             setFormattedDate('Invalid Date');
         }
-    }, [dateString]);
+    }, [dateString, prefix]);
 
-    return <span>{formattedDate || '...'}</span>
+    return <span className="text-xs text-muted-foreground">{formattedDate}</span>
 }
 
 
@@ -201,9 +205,27 @@ export const columns: ColumnDef<UserRole>[] = [
   {
     accessorKey: 'lastLogin',
     header: 'Last Login',
+    cell: ({ row }) => <DateCell dateString={row.original.lastLogin} prefix="Last login" />
+  },
+  {
+    accessorKey: 'createdBy',
+    header: 'Audit Trail',
     cell: ({ row }) => {
-        const lastLogin = row.getValue('lastLogin') as string;
-        return <LastLoginCell dateString={lastLogin} />;
+      const user = row.original;
+      return (
+        <div className="flex flex-col items-start text-xs">
+          <span className="flex items-center gap-1">
+            <UserPlus className="h-3 w-3" />
+            Created by <strong>{user.createdBy || 'System'}</strong> <DateCell dateString={user.createdAt} prefix="" />
+          </span>
+           {user.modifiedBy && (
+            <span className="flex items-center gap-1 mt-1">
+              <Pencil className="h-3 w-3" />
+              Modified by <strong>{user.modifiedBy}</strong> <DateCell dateString={user.modifiedAt} prefix="" />
+            </span>
+           )}
+        </div>
+      )
     }
   },
   {

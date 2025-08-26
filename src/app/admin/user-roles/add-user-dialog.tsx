@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +43,14 @@ export function AddUserDialog() {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<{name: string} | null>(null);
+
+  useEffect(() => {
+    const storedProfile = sessionStorage.getItem('userProfile');
+    if (storedProfile) {
+        setCurrentUser(JSON.parse(storedProfile));
+    }
+  }, []);
 
   const {
     register,
@@ -62,8 +70,12 @@ export function AddUserDialog() {
   });
 
   const onSubmit = async (data: UserFormData) => {
+    if (!currentUser) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Cannot determine current user. Please log in again.'});
+        return;
+    }
     setIsSaving(true);
-    const result = await addUser(data);
+    const result = await addUser(data, currentUser);
 
     if (result.success) {
       toast({
