@@ -52,7 +52,7 @@ export async function getAllAgents() {
     const commissionPaidMap = new Map<string, number>();
 
     payments.forEach(p => {
-        if(p.type === 'Payment' && p.agentCode) {
+        if(p.type === 'Payment' && p.currentStatus === 'POSTED' && p.agentCode) {
             const currentPaid = commissionPaidMap.get(p.agentCode) || 0;
             commissionPaidMap.set(p.agentCode, currentPaid + p.amount);
         }

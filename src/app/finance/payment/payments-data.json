@@ -58,35 +58,35 @@
     "status": "Paid",
     "createdByUser": "Super Admin",
     "billAllocations": [],
-    "id": "PAY-1756226129641",
+    "id": "PAY-1756226997631",
     "currentStatus": "POSTED",
     "approvalHistory": [
       {
         "action": "Created Transaction",
         "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-08-26T16:35:29.641Z",
+        "timestamp": "2025-08-26T16:49:57.631Z",
         "comments": "Initial Draft"
       },
       {
         "action": "Submitted for Approval",
         "actorId": "super.admin@propvue.com",
         "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T16:35:45.899Z",
+        "timestamp": "2025-08-26T16:50:53.422Z",
         "comments": ""
       },
       {
         "action": "Approved by Admin",
         "actorId": "ripondxn@gmail.com",
         "actorRole": "Admin",
-        "timestamp": "2025-08-26T16:36:50.919Z",
+        "timestamp": "2025-08-26T16:51:04.030Z",
         "comments": ""
       },
       {
         "action": "Final Approval & Posted",
         "actorId": "super.admin@propvue.com",
         "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T16:38:52.713Z",
+        "timestamp": "2025-08-26T16:51:36.453Z",
         "comments": ""
       }
     ]
