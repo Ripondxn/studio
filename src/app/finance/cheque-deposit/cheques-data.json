@@ -1,21 +1,5 @@
 [
   {
-    "chequeNo": "123456",
-    "chequeDate": "2025-08-25",
-    "amount": 15000,
-    "bankName": "ADCB",
-    "status": "Returned with Cash",
-    "type": "Incoming",
-    "partyName": "Tanvir Ahmed",
-    "property": "LT-C38",
-    "contractNo": "TC-0002",
-    "remarks": "",
-    "id": "CHQ-1756143329059",
-    "depositDate": "2025-08-25",
-    "bankAccountId": "acc_1756122907621",
-    "clearanceDate": "2025-08-30"
-  },
-  {
     "chequeNo": "123457",
     "chequeDate": "2025-09-24",
     "amount": 15000,
@@ -40,5 +24,20 @@
     "contractNo": "TC-0002",
     "remarks": "Installment 3",
     "id": "CHQ-1756148328555"
+  },
+  {
+    "chequeNo": "123456",
+    "chequeDate": "2025-08-24",
+    "amount": 15000,
+    "bankName": "ABC",
+    "status": "In Hand",
+    "type": "Incoming",
+    "partyName": "Tanvir Ahmed",
+    "property": "LT-C38",
+    "unitCode": "F201",
+    "roomCode": "",
+    "contractNo": "TC-0002",
+    "remarks": "",
+    "id": "CHQ-1756193575722"
   }
 ]

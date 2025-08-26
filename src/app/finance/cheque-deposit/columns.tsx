@@ -281,12 +281,13 @@ export const columns: ColumnDef<Cheque>[] = [
     ),
      cell: ({ row }) => {
         return (
-            <div className="flex flex-col">
-                <span className="font-medium">{row.original.chequeNo}</span>
-                <span className="text-xs text-muted-foreground flex items-center gap-1"><Landmark className="h-3 w-3" />{row.original.bankName}</span>
-            </div>
+            <span className="font-medium">{row.original.chequeNo}</span>
         )
     }
+  },
+  {
+    accessorKey: 'bankName',
+    header: 'Bank Name',
   },
   {
     accessorKey: 'chequeDate',
