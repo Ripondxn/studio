@@ -1,7 +1,6 @@
 
-import { AssetList } from './asset-list';
 import { getAssets } from './actions';
-import { AddAssetDialog } from './add-asset-dialog';
+import { AssetsClient } from './assets-client';
 
 export default async function AssetManagementPage() {
   const assets = await getAssets();
@@ -15,9 +14,8 @@ export default async function AssetManagementPage() {
             Track and manage your company's long-term and short-term assets.
           </p>
         </div>
-        <AddAssetDialog onAssetAdded={() => {}} />
       </div>
-      <AssetList initialAssets={assets} />
+      <AssetsClient initialAssets={assets} />
     </div>
   );
 }
