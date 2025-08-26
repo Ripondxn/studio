@@ -67,7 +67,7 @@ export async function getAllAgents() {
 export async function getPaymentsForAgent(agentCode: string): Promise<Payment[]> {
     const allPayments = await getPayments();
     const agentPayments = allPayments.filter(
-        (p) => p.partyType === 'Agent' && p.partyName === agentCode && p.type === 'Payment'
+        (p) => p.agentCode === agentCode && p.type === 'Payment'
     );
     return agentPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
