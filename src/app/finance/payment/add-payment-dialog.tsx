@@ -318,10 +318,10 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
     if (partyType === 'Agent') {
         const selectedAgent = lookups.agents.find(agent => agent.value === partyCode);
-        if (selectedAgent) {
-            setValue('amount', selectedAgent.commissionRate || 0);
-            setValue('agentCode', selectedAgent.code);
+        if (selectedAgent && selectedAgent.commissionRate) {
+            setValue('amount', selectedAgent.commissionRate);
         }
+        setValue('agentCode', partyCode);
     }
   };
 

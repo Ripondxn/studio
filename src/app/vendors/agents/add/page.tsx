@@ -119,7 +119,7 @@ export default function AgentPage() {
         setIsEditing(true); 
         handleFindClick('new');
     }
-  }, [searchParams]);
+  }, []);
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -128,7 +128,7 @@ export default function AgentPage() {
   const onSubmit = async (data: Agent) => {
     setIsSaving(true);
     try {
-      const result = await saveAgentData(data, isNewRecord);
+      const result = await saveAgentData({ ...form.getValues(), ...data }, isNewRecord);
       if (result.success && result.data) {
         toast({
           title: "Success",
@@ -348,4 +348,3 @@ export default function AgentPage() {
     </div>
   );
 }
-

@@ -52,7 +52,7 @@ export async function getAllAgents() {
     const commissionPaidMap = new Map<string, number>();
 
     payments.forEach(p => {
-        if(p.type === 'Payment' && p.currentStatus === 'POSTED' && p.agentCode) {
+        if(p.currentStatus === 'POSTED' && p.agentCode) {
             const currentPaid = commissionPaidMap.get(p.agentCode) || 0;
             commissionPaidMap.set(p.agentCode, currentPaid + p.amount);
         }
@@ -108,15 +108,15 @@ export async function saveAgentData(data: Agent, isNewRecord: boolean) {
         let savedData: Agent;
 
         if (isNewRecord) {
-            const newAgent = { ...data, id: `AGENT-${Date.now()}` };
-            const validation = agentSchema.safeParse(newAgent);
+            const newAgentWithId = { ...data, id: `AGENT-${Date.now()}` };
+            const validation = agentSchema.safeParse(newAgentWithId);
             if (!validation.success) {
                 return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
             }
             allAgents.push(validation.data);
             savedData = validation.data;
         } else {
-            const validation = agentSchema.safeParse(data);
+             const validation = agentSchema.safeParse(data);
             if (!validation.success) {
                 return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
             }

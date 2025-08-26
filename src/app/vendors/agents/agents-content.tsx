@@ -33,8 +33,8 @@ export function AgentContent({ agents }: { agents: Agent[] }) {
   const handleRecordPayment = (agent: Agent) => {
     setPaymentDefaultValues({
       type: 'Payment',
-      partyType: 'Vendor',
-      partyName: agent.name,
+      partyType: 'Agent',
+      partyName: agent.code,
       amount: agent.commissionRate,
       remarks: `Commission payment for agent ${agent.name} (${agent.code})`,
       agentCode: agent.code,
