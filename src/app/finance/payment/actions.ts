@@ -21,6 +21,8 @@ import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { type Bill } from '@/app/vendors/bill/schema';
 import { applyPaymentToBills } from '@/app/vendors/bill/actions';
 import { type Cheque } from '../cheque-deposit/schema';
+import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
+import { applyFinancialImpact } from '@/app/workflow/actions';
 
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -117,18 +119,21 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
 
     try {
         const allPayments = await readPayments();
+        const workflowSettings = await getWorkflowSettings();
+
+        const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
         
         const newPayment: Payment = {
             ...paymentData,
             id: `PAY-${Date.now()}`,
-            currentStatus: 'DRAFT',
+            currentStatus: initialStatus,
             approvalHistory: [
               {
                 action: 'Created Transaction',
                 actorId: paymentData.createdByUser || 'System',
                 actorRole: 'User',
                 timestamp: new Date().toISOString(),
-                comments: 'Initial Draft',
+                comments: `Initial status set to ${initialStatus}`,
               },
             ],
         };
@@ -141,16 +146,14 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
             await applyPaymentToBills(newPayment.billAllocations, newPayment.partyName);
         }
 
+        if (initialStatus === 'POSTED') {
+            await applyFinancialImpact(newPayment);
+        }
+        
         allPayments.push(newPayment);
         await writePayments(allPayments);
         
-        revalidatePath('/finance/payment');
-        revalidatePath('/finance/banking');
-        revalidatePath('/finance/chart-of-accounts');
-        revalidatePath('/vendors/agents');
-        revalidatePath('/workflow');
-        revalidatePath(`/tenancy/customer/add?code=${newPayment.partyName}`);
-        revalidatePath(`/vendors/add?code=${newPayment.partyName}`);
+        revalidateAllPaths(newPayment);
         return { success: true, data: newPayment };
 
     } catch (error) {
@@ -194,32 +197,6 @@ async function reverseFinancialImpact(payment: Payment) {
             }
         });
         await writeInvoices(allInvoices);
-    }
-}
-
-async function applyFinancialImpact(payment: Payment) {
-    if (payment.paymentFrom === 'Petty Cash') {
-        const pettyCash = await readPettyCash();
-        if (payment.type === 'Payment') {
-            pettyCash.balance -= payment.amount;
-        } else {
-            pettyCash.balance += payment.amount;
-        }
-        await writePettyCash(pettyCash);
-    } else if (payment.bankAccountId) {
-        const allBankAccounts = await readBankAccounts();
-        const accountIndex = allBankAccounts.findIndex(acc => acc.id === payment.bankAccountId);
-        if (accountIndex !== -1) {
-            if (payment.type === 'Payment') {
-                allBankAccounts[accountIndex].balance -= payment.amount;
-            } else {
-                allBankAccounts[accountIndex].balance += payment.amount;
-            }
-            await writeBankAccounts(allBankAccounts);
-        }
-    }
-     if (payment.type === 'Receipt' && payment.invoiceAllocations && payment.invoiceAllocations.length > 0) {
-        await applyPaymentToInvoices(payment.invoiceAllocations, payment.partyName);
     }
 }
 

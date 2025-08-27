@@ -27,5 +27,33 @@
     "status": "Sent",
     "id": "INV-1755853030320",
     "amountPaid": 0
+  },
+  {
+    "invoiceNo": "INV-1755853051214",
+    "customerCode": "C002",
+    "customerName": "Md Ripon Ahmed",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "",
+    "invoiceDate": "2025-08-27",
+    "dueDate": "2025-08-27",
+    "items": [
+      {
+        "id": "item-1756277541185",
+        "description": "Monthly Rent",
+        "quantity": 1,
+        "unitPrice": 500,
+        "total": 0
+      }
+    ],
+    "subTotal": 500,
+    "taxType": "inclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 500,
+    "status": "Draft",
+    "notes": "",
+    "id": "INV-1756277519627",
+    "amountPaid": 0
   }
 ]

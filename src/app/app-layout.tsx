@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -42,7 +43,8 @@ import {
   ChevronRight,
   BadgeDollarSign,
   Briefcase,
-  Package
+  Package,
+  Route
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -140,6 +142,7 @@ const navLinks = [
             { href: '/admin/currency', label: 'Currency' },
             { href: '/admin/payment-gateway', label: 'Payment Gateway' },
             { href: '/admin/access-control', label: 'Access Control' },
+            { href: '/admin/workflow-settings', label: 'Workflow Settings' },
         ]
     },
 ];

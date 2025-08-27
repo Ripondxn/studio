@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -12,6 +13,8 @@ import { getContractLookups } from '@/app/tenancy/contract/actions';
 import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
 import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
 import { getProducts } from '@/app/products/actions';
+import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
+import { applyFinancialImpact } from '@/app/workflow/actions';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -86,7 +89,8 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
         const allBills = await readBills();
         const isNew = !data.id;
         const validatedData = validation.data;
-        const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+        const workflowSettings = await getWorkflowSettings();
+        const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
 
         if (isNew) {
             let newBillNo = validatedData.billNo;
@@ -120,9 +124,15 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
                 roomCode: validatedData.roomCode,
                 description: `Payment for Bill #${validatedData.billNo}`,
                 status: 'Paid',
-                currentStatus: 'DRAFT',
+                currentStatus: initialStatus,
                 billAllocations: [{ billId: newBillId, amount: validatedData.total }]
             };
+            
+            if(initialStatus === 'POSTED') await applyFinancialImpact(newPayment as Payment);
+
+            const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+            allPayments.push({...newPayment, id: `PAY-${Date.now()}`});
+            await fs.writeFile(paymentsFilePath, JSON.stringify(allPayments, null, 2), 'utf-8');
         } else {
             const index = allBills.findIndex(bill => bill.id === data.id);
             if (index === -1) {
@@ -131,10 +141,9 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
             allBills[index] = { ...allBills[index], ...validatedData };
         }
         
-       
-
         await writeBills(allBills);
         revalidatePath(`/vendors/add?code=${data.vendorCode}`);
+        revalidatePath('/workflow');
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };

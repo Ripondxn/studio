@@ -59,6 +59,30 @@ async function writePettyCash(data: { balance: number }) {
     await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+export async function applyFinancialImpact(payment: Payment) {
+    const { type, amount, bankAccountId, paymentFrom } = payment;
+    if (paymentFrom === 'Petty Cash') {
+        const pettyCash = await readPettyCash();
+        if (type === 'Payment') {
+            pettyCash.balance -= amount;
+        } else { // Receipt
+            pettyCash.balance += amount;
+        }
+        await writePettyCash(pettyCash);
+    } else if (bankAccountId) {
+        const allBankAccounts = await readBankAccounts();
+        const accountIndex = allBankAccounts.findIndex(acc => acc.id === bankAccountId);
+        if (accountIndex !== -1) {
+            if (type === 'Payment') {
+                allBankAccounts[accountIndex].balance -= amount;
+            } else { // Receipt
+                allBankAccounts[accountIndex].balance += amount;
+            }
+            await writeBankAccounts(allBankAccounts);
+        }
+    }
+}
+
 
 type WorkflowAction = 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
 
@@ -148,29 +172,7 @@ async function updateTransactionWorkflow(
         
         // If the transaction is now posted, update the financial accounts
         if (newStatus === 'POSTED' && previousStatus !== 'POSTED') {
-            const { type, amount, bankAccountId, paymentFrom, partyType, agentCode } = allPayments[transactionIndex];
-            const isAgentCommission = partyType === 'Agent' || !!agentCode;
-
-            if (paymentFrom === 'Petty Cash') {
-                const pettyCash = await readPettyCash();
-                if (type === 'Payment') {
-                    pettyCash.balance -= amount;
-                } else { // Receipt
-                    pettyCash.balance += amount;
-                }
-                await writePettyCash(pettyCash);
-            } else if (bankAccountId) {
-                const allBankAccounts = await readBankAccounts();
-                const accountIndex = allBankAccounts.findIndex(acc => acc.id === bankAccountId);
-                if (accountIndex !== -1) {
-                    if (type === 'Payment') {
-                        allBankAccounts[accountIndex].balance -= amount;
-                    } else { // Receipt
-                        allBankAccounts[accountIndex].balance += amount;
-                    }
-                    await writeBankAccounts(allBankAccounts);
-                }
-            }
+            await applyFinancialImpact(allPayments[transactionIndex]);
         }
 
 

@@ -9,6 +9,8 @@ import { revalidatePath } from 'next/cache';
 import { bankAccountSchema, type BankAccount } from './schema';
 import { type Payment, paymentSchema } from '../payment/schema';
 import { type Cheque } from '../cheque-deposit/schema';
+import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
+import { applyFinancialImpact } from '@/app/workflow/actions';
 
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
@@ -207,46 +209,55 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
     }
     
     try {
-        const allAccounts = await readAccounts();
-        const pettyCash = await readPettyCash();
-        
-        const fromAccount = fromAccountId === 'acc_3' ? { ...pettyCash, id: 'acc_3', accountName: 'Petty Cash' } : allAccounts.find(acc => acc.id === fromAccountId);
-        const toAccount = toAccountId === 'acc_3' ? { ...pettyCash, id: 'acc_3', accountName: 'Petty Cash' } : allAccounts.find(acc => acc.id === toAccountId);
+        const workflowSettings = await getWorkflowSettings();
+        const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
 
-        if (!fromAccount || !toAccount) {
-            return { success: false, error: "One or both accounts not found." };
-        }
-        
-        if(fromAccount.balance < amount) {
-             return { success: false, error: `Insufficient funds in ${fromAccount.accountName}.` };
+        if (initialStatus === 'POSTED') {
+            // If direct posting, do the balance update. Otherwise, it happens on final approval.
+            const allAccounts = await readAccounts();
+            const pettyCash = await readPettyCash();
+            
+            const fromAccount = fromAccountId === 'acc_3' ? { ...pettyCash, id: 'acc_3', accountName: 'Petty Cash' } : allAccounts.find(acc => acc.id === fromAccountId);
+            const toAccount = toAccountId === 'acc_3' ? { ...pettyCash, id: 'acc_3', accountName: 'Petty Cash' } : allAccounts.find(acc => acc.id === toAccountId);
+
+            if (!fromAccount || !toAccount) {
+                return { success: false, error: "One or both accounts not found." };
+            }
+            
+            if(fromAccount.balance < amount) {
+                return { success: false, error: `Insufficient funds in ${fromAccount.accountName}.` };
+            }
+
+            if (fromAccountId === 'acc_3') {
+                pettyCash.balance -= amount;
+            } else {
+                const fromIndex = allAccounts.findIndex(acc => acc.id === fromAccountId);
+                allAccounts[fromIndex].balance -= amount;
+            }
+            
+            if (toAccountId === 'acc_3') {
+                pettyCash.balance += amount;
+            } else {
+                const toIndex = allAccounts.findIndex(acc => acc.id === toAccountId);
+                allAccounts[toIndex].balance += amount;
+            }
+            
+            await writeAccounts(allAccounts);
+            await writePettyCash(pettyCash);
         }
 
-        if (fromAccountId === 'acc_3') {
-            pettyCash.balance -= amount;
-        } else {
-            const fromIndex = allAccounts.findIndex(acc => acc.id === fromAccountId);
-            allAccounts[fromIndex].balance -= amount;
-        }
-        
-        if (toAccountId === 'acc_3') {
-            pettyCash.balance += amount;
-        } else {
-            const toIndex = allAccounts.findIndex(acc => acc.id === toAccountId);
-            allAccounts[toIndex].balance += amount;
-        }
-        
-        await writeAccounts(allAccounts);
-        await writePettyCash(pettyCash);
-        
+        // Create payment records regardless of workflow status
         const allPayments = await readAllPayments();
         const referenceNo = `TRF-${Date.now()}`;
+        const fromAccountName = fromAccountId === 'acc_3' ? 'Petty Cash' : (await readAccounts()).find(a => a.id === fromAccountId)?.accountName || 'Bank';
+        const toAccountName = toAccountId === 'acc_3' ? 'Petty Cash' : (await readAccounts()).find(a => a.id === toAccountId)?.accountName || 'Bank';
         
         const paymentRecord: Payment = {
             id: `PAY-${Date.now()}-OUT`,
             type: 'Payment',
             date: date,
-            partyType: 'Vendor',
-            partyName: `Transfer to ${toAccount.accountName}`,
+            partyType: 'Vendor', // Internal Transfer
+            partyName: `Transfer to ${toAccountName}`,
             amount: amount,
             paymentMethod: fromAccountId === 'acc_3' ? 'Cash' : 'Bank Transfer',
             bankAccountId: fromAccountId,
@@ -254,15 +265,15 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
             referenceNo,
             remarks,
             status: 'Paid',
-            currentStatus: 'POSTED',
+            currentStatus: initialStatus,
         };
 
          const receiptRecord: Payment = {
             id: `PAY-${Date.now()}-IN`,
             type: 'Receipt',
             date: date,
-            partyType: 'Customer',
-            partyName: `Transfer from ${fromAccount.accountName}`,
+            partyType: 'Customer', // Internal Transfer
+            partyName: `Transfer from ${fromAccountName}`,
             amount: amount,
             paymentMethod: toAccountId === 'acc_3' ? 'Cash' : 'Bank Transfer',
             bankAccountId: toAccountId,
@@ -270,7 +281,7 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
             referenceNo,
             remarks,
             status: 'Received',
-            currentStatus: 'POSTED',
+            currentStatus: initialStatus,
         };
         
         allPayments.push(paymentRecord, receiptRecord);

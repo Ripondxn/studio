@@ -17,6 +17,8 @@ import { type Payment } from '../payment/schema';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Room } from '@/app/property/rooms/schema';
+import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
+import { applyFinancialImpact } from '@/app/workflow/actions';
 
 const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
@@ -116,6 +118,7 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
     try {
         const allCheques = await readCheques();
         const allPayments = await readPayments();
+        const workflowSettings = await getWorkflowSettings();
 
         const chequeIndex = allCheques.findIndex(c => c.id === chequeId);
 
@@ -138,6 +141,7 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         }
         
         const updatedCheque = { ...originalCheque, status, bankAccountId };
+        const initialStatus = workflowSettings.approvalProcessEnabled ? 'PENDING_ADMIN_APPROVAL' : 'POSTED';
         
         if(status === 'Deposited' && bankAccountId) {
             updatedCheque.depositDate = date;
@@ -149,70 +153,60 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         
         allCheques[chequeIndex] = updatedCheque;
         
+        const basePayment: Omit<Payment, 'id'> = {
+            type: 'Receipt',
+            date: date,
+            partyType: originalCheque.type === 'Incoming' ? 'Tenant' : 'Landlord',
+            partyName: originalCheque.partyName,
+            amount: originalCheque.amount,
+            property: originalCheque.property,
+            unitCode: originalCheque.unitCode,
+            roomCode: originalCheque.roomCode,
+            createdByUser: user.name,
+            currentStatus: initialStatus,
+            approvalHistory: [{
+                action: 'Created & Submitted',
+                actorId: user.email,
+                actorRole: user.role,
+                timestamp: new Date().toISOString(),
+                comments: `Status updated to ${status}`
+            }]
+        };
+
+        let newPayment: Payment | null = null;
+        
         if (status === 'Returned with Cash') {
-            const newPayment: Payment = {
+             newPayment = {
+                ...basePayment,
                 id: `PAY-${Date.now()}`,
-                type: 'Receipt',
-                date: date,
-                partyType: 'Tenant',
-                partyName: originalCheque.partyName,
-                amount: originalCheque.amount,
                 paymentMethod: 'Cash',
                 bankAccountId: bankAccountId,
                 paymentFrom: bankAccountId ? 'Bank' : 'Petty Cash',
                 referenceNo: cashReturnRef,
-                property: originalCheque.property,
-                unitCode: originalCheque.unitCode,
-                roomCode: originalCheque.roomCode,
                 description: `Cash received for returned cheque #${originalCheque.chequeNo}`,
                 status: 'Received',
-                currentStatus: 'PENDING_ADMIN_APPROVAL',
-                createdByUser: user.name,
-                approvalHistory: [{
-                    action: 'Created & Submitted',
-                    actorId: user.email,
-                    actorRole: user.role,
-                    timestamp: new Date().toISOString(),
-                    comments: `Status updated to ${status}`
-                }]
             };
-            allPayments.push(newPayment);
-            await writePayments(allPayments);
-            revalidatePath('/workflow');
         } else if (status === 'Cleared') {
             if (!bankAccountId) {
                  return { success: false, error: 'Bank account is required to clear a cheque.' };
             }
-            
-            const paymentType = originalCheque.type === 'Incoming' ? 'Receipt' : 'Payment';
-            const remarks = `Cleared Cheque: ${originalCheque.chequeNo}`;
-            
-            const newPayment: Payment = {
+            newPayment = {
+                ...basePayment,
                 id: `PAY-${Date.now()}`,
-                type: paymentType,
-                date: date,
-                partyType: originalCheque.type === 'Incoming' ? 'Tenant' : 'Landlord',
-                partyName: originalCheque.partyName,
-                amount: originalCheque.amount,
+                type: originalCheque.type === 'Incoming' ? 'Receipt' : 'Payment',
                 paymentMethod: 'Cheque',
                 bankAccountId: bankAccountId,
                 paymentFrom: 'Bank',
                 referenceNo: originalCheque.chequeNo,
-                property: originalCheque.property,
-                unitCode: originalCheque.unitCode,
-                roomCode: originalCheque.roomCode,
-                status: paymentType === 'Receipt' ? 'Received' : 'Paid',
-                currentStatus: 'PENDING_ADMIN_APPROVAL',
-                createdByUser: user.name,
-                remarks,
-                approvalHistory: [{
-                    action: 'Created & Submitted',
-                    actorId: user.email,
-                    actorRole: user.role,
-                    timestamp: new Date().toISOString(),
-                    comments: `Status updated to ${status}`
-                }]
+                remarks: `Cleared Cheque: ${originalCheque.chequeNo}`,
+                status: originalCheque.type === 'Incoming' ? 'Received' : 'Paid',
             };
+        }
+
+        if (newPayment) {
+            if(initialStatus === 'POSTED') {
+                await applyFinancialImpact(newPayment);
+            }
             allPayments.push(newPayment);
             await writePayments(allPayments);
             revalidatePath('/workflow');
@@ -366,6 +360,7 @@ export async function createDepositVoucher(
   try {
     const allCheques = await readCheques();
     const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const workflowSettings = await getWorkflowSettings();
 
     const selectedCheques = allCheques.filter(c => chequeIds.includes(c.id) && c.status === 'In Hand');
 
@@ -375,6 +370,8 @@ export async function createDepositVoucher(
 
     const totalAmount = selectedCheques.reduce((sum, c) => sum + c.amount, 0);
     const chequeNumbers = selectedCheques.map(c => c.chequeNo).join(', ');
+    const initialStatus = workflowSettings.approvalProcessEnabled ? 'PENDING_ADMIN_APPROVAL' : 'POSTED';
+
 
     const newPayment: Payment = {
       id: `PAY-${Date.now()}`,
@@ -391,7 +388,7 @@ export async function createDepositVoucher(
       remarks: `Cheque IDs: ${chequeIds.join(', ')}`,
       status: 'Received', // Final status upon posting
       createdByUser: user.name,
-      currentStatus: 'PENDING_ADMIN_APPROVAL', // Start of workflow
+      currentStatus: initialStatus,
       approvalHistory: [
         {
           action: 'Created & Submitted',
@@ -402,7 +399,11 @@ export async function createDepositVoucher(
         },
       ],
     };
-
+    
+    if (initialStatus === 'POSTED') {
+        await applyFinancialImpact(newPayment);
+    }
+    
     allPayments.push(newPayment);
     await fs.writeFile(paymentsFilePath, JSON.stringify(allPayments, null, 2), 'utf-8');
 
@@ -444,8 +445,10 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
     try {
         const allCheques = await readCheques();
         const allPayments = await readPayments();
+        const workflowSettings = await getWorkflowSettings();
         let updatedCount = 0;
         const newStatus = returnWithCash ? 'Returned with Cash' : 'Returned';
+        const initialStatus = workflowSettings.approvalProcessEnabled ? 'PENDING_ADMIN_APPROVAL' : 'POSTED';
 
         const selectedCheques = allCheques.filter(c => chequeIds.includes(c.id) && c.status === 'In Hand');
 
@@ -481,7 +484,7 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
                     remarks: `Cheque returned with cash settlement.`,
                     status: 'Paid',
                     createdByUser: paymentDetails.user.name,
-                    currentStatus: 'PENDING_ADMIN_APPROVAL',
+                    currentStatus: initialStatus,
                     approvalHistory: [{
                         action: 'Created & Submitted',
                         actorId: paymentDetails.user.email,
@@ -490,6 +493,7 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
                         comments: 'Cheque returned with cash payment.',
                     }],
                 };
+                if(initialStatus === 'POSTED') await applyFinancialImpact(newPayment);
                 allPayments.push(newPayment);
             }
             await writePayments(allPayments);
@@ -511,7 +515,7 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
                     remarks: `Cheque returned.`,
                     status: 'Paid',
                     createdByUser: paymentDetails.user.name,
-                    currentStatus: 'PENDING_ADMIN_APPROVAL',
+                    currentStatus: initialStatus,
                     approvalHistory: [{
                         action: 'Created & Submitted',
                         actorId: paymentDetails.user.email,
@@ -520,6 +524,7 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
                         comments: 'Cheque returned.',
                     }],
                 };
+                if(initialStatus === 'POSTED') await applyFinancialImpact(newPayment);
                 allPayments.push(newPayment);
             }
             await writePayments(allPayments);
