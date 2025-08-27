@@ -11,20 +11,21 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import {AlertTriangle, Link2Off, Shuffle} from 'lucide-react';
+import {AlertTriangle, Shuffle} from 'lucide-react';
 import {useMemo} from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function ContinuityClient({
   initialContracts,
 }: {
   initialContracts: Contract[];
 }) {
-  const summary = useMemo(() => {
-    const gapCount = initialContracts.filter(c => c.periodStatus === 'Gap').length;
-    const overlapCount = initialContracts.filter(
+  const { gapContracts, overlapContracts } = useMemo(() => {
+    const gap = initialContracts.filter(c => c.periodStatus === 'Gap');
+    const overlap = initialContracts.filter(
       c => c.periodStatus === 'Overlap'
-    ).length;
-    return {gapCount, overlapCount};
+    );
+    return { gapContracts: gap, overlapContracts: overlap };
   }, [initialContracts]);
 
   return (
@@ -36,7 +37,7 @@ export function ContinuityClient({
             <AlertTriangle className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.gapCount}</div>
+            <div className="text-2xl font-bold">{gapContracts.length}</div>
             <p className="text-xs text-muted-foreground">
               Contracts with a time gap between them.
             </p>
@@ -50,14 +51,30 @@ export function ContinuityClient({
             <Shuffle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.overlapCount}</div>
+            <div className="text-2xl font-bold">{overlapContracts.length}</div>
             <p className="text-xs text-muted-foreground">
               Contracts with overlapping dates.
             </p>
           </CardContent>
         </Card>
       </div>
-      <DataTable columns={columns} data={initialContracts} />
+
+      <Tabs defaultValue="all">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="all">All Issues ({initialContracts.length})</TabsTrigger>
+          <TabsTrigger value="gaps">Gaps ({gapContracts.length})</TabsTrigger>
+          <TabsTrigger value="overlaps">Overlaps ({overlapContracts.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all">
+          <DataTable columns={columns} data={initialContracts} />
+        </TabsContent>
+        <TabsContent value="gaps">
+           <DataTable columns={columns} data={gapContracts} />
+        </TabsContent>
+        <TabsContent value="overlaps">
+           <DataTable columns={columns} data={overlapContracts} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
