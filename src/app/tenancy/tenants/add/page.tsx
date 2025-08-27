@@ -115,8 +115,6 @@ export default function TenantPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const movementHistoryPrintRef = useRef<HTMLDivElement>(null);
-
 
   useEffect(() => {
     return () => {
@@ -328,25 +326,7 @@ export default function TenantPage() {
     }
   };
   
-  const handlePrintMovementHistory = () => {
-    const printContent = movementHistoryPrintRef.current;
-    if (printContent) {
-      const printWindow = window.open('', '', 'height=600,width=800');
-      if (printWindow) {
-        printWindow.document.write('<html><head><title>Tenant Movement History</title>');
-        printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; } h1, h2 { text-align: center; } .no-print { display: none; } </style>');
-        printWindow.document.write('</head><body>');
-        printWindow.document.write(`<h1>Movement History for ${tenantData.name}</h1>`);
-        printWindow.document.write(printContent.innerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.print();
-      }
-    }
-  };
-
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${initialData.name}`;
-  const movementHistory = contractData.paymentSchedule?.filter(item => item.chequeNo === 'MOVEMENT') || [];
 
   return (
     <div className="container mx-auto p-4 bg-background">
@@ -381,7 +361,6 @@ export default function TenantPage() {
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
                 <TabsTrigger value="rental-details">Rental Details</TabsTrigger>
-                <TabsTrigger value="movement-history" disabled={isNewRecord}>Movement History</TabsTrigger>
                 <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
                 <TabsTrigger value="pdc">PDC Schedule</TabsTrigger>
                 <TabsTrigger value="termination">Termination</TabsTrigger>
@@ -624,45 +603,6 @@ export default function TenantPage() {
                     </CardContent>
                 </Card>
             </TabsContent>
-             <TabsContent value="movement-history">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Tenant Movement History</CardTitle>
-                            <CardDescription>A log of all unit/room changes for this tenant.</CardDescription>
-                        </div>
-                        <Button variant="outline" onClick={handlePrintMovementHistory}><Printer className="mr-2 h-4 w-4" /> Print History</Button>
-                    </CardHeader>
-                    <CardContent>
-                        <div ref={movementHistoryPrintRef}>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Movement Date</TableHead>
-                                        <TableHead>Details</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {movementHistory.length > 0 ? (
-                                        movementHistory.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{format(new Date(item.dueDate), 'PP')}</TableCell>
-                                                <TableCell>{item.bankName}</TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={2} className="h-24 text-center">
-                                                No movement history found for this tenant.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
             <TabsContent value="security-deposit">
                 <Card>
                     <CardHeader>
@@ -817,4 +757,3 @@ export default function TenantPage() {
     </div>
   );
 }
-
