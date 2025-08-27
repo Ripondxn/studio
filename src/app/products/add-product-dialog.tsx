@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,8 +21,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { productSchema, type Product } from './schema';
-import { saveProduct } from './actions';
+import { saveProduct, getNextItemCode } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 const formSchema = productSchema.omit({ id: true });
 
@@ -41,6 +43,7 @@ export function AddProductDialog({ product, onProductAdded, children, isOpen: ex
   const setIsOpen = setExternalOpen ?? setInternalOpen;
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutoCode, setIsAutoCode] = useState(true);
   const { toast } = useToast();
 
   const {
@@ -48,30 +51,37 @@ export function AddProductDialog({ product, onProductAdded, children, isOpen: ex
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(formSchema),
   });
 
   useEffect(() => {
-    if (isOpen) {
-        if(product) {
+    const initializeForm = async () => {
+        if (product) {
             reset(product);
+            setIsAutoCode(false); // When editing, code is always manual
         } else {
+            const nextCode = await getNextItemCode();
             reset({
-                itemCode: '',
+                itemCode: nextCode,
                 itemName: '',
                 itemType: 'Product',
                 salePrice: 0,
                 costPrice: 0,
             });
+            setIsAutoCode(true);
         }
+    }
+    if (isOpen) {
+        initializeForm();
     }
   }, [isOpen, product, reset]);
 
   const onSubmit = async (data: ProductFormData) => {
     setIsSaving(true);
-    const result = await saveProduct(data, product?.id);
+    const result = await saveProduct(data, product?.id, !product && isAutoCode);
 
     if (result.success) {
       toast({
@@ -113,14 +123,23 @@ export function AddProductDialog({ product, onProductAdded, children, isOpen: ex
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="itemCode">Item Code</Label>
-                        <Input id="itemCode" {...register('itemCode')} />
+                        <Input id="itemCode" {...register('itemCode')} disabled={isAutoCode} />
                         {errors.itemCode && <p className="text-destructive text-xs mt-1">{errors.itemCode.message}</p>}
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="itemName">Item Name</Label>
-                        <Input id="itemName" {...register('itemName')} />
-                        {errors.itemName && <p className="text-destructive text-xs mt-1">{errors.itemName.message}</p>}
+                     <div className="flex items-end space-x-2 pb-1">
+                        <Switch
+                            id="auto-code-switch"
+                            checked={isAutoCode}
+                            onCheckedChange={setIsAutoCode}
+                            disabled={!!product}
+                        />
+                        <Label htmlFor="auto-code-switch">Auto-generate Code</Label>
                     </div>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="itemName">Item Name</Label>
+                    <Input id="itemName" {...register('itemName')} />
+                    {errors.itemName && <p className="text-destructive text-xs mt-1">{errors.itemName.message}</p>}
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="itemType">Item Type</Label>

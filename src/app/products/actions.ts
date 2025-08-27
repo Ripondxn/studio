@@ -1,3 +1,4 @@
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -31,9 +32,25 @@ export async function getProducts(): Promise<Product[]> {
     return await readProducts();
 }
 
+export async function getNextItemCode() {
+    const allProducts = await readProducts();
+    let maxNum = 0;
+    allProducts.forEach(p => {
+        const match = p.itemCode.match(/^ITEM-(\d+)$/);
+        if(match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `ITEM-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
+
 const productFormSchema = productSchema.omit({ id: true });
 
-export async function saveProduct(data: z.infer<typeof productFormSchema>, id?: string) {
+export async function saveProduct(data: z.infer<typeof productFormSchema>, id?: string, isAutoCode?: boolean) {
     const validation = productFormSchema.safeParse(data);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -47,8 +64,19 @@ export async function saveProduct(data: z.infer<typeof productFormSchema>, id?: 
             if(index === -1) return { success: false, error: 'Product not found.'};
             allProducts[index] = { ...allProducts[index], ...validation.data };
         } else { // Create new
+            let itemCode = validation.data.itemCode;
+            if (isAutoCode) {
+                itemCode = await getNextItemCode();
+            } else {
+                const itemExists = allProducts.some(p => p.itemCode === itemCode);
+                if (itemExists) {
+                    return { success: false, error: `Item with code "${itemCode}" already exists.` };
+                }
+            }
+
             const newProduct: Product = {
                 ...validation.data,
+                itemCode,
                 id: `PROD-${Date.now()}`,
             };
             allProducts.push(newProduct);
