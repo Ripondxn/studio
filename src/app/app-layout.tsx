@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -44,7 +43,8 @@ import {
   BadgeDollarSign,
   Briefcase,
   Package,
-  Route
+  Route,
+  Warehouse
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -110,6 +110,11 @@ const navLinks = [
         label: 'Products & Services',
         href: '/products',
         icon: <Package />,
+    },
+     {
+        label: 'Vaults & Stores',
+        href: '/stores',
+        icon: <Warehouse />,
     },
     {
         label: 'Asset Management',
