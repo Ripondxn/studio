@@ -80,12 +80,34 @@ export async function getAllTenants() {
     });
 }
 
-export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
+async function getNextTenantCode() {
+    const allTenants = await getTenants();
+    let maxNum = 0;
+    allTenants.forEach((t: any) => {
+        const code = t.tenantData.code || '';
+        const match = code.match(/^T(\d+)$/);
+        if(match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `T${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
+export async function saveTenantData(dataToSave: any, isNewRecord: boolean, isAutoCode: boolean) {
   try {
     const allTenants = await getTenants();
+    let tenantData = dataToSave.tenantData;
+    let savedTenant;
     
     if (isNewRecord) {
-        const { code, name } = dataToSave.tenantData;
+        if (isAutoCode) {
+            tenantData.code = await getNextTenantCode();
+        }
+
+        const { code, name } = tenantData;
         const codeExists = allTenants.some((l: any) => l.tenantData.code === code);
         if (codeExists) {
             return { success: false, error: `Tenant with code "${code}" already exists.` };
@@ -96,11 +118,14 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
         }
         const newTenant = {
             id: `T${Date.now()}`,
-            ...dataToSave
+            tenantData,
+            attachments: dataToSave.attachments,
         };
         allTenants.push(newTenant);
+        savedTenant = newTenant;
+
     } else {
-        const { code, name } = dataToSave.tenantData;
+        const { code, name } = tenantData;
         const index = allTenants.findIndex((l: any) => l.tenantData.code === code);
 
         if (index !== -1) {
@@ -113,6 +138,7 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
                 ...dataToSave,
                 id: allTenants[index].id
             };
+            savedTenant = allTenants[index];
         } else {
             return { success: false, error: `Tenant with code "${code}" not found.` };
         }
@@ -121,7 +147,7 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
     await writeTenants(allTenants);
     revalidatePath('/tenancy/tenants');
 
-    return { success: true };
+    return { success: true, data: savedTenant.tenantData };
   } catch (error) {
     console.error('Failed to save tenant data:', error);
     return { success: false, error: (error as Error).message || 'An unknown error occurred' };
@@ -133,18 +159,7 @@ export async function findTenantData(tenantCode: string) {
     const allTenants = await getTenants();
 
     if (tenantCode === 'new') {
-        let maxNum = 0;
-        allTenants.forEach((t: any) => {
-            const code = t.tenantData.code || '';
-            const match = code.match(/^T(\d+)$/);
-            if(match) {
-                const num = parseInt(match[1], 10);
-                if (num > maxNum) {
-                    maxNum = num;
-                }
-            }
-        });
-        const newCode = `T${(maxNum + 1).toString().padStart(4, '0')}`;
+        const newCode = await getNextTenantCode();
         return { success: true, data: { tenantData: { code: newCode } } };
     }
 

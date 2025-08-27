@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -61,6 +61,7 @@ import { type Unit } from '@/app/property/units/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 
 type Attachment = {
   id: number;
@@ -102,6 +103,7 @@ export default function TenantPage() {
   
   const [tenantData, setTenantData] = useState(initialTenantData);
   const [initialData, setInitialData] = useState(initialTenantData);
+  const [isAutoCode, setIsAutoCode] = useState(true);
 
   const [contractData, setContractData] = useState<Partial<Contract>>({});
   const [unitData, setUnitData] = useState<Partial<Unit & { property?: any }>>({});
@@ -121,6 +123,51 @@ export default function TenantPage() {
     };
   }, [attachments]);
 
+  const handleFindClick = useCallback(async (code?: string) => {
+    const codeToFind = code || tenantData.code;
+    if (!codeToFind) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter a Tenant Code to find.',
+      });
+      return;
+    }
+    setIsFinding(true);
+    try {
+      const result = await findTenantData(codeToFind);
+      if (result.success && result.data) {
+        setAllData(result.data);
+        if (codeToFind !== 'new') {
+            setInitialAllData(result.data);
+            setIsNewRecord(false);
+            setIsEditing(false);
+            setIsAutoCode(false);
+        } else {
+            setInitialAllData({ tenantData: { ...initialTenantData, code: result.data.tenantData.code } });
+            setIsNewRecord(true);
+            setIsEditing(true);
+            setIsAutoCode(true);
+        }
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Not Found',
+          description: `No record found for Tenant Code: ${codeToFind}. You can create a new one.`,
+        });
+        handleFindClick('new');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: (error as Error).message || 'Failed to find tenant data.',
+      });
+    } finally {
+      setIsFinding(false);
+    }
+  }, [tenantData.code, toast]);
+
   useEffect(() => {
     const tenantCode = searchParams.get('code');
     if (tenantCode) {
@@ -131,7 +178,7 @@ export default function TenantPage() {
         setIsEditing(true); 
         handleFindClick('new');
     }
-  }, [searchParams]);
+  }, [searchParams, handleFindClick]);
 
   const handleInputChange = (field: keyof typeof tenantData, value: string | number) => {
     setTenantData(prev => ({ ...prev, [field]: value }));
@@ -218,7 +265,7 @@ export default function TenantPage() {
         })),
       };
 
-      const result = await saveTenantData(dataToSave, isNewRecord);
+      const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
       if (result.success) {
         toast({
           title: "Success",
@@ -226,7 +273,7 @@ export default function TenantPage() {
         });
         setIsEditing(false);
         if (isNewRecord) {
-            router.push(`/tenancy/tenants/add?code=${tenantData.code}`);
+            router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
             setInitialAllData(dataToSave);
         }
@@ -253,49 +300,6 @@ export default function TenantPage() {
         setIsEditing(false);
      }
   }
-
-  const handleFindClick = async (code?: string) => {
-    const codeToFind = code || tenantData.code;
-    if (!codeToFind) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter a Tenant Code to find.',
-      });
-      return;
-    }
-    setIsFinding(true);
-    try {
-      const result = await findTenantData(codeToFind);
-      if (result.success && result.data) {
-        setAllData(result.data);
-        if (codeToFind !== 'new') {
-            setInitialAllData(result.data);
-            setIsNewRecord(false);
-            setIsEditing(false);
-        } else {
-            setInitialAllData({ tenantData: { ...initialTenantData, code: result.data.tenantData.code } });
-            setIsNewRecord(true);
-            setIsEditing(true);
-        }
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Not Found',
-          description: `No record found for Tenant Code: ${codeToFind}. You can create a new one.`,
-        });
-        handleFindClick('new');
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: (error as Error).message || 'Failed to find tenant data.',
-      });
-    } finally {
-      setIsFinding(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!tenantData.code) return;
@@ -370,15 +374,26 @@ export default function TenantPage() {
                             <div className="flex items-end gap-2">
                                 <div className="flex-grow">
                                     <Label htmlFor="code">Code</Label>
-                                    <Input id="code" value={tenantData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled />
+                                    <Input id="code" value={tenantData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={isAutoCode || !isEditing} />
                                 </div>
                                 <Button variant="outline" size="icon" onClick={() => router.push('/tenancy/tenants/add')} disabled={isFinding || !isNewRecord}>
                                     <Plus className="h-4 w-4" />
                                 </Button>
                             </div>
                             <div>
-                            <Label htmlFor="name">Name</Label>
-                            <Input id="name" value={tenantData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
+                                <div className="flex items-center space-x-2 pt-6">
+                                    <Switch
+                                        id="auto-code-switch"
+                                        checked={isAutoCode}
+                                        onCheckedChange={setIsAutoCode}
+                                        disabled={!isNewRecord || !isEditing}
+                                    />
+                                    <Label htmlFor="auto-code-switch">Auto-generate Code</Label>
+                                </div>
+                            </div>
+                             <div>
+                                <Label htmlFor="name">Name</Label>
+                                <Input id="name" value={tenantData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
                             </div>
                             <div>
                             <Label htmlFor="mobile">Mobile No</Label>
@@ -731,3 +746,4 @@ export default function TenantPage() {
     </div>
   );
 }
+
