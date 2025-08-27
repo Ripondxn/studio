@@ -42,7 +42,7 @@
     "contractNo": "TC-0002",
     "contractDate": "2025-08-24",
     "property": "LT-C38",
-    "unitCode": "F201",
+    "unitCode": "F103",
     "roomCode": "",
     "tenantCode": "T003",
     "tenantName": "Tanvir Ahmed",
@@ -84,6 +84,14 @@
         "status": "unpaid",
         "chequeNo": "123458",
         "bankName": "ABC"
+      },
+      {
+        "installment": 0,
+        "dueDate": "2025-08-30",
+        "amount": 0,
+        "status": "paid",
+        "chequeNo": "MOVEMENT",
+        "bankName": "Moved from LT-C38/F201 to LT-C38/F103"
       }
     ],
     "terms": "",

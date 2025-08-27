@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -18,11 +19,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Printer, Loader2 } from 'lucide-react';
+import { Printer, Loader2, FileSpreadsheet } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { getAllContracts } from '../contract/actions';
 import { type Contract } from '../contract/schema';
 import { Input } from '@/components/ui/input';
+import * as XLSX from 'xlsx';
 
 type MovementHistoryItem = {
     date: string;
@@ -105,6 +107,22 @@ export default function TenantMovementHistoryPage() {
         }
         }
     };
+    
+    const handleExportExcel = () => {
+        const dataToExport = filteredHistory.map(item => ({
+            'Movement Date': format(new Date(item.date), 'PP'),
+            'Tenant Name': item.tenantName,
+            'Tenant Code': item.tenantCode,
+            'Contract Start Date': format(new Date(item.contractStartDate), 'PP'),
+            'Movement Details': item.details,
+            'Days In Previous Location': item.daysInPreviousLocation
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Movement History");
+        XLSX.writeFile(wb, "tenant-movement-history.xlsx");
+    };
 
     return (
         <div className="container mx-auto py-10">
@@ -122,7 +140,8 @@ export default function TenantMovementHistoryPage() {
                                 onChange={(e) => setFilter(e.target.value)}
                                 className="max-w-sm"
                             />
-                            <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print History</Button>
+                            <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+                            <Button variant="outline" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
                         </div>
                     </div>
                 </CardHeader>
