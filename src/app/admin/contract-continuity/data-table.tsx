@@ -52,20 +52,44 @@ export function DataTable<TData, TValue>({
   
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const visibleColumns = columns.filter(c => c.id !== 'actions' && ('accessorKey' in c));
+    const exportableColumns = columns.filter(c => c.id !== 'actions');
     
-    const head = [visibleColumns.map(col => {
+    const head = [exportableColumns.map(col => {
       if (typeof col.header === 'string') return col.header;
       // Simple fallback for functional headers
       return (col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id || '';
     })];
     
     const body = data.map(row =>
-      visibleColumns.map(col => {
+      exportableColumns.map(col => {
+        const cell = table.getRow(row.id).getVisibleCells().find(cell => cell.column.id === col.id);
+        if (cell) {
+          const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext());
+          if (typeof renderedCell === 'string' || typeof renderedCell === 'number') {
+            return String(renderedCell);
+          }
+           if (React.isValidElement(renderedCell)) {
+            // Attempt to extract text from simple React elements. This might not cover all cases.
+            const textContent = (function extractText(element: React.ReactNode): string {
+                if (typeof element === 'string' || typeof element === 'number') {
+                    return String(element);
+                }
+                if (Array.isArray(element)) {
+                    return element.map(extractText).join(' ');
+                }
+                if (React.isValidElement(element) && element.props.children) {
+                    return extractText(element.props.children);
+                }
+                return '';
+            })(renderedCell);
+            return textContent;
+          }
+        }
         // @ts-ignore
         let value = row[(col as any).accessorKey as keyof TData] as any;
         const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
-        if (dateKeys.includes((col as any).accessorKey)) {
+        // @ts-ignore
+        if (dateKeys.includes(col.accessorKey)) {
           value = value ? format(parseISO(value), 'PP') : '';
         }
         return String(value ?? '');
@@ -82,15 +106,36 @@ export function DataTable<TData, TValue>({
   };
 
   const handleExportExcel = () => {
-    const visibleColumns = columns.filter(c => c.id !== 'actions' && ('accessorKey' in c));
+    const exportableColumns = columns.filter(c => c.id !== 'actions');
     const dataToExport = data.map(row => {
         let obj: any = {};
-        visibleColumns.forEach(col => {
+        exportableColumns.forEach(col => {
             const header = typeof col.header === 'string' ? col.header : ((col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id);
+            const cell = table.getRow(row.id).getVisibleCells().find(cell => cell.column.id === col.id);
+            if (cell) {
+              const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext());
+              if (typeof renderedCell === 'string' || typeof renderedCell === 'number') {
+                obj[header] = renderedCell;
+                return;
+              }
+               if (React.isValidElement(renderedCell)) {
+                // Attempt to extract text content, this might be brittle
+                const textContent = (function extractText(element: React.ReactNode): string {
+                  if (typeof element === 'string' || typeof element === 'number') return String(element);
+                  if (Array.isArray(element)) return element.map(extractText).join(' ');
+                  if (React.isValidElement(element) && element.props.children) return extractText(element.props.children);
+                  return '';
+                })(renderedCell);
+                 obj[header] = textContent;
+                 return;
+              }
+            }
+            
             // @ts-ignore
             let value = row[(col as any).accessorKey as keyof TData] as any;
-             const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
-             if (dateKeys.includes((col as any).accessorKey)) {
+            const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
+            // @ts-ignore
+            if (dateKeys.includes(col.accessorKey)) {
                 value = value ? format(parseISO(value), 'PP') : '';
             }
             obj[header] = value;
