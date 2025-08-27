@@ -42,7 +42,22 @@ export async function getAssets(): Promise<Asset[]> {
 
 const addAssetFormSchema = assetSchema.omit({ id: true, currentValue: true, history: true });
 
-export async function saveAsset(data: z.infer<typeof addAssetFormSchema>, id?: string) {
+async function getNextAssetCode() {
+    const allAssets = await readAssets();
+    let maxNum = 0;
+    allAssets.forEach(asset => {
+        const match = asset.assetCode.match(/^ASSET-(\d+)$/);
+        if(match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `ASSET-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
+export async function saveAsset(data: z.infer<typeof addAssetFormSchema>, isNewRecord: boolean, isAutoCode: boolean, id?: string) {
     const validation = addAssetFormSchema.safeParse(data);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -50,14 +65,19 @@ export async function saveAsset(data: z.infer<typeof addAssetFormSchema>, id?: s
 
     try {
         const allAssets = await readAssets();
+        let assetData = validation.data;
 
-        if (id) { // Update existing
-            const index = allAssets.findIndex(a => a.id === id);
-            if(index === -1) return { success: false, error: 'Asset not found.'};
-            allAssets[index] = { ...allAssets[index], ...validation.data };
-        } else { // Create new
+        if (isNewRecord) { // Create new
+            if (isAutoCode) {
+                assetData.assetCode = await getNextAssetCode();
+            } else {
+                const assetExists = allAssets.some(a => a.assetCode === assetData.assetCode);
+                if(assetExists) {
+                     return { success: false, error: `Asset with code "${assetData.assetCode}" already exists.` };
+                }
+            }
             const newAsset: Asset = {
-                ...validation.data,
+                ...assetData,
                 id: `ASSET-${Date.now()}`,
                 history: [{
                     date: new Date().toISOString(),
@@ -67,11 +87,15 @@ export async function saveAsset(data: z.infer<typeof addAssetFormSchema>, id?: s
                 }]
             };
             allAssets.push(newAsset);
+        } else { // Update existing
+            const index = allAssets.findIndex(a => a.id === id);
+            if(index === -1) return { success: false, error: 'Asset not found.'};
+            allAssets[index] = { ...allAssets[index], ...assetData };
         }
 
         await writeAssets(allAssets);
         revalidatePath('/assets');
-        return { success: true };
+        return { success: true, data: assetData };
 
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };

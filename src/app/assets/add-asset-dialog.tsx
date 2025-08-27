@@ -24,6 +24,7 @@ import { assetSchema, type Asset } from './schema';
 import { saveAsset } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 const formSchema = assetSchema.omit({ id: true, currentValue: true, history: true });
 
@@ -43,6 +44,7 @@ export function AddAssetDialog({ asset, onAssetAdded, children, isOpen: external
   const setIsOpen = setExternalOpen ?? setInternalOpen;
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutoCode, setIsAutoCode] = useState(true);
   const { toast } = useToast();
 
   const {
@@ -59,6 +61,7 @@ export function AddAssetDialog({ asset, onAssetAdded, children, isOpen: external
     if (isOpen) {
         if(asset) {
             reset(asset);
+            setIsAutoCode(false);
         } else {
             reset({
                 assetCode: '',
@@ -73,13 +76,14 @@ export function AddAssetDialog({ asset, onAssetAdded, children, isOpen: external
                 assignedTo: '',
                 notes: '',
             });
+            setIsAutoCode(true);
         }
     }
   }, [isOpen, asset, reset]);
 
   const onSubmit = async (data: AssetFormData) => {
     setIsSaving(true);
-    const result = await saveAsset(data, asset?.id);
+    const result = await saveAsset(data, !asset, isAutoCode, asset?.id);
 
     if (result.success) {
       toast({
@@ -121,8 +125,17 @@ export function AddAssetDialog({ asset, onAssetAdded, children, isOpen: external
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="assetCode">Asset Code</Label>
-                        <Input id="assetCode" {...register('assetCode')} />
+                        <Input id="assetCode" {...register('assetCode')} disabled={isAutoCode} />
                         {errors.assetCode && <p className="text-destructive text-xs mt-1">{errors.assetCode.message}</p>}
+                    </div>
+                     <div className="flex items-end space-x-2 pb-1">
+                        <Switch
+                            id="auto-code-switch"
+                            checked={isAutoCode}
+                            onCheckedChange={setIsAutoCode}
+                            disabled={!!asset}
+                        />
+                        <Label htmlFor="auto-code-switch">Auto-generate Code</Label>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="assetName">Asset Name</Label>
