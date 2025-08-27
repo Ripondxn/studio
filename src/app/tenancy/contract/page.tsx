@@ -42,6 +42,7 @@ import { type Tenant } from '../tenants/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { MoveTenantDialog } from '../tenants/add/move-tenant-dialog';
+import type { UserRole } from '@/app/admin/user-roles/schema';
 
 const initialContractState: Contract = {
     id: '',
@@ -94,6 +95,7 @@ export default function TenancyContractPage() {
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
   const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], tenants: [] });
   const [tenancyPeriod, setTenancyPeriod] = useState<{days: number, period: string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{name: string, role: UserRole['role']} | null>(null);
 
 
   const fetchContractData = useCallback(async (contractId: string) => {
@@ -200,6 +202,9 @@ export default function TenancyContractPage() {
 
 
   useEffect(() => {
+    const userProfileRaw = sessionStorage.getItem('userProfile');
+    if(userProfileRaw) setCurrentUser(JSON.parse(userProfileRaw));
+
     const propertyCode = searchParams.get('propertyCode');
     const unitCode = searchParams.get('unitCode');
     const roomCode = searchParams.get('roomCode');
@@ -457,7 +462,8 @@ export default function TenancyContractPage() {
    const handleClose = () => {
     router.push('/tenancy/contracts');
   };
-
+  
+  const canEdit = isEditing || currentUser?.role === 'Super Admin';
   const pageTitle = isNewRecord ? 'New Tenancy Contract' : `Edit Contract: ${initialContract.contractNo}`;
 
   if (isLoading) {
@@ -475,7 +481,11 @@ export default function TenancyContractPage() {
           {pageTitle}
         </h1>
         <div className="flex items-center gap-2">
-           {isEditing ? (
+           {!isEditing && currentUser?.role !== 'Super Admin' ? (
+              <Button onClick={() => setIsEditing(true)} disabled={isLoading}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+           ) : canEdit ? (
             <>
                 <Button onClick={handleSave} disabled={isSaving}>
                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
@@ -485,44 +495,42 @@ export default function TenancyContractPage() {
                     <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
             </>
-           ) : (
-             <>
-                <Button onClick={() => setIsEditing(true)} disabled={isLoading}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                </Button>
-                <Button variant="outline" onClick={handlePrint}>
-                    <FileText className="mr-2 h-4 w-4" /> Print
-                </Button>
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                    <Button
-                        variant="destructive"
-                        disabled={isNewRecord || isEditing}
-                    >
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+           ) : null}
+            {!isEditing && (
+                <>
+                    <Button variant="outline" onClick={handlePrint}>
+                        <FileText className="mr-2 h-4 w-4" /> Print
                     </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the
-                        contract "{contract.contractNo}".
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                        onClick={handleDelete}
-                        className="bg-destructive hover:bg-destructive/90"
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                        <Button
+                            variant="destructive"
+                            disabled={isNewRecord || isEditing}
                         >
-                        Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-             </>
-           )}
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the
+                            contract "{contract.contractNo}".
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-destructive hover:bg-destructive/90"
+                            >
+                            Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </>
+            )}
             <Button variant="outline" onClick={handleClose}>
                 <X className="mr-2 h-4 w-4" /> Close
             </Button>
@@ -548,11 +556,11 @@ export default function TenancyContractPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="contract-no">Tenancy Contract No</Label>
-                                    <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={isAutoContractNo || !isEditing}/>
+                                    <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={isAutoContractNo || !canEdit}/>
                                 </div>
                                 <div>
                                     <Label htmlFor="contract-date">Date</Label>
-                                    <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
+                                    <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!canEdit}/>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -560,7 +568,7 @@ export default function TenancyContractPage() {
                                     id="auto-contract-no-switch"
                                     checked={isAutoContractNo}
                                     onCheckedChange={setIsAutoContractNo}
-                                    disabled={!isNewRecord || !isEditing}
+                                    disabled={!isNewRecord || !canEdit}
                                 />
                                 <Label htmlFor="auto-contract-no-switch">Auto-generate Contract No</Label>
                             </div>
@@ -572,7 +580,7 @@ export default function TenancyContractPage() {
                                         value={contract.property || ''}
                                         onSelect={handlePropertySelect}
                                         placeholder="Select Property"
-                                        disabled={!isEditing}
+                                        disabled={!canEdit}
                                     />
                                 </div>
                                 <div>
@@ -582,7 +590,7 @@ export default function TenancyContractPage() {
                                         value={contract.unitCode}
                                         onSelect={handleUnitSelect}
                                         placeholder="Select a Unit"
-                                        disabled={!isEditing || !contract.property}
+                                        disabled={!canEdit || !contract.property}
                                     />
                                 </div>
                                 <div>
@@ -592,18 +600,18 @@ export default function TenancyContractPage() {
                                         value={contract.roomCode || ''}
                                         onSelect={handleRoomSelect}
                                         placeholder="Select a Room"
-                                        disabled={!isEditing || !contract.unitCode}
+                                        disabled={!canEdit || !contract.unitCode}
                                     />
                                 </div>
                             </div>
                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="start-date">Start Date</Label>
-                                    <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
+                                    <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!canEdit}/>
                                 </div>
                                 <div className="relative">
                                     <Label htmlFor="end-date">End Date</Label>
-                                    <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
+                                    <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!canEdit}/>
                                     {tenancyPeriod && <p className="text-xs text-muted-foreground absolute bottom-[-18px] right-1">({tenancyPeriod.days} Days)</p>}
                                 </div>
                             </div>
@@ -621,13 +629,13 @@ export default function TenancyContractPage() {
                                 </div>
                                 <div>
                                     <Label htmlFor="rent-amount">Total Rent</Label>
-                                    <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!isEditing}/>
+                                    <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!canEdit}/>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                  <div>
                                     <Label htmlFor="payment-mode">Payment Mode</Label>
-                                    <Select value={contract.paymentMode} onValueChange={(value: 'cash' | 'cheque' | 'bank-transfer') => handleInputChange('paymentMode', value)} disabled={!isEditing}>
+                                    <Select value={contract.paymentMode} onValueChange={(value: 'cash' | 'cheque' | 'bank-transfer') => handleInputChange('paymentMode', value)} disabled={!canEdit}>
                                         <SelectTrigger id="payment-mode">
                                             <SelectValue placeholder="Select mode"/>
                                         </SelectTrigger>
@@ -640,7 +648,7 @@ export default function TenancyContractPage() {
                                 </div>
                                 <div>
                                     <Label htmlFor="status">Status</Label>
-                                    <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!isEditing}>
+                                    <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!canEdit}>
                                         <SelectTrigger id="status">
                                             <SelectValue/>
                                         </SelectTrigger>
@@ -650,7 +658,7 @@ export default function TenancyContractPage() {
                                             <SelectItem value="Cancel">Cancel</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                     {contract.periodStatus === 'Orphaned' && isEditing && (
+                                     {contract.periodStatus === 'Orphaned' && (
                                         <p className="text-xs text-amber-600 flex gap-1 items-center mt-1">
                                             <AlertCircle className="h-3 w-3" />
                                             This is an orphaned renewal. Change status to "New" to fix.
@@ -669,7 +677,7 @@ export default function TenancyContractPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <Label htmlFor="tawtheeq-status">Status</Label>
-                                    <Select value={contract.tawtheeqStatus} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!isEditing}>
+                                    <Select value={contract.tawtheeqStatus} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!canEdit}>
                                         <SelectTrigger id="tawtheeq-status"><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="Not Registered">Not Registered</SelectItem>
@@ -680,11 +688,11 @@ export default function TenancyContractPage() {
                                 </div>
                                 <div>
                                     <Label htmlFor="tawtheeq-reg-no">Registration No</Label>
-                                    <Input id="tawtheeq-reg-no" value={contract.tawtheeqRegistrationNo || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationNo', e.target.value)} disabled={!isEditing}/>
+                                    <Input id="tawtheeq-reg-no" value={contract.tawtheeqRegistrationNo || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationNo', e.target.value)} disabled={!canEdit}/>
                                 </div>
                                 <div>
                                     <Label htmlFor="tawtheeq-reg-date">Registration Date</Label>
-                                    <Input id="tawtheeq-reg-date" type="date" value={contract.tawtheeqRegistrationDate || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationDate', e.target.value)} disabled={!isEditing}/>
+                                    <Input id="tawtheeq-reg-date" type="date" value={contract.tawtheeqRegistrationDate || ''} onChange={(e) => handleInputChange('tawtheeqRegistrationDate', e.target.value)} disabled={!canEdit}/>
                                 </div>
                             </div>
                         </CardContent>
@@ -702,7 +710,7 @@ export default function TenancyContractPage() {
                                 value={contract.tenantCode || ''}
                                 onSelect={handleTenantSelect}
                                 placeholder="Select a Tenant"
-                                disabled={!isEditing}
+                                disabled={!canEdit}
                             />
                         </div>
                         <div>
@@ -737,7 +745,7 @@ export default function TenancyContractPage() {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4 p-4 border rounded-md bg-muted/50">
                         <div>
                             <Label htmlFor="payment-frequency">Payment Frequency</Label>
-                            <Select value={contract.paymentFrequency || 'Monthly'} onValueChange={(value) => handleInputChange('paymentFrequency', value)} disabled={!isEditing}>
+                            <Select value={contract.paymentFrequency || 'Monthly'} onValueChange={(value) => handleInputChange('paymentFrequency', value)} disabled={!canEdit}>
                                 <SelectTrigger id="payment-frequency"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Monthly">Monthly</SelectItem>
@@ -750,10 +758,10 @@ export default function TenancyContractPage() {
                         </div>
                         <div>
                             <Label htmlFor="number-of-payments">Number of Payments</Label>
-                            <Input id="number-of-payments" type="number" value={contract.numberOfPayments || 1} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!isEditing} />
+                            <Input id="number-of-payments" type="number" value={contract.numberOfPayments || 1} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!canEdit} />
                         </div>
                         <div className="flex items-end">
-                            <Button onClick={handleGenerateSchedule} disabled={!isEditing} className="w-full">
+                            <Button onClick={handleGenerateSchedule} disabled={!canEdit} className="w-full">
                                 <RefreshCw className="mr-2 h-4 w-4"/>
                                 Generate Schedule
                             </Button>
@@ -776,19 +784,19 @@ export default function TenancyContractPage() {
                     <TableRow key={index}>
                         <TableCell>{item.installment}</TableCell>
                         <TableCell>
-                        <Input type="date" value={item.dueDate} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!isEditing}/>
+                        <Input type="date" value={item.dueDate} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!canEdit}/>
                         </TableCell>
                         <TableCell>
-                        <Input placeholder="Bank Name" value={item.bankName || ''} onChange={(e) => handleScheduleChange(index, 'bankName', e.target.value)} disabled={!isEditing}/>
+                        <Input placeholder="Bank Name" value={item.bankName || ''} onChange={(e) => handleScheduleChange(index, 'bankName', e.target.value)} disabled={!canEdit}/>
                         </TableCell>
                         <TableCell>
-                        <Input placeholder="Cheque number" value={item.chequeNo || ''} onChange={(e) => handleScheduleChange(index, 'chequeNo', e.target.value)} disabled={!isEditing}/>
+                        <Input placeholder="Cheque number" value={item.chequeNo || ''} onChange={(e) => handleScheduleChange(index, 'chequeNo', e.target.value)} disabled={!canEdit}/>
                         </TableCell>
                         <TableCell>
-                        <Input type="number" placeholder="Amount" value={item.amount} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!isEditing}/>
+                        <Input type="number" placeholder="Amount" value={item.amount} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!canEdit}/>
                         </TableCell>
                         <TableCell>
-                        <Select value={item.status} onValueChange={(value: 'paid' | 'unpaid') => handleScheduleChange(index, 'status', value)} disabled={!isEditing}>
+                        <Select value={item.status} onValueChange={(value: 'paid' | 'unpaid') => handleScheduleChange(index, 'status', value)} disabled={!canEdit}>
                             <SelectTrigger>
                             <SelectValue placeholder="Status" />
                             </SelectTrigger>
@@ -799,7 +807,7 @@ export default function TenancyContractPage() {
                         </Select>
                         </TableCell>
                         <TableCell>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeInstallment(index)} disabled={!isEditing}>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeInstallment(index)} disabled={!canEdit}>
                             <Trash2 className="h-4 w-4" />
                         </Button>
                         </TableCell>
@@ -807,14 +815,14 @@ export default function TenancyContractPage() {
                     ))}
                     </TableBody>
                 </Table>
-                <Button variant="outline" size="sm" className="mt-4" onClick={addInstallment} disabled={!isEditing}>
+                <Button variant="outline" size="sm" className="mt-4" onClick={addInstallment} disabled={!canEdit}>
                     <Plus className="mr-2 h-4 w-4" /> Add Installment
                 </Button>
 
                     <Separator className="my-6"/>
                     <div>
                         <Label htmlFor="terms">Terms & Conditions</Label>
-                        <Textarea id="terms" rows={5} placeholder="Enter contract terms and conditions..." value={contract.terms || ''} onChange={e => handleInputChange('terms', e.target.value)} disabled={!isEditing}/>
+                        <Textarea id="terms" rows={5} placeholder="Enter contract terms and conditions..." value={contract.terms || ''} onChange={e => handleInputChange('terms', e.target.value)} disabled={!canEdit}/>
                     </div>
                 </CardContent>
             </Card>
@@ -829,16 +837,16 @@ export default function TenancyContractPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <Label>Termination Date</Label>
-                            <Input type="date" value={contract.terminationDate || ''} onChange={(e) => handleInputChange('terminationDate', e.target.value)} disabled={!isEditing}/>
+                            <Input type="date" value={contract.terminationDate || ''} onChange={(e) => handleInputChange('terminationDate', e.target.value)} disabled={!canEdit}/>
                         </div>
                         <div>
                             <Label>Final Settlement Amount</Label>
-                            <Input type="number" placeholder="0.00" value={contract.finalSettlementAmount || ''} onChange={(e) => handleNumberInputChange('finalSettlementAmount', e.target.value)} disabled={!isEditing}/>
+                            <Input type="number" placeholder="0.00" value={contract.finalSettlementAmount || ''} onChange={(e) => handleNumberInputChange('finalSettlementAmount', e.target.value)} disabled={!canEdit}/>
                         </div>
                     </div>
                     <div>
                         <Label>Reason for Termination</Label>
-                        <Textarea placeholder="e.g., Early exit, end of contract..." value={contract.terminationReason || ''} onChange={(e) => handleInputChange('terminationReason', e.target.value)} disabled={!isEditing}/>
+                        <Textarea placeholder="e.g., Early exit, end of contract..." value={contract.terminationReason || ''} onChange={(e) => handleInputChange('terminationReason', e.target.value)} disabled={!canEdit}/>
                     </div>
                     <p className="text-sm text-muted-foreground pt-4">
                        Note: To terminate, please set the contract status to "Cancel" in the details tab and provide a termination date above, then save the contract.
