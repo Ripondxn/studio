@@ -60,9 +60,9 @@ export function DataTable<TData, TValue>({
       return (col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id || '';
     })];
     
-    const body = data.map(row =>
+    const body = data.map((row: TData, rowIndex: number) =>
       exportableColumns.map(col => {
-        const cell = table.getRow(row.id).getVisibleCells().find(cell => cell.column.id === col.id);
+        const cell = table.getRowModel().rows[rowIndex]?.getVisibleCells().find(cell => cell.column.id === col.id);
         if (cell) {
           const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext());
           if (typeof renderedCell === 'string' || typeof renderedCell === 'number') {
@@ -89,8 +89,12 @@ export function DataTable<TData, TValue>({
         let value = row[(col as any).accessorKey as keyof TData] as any;
         const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
         // @ts-ignore
-        if (dateKeys.includes(col.accessorKey)) {
-          value = value ? format(parseISO(value), 'PP') : '';
+        if (dateKeys.includes(col.accessorKey) && value) {
+          try {
+             value = format(parseISO(value), 'PP');
+          } catch (e) {
+            // ignore if date is invalid
+          }
         }
         return String(value ?? '');
       })
@@ -107,11 +111,11 @@ export function DataTable<TData, TValue>({
 
   const handleExportExcel = () => {
     const exportableColumns = columns.filter(c => c.id !== 'actions');
-    const dataToExport = data.map(row => {
+    const dataToExport = data.map((row: TData, rowIndex: number) => {
         let obj: any = {};
         exportableColumns.forEach(col => {
             const header = typeof col.header === 'string' ? col.header : ((col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id);
-            const cell = table.getRow(row.id).getVisibleCells().find(cell => cell.column.id === col.id);
+            const cell = table.getRowModel().rows[rowIndex]?.getVisibleCells().find(cell => cell.column.id === col.id);
             if (cell) {
               const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext());
               if (typeof renderedCell === 'string' || typeof renderedCell === 'number') {
@@ -135,8 +139,12 @@ export function DataTable<TData, TValue>({
             let value = row[(col as any).accessorKey as keyof TData] as any;
             const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
             // @ts-ignore
-            if (dateKeys.includes(col.accessorKey)) {
-                value = value ? format(parseISO(value), 'PP') : '';
+            if (dateKeys.includes(col.accessorKey) && value) {
+                 try {
+                   value = format(parseISO(value), 'PP');
+                 } catch(e) {
+                    // ignore if date is invalid
+                 }
             }
             obj[header] = value;
         });
@@ -150,7 +158,23 @@ export function DataTable<TData, TValue>({
   };
   
    const handlePrint = () => {
-    window.print();
+    const printArea = document.getElementById('printable-area');
+    if (printArea) {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write('<html><head><title>Print Report</title>');
+        // Optional: Include styles for better print format
+        printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } .no-print { display: none; } </style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(`<h2>${reportTitle}</h2>`);
+        printWindow.document.write(printArea.innerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      }
+    }
   }
 
   return (
@@ -174,7 +198,7 @@ export function DataTable<TData, TValue>({
           }
         }
       `}</style>
-      <div id="printable-area">
+      <div>
         <div className="flex items-center py-4 gap-2 no-print">
             <div className="ml-auto flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={handlePrint}>
@@ -188,55 +212,57 @@ export function DataTable<TData, TValue>({
                 </Button>
             </div>
         </div>
-        <div className="rounded-md border">
-        <Table>
-            <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                    return (
-                    <TableHead key={header.id}>
-                        {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                            )}
-                    </TableHead>
-                    );
-                })}
-                </TableRow>
-            ))}
-            </TableHeader>
-            <TableBody>
-            {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
-                >
-                    {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                        {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                        )}
-                    </TableCell>
-                    ))}
-                </TableRow>
-                ))
-            ) : (
-                <TableRow>
-                <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                >
-                    No problematic contracts found.
-                </TableCell>
-                </TableRow>
-            )}
-            </TableBody>
-        </Table>
+        <div id="printable-area">
+          <div className="rounded-md border">
+          <Table>
+              <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                      return (
+                      <TableHead key={header.id}>
+                          {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                              )}
+                      </TableHead>
+                      );
+                  })}
+                  </TableRow>
+              ))}
+              </TableHeader>
+              <TableBody>
+              {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                  <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && 'selected'}
+                  >
+                      {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                          {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                          )}
+                      </TableCell>
+                      ))}
+                  </TableRow>
+                  ))
+              ) : (
+                  <TableRow>
+                  <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                  >
+                      No problematic contracts found.
+                  </TableCell>
+                  </TableRow>
+              )}
+              </TableBody>
+          </Table>
+          </div>
         </div>
         <div className="flex items-center justify-end space-x-2 py-4 no-print">
             <Button
