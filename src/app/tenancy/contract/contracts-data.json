@@ -12,7 +12,7 @@
     "endDate": "2025-07-26",
     "totalRent": 60000,
     "paymentMode": "cash",
-    "status": "New",
+    "status": "Cancel",
     "renewalCount": 0,
     "terminationDate": "",
     "rentBasedOn": "Monthly",
@@ -23,8 +23,7 @@
     "terms": "",
     "tawtheeqRegistrationNo": "",
     "tawtheeqStatus": "Not Registered",
-    "tawtheeqRegistrationDate": "",
-    "id": "CON-1756314742173"
+    "tawtheeqRegistrationDate": ""
   },
   {
     "contractNo": "TC-0002",
@@ -52,5 +51,31 @@
     "tawtheeqStatus": "Not Registered",
     "tawtheeqRegistrationDate": "",
     "periodStatus": "OK"
+  },
+  {
+    "contractNo": "TC-0003",
+    "contractDate": "2025-08-27",
+    "property": "LT-C38",
+    "unitCode": "F202",
+    "roomCode": "",
+    "tenantCode": "T082",
+    "tenantName": "ALEXANDER ACUESTA",
+    "email": "alexander.acuesta@example.com",
+    "startDate": "2025-09-28",
+    "endDate": "2025-10-27",
+    "totalRent": 60000,
+    "paymentMode": "cash",
+    "status": "Renew",
+    "renewalCount": 1,
+    "terminationDate": "",
+    "rentBasedOn": "Monthly",
+    "paymentFrequency": "Monthly",
+    "numberOfPayments": 1,
+    "gracePeriod": 0,
+    "paymentSchedule": [],
+    "terms": "",
+    "tawtheeqRegistrationNo": "",
+    "tawtheeqStatus": "Not Registered",
+    "tawtheeqRegistrationDate": ""
   }
 ]

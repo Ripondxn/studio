@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -242,20 +240,6 @@ export const columns: ColumnDef<Contract & {periodStatus?: string}>[] = [
     id: 'remainingDays',
     header: 'Remaining Days',
     cell: RemainingDaysCell,
-  },
-   {
-    accessorKey: 'periodStatus',
-    header: 'Continuity',
-    cell: ({ row }) => {
-        const status = row.original.periodStatus;
-        if (status === 'Gap') {
-            return <Badge variant="destructive" className="bg-yellow-500/80">Gap</Badge>;
-        }
-        if (status === 'Overlap') {
-            return <Badge variant="destructive">Overlap</Badge>;
-        }
-        return <Badge variant="outline" className="bg-green-500/20 text-green-700 border-transparent">OK</Badge>;
-    }
   },
   {
     accessorKey: 'totalRent',
