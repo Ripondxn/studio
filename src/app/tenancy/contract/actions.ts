@@ -12,6 +12,7 @@ import { type Floor } from '@/app/property/floors/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { addCheque } from '@/app/finance/cheque-deposit/actions';
+import { differenceInDays, parseISO } from 'date-fns';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
@@ -52,8 +53,64 @@ async function writeContracts(data: Contract[]) {
 }
 
 export async function getAllContracts() {
-    return await readContracts();
+    const contracts = await readContracts();
+    return processContracts(contracts);
 }
+
+function processContracts(contracts: Contract[]): Contract[] {
+    const contractsByTenant = new Map<string, Contract[]>();
+
+    for (const contract of contracts) {
+        if (!contract.tenantCode) continue;
+        if (!contractsByTenant.has(contract.tenantCode)) {
+            contractsByTenant.set(contract.tenantCode, []);
+        }
+        contractsByTenant.get(contract.tenantCode)!.push(contract);
+    }
+    
+    const processedContracts: Contract[] = [];
+
+    for (const tenantContracts of contractsByTenant.values()) {
+        const sortedContracts = tenantContracts.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+        for (let i = 0; i < sortedContracts.length; i++) {
+            const current = sortedContracts[i];
+            const previous = i > 0 ? sortedContracts[i - 1] : null;
+
+            if (!previous) {
+                 if (current.status === 'Renew') {
+                    current.periodStatus = 'Orphaned';
+                } else {
+                    current.periodStatus = 'OK';
+                }
+            } else {
+                const prevEndDate = parseISO(previous.endDate);
+                const currStartDate = parseISO(current.startDate);
+                const daysDiff = differenceInDays(currStartDate, prevEndDate);
+
+                if (daysDiff === 1) {
+                    current.periodStatus = 'OK';
+                } else if (daysDiff > 1) {
+                    current.periodStatus = 'Gap';
+                } else { // daysDiff <= 0
+                    current.periodStatus = 'Overlap';
+                }
+            }
+             processedContracts.push(current);
+        }
+    }
+    
+    // Add back contracts without tenant codes
+    const contractsWithTenantCode = new Set(processedContracts.map(c => c.id));
+    contracts.forEach(c => {
+        if(!c.tenantCode) {
+            processedContracts.push(c);
+        }
+    });
+
+    return processedContracts.sort((a,b) => a.contractNo.localeCompare(b.contractNo));
+}
+
 
 async function createChequesFromContract(contract: Contract) {
     if (contract.paymentMode !== 'cheque' || !contract.paymentSchedule) {
@@ -153,9 +210,9 @@ async function getNextContractNumber() {
 
 export async function findContract(query: { unitCode?: string, tenantName?: string, contractId?: string }): Promise<{ success: boolean; data?: Contract; error?: string }> {
     try {
-        const allContracts = await readContracts();
+        const allContracts = await getAllContracts();
         let foundContract: Contract | undefined;
-        
+
         if (query.contractId === 'new') {
             const newContractNo = await getNextContractNumber();
             return { success: true, data: { ...initialContractState, contractNo: newContractNo } };
@@ -288,10 +345,7 @@ export async function getUnitsForProperty(propertyCode: string) {
     
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
-    // Units that are fully occupied by a contract on the unit itself (not room-based)
-    const fullyOccupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
-
-    // Rooms that are occupied by a contract
+    const unitLevelContracts = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
     const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
 
     const unitsWithRoomCounts = new Map<string, { total: number, occupied: number }>();
@@ -314,16 +368,13 @@ export async function getUnitsForProperty(propertyCode: string) {
             if (u.propertyCode !== propertyCode) {
                 return false;
             }
-            // If it's fully rented as a whole unit, don't show it.
             if (fullyOccupiedUnitCodes.has(u.unitCode)) {
                 return false;
             }
-            // If it has rooms, check if all are occupied.
             const roomCounts = unitsWithRoomCounts.get(u.unitCode);
             if (roomCounts) {
                 return roomCounts.occupied < roomCounts.total;
             }
-            // If it has no rooms, it's available if it's not in the fully occupied set.
             return true;
         })
         .map((u: any) => ({ value: u.unitCode, label: u.unitCode }));
@@ -392,17 +443,15 @@ export async function moveTenant(data: z.infer<typeof moveTenantSchema>) {
         const oldLocation = `${contract.property}/${contract.unitCode}${contract.roomCode ? '/'+contract.roomCode : ''}`;
         const newLocation = `${newPropertyCode}/${newUnitCode}${newRoomCode ? '/'+newRoomCode : ''}`;
 
-        // Update contract with new location
         contract.property = newPropertyCode;
         contract.unitCode = newUnitCode;
         contract.roomCode = newRoomCode;
 
-        // Add a note to the payment schedule to log the movement
         contract.paymentSchedule.push({
-            installment: 0, // Use 0 or a special marker for non-payment entries
+            installment: 0, 
             dueDate: moveDate,
             amount: 0,
-            status: 'paid', // Mark as 'paid' to not show as due
+            status: 'paid', 
             chequeNo: 'MOVEMENT',
             bankName: `Moved from ${oldLocation} to ${newLocation}`,
         });
