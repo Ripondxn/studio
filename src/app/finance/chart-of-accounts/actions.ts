@@ -11,6 +11,7 @@ import { type BankAccount } from '../banking/schema';
 import { type Payment } from '../payment/schema';
 import { getAssets } from '@/app/assets/actions';
 import { type StockTransaction } from '@/app/stores/schema';
+import { type Product } from '@/app/products/schema';
 
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json');
@@ -19,6 +20,7 @@ const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/pett
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 const equityTransactionsFilePath = path.join(process.cwd(), 'src/app/finance/equity/transactions.json');
 const stockTransactionsFilePath = path.join(process.cwd(), 'src/app/stores/stock-transactions.json');
+const productsFilePath = path.join(process.cwd(), 'src/app/products/products-data.json');
 
 
 async function readData(filePath: string) {
@@ -48,6 +50,7 @@ export async function getAccounts(): Promise<Account[]> {
     const equityTransactions: any[] = await readData(equityTransactionsFilePath);
     const assets = await getAssets();
     const stockTransactions: StockTransaction[] = await readData(stockTransactionsFilePath);
+    const products: Product[] = await readData(productsFilePath);
 
 
     // Create a map for easy access and modification
@@ -76,7 +79,6 @@ export async function getAccounts(): Promise<Account[]> {
 
     // 4. Aggregate stock value into inventory account
     const inventoryValue = stockTransactions.reduce((acc, tx) => {
-        const products = readData(path.join(process.cwd(), 'src/app/products/products-data.json'));
         const product = products.find((p:any) => p.id === tx.productId);
         const cost = product?.costPrice || 0;
         if(tx.type === 'IN') return acc + (tx.quantity * cost);
