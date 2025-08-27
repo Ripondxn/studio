@@ -8,9 +8,11 @@ import { type Payment } from '@/app/finance/payment/schema';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { agentSchema, type Agent } from './schema';
+import { type Vendor } from '../schema';
 
 const agentsFilePath = path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
 
 
 async function readAgents(): Promise<Agent[]> {
@@ -45,10 +47,26 @@ async function getPayments(): Promise<Payment[]> {
     }
 }
 
+async function getVendors() {
+    try {
+        const data = await fs.readFile(vendorsFilePath, 'utf-8');
+        // The vendors data is nested, so we extract it.
+        return JSON.parse(data).map((v: any) => v.vendorData) as Vendor[];
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
+
 export async function getAllAgents() {
     const agents = await readAgents();
     const payments = await getPayments();
+    const vendors = await getVendors();
     
+    const vendorMap = new Map<string, string>(vendors.map(v => [v.code, v.name]));
     const commissionPaidMap = new Map<string, number>();
 
     payments.forEach(p => {
@@ -60,6 +78,7 @@ export async function getAllAgents() {
 
     return agents.map(agent => ({
         ...agent,
+        vendorName: agent.vendorCode ? vendorMap.get(agent.vendorCode) : undefined,
         totalCommissionPaid: commissionPaidMap.get(agent.code) || 0,
     }));
 }
