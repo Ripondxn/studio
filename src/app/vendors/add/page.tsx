@@ -54,6 +54,7 @@ import { vendorSchema, type Vendor } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { VendorTransactionHistory } from '../vendor-transaction-history';
 import { BillList } from '../bill/bill-list';
+import { Switch } from '@/components/ui/switch';
 
 
 type Attachment = {
@@ -80,6 +81,7 @@ export default function VendorPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutoCode, setIsAutoCode] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -116,9 +118,11 @@ export default function VendorPage() {
         if (code !== 'new') {
             setIsNewRecord(false);
             setIsEditing(false);
+            setIsAutoCode(false);
         } else {
             setIsNewRecord(true);
             setIsEditing(true);
+            setIsAutoCode(true);
         }
       } else {
         toast({
@@ -204,15 +208,15 @@ export default function VendorPage() {
         })),
       };
 
-      const result = await saveVendorData(dataToSave, isNewRecord);
-      if (result.success) {
+      const result = await saveVendorData(dataToSave, isNewRecord, isAutoCode);
+      if (result.success && result.data) {
         toast({
           title: "Success",
           description: `Vendor "${data.name}" saved successfully.`,
         });
         setIsEditing(false);
         if (isNewRecord) {
-            router.push(`/vendors/add?code=${data.code}`);
+            router.push(`/vendors/add?code=${result.data.code}`);
         } else {
             form.reset(data);
         }
@@ -350,11 +354,17 @@ export default function VendorPage() {
                            <Label htmlFor="code">Code</Label>
                            <div className="flex items-end gap-2">
                                 <FormControl>
-                                    <Input {...field} disabled={!isNewRecord} />
+                                    <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
                                 </FormControl>
-                                <Button type="button" variant="outline" size="icon" onClick={() => router.push('/vendors/add')} disabled={!isNewRecord}>
-                                    <Plus className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center space-x-2 pt-6">
+                                    <Switch
+                                        id="auto-code-switch"
+                                        checked={isAutoCode}
+                                        onCheckedChange={setIsAutoCode}
+                                        disabled={!isNewRecord || !isEditing}
+                                    />
+                                    <Label htmlFor="auto-code-switch">Auto</Label>
+                                </div>
                            </div>
                           <FormMessage />
                         </FormItem>

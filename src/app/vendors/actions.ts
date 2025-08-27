@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -37,22 +36,46 @@ export async function getAllVendors() {
     }));
 }
 
-export async function saveVendorData(dataToSave: any, isNewRecord: boolean) {
+async function getNextVendorCode() {
+    const allVendors = await getVendors();
+    let maxNum = 0;
+    allVendors.forEach((v: any) => {
+        const code = v.vendorData.code || '';
+        const match = code.match(/^V(\d+)$/);
+        if(match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `V${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
+export async function saveVendorData(dataToSave: any, isNewRecord: boolean, isAutoCode: boolean) {
   try {
     const allVendors = await getVendors();
-    const { code } = dataToSave.vendorData;
-
+    let vendorData = dataToSave.vendorData;
+    let savedVendor;
+    
     if (isNewRecord) {
+        if (isAutoCode) {
+            vendorData.code = await getNextVendorCode();
+        }
+        const { code } = vendorData;
         const vendorExists = allVendors.some((v: any) => v.vendorData.code === code);
         if (vendorExists) {
             return { success: false, error: `Vendor with code "${code}" already exists.` };
         }
         const newVendor = {
             id: `V-${Date.now()}`,
-            ...dataToSave
+            ...dataToSave,
+            vendorData
         };
         allVendors.push(newVendor);
+        savedVendor = newVendor;
     } else {
+        const { code } = vendorData;
         const index = allVendors.findIndex((v: any) => v.vendorData.code === code);
 
         if (index !== -1) {
@@ -61,6 +84,7 @@ export async function saveVendorData(dataToSave: any, isNewRecord: boolean) {
                 ...dataToSave,
                 id: allVendors[index].id // Preserve original ID
             };
+            savedVendor = allVendors[index];
         } else {
             return { success: false, error: `Vendor with code "${code}" not found.` };
         }
@@ -69,7 +93,7 @@ export async function saveVendorData(dataToSave: any, isNewRecord: boolean) {
     await writeVendors(allVendors);
     revalidatePath('/vendors');
 
-    return { success: true };
+    return { success: true, data: savedVendor.vendorData };
   } catch (error) {
     console.error('Failed to save vendor data:', error);
     return { success: false, error: (error as Error).message || 'An unknown error occurred' };
@@ -81,15 +105,7 @@ export async function findVendorData(vendorCode: string) {
     const allVendors = await getVendors();
     
     if (vendorCode === 'new') {
-        let maxVendorNum = 0;
-        allVendors.forEach((v: any) => {
-            const vendorCodeMatch = v.vendorData.code?.match(/^V(\d+)$/);
-            if (vendorCodeMatch) {
-                const num = parseInt(vendorCodeMatch[1], 10);
-                if (num > maxVendorNum) maxVendorNum = num;
-            }
-        });
-        const newVendorCode = `V${(maxVendorNum + 1).toString().padStart(4, '0')}`;
+        const newVendorCode = await getNextVendorCode();
         return { success: true, data: { vendorData: { code: newVendorCode } } };
     }
 
