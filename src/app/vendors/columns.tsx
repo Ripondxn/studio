@@ -132,6 +132,7 @@ type Attachment = {
   isLink: boolean;
 };
 
+
 const AttachmentsCell = ({ row }: { row: { original: Vendor } }) => {
     const vendor = row.original;
     const attachments: Attachment[] = vendor.attachments || [];
@@ -215,6 +216,14 @@ export const columns: ColumnDef<Vendor>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+        const vendor = row.original;
+        return (
+            <Button asChild variant="link" className="p-0 h-auto font-normal">
+                <Link href={`/vendors/add?code=${vendor.code}`}>{vendor.code}</Link>
+            </Button>
+        )
+    }
   },
   {
     accessorKey: 'name',
