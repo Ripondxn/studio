@@ -125,6 +125,8 @@ export type VacantPeriod = {
     vacancyStartDate: string;
     vacancyEndDate: string;
     daysVacant: number;
+    previousContractNo?: string;
+    nextContractNo?: string;
 }
 
 export async function getVacantPeriods(): Promise<VacantPeriod[]> {
@@ -163,7 +165,9 @@ export async function getVacantPeriods(): Promise<VacantPeriod[]> {
                     roomCode: prevContract.roomCode,
                     vacancyStartDate: vacancyStart.toISOString(),
                     vacancyEndDate: vacancyEnd.toISOString(),
-                    daysVacant
+                    daysVacant,
+                    previousContractNo: prevContract.contractNo,
+                    nextContractNo: nextContract.contractNo,
                 });
             }
         }
