@@ -5,7 +5,7 @@ import {promises as fs} from 'fs';
 import path from 'path';
 import {revalidatePath} from 'next/cache';
 import {type Contract} from '@/app/tenancy/contract/schema';
-import {differenceInDays, parseISO} from 'date-fns';
+import {differenceInDays, parseISO, addDays} from 'date-fns';
 
 const contractsFilePath = path.join(
   process.cwd(),
@@ -117,3 +117,57 @@ export async function getMovementHistory(): Promise<MovementHistoryItem[]> {
     return allMovements;
 }
 
+export type VacantPeriod = {
+    id: string;
+    property: string;
+    unitCode: string;
+    roomCode?: string;
+    vacancyStartDate: string;
+    vacancyEndDate: string;
+    daysVacant: number;
+}
+
+export async function getVacantPeriods(): Promise<VacantPeriod[]> {
+    const contracts = await readContracts();
+    const vacantPeriods: VacantPeriod[] = [];
+    const contractsByUnit = new Map<string, Contract[]>();
+
+    // Group contracts by unit (and room if applicable)
+    contracts.forEach(contract => {
+        const key = `${contract.property}-${contract.unitCode}${contract.roomCode ? `-${contract.roomCode}`: ''}`;
+        if (!contractsByUnit.has(key)) {
+            contractsByUnit.set(key, []);
+        }
+        contractsByUnit.get(key)!.push(contract);
+    });
+
+    // For each unit, sort contracts and find gaps
+    contractsByUnit.forEach((unitContracts, key) => {
+        if (unitContracts.length < 2) return;
+
+        const sorted = unitContracts.sort((a,b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+        for (let i = 0; i < sorted.length - 1; i++) {
+            const prevContract = sorted[i];
+            const nextContract = sorted[i+1];
+
+            const vacancyStart = addDays(parseISO(prevContract.endDate), 1);
+            const vacancyEnd = addDays(parseISO(nextContract.startDate), -1);
+
+            if (isBefore(vacancyStart, vacancyEnd) || vacancyStart.getTime() === vacancyEnd.getTime()) {
+                const daysVacant = differenceInDays(vacancyEnd, vacancyStart) + 1;
+                vacantPeriods.push({
+                    id: `${key}-${i}`,
+                    property: prevContract.property,
+                    unitCode: prevContract.unitCode,
+                    roomCode: prevContract.roomCode,
+                    vacancyStartDate: vacancyStart.toISOString(),
+                    vacancyEndDate: vacancyEnd.toISOString(),
+                    daysVacant
+                });
+            }
+        }
+    });
+
+    return vacantPeriods.sort((a,b) => new Date(b.vacancyStartDate).getTime() - new Date(a.vacancyStartDate).getTime());
+}

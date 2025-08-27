@@ -1,10 +1,11 @@
 
-import { getProblematicContracts, getMovementHistory } from './actions';
+import { getProblematicContracts, getMovementHistory, getVacantPeriods } from './actions';
 import { ContinuityClient } from './client';
 
 export default async function ContractContinuityPage() {
   const problematicContracts = await getProblematicContracts();
   const movementHistory = await getMovementHistory();
+  const vacantPeriods = await getVacantPeriods();
 
   const overlapContracts = problematicContracts.filter(c => c.periodStatus === 'Overlap');
   const gapContracts = problematicContracts.filter(c => c.periodStatus === 'Gap');
@@ -24,6 +25,7 @@ export default async function ContractContinuityPage() {
         initialOverlapContracts={overlapContracts} 
         initialGapContracts={gapContracts}
         initialMovementHistory={movementHistory}
+        initialVacantPeriods={vacantPeriods}
       />
     </div>
   );
