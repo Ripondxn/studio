@@ -83,7 +83,7 @@ const navLinks = [
       ]
     },
     { 
-      label: 'Vendor', 
+      label: 'Vendor / Supplier', 
       icon: <UserSquare />,
       subItems: [
         { href: '/vendors', label: 'Vendors' },
