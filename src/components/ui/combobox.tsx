@@ -31,7 +31,10 @@ type ComboboxProps = {
 export function Combobox({ options = [], value, onSelect, placeholder, disabled }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
 
-  const selectedOption = options.find((option) => option.value.toLowerCase() === value.toLowerCase() || option.label.toLowerCase() === value.toLowerCase());
+  const selectedOption = options.find((option) => 
+    (option.value?.toLowerCase() === value?.toLowerCase()) || 
+    (option.label?.toLowerCase() === value?.toLowerCase())
+  );
   
   return (
     <Popover open={open} onOpenChange={setOpen}>
