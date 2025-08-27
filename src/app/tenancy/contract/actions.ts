@@ -210,14 +210,14 @@ async function getNextContractNumber() {
 
 export async function findContract(query: { unitCode?: string, tenantName?: string, contractId?: string }): Promise<{ success: boolean; data?: Contract; error?: string }> {
     try {
-        const allContracts = await getAllContracts();
+        const allContracts = await readContracts();
         let foundContract: Contract | undefined;
 
         if (query.contractId === 'new') {
             const newContractNo = await getNextContractNumber();
             return { success: true, data: { ...initialContractState, contractNo: newContractNo } };
         }
-
+        
         if (query.contractId) {
             foundContract = allContracts.find(c => c.id === query.contractId);
         } else if (query.unitCode) {
@@ -227,7 +227,10 @@ export async function findContract(query: { unitCode?: string, tenantName?: stri
         }
 
         if (foundContract) {
-            return { success: true, data: foundContract };
+            // After finding the contract, process it to determine its continuity status
+            const processedContracts = processContracts(allContracts);
+            const finalContractData = processedContracts.find(c => c.id === foundContract!.id);
+            return { success: true, data: finalContractData };
         } else {
             return { success: false, error: 'Contract not found.' };
         }
@@ -236,6 +239,7 @@ export async function findContract(query: { unitCode?: string, tenantName?: stri
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
 }
+
 
 const initialContractState: Contract = {
     id: '',
@@ -345,7 +349,7 @@ export async function getUnitsForProperty(propertyCode: string) {
     
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
-    const unitLevelContracts = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
+    const fullyOccupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
     const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
 
     const unitsWithRoomCounts = new Map<string, { total: number, occupied: number }>();
