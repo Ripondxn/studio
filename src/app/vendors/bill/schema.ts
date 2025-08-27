@@ -1,6 +1,4 @@
 
-'use client';
-
 import { z } from 'zod';
 
 export const billItemSchema = z.object({
