@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -120,8 +121,9 @@ export function MoveTenantDialog({ contractId, currentLocation }: MoveTenantDial
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Move className="mr-2 h-4 w-4" /> Move Tenant
+        <Button variant="outline" size="icon">
+          <Move className="h-4 w-4" />
+          <span className="sr-only">Move Tenant</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
@@ -132,7 +134,7 @@ export function MoveTenantDialog({ contractId, currentLocation }: MoveTenantDial
               Select the new location for the tenant. The current contract will be updated.
             </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
                 <div className="p-2 border rounded-md bg-muted text-sm">
                     <p><strong>Current Location:</strong> {currentLocation.property} / {currentLocation.unit} {currentLocation.room && `/ ${currentLocation.room}`}</p>
                 </div>
