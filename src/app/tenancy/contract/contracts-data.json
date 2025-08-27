@@ -38,7 +38,6 @@
     "tawtheeqRegistrationDate": ""
   },
   {
-    "id": "CON-1756147555712",
     "contractNo": "TC-0002",
     "contractDate": "2025-08-24",
     "property": "LT-C38",
@@ -49,11 +48,11 @@
     "mobile": "0509231340",
     "email": "tahmed.3386@gmail.com",
     "address": "1 Hazza ' Bin Zayed The First Street",
-    "startDate": "2025-08-24",
-    "endDate": "2025-09-24",
+    "startDate": "2025-08-20",
+    "endDate": "2025-10-23",
     "totalRent": 45000,
     "paymentMode": "cheque",
-    "status": "New",
+    "status": "Renew",
     "renewalCount": 0,
     "terminationDate": "",
     "rentBasedOn": "Monthly",

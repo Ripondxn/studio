@@ -31,9 +31,9 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getRoomDetails } from './actions';
+import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getRoomDetails, moveTenant } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { addMonths, format as formatDate, differenceInDays, differenceInMonths, isValid } from 'date-fns';
@@ -41,6 +41,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { type Tenant } from '../tenants/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { MoveTenantDialog } from '../tenants/add/move-tenant-dialog';
 
 const initialContractState: Contract = {
     id: '',
@@ -649,6 +650,12 @@ export default function TenancyContractPage() {
                                             <SelectItem value="Cancel">Cancel</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                     {contract.periodStatus === 'Orphaned' && isEditing && (
+                                        <p className="text-xs text-amber-600 flex gap-1 items-center mt-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            This is an orphaned renewal. Change status to "New" to fix.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
