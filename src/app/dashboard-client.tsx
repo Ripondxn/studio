@@ -70,7 +70,6 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     totalProperties,
     totalLandlords,
     upcomingLandlordPayments,
-    totalMovements,
   } = initialDashboardData;
   
   // Pagination for expiring contracts
@@ -108,13 +107,6 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       change: 'currently active tenants',
       icon: <Users className="h-6 w-6 text-muted-foreground" />,
       href: '/tenancy/tenants',
-    },
-     {
-      title: 'Tenant Movements',
-      value: totalMovements,
-      change: 'View movement history',
-      icon: <Move className="h-6 w-6 text-muted-foreground" />,
-      href: '/tenancy/movement-history',
     },
     {
       title: 'Vacant Units',

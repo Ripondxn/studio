@@ -111,14 +111,6 @@ async function getDashboardData() {
       )
       .sort((a, b) => new Date(a.chequeDate).getTime() - new Date(b.chequeDate).getTime());
 
-    // KPI: Tenant Movements
-    let totalMovements = 0;
-    contracts.forEach(contract => {
-        if (contract.paymentSchedule) {
-            totalMovements += contract.paymentSchedule.filter(p => p.chequeNo === 'MOVEMENT').length;
-        }
-    });
-
     return {
         vacantUnitsCount,
         totalUnits,
@@ -129,7 +121,6 @@ async function getDashboardData() {
         totalProperties: allProperties.length,
         totalLandlords: allLandlords.length,
         upcomingLandlordPayments,
-        totalMovements,
     };
 }
 
