@@ -31,6 +31,8 @@ export const paymentSchema = z.object({
   paymentMethod: z.enum(['Cash', 'Cheque', 'Bank Transfer', 'Card']),
   paymentFrom: z.enum(['Bank', 'Petty Cash']).default('Bank'),
   bankAccountId: z.string().optional(),
+  expenseAccountId: z.string().optional(),
+  maintenanceTicketId: z.string().optional(),
   property: z.string().optional(),
   unitCode: z.string().optional(),
   floor: z.string().optional(),
@@ -50,3 +52,4 @@ export const paymentSchema = z.object({
 });
 
 export type Payment = z.infer<typeof paymentSchema>;
+

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -73,17 +74,10 @@ export async function getAccounts(): Promise<Account[]> {
     payments.forEach(payment => {
         if (payment.currentStatus !== 'POSTED') return; // Only consider posted transactions
 
-        if (payment.type === 'Payment') {
-            if (payment.agentCode) { // Agent Fee
-                if (accountMap.has('5170')) {
-                    accountMap.get('5170')!.balance += payment.amount;
-                }
-            } else if (payment.partyType === 'Vendor') { // Generic vendor payment, assume maintenance for now
-                 if (accountMap.has('5140')) {
-                    accountMap.get('5140')!.balance += payment.amount;
-                }
+        if (payment.type === 'Payment' && payment.expenseAccountId) {
+            if (accountMap.has(payment.expenseAccountId)) {
+                accountMap.get(payment.expenseAccountId)!.balance += payment.amount;
             }
-             // Other payment types could be routed here
         } else if (payment.type === 'Receipt') { // Rental Income
             if (accountMap.has('4110')) {
                 accountMap.get('4110')!.balance += payment.amount;
@@ -138,6 +132,14 @@ export async function getAccounts(): Promise<Account[]> {
 
     return Array.from(accountMap.values());
 }
+
+export async function getExpenseAccounts(): Promise<{ value: string; label: string }[]> {
+    const accounts: Account[] = await readData(accountsFilePath);
+    return accounts
+        .filter(acc => acc.type === 'Expense' && !acc.isGroup)
+        .map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})` }));
+}
+
 
 const addAccountFormSchema = accountSchema.omit({ balance: true }).extend({
     balance: z.number().optional().default(0),
@@ -319,14 +321,11 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
             case '4110': // Rental Income
                 transactions.push(...allPayments.filter(p => p.type === 'Receipt' && p.currentStatus === 'POSTED'));
                 break;
-            case '5140': // Maintenance & Repairs
-                transactions.push(...allPayments.filter(p => p.type === 'Payment' && p.partyType === 'Vendor' && !p.agentCode && p.currentStatus === 'POSTED'));
-                break;
-            case '5170': // Agent Fee
-                transactions.push(...allPayments.filter(p => p.type === 'Payment' && !!p.agentCode && p.currentStatus === 'POSTED'));
-                break;
             default:
-                // For other accounts, no specific transaction logic is defined yet.
+                // For expense accounts, filter by the specific account code.
+                if (targetAccount.type === 'Expense') {
+                    transactions.push(...allPayments.filter(p => p.expenseAccountId === code && p.currentStatus === 'POSTED'));
+                }
                 break;
         }
     }
@@ -336,5 +335,3 @@ export async function getTransactionsForAccount(accountCode: string): Promise<Pa
     
     return uniqueTransactions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
-
-    

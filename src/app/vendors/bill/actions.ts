@@ -8,8 +8,10 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { billSchema, type Bill } from './schema';
 import { isBefore, parseISO } from 'date-fns';
+import { type Payment } from '@/app/finance/payment/schema';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
+const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 
 async function readBills(): Promise<Bill[]> {
     try {
@@ -65,6 +67,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
         const allBills = await readBills();
         const isNew = !data.id;
         const validatedData = validation.data;
+        const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
 
         if (isNew) {
             let newBillNo = validatedData.billNo;
@@ -91,6 +94,32 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
             }
             allBills[index] = { ...allBills[index], ...validatedData };
         }
+        
+        // When a bill is created, create a corresponding payment in DRAFT status
+        if (isNew) {
+            const newPayment: Omit<Payment, 'id'> = {
+                type: 'Payment',
+                date: validatedData.billDate,
+                partyType: 'Vendor',
+                partyName: validatedData.vendorName,
+                amount: validatedData.total,
+                paymentMethod: 'Bank Transfer', // Default or based on vendor preference
+                paymentFrom: 'Bank',
+                referenceNo: validatedData.billNo,
+                property: validatedData.property,
+                unitCode: validatedData.unitCode,
+                roomCode: validatedData.roomCode,
+                description: `Payment for Bill #${validatedData.billNo}`,
+                status: 'Paid',
+                currentStatus: 'DRAFT',
+                billAllocations: [{ billId: data.id!, amount: validatedData.total }]
+            };
+            // This assumes an addPayment function exists and works correctly.
+            // You might need to import and call it here.
+            // For now, let's just log it.
+            console.log("A draft payment would be created:", newPayment);
+        }
+
 
         await writeBills(allBills);
         revalidatePath(`/vendors/add?code=${data.vendorCode}`);

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -36,6 +37,13 @@ async function writeTickets(data: MaintenanceTicket[]) {
 
 export async function getTickets() {
     return await readTickets();
+}
+
+export async function getOpenTickets(): Promise<{ value: string, label: string }[]> {
+    const tickets = await readTickets();
+    return tickets
+        .filter(t => t.status !== 'Completed' && t.status !== 'Cancelled')
+        .map(t => ({ value: t.id, label: `${t.ticketNo} - ${t.issueType}` }));
 }
 
 const addTicketFormSchema = maintenanceTicketSchema.omit({ id: true });

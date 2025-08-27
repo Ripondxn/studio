@@ -8,6 +8,7 @@ export const billItemSchema = z.object({
   quantity: z.number().min(1, 'Quantity must be at least 1.'),
   unitPrice: z.number().min(0, 'Unit price must be positive.'),
   total: z.number(),
+  expenseAccountId: z.string().optional(),
 });
 
 export const billSchema = z.object({
@@ -18,6 +19,7 @@ export const billSchema = z.object({
   property: z.string().optional(),
   unitCode: z.string().optional(),
   roomCode: z.string().optional(),
+  maintenanceTicketId: z.string().optional(),
   billDate: z.string().min(1, 'Bill date is required.'),
   dueDate: z.string().min(1, 'Due date is required.'),
   items: z.array(billItemSchema).min(1, 'At least one item is required.'),
@@ -34,3 +36,4 @@ export const billSchema = z.object({
 
 export type Bill = z.infer<typeof billSchema>;
 export type BillItem = z.infer<typeof billItemSchema>;
+
