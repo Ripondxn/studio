@@ -4,10 +4,10 @@
 
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, CheckCircle, AlertTriangle, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format, differenceInDays, formatDistanceToNowStrict, isFuture } from 'date-fns';
+import { format, differenceInDays, formatDistanceToNowStrict, isFuture, parseISO } from 'date-fns';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -189,6 +189,13 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
   Cancel: 'destructive',
 };
 
+const continuityStatusConfig = {
+    'OK': { label: 'OK', className: 'bg-green-500/20 text-green-700', icon: <CheckCircle className="h-3 w-3" /> },
+    'Gap': { label: 'Gap', className: 'bg-yellow-500/20 text-yellow-700', icon: <AlertTriangle className="h-3 w-3" /> },
+    'Overlap': { label: 'Overlap', className: 'bg-red-500/20 text-red-700', icon: <AlertTriangle className="h-3 w-3" /> },
+    'Orphaned': { label: 'Orphaned', className: 'bg-purple-500/20 text-purple-700', icon: <HelpCircle className="h-3 w-3" /> },
+}
+
 export const columns: ColumnDef<Contract>[] = [
   {
     id: 'select',
@@ -222,9 +229,8 @@ export const columns: ColumnDef<Contract>[] = [
     ),
   },
   {
-    accessorKey: 'contractDate',
-    header: 'Contract Date',
-    cell: ({ row }) => format(new Date(row.getValue('contractDate')), 'PP'),
+    accessorKey: 'tenantName',
+    header: 'Tenant',
   },
   {
     accessorKey: 'property',
@@ -235,23 +241,9 @@ export const columns: ColumnDef<Contract>[] = [
     header: 'Unit',
   },
   {
-    accessorKey: 'tenantName',
-    header: 'Tenant',
-  },
-  {
-    accessorKey: 'startDate',
-    header: 'Contract Start...',
-    cell: ({ row }) => format(new Date(row.getValue('startDate')), 'PP'),
-  },
-  {
     accessorKey: 'endDate',
-    header: 'Contract End...',
+    header: 'Contract End',
      cell: ({ row }) => format(new Date(row.getValue('endDate')), 'PP'),
-  },
-  {
-    id: 'daysPassed',
-    header: 'Days Passed',
-    cell: DaysPassedCell,
   },
   {
     id: 'remainingDays',
@@ -285,25 +277,14 @@ export const columns: ColumnDef<Contract>[] = [
     }
   },
   {
-    accessorKey: 'gracePeriod',
-    header: 'Grace Period',
+    accessorKey: 'periodStatus',
+    header: 'Continuity',
     cell: ({ row }) => {
-        const gracePeriod = row.getValue('gracePeriod') as number;
-        return <span>{gracePeriod || 0} days</span>;
+        const status = row.original.periodStatus;
+        if (!status) return null;
+        const config = continuityStatusConfig[status];
+        return <Badge variant="outline" className={cn('gap-1 border-transparent', config.className)}>{config.icon}{config.label}</Badge>;
     }
-  },
-   {
-    accessorKey: 'terminationDate',
-    header: 'Termination D...',
-    cell: ({row}) => {
-        const value = row.getValue('terminationDate') as string;
-        return value ? format(new Date(value), 'PP') : '';
-    }
-  },
-   {
-    accessorKey: 'rentBasedOn',
-    header: 'Rent Based On',
-    cell: ({ row }) => <span className="capitalize">{row.getValue('rentBasedOn')}</span>,
   },
   {
     id: 'actions',
