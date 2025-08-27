@@ -64,7 +64,8 @@ export function DataTable<TData, TValue>({
       visibleColumns.map(col => {
         // @ts-ignore
         let value = row[(col as any).accessorKey as keyof TData] as any;
-        if ((col as any).accessorKey === 'startDate' || (col as any).accessorKey === 'endDate' || (col as any).accessorKey === 'date') {
+        const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
+        if (dateKeys.includes((col as any).accessorKey)) {
           value = value ? format(parseISO(value), 'PP') : '';
         }
         return String(value ?? '');
@@ -88,7 +89,8 @@ export function DataTable<TData, TValue>({
             const header = typeof col.header === 'string' ? col.header : ((col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id);
             // @ts-ignore
             let value = row[(col as any).accessorKey as keyof TData] as any;
-             if ((col as any).accessorKey === 'startDate' || (col as any).accessorKey === 'endDate' || (col as any).accessorKey === 'date') {
+             const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
+             if (dateKeys.includes((col as any).accessorKey)) {
                 value = value ? format(parseISO(value), 'PP') : '';
             }
             obj[header] = value;
