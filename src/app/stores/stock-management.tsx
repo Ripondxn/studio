@@ -44,7 +44,7 @@ export function StockManagement({ store }: { store: Store }) {
             {isLoading ? (
                 <div className="flex justify-center items-center h-40"><Loader2 className="h-6 w-6 animate-spin"/></div>
             ) : (
-                <DataTable columns={columns} data={stock} />
+                <DataTable columns={columns} data={stock} storeName={store.name} />
             )}
         </div>
     )
