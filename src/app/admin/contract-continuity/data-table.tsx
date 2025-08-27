@@ -52,6 +52,7 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = 'Filter by tenant name...',
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  
   const table = useReactTable({
     data,
     columns,
@@ -63,6 +64,11 @@ export function DataTable<TData, TValue>({
       columnFilters,
     }
   });
+
+  React.useEffect(() => {
+    // Reset search filter when data changes (e.g. from parent date filter)
+    table.getColumn(searchColumn)?.setFilterValue('');
+  }, [data, searchColumn, table]);
   
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -70,7 +76,7 @@ export function DataTable<TData, TValue>({
     
     const head = [exportableColumns.map(col => {
       if (typeof col.header === 'string') return col.header;
-      // Simple fallback for functional headers
+      // @ts-ignore
       return (col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id || '';
     })];
     

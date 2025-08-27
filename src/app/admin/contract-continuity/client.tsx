@@ -15,9 +15,14 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import {AlertTriangle, Shuffle, Link2Off, Home} from 'lucide-react';
-import {useMemo} from 'react';
+import {useMemo, useState} from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type MovementHistoryItem, type VacantPeriod } from './actions';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { isAfter, isBefore, parseISO } from 'date-fns';
 
 export function ContinuityClient({
   initialOverlapContracts,
@@ -30,6 +35,58 @@ export function ContinuityClient({
   initialMovementHistory: MovementHistoryItem[];
   initialVacantPeriods: VacantPeriod[];
 }) {
+
+  const [filters, setFilters] = useState<{ fromDate?: string, toDate?: string }>({});
+
+  const handleFilterChange = (key: 'fromDate' | 'toDate', value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+  };
+  
+  const filteredMovementHistory = useMemo(() => {
+    if (!filters.fromDate && !filters.toDate) return initialMovementHistory;
+    return initialMovementHistory.filter(item => {
+        const itemDate = parseISO(item.date);
+        if (filters.fromDate && isBefore(itemDate, parseISO(filters.fromDate))) return false;
+        if (filters.toDate && isBefore(itemDate, parseISO(filters.toDate))) return false;
+        return true;
+    });
+  }, [initialMovementHistory, filters]);
+
+  const filteredOverlapContracts = useMemo(() => {
+    if (!filters.fromDate && !filters.toDate) return initialOverlapContracts;
+    return initialOverlapContracts.filter(item => {
+        const itemDate = parseISO(item.startDate);
+        if (filters.fromDate && isBefore(itemDate, parseISO(filters.fromDate))) return false;
+        if (filters.toDate && isBefore(itemDate, parseISO(filters.toDate))) return false;
+        return true;
+    });
+  }, [initialOverlapContracts, filters]);
+  
+  const filteredGapContracts = useMemo(() => {
+    if (!filters.fromDate && !filters.toDate) return initialGapContracts;
+    return initialGapContracts.filter(item => {
+        const itemDate = parseISO(item.startDate);
+        if (filters.fromDate && isBefore(itemDate, parseISO(filters.fromDate))) return false;
+        if (filters.toDate && isBefore(itemDate, parseISO(filters.toDate))) return false;
+        return true;
+    });
+  }, [initialGapContracts, filters]);
+
+  const filteredVacantPeriods = useMemo(() => {
+    if (!filters.fromDate && !filters.toDate) return initialVacantPeriods;
+    return initialVacantPeriods.filter(item => {
+        const itemDate = parseISO(item.vacancyStartDate);
+        if (filters.fromDate && isBefore(itemDate, parseISO(filters.fromDate))) return false;
+        if (filters.toDate && isBefore(itemDate, parseISO(filters.toDate))) return false;
+        return true;
+    });
+  }, [initialVacantPeriods, filters]);
+
+
   return (
     <div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -88,18 +145,33 @@ export function ContinuityClient({
           </CardContent>
         </Card>
       </div>
+      
+       <div className="flex gap-4 mb-4 p-4 border rounded-lg bg-card items-end">
+            <div className="grid gap-2">
+                <Label htmlFor="from-date">From Date</Label>
+                <Input id="from-date" type="date" value={filters.fromDate || ''} onChange={e => handleFilterChange('fromDate', e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="to-date">To Date</Label>
+                <Input id="to-date" type="date" value={filters.toDate || ''} onChange={e => handleFilterChange('toDate', e.target.value)} />
+            </div>
+             <Button variant="ghost" onClick={handleClearFilters} disabled={!filters.fromDate && !filters.toDate}>
+                <X className="mr-2 h-4 w-4"/> Clear
+             </Button>
+        </div>
+
 
       <Tabs defaultValue="movement">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="movement">Movement Reports ({initialMovementHistory.length})</TabsTrigger>
-          <TabsTrigger value="overlaps">Overlaps ({initialOverlapContracts.length})</TabsTrigger>
-          <TabsTrigger value="gaps">Gaps ({initialGapContracts.length})</TabsTrigger>
-          <TabsTrigger value="vacant">Vacant Periods ({initialVacantPeriods.length})</TabsTrigger>
+          <TabsTrigger value="movement">Movement Reports ({filteredMovementHistory.length})</TabsTrigger>
+          <TabsTrigger value="overlaps">Overlaps ({filteredOverlapContracts.length})</TabsTrigger>
+          <TabsTrigger value="gaps">Gaps ({filteredGapContracts.length})</TabsTrigger>
+          <TabsTrigger value="vacant">Vacant Periods ({filteredVacantPeriods.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="movement">
            <DataTable 
              columns={movementColumns} 
-             data={initialMovementHistory} 
+             data={filteredMovementHistory} 
              reportTitle="Movement History Report"
              searchColumn="tenantName"
              searchPlaceholder="Filter by tenant name..."
@@ -108,7 +180,7 @@ export function ContinuityClient({
         <TabsContent value="overlaps">
            <DataTable 
             columns={problemColumns} 
-            data={initialOverlapContracts} 
+            data={filteredOverlapContracts} 
             reportTitle="Overlapping Contracts Report" 
             searchColumn="tenantName"
             searchPlaceholder="Filter by tenant, property, or unit..."
@@ -117,7 +189,7 @@ export function ContinuityClient({
         <TabsContent value="gaps">
            <DataTable 
             columns={problemColumns} 
-            data={initialGapContracts} 
+            data={filteredGapContracts} 
             reportTitle="Contract Gaps Report" 
             searchColumn="tenantName"
             searchPlaceholder="Filter by tenant, property, or unit..."
@@ -126,7 +198,7 @@ export function ContinuityClient({
          <TabsContent value="vacant">
            <DataTable 
             columns={vacantPeriodColumns} 
-            data={initialVacantPeriods} 
+            data={filteredVacantPeriods} 
             reportTitle="Vacant Periods Report"
             searchColumn="property"
             searchPlaceholder="Filter by property or unit..."
