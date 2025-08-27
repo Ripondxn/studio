@@ -145,6 +145,18 @@ export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agen
     header: 'Email',
   },
   {
+    accessorKey: 'vendorCode',
+    header: 'Vendor Code',
+    cell: ({ row }) => {
+      const agent = row.original;
+      return agent.vendorCode ? (
+        <Button asChild variant="link" className="p-0 h-auto font-normal">
+          <Link href={`/vendors/add?code=${agent.vendorCode}`}>{agent.vendorCode}</Link>
+        </Button>
+      ) : <span className="text-muted-foreground">N/A</span>
+    }
+  },
+  {
     accessorKey: 'vendorName',
     header: 'Associated Vendor',
     cell: ({ row }) => {
