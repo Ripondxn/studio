@@ -2,7 +2,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, AlertTriangle, LinkOff, Shuffle } from 'lucide-react';
+import { ArrowUpDown, Pencil, AlertTriangle, Link2Off, Shuffle } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ const continuityStatusConfig = {
     'OK': { label: 'OK', className: 'bg-green-500/20 text-green-700' },
     'Gap': { label: 'Gap', className: 'bg-yellow-500/20 text-yellow-700', icon: <Shuffle className="h-3 w-3" /> },
     'Overlap': { label: 'Overlap', className: 'bg-red-500/20 text-red-700', icon: <AlertTriangle className="h-3 w-3" /> },
-    'Orphaned': { label: 'Orphaned', className: 'bg-purple-500/20 text-purple-700', icon: <LinkOff className="h-3 w-3" /> },
+    'Orphaned': { label: 'Orphaned', className: 'bg-purple-500/20 text-purple-700', icon: <Link2Off className="h-3 w-3" /> },
 };
 
 

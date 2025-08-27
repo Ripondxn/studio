@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +5,7 @@ import { type Contract } from '@/app/tenancy/contract/schema';
 import { DataTable } from './data-table';
 import { columns } from './columns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AlertTriangle, LinkOff, Shuffle } from 'lucide-react';
+import { AlertTriangle, Link2Off, Shuffle } from 'lucide-react';
 import { useMemo } from 'react';
 
 export function ContinuityClient({ initialContracts }: { initialContracts: Contract[] }) {
@@ -47,7 +46,7 @@ export function ContinuityClient({ initialContracts }: { initialContracts: Contr
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Orphaned Renewals</CardTitle>
-                        <LinkOff className="h-4 w-4 text-muted-foreground" />
+                        <Link2Off className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{summary.orphans}</div>
