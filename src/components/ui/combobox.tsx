@@ -27,7 +27,7 @@ type ComboboxProps = {
     disabled?: boolean;
 }
 
-export function Combobox({ options, value, onSelect, placeholder, disabled }: ComboboxProps) {
+export function Combobox({ options = [], value, onSelect, placeholder, disabled }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
 
   return (
