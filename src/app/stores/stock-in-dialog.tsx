@@ -46,6 +46,7 @@ export function StockInDialog({ isOpen, setIsOpen, store, onSuccess }: StockInDi
   const { toast } = useToast();
 
   const {
+    register,
     handleSubmit,
     control,
     reset,

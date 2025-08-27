@@ -47,6 +47,7 @@ export function StockOutDialog({ isOpen, setIsOpen, store, onSuccess }: StockOut
   const { toast } = useToast();
 
   const {
+    register,
     handleSubmit,
     control,
     reset,
