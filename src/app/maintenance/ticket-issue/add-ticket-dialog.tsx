@@ -39,6 +39,24 @@ type Lookups = {
     tenants: { value: string, label: string }[];
 }
 
+const commonIssues = [
+  { value: 'Plumbing', label: 'Plumbing' },
+  { value: 'Electrical', label: 'Electrical' },
+  { value: 'HVAC', label: 'HVAC' },
+  { value: 'AC Not Cooling', label: 'AC Not Cooling' },
+  { value: 'Split AC Repair', label: 'Split AC Repair' },
+  { value: 'Washing Machine Repair', label: 'Washing Machine Repair' },
+  { value: 'Water Faucet Change', label: 'Water Faucet Change' },
+  { value: 'Burner Repair', label: 'Burner Repair' },
+  { value: 'Wash Basin Issue', label: 'Wash Basin Issue' },
+  { value: 'Water Leakage', label: 'Water Leakage' },
+  { value: 'Power Failure', label: 'Power Failure' },
+  { value: 'Painting', label: 'Painting' },
+  { value: 'Pest Control', label: 'Pest Control' },
+  { value: 'Carpentry', label: 'Carpentry' },
+  { value: 'General Maintenance', label: 'General Maintenance' },
+];
+
 export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -230,7 +248,18 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="issueType">Issue Type</Label>
-                    <Input id="issueType" placeholder="e.g., Plumbing, Electrical, HVAC" {...register('issueType')} />
+                    <Controller
+                        name="issueType"
+                        control={control}
+                        render={({ field }) => (
+                            <Combobox
+                                options={commonIssues}
+                                value={field.value}
+                                onSelect={(value) => field.onChange(value)}
+                                placeholder="Select or type an issue..."
+                            />
+                        )}
+                    />
                     {errors.issueType && <p className="text-destructive text-xs mt-1">{errors.issueType.message}</p>}
                 </div>
                 <div className="space-y-2">
