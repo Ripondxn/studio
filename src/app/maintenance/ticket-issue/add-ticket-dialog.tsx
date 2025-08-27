@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ import { Plus, Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { maintenanceTicketSchema, type MaintenanceTicket } from './schema';
-import { addTicket, getLookups, getNextTicketNumber } from './actions';
+import { addTicket, getLookups, getNextTicketNumber, getTenantForProperty } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
@@ -57,8 +57,27 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
   });
 
   const watchedPropertyCode = watch('propertyCode');
+  const watchedUnitCode = watch('unitCode');
+  const watchedRoomCode = watch('roomCode');
 
   const filteredUnits = lookups.units.filter(u => u.propertyCode === watchedPropertyCode);
+
+  const fetchTenantName = useCallback(async (property: string, unit: string, room?: string) => {
+    if (property && unit) {
+        const result = await getTenantForProperty(property, unit, room);
+        if(result.success && result.tenantName) {
+            setValue('tenantName', result.tenantName);
+        } else {
+            setValue('tenantName', ''); // Clear if no tenant found
+        }
+    }
+  }, [setValue]);
+
+
+  useEffect(() => {
+    fetchTenantName(watchedPropertyCode, watchedUnitCode, watchedRoomCode);
+  }, [watchedPropertyCode, watchedUnitCode, watchedRoomCode, fetchTenantName]);
+
 
   useEffect(() => {
       const initializeForm = async () => {

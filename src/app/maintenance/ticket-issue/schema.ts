@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const maintenanceTicketSchema = z.object({
@@ -7,6 +8,7 @@ export const maintenanceTicketSchema = z.object({
   requestDate: z.string().min(1, "Request date is required."),
   propertyCode: z.string().min(1, "Property is required."),
   unitCode: z.string().min(1, "Unit is required."),
+  roomCode: z.string().optional(),
   tenantName: z.string().min(1, "Tenant name is required."),
   issueType: z.string().min(1, "Issue type is required."),
   description: z.string().min(1, "Description is required."),

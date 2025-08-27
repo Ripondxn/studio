@@ -10,11 +10,13 @@ import { maintenanceTicketSchema, type MaintenanceTicket } from './schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Property } from '@/app/property/properties/list/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
+import { type Contract } from '@/app/tenancy/contract/schema';
 
 const ticketsFilePath = path.join(process.cwd(), 'src/app/maintenance/ticket-issue/tickets-data.json');
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
+const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 
 
 async function readTickets(): Promise<MaintenanceTicket[]> {
@@ -183,3 +185,25 @@ export async function getLookups() {
         tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name }))
     }
 }
+
+export async function getTenantForProperty(propertyCode: string, unitCode: string, roomCode?: string) {
+    try {
+        const contracts: Contract[] = await fs.readFile(contractsFilePath, 'utf-8').then(JSON.parse);
+        
+        const activeContract = contracts.find(c =>
+            c.property === propertyCode &&
+            c.unitCode === unitCode &&
+            (roomCode ? c.roomCode === roomCode : true) && // Match room if provided
+            (c.status === 'New' || c.status === 'Renew')
+        );
+
+        if (activeContract) {
+            return { success: true, tenantName: activeContract.tenantName };
+        }
+        return { success: false, error: 'No active tenant found for this location.' };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
+}
+
