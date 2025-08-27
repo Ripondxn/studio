@@ -1,22 +1,25 @@
-import { getProblematicContracts } from './actions';
+
+import { getProblematicContracts, getMovementHistory } from './actions';
 import { ContinuityClient } from './client';
-import { type Contract } from '@/app/tenancy/contract/schema';
 
 export default async function ContractContinuityPage() {
-  const contracts: Contract[] = await getProblematicContracts();
+  const overlapContracts = await getProblematicContracts();
+  const movementHistory = await getMovementHistory();
 
   return (
     <div className="container mx-auto py-10">
       <div className="mb-8">
         <h1 className="text-3xl font-bold font-headline">
-          Contract Continuity Check
+          Contract Continuity & Movements
         </h1>
         <p className="text-muted-foreground">
-          Review tenancy contracts with potential gaps or overlaps in their
-          renewal periods.
+          Review tenant contract history for potential data issues or view tenant relocations.
         </p>
       </div>
-      <ContinuityClient initialContracts={contracts} />
+      <ContinuityClient 
+        initialOverlapContracts={overlapContracts} 
+        initialMovementHistory={movementHistory}
+      />
     </div>
   );
 }

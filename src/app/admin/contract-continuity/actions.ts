@@ -1,3 +1,4 @@
+
 'use server';
 
 import {promises as fs} from 'fs';
@@ -64,8 +65,55 @@ export async function getProblematicContracts(): Promise<Contract[]> {
     };
   });
 
-  // Filter for only problematic contracts
+  // Filter for only problematic contracts (Overlaps only for now)
   return contractsWithStatus.filter(
-    c => c.periodStatus === 'Gap' || c.periodStatus === 'Overlap'
+    c => c.periodStatus === 'Overlap'
   );
 }
+
+
+export type MovementHistoryItem = {
+    date: string;
+    details: string;
+    tenantName: string;
+    tenantCode: string;
+    contractNo: string;
+    contractStartDate: string;
+    daysInPreviousLocation: number | null;
+};
+
+export async function getMovementHistory(): Promise<MovementHistoryItem[]> {
+    const allContracts: Contract[] = await readContracts();
+    const allMovements: MovementHistoryItem[] = [];
+
+    allContracts.forEach(contract => {
+        const movements = contract.paymentSchedule
+            .filter(item => item.chequeNo === 'MOVEMENT')
+            .map((item, index, arr) => {
+                const previousMovements = arr.slice(0, index);
+                const lastMoveDate = previousMovements.length > 0 
+                    ? parseISO(previousMovements[previousMovements.length - 1].dueDate) 
+                    : null;
+                
+                const startDateOfStay = lastMoveDate || parseISO(contract.startDate);
+                const moveOutDate = parseISO(item.dueDate);
+                
+                const daysStayed = differenceInDays(moveOutDate, startDateOfStay);
+
+                return {
+                    date: item.dueDate,
+                    details: item.bankName || 'Unknown Movement',
+                    tenantName: contract.tenantName,
+                    tenantCode: contract.tenantCode || '',
+                    contractNo: contract.contractNo,
+                    contractStartDate: contract.startDate,
+                    daysInPreviousLocation: daysStayed,
+                };
+            });
+        allMovements.push(...movements);
+    });
+
+    allMovements.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return allMovements;
+}
+

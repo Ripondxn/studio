@@ -1,9 +1,11 @@
+
 'use client';
 
 import * as React from 'react';
 import {type Contract} from '@/app/tenancy/contract/schema';
 import {DataTable} from './data-table';
-import {columns} from './columns';
+import {columns as overlapColumns} from './columns';
+import {movementColumns} from './movement-columns';
 import {
   Card,
   CardContent,
@@ -14,32 +16,27 @@ import {
 import {AlertTriangle, Shuffle} from 'lucide-react';
 import {useMemo} from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MovementHistoryItem } from './actions';
 
 export function ContinuityClient({
-  initialContracts,
+  initialOverlapContracts,
+  initialMovementHistory,
 }: {
-  initialContracts: Contract[];
+  initialOverlapContracts: Contract[];
+  initialMovementHistory: MovementHistoryItem[];
 }) {
-  const { gapContracts, overlapContracts } = useMemo(() => {
-    const gap = initialContracts.filter(c => c.periodStatus === 'Gap');
-    const overlap = initialContracts.filter(
-      c => c.periodStatus === 'Overlap'
-    );
-    return { gapContracts: gap, overlapContracts: overlap };
-  }, [initialContracts]);
-
   return (
     <div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gaps Detected</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            <CardTitle className="text-sm font-medium">Tenant Movements</CardTitle>
+            <Shuffle className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{gapContracts.length}</div>
+            <div className="text-2xl font-bold">{initialMovementHistory.length}</div>
             <p className="text-xs text-muted-foreground">
-              Contracts with a time gap between them.
+              Total recorded tenant relocations.
             </p>
           </CardContent>
         </Card>
@@ -48,10 +45,10 @@ export function ContinuityClient({
             <CardTitle className="text-sm font-medium">
               Overlaps Detected
             </CardTitle>
-            <Shuffle className="h-4 w-4 text-red-500" />
+            <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{overlapContracts.length}</div>
+            <div className="text-2xl font-bold">{initialOverlapContracts.length}</div>
             <p className="text-xs text-muted-foreground">
               Contracts with overlapping dates.
             </p>
@@ -59,20 +56,16 @@ export function ContinuityClient({
         </Card>
       </div>
 
-      <Tabs defaultValue="all">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">All Issues ({initialContracts.length})</TabsTrigger>
-          <TabsTrigger value="gaps">Gaps ({gapContracts.length})</TabsTrigger>
-          <TabsTrigger value="overlaps">Overlaps ({overlapContracts.length})</TabsTrigger>
+      <Tabs defaultValue="movement">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="movement">Movement Reports ({initialMovementHistory.length})</TabsTrigger>
+          <TabsTrigger value="overlaps">Overlaps ({initialOverlapContracts.length})</TabsTrigger>
         </TabsList>
-        <TabsContent value="all">
-          <DataTable columns={columns} data={initialContracts} />
-        </TabsContent>
-        <TabsContent value="gaps">
-           <DataTable columns={columns} data={gapContracts} />
+        <TabsContent value="movement">
+           <DataTable columns={movementColumns} data={initialMovementHistory} />
         </TabsContent>
         <TabsContent value="overlaps">
-           <DataTable columns={columns} data={overlapContracts} />
+           <DataTable columns={overlapColumns} data={initialOverlapContracts} />
         </TabsContent>
       </Tabs>
     </div>
