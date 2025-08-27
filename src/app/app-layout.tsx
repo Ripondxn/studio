@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -118,6 +119,7 @@ const navLinks = [
         icon: <Wrench />,
         subItems: [
             { href: '/maintenance/ticket-issue', label: 'Ticket Issue' },
+            { href: '/maintenance/contracts', label: 'Service Contracts' },
         ]
     },
     {
