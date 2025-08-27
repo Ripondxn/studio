@@ -88,14 +88,13 @@
 }
 
 @media print {
-  body > *:not(#printable-area) {
-    display: none;
+  body * {
+    visibility: hidden;
   }
-  main.flex-1 {
-    display: block !important;
+  #printable-area, #printable-area * {
+    visibility: visible;
   }
   #printable-area {
-    display: block;
     position: absolute;
     left: 0;
     top: 0;
