@@ -39,7 +39,7 @@ declare module 'jspdf' {
     }
 }
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData extends Asset, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
