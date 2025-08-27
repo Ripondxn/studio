@@ -85,10 +85,14 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
     const allTenants = await getTenants();
     
     if (isNewRecord) {
-        const { code } = dataToSave.tenantData;
-        const tenantExists = allTenants.some((l: any) => l.tenantData.code === code);
-        if (tenantExists) {
+        const { code, name } = dataToSave.tenantData;
+        const codeExists = allTenants.some((l: any) => l.tenantData.code === code);
+        if (codeExists) {
             return { success: false, error: `Tenant with code "${code}" already exists.` };
+        }
+        const nameExists = allTenants.some((l: any) => l.tenantData.name.toLowerCase() === name.toLowerCase());
+        if (nameExists) {
+            return { success: false, error: `Tenant with name "${name}" already exists.` };
         }
         const newTenant = {
             id: `T${Date.now()}`,
@@ -96,10 +100,14 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean) {
         };
         allTenants.push(newTenant);
     } else {
-        const { code } = dataToSave.tenantData;
+        const { code, name } = dataToSave.tenantData;
         const index = allTenants.findIndex((l: any) => l.tenantData.code === code);
 
         if (index !== -1) {
+             const nameExists = allTenants.some((l: any, i: number) => i !== index && l.tenantData.name.toLowerCase() === name.toLowerCase());
+            if (nameExists) {
+                return { success: false, error: `Another tenant with the name "${name}" already exists.` };
+            }
             allTenants[index] = {
                 ...allTenants[index],
                 ...dataToSave,
