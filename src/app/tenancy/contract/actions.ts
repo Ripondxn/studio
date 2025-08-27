@@ -489,4 +489,21 @@ export async function moveTenant(data: z.infer<typeof moveTenantSchema>) {
     }
 }
 
+export async function getLatestContractForTenant(tenantCode: string): Promise<{ success: boolean; data?: Contract; error?: string }> {
+    if (!tenantCode) {
+        return { success: false, error: "Tenant code is required." };
+    }
+    try {
+        const allContracts = await readContracts();
+        const tenantContracts = allContracts.filter(c => c.tenantCode === tenantCode);
+        if (tenantContracts.length === 0) {
+            return { success: false, error: 'No contracts found for this tenant.' };
+        }
+        tenantContracts.sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
+        return { success: true, data: tenantContracts[0] };
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
+}
+
     

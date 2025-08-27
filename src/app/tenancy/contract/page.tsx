@@ -33,10 +33,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getRoomDetails, moveTenant } from './actions';
+import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getRoomDetails, moveTenant, getLatestContractForTenant } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { addMonths, format as formatDate, differenceInDays, differenceInMonths, isValid } from 'date-fns';
+import { addDays, addMonths, format as formatDate, differenceInDays, differenceInMonths, isValid } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import { type Tenant } from '../tenants/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -273,13 +273,41 @@ export default function TenancyContractPage() {
     }, [contract.startDate, contract.endDate]);
 
 
-  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount'>, value: string) => {
+  const handleInputChange = (field: keyof Omit<Contract, 'id' | 'paymentSchedule' | 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount' | 'status'>, value: string) => {
     setContract(prev => ({...prev, [field]: value}));
   }
   
   const handleNumberInputChange = (field: 'totalRent' | 'numberOfPayments' | 'gracePeriod' | 'finalSettlementAmount', value: string) => {
     setContract(prev => ({...prev, [field]: parseFloat(value) || 0 }));
   }
+
+  const handleStatusChange = async (newStatus: 'New' | 'Renew' | 'Cancel') => {
+    if (newStatus === 'Renew' && contract.tenantCode) {
+        const result = await getLatestContractForTenant(contract.tenantCode);
+        if (result.success && result.data) {
+            const latestContract = result.data;
+            const newStartDate = formatDate(addDays(new Date(latestContract.endDate), 1), 'yyyy-MM-dd');
+            setContract(prev => ({
+                ...prev,
+                status: 'Renew',
+                property: latestContract.property,
+                unitCode: latestContract.unitCode,
+                roomCode: latestContract.roomCode,
+                totalRent: latestContract.totalRent,
+                startDate: newStartDate,
+                renewalCount: (latestContract.renewalCount || 0) + 1,
+            }));
+            toast({ title: 'Renewal Pre-filled', description: "Contract details have been pre-filled from the tenant's last contract."});
+        } else {
+            toast({ variant: 'destructive', title: 'Cannot Renew', description: "No previous contract found for this tenant. Please create a 'New' contract." });
+        }
+    } else if (newStatus === 'Renew' && !contract.tenantCode) {
+         toast({ variant: 'destructive', title: 'Cannot Renew', description: 'Please select a tenant before setting status to "Renew".' });
+    } else {
+        setContract(prev => ({...prev, status: newStatus}));
+    }
+  }
+
 
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
     const currentSchedule = [...contract.paymentSchedule];
@@ -648,7 +676,7 @@ export default function TenancyContractPage() {
                                 </div>
                                 <div>
                                     <Label htmlFor="status">Status</Label>
-                                    <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleInputChange('status', value)} disabled={!canEdit}>
+                                    <Select value={contract.status} onValueChange={(value: 'New' | 'Renew' | 'Cancel') => handleStatusChange(value)} disabled={!canEdit}>
                                         <SelectTrigger id="status">
                                             <SelectValue/>
                                         </SelectTrigger>
