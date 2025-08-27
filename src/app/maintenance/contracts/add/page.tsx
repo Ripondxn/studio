@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams }from 'next/navigation';
 import {
   Card,
@@ -39,6 +40,7 @@ import { addMonths, format as formatDate } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
+import { PrintableMaintenanceContract } from '../printable-maintenance-contract';
 
 type LookupData = {
     vendors: {value: string, label: string}[];
@@ -77,6 +79,8 @@ export default function MaintenanceContractPage() {
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
   const [lookups, setLookups] = useState<LookupData>({ vendors: [], properties: [] });
   const { formatCurrency } = useCurrency();
+  const printRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     getContractLookups().then(data => {
@@ -225,7 +229,7 @@ export default function MaintenanceContractPage() {
         });
     }
     
-    const totalCalculated = installmentAmount * numberOfPayments;
+    const totalCalculated = newSchedule.reduce((sum, item) => sum + item.amount, 0);
     const remainder = totalValue - totalCalculated;
     if(remainder !== 0 && newSchedule.length > 0) {
         newSchedule[newSchedule.length - 1].amount += remainder;
@@ -283,7 +287,19 @@ export default function MaintenanceContractPage() {
 
 
   const handlePrint = () => {
-    window.print();
+    const printContent = printRef.current?.innerHTML;
+    if (printContent) {
+        const printWindow = window.open('', '', 'height=800,width=800');
+        if (printWindow) {
+            printWindow.document.write('<html><head><title>Print Maintenance Contract</title>');
+            printWindow.document.write('<style>@page { size: A4; margin: 1.5cm; } body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }</style>');
+            printWindow.document.write('</head><body class="bg-white">');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            setTimeout(() => printWindow.print(), 500);
+        }
+    }
   }
   
   const handleCancel = () => {
@@ -526,6 +542,9 @@ export default function MaintenanceContractPage() {
              </div>
         </CardContent>
       </Card>
+      <div className="hidden">
+        <PrintableMaintenanceContract ref={printRef} contract={contract} lookups={lookups} />
+      </div>
     </div>
   );
 }
