@@ -119,7 +119,7 @@ export function StoresClient({ initialStores }: { initialStores: Store[] }) {
         />
         <div className="flex justify-between items-center mb-6">
             <div>
-                <h1 className="text-3xl font-bold font-headline">Vaults &amp; Stores</h1>
+                <h1 className="text-3xl font-bold font-headline">Vaults & Stores</h1>
                 <p className="text-muted-foreground">
                     Manage your inventory across all locations.
                 </p>
