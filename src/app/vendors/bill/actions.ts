@@ -55,7 +55,7 @@ export async function getNextBillNumber() {
     return `BL-${(maxNum + 1).toString().padStart(4, '0')}`;
 }
 
-export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: string, isAutoBillNo?: boolean }) {
+export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }) {
     const { isAutoBillNo, ...billData } = data;
     const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(billData);
 
@@ -79,31 +79,21 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
                     return { success: false, error: `A bill with number "${newBillNo}" already exists.`};
                 }
             }
-
+            const newBillId = `BILL-${Date.now()}`;
             const newBill: Bill = {
                 ...validatedData,
                 billNo: newBillNo,
-                id: `BILL-${Date.now()}`,
+                id: newBillId,
                 amountPaid: 0,
             };
             allBills.push(newBill);
-        } else {
-            const index = allBills.findIndex(bill => bill.id === data.id);
-            if (index === -1) {
-                return { success: false, error: 'Bill not found.' };
-            }
-            allBills[index] = { ...allBills[index], ...validatedData };
-        }
-        
-        // When a bill is created, create a corresponding payment in DRAFT status
-        if (isNew) {
-            const newPayment: Omit<Payment, 'id'> = {
+             const newPayment: Omit<Payment, 'id'> = {
                 type: 'Payment',
                 date: validatedData.billDate,
                 partyType: 'Vendor',
-                partyName: validatedData.vendorName,
+                partyName: validatedData.vendorCode,
                 amount: validatedData.total,
-                paymentMethod: 'Bank Transfer', // Default or based on vendor preference
+                paymentMethod: 'Bank Transfer', 
                 paymentFrom: 'Bank',
                 referenceNo: validatedData.billNo,
                 property: validatedData.property,
@@ -112,14 +102,17 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: st
                 description: `Payment for Bill #${validatedData.billNo}`,
                 status: 'Paid',
                 currentStatus: 'DRAFT',
-                billAllocations: [{ billId: data.id!, amount: validatedData.total }]
+                billAllocations: [{ billId: newBillId, amount: validatedData.total }]
             };
-            // This assumes an addPayment function exists and works correctly.
-            // You might need to import and call it here.
-            // For now, let's just log it.
-            console.log("A draft payment would be created:", newPayment);
+        } else {
+            const index = allBills.findIndex(bill => bill.id === data.id);
+            if (index === -1) {
+                return { success: false, error: 'Bill not found.' };
+            }
+            allBills[index] = { ...allBills[index], ...validatedData };
         }
-
+        
+       
 
         await writeBills(allBills);
         revalidatePath(`/vendors/add?code=${data.vendorCode}`);
