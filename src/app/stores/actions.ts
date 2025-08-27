@@ -224,3 +224,82 @@ export async function recordStockTransaction(data: z.infer<typeof transactionSch
 export async function getTransactionHistory(): Promise<StockTransaction[]> {
     return await readData<StockTransaction>(stockTransactionsFilePath);
 }
+
+const transferSchema = z.object({
+  fromStoreId: z.string().min(1, 'Source store is required'),
+  toStoreId: z.string().min(1, 'Destination store is required'),
+  productId: z.string().min(1, 'Product is required'),
+  quantity: z.coerce.number().min(1, 'Quantity must be at least 1'),
+  notes: z.string().optional(),
+}).refine(data => data.fromStoreId !== data.toStoreId, {
+    message: "Source and destination stores cannot be the same.",
+    path: ['toStoreId'],
+});
+
+export async function transferStock(data: z.infer<typeof transferSchema>) {
+    const validation = transferSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: validation.error.errors[0].message };
+    }
+
+    const { fromStoreId, toStoreId, productId, quantity, notes } = validation.data;
+    
+    const allStock = await readData<StockItem>(stockFilePath);
+    const sourceStockIndex = allStock.findIndex(item => item.storeId === fromStoreId && item.productId === productId);
+    
+    // Check for sufficient stock
+    if (sourceStockIndex === -1 || allStock[sourceStockIndex].quantity < quantity) {
+        return { success: false, error: 'Insufficient stock in the source store.' };
+    }
+
+    // Decrement from source
+    allStock[sourceStockIndex].quantity -= quantity;
+
+    // Increment in destination
+    const destinationStockIndex = allStock.findIndex(item => item.storeId === toStoreId && item.productId === productId);
+    if (destinationStockIndex > -1) {
+        allStock[destinationStockIndex].quantity += quantity;
+    } else {
+        allStock.push({ id: `STOCK-${Date.now()}`, storeId: toStoreId, productId, quantity });
+    }
+
+    await writeData(stockFilePath, allStock);
+    
+    // Record transactions
+    const allTransactions = await readData<StockTransaction>(stockTransactionsFilePath);
+    const stores = await getStores();
+    const products = await readData<Product>(productsFilePath);
+    const fromStoreName = stores.find(s => s.id === fromStoreId)?.name || 'Unknown';
+    const toStoreName = stores.find(s => s.id === toStoreId)?.name || 'Unknown';
+    const productName = products.find(p => p.id === productId)?.itemName || 'Unknown';
+    const transferRef = `TRN-${Date.now()}`;
+
+    allTransactions.push({
+        id: `TXN-${Date.now()}-OUT`,
+        date: new Date().toISOString(),
+        storeId: fromStoreId,
+        storeName: fromStoreName,
+        productId,
+        productName,
+        quantity,
+        type: 'OUT',
+        notes: `Transfer to ${toStoreName}. Ref: ${transferRef}. ${notes || ''}`,
+    });
+
+    allTransactions.push({
+        id: `TXN-${Date.now()}-IN`,
+        date: new Date().toISOString(),
+        storeId: toStoreId,
+        storeName: toStoreName,
+        productId,
+        productName,
+        quantity,
+        type: 'IN',
+        notes: `Transfer from ${fromStoreName}. Ref: ${transferRef}. ${notes || ''}`,
+    });
+
+    await writeData(stockTransactionsFilePath, allTransactions);
+
+    revalidatePath('/stores');
+    return { success: true };
+}

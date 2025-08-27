@@ -1,2 +1,25 @@
-
-[]
+[
+  {
+    "id": "TXN-1756292540085",
+    "date": "2025-08-27T11:02:20.085Z",
+    "storeId": "STORE-1756290389505",
+    "storeName": "Main-Warehouse",
+    "productId": "PROD-1756270306717",
+    "productName": "Washing Machine",
+    "quantity": 6,
+    "type": "IN",
+    "notes": "Initial Stock"
+  },
+  {
+    "id": "TXN-1756292604707",
+    "date": "2025-08-27T11:03:24.707Z",
+    "storeId": "STORE-1756290389505",
+    "storeName": "Main-Warehouse",
+    "productId": "PROD-1756270306717",
+    "productName": "Washing Machine",
+    "quantity": 2,
+    "type": "OUT",
+    "notes": "ahsan habiv",
+    "jobId": "lewa tower"
+  }
+]

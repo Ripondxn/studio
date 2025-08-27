@@ -4,9 +4,9 @@
 import { useState, useEffect } from 'react';
 import { AddStoreDialog } from './add-store-dialog';
 import { type Store } from './schema';
-import { getStores, getAggregatedStock } from './actions';
+import { getStores } from './actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Building, MapPin, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Building, MapPin, MoreVertical, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,13 +22,13 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { StockManagement } from './stock-management';
 import { deleteStore } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { GlobalStockView } from './global-stock-view';
+import { StockTransferDialog } from './stock-transfer-dialog';
 
 const StoreCard = ({ store, onEdit, onDelete }: { store: Store, onEdit: (store: Store) => void, onDelete: (storeId: string) => void }) => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -79,6 +79,7 @@ const StoreCard = ({ store, onEdit, onDelete }: { store: Store, onEdit: (store: 
 export function StoresClient({ initialStores }: { initialStores: Store[] }) {
   const [stores, setStores] = useState(initialStores);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<Store | undefined>(undefined);
   const { toast } = useToast();
   
@@ -117,6 +118,13 @@ export function StoresClient({ initialStores }: { initialStores: Store[] }) {
                 setSelectedStore(undefined);
             }}
         />
+        <StockTransferDialog
+            isOpen={isTransferDialogOpen}
+            setIsOpen={setIsTransferDialogOpen}
+            stores={stores}
+            onSuccess={refreshStores}
+        />
+
         <div className="flex justify-between items-center mb-6">
             <div>
                 <h1 className="text-3xl font-bold font-headline">Vaults & Stores</h1>
@@ -124,9 +132,14 @@ export function StoresClient({ initialStores }: { initialStores: Store[] }) {
                     Manage your inventory across all locations.
                 </p>
             </div>
-             <Button onClick={() => { setSelectedStore(undefined); setIsDialogOpen(true); }}>
-                Add New Store
-            </Button>
+            <div className="flex items-center gap-2">
+                 <Button variant="outline" onClick={() => setIsTransferDialogOpen(true)}>
+                    <ArrowRightLeft className="mr-2 h-4 w-4" /> Stock Transfer
+                </Button>
+                <Button onClick={() => { setSelectedStore(undefined); setIsDialogOpen(true); }}>
+                    Add New Store
+                </Button>
+            </div>
         </div>
         
         <div className="mb-8">
