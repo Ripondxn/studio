@@ -3,20 +3,20 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -33,7 +33,7 @@ import { deleteMaintenanceContract } from './actions';
 import { MaintenanceContract } from './schema';
 import { useCurrency } from '@/context/currency-context';
 
-const ActionsCell = ({ row }: { row: { original: MaintenanceContract } }) => {
+const ActionsCell = ({ row, onRecordPayment }: { row: { original: MaintenanceContract }, onRecordPayment: (contract: MaintenanceContract) => void }) => {
   const contract = row.original;
   const router = useRouter();
   const { toast } = useToast();
@@ -99,12 +99,16 @@ const ActionsCell = ({ row }: { row: { original: MaintenanceContract } }) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+             <DropdownMenuItem onSelect={() => onRecordPayment(contract)}>
+                <DollarSign className="mr-2 h-4 w-4" /> Record Payment
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={`/maintenance/contracts/add?id=${contract.id}`}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </Link>
             </DropdownMenuItem>
+             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive"
               onSelect={() => setIsDeleteDialogOpen(true)}
@@ -125,7 +129,7 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
   Cancelled: 'destructive',
 };
 
-export const columns: ColumnDef<MaintenanceContract>[] = [
+export const columns = (onRecordPayment: (contract: MaintenanceContract) => void): ColumnDef<MaintenanceContract>[] => [
   {
     accessorKey: 'contractNo',
     header: 'Contract No',
@@ -179,6 +183,6 @@ export const columns: ColumnDef<MaintenanceContract>[] = [
   },
   {
     id: 'actions',
-    cell: ActionsCell,
+    cell: ({ row }) => <ActionsCell row={row} onRecordPayment={onRecordPayment} />,
   },
 ];
