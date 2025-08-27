@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -106,8 +107,28 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div>
-        <div className="flex items-center py-4 gap-2">
+    <>
+        <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-area, #printable-area * {
+            visibility: visible;
+          }
+          #printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none;
+          }
+        }
+      `}</style>
+      <div id="printable-area">
+        <div className="flex items-center py-4 gap-2 no-print">
             <div className="ml-auto flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={handlePrint}>
                     <Printer className="mr-2 h-4 w-4" /> Print
@@ -170,7 +191,7 @@ export function DataTable<TData, TValue>({
             </TableBody>
         </Table>
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex items-center justify-end space-x-2 py-4 no-print">
             <Button
             variant="outline"
             size="sm"
@@ -189,5 +210,7 @@ export function DataTable<TData, TValue>({
             </Button>
         </div>
     </div>
+    </>
   );
 }
+
