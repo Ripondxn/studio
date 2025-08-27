@@ -4,8 +4,8 @@
     "contractNo": "TC-0001",
     "contractDate": "2025-08-24",
     "property": "LT-C38",
-    "unitCode": "F101",
-    "roomCode": "Room-1/A",
+    "unitCode": "F102",
+    "roomCode": "",
     "tenantCode": "T001",
     "tenantName": "Md Ripon Ahmed",
     "mobile": "0509231340",
@@ -22,7 +22,16 @@
     "paymentFrequency": "Monthly",
     "numberOfPayments": 1,
     "gracePeriod": 0,
-    "paymentSchedule": [],
+    "paymentSchedule": [
+      {
+        "installment": 0,
+        "dueDate": "2025-08-27",
+        "amount": 0,
+        "status": "paid",
+        "chequeNo": "MOVEMENT",
+        "bankName": "Moved from LT-C38/F101/Room-1/A to LT-C38/F102"
+      }
+    ],
     "terms": "",
     "tawtheeqRegistrationNo": "",
     "tawtheeqStatus": "Not Registered",
