@@ -148,10 +148,25 @@ export async function saveContractData(data: Omit<Contract, 'id'> & { id?: strin
 
     try {
         const allContracts = await readContracts();
+        const validatedData = validation.data;
+        
+        // Prevent creating orphaned "Renew" contracts
+        if (validatedData.status === 'Renew') {
+            const otherContractsForTenant = allContracts.filter(
+                c => c.tenantCode === validatedData.tenantCode && c.id !== data.id
+            );
+            if (otherContractsForTenant.length === 0) {
+                return {
+                    success: false,
+                    error: 'Cannot create a "Renew" contract for a tenant with no prior contracts. Please set status to "New".'
+                };
+            }
+        }
+        
         let savedContract: Contract;
         
         if (isNewRecord) {
-             let newContractNo = validation.data.contractNo;
+             let newContractNo = validatedData.contractNo;
              if (isAutoContractNo || !newContractNo) {
                 newContractNo = await getNextContractNumber();
              } else {
@@ -162,7 +177,7 @@ export async function saveContractData(data: Omit<Contract, 'id'> & { id?: strin
              }
 
              const newContract: Contract = {
-                ...validation.data,
+                ...validatedData,
                 contractNo: newContractNo,
                 id: `CON-${Date.now()}`,
             };
@@ -227,7 +242,6 @@ export async function findContract(query: { unitCode?: string, tenantName?: stri
         }
 
         if (foundContract) {
-            // After finding the contract, process it to determine its continuity status
             const processedContracts = processContracts(allContracts);
             const finalContractData = processedContracts.find(c => c.id === foundContract!.id);
             return { success: true, data: finalContractData };
