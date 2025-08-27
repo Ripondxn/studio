@@ -298,8 +298,6 @@ export default function TenancyContractPage() {
                 renewalCount: (latestContract.renewalCount || 0) + 1,
             }));
             toast({ title: 'Renewal Pre-filled', description: "Contract details have been pre-filled from the tenant's last contract."});
-        } else {
-            toast({ variant: 'destructive', title: 'Cannot Renew', description: "No previous contract found for this tenant. Please create a 'New' contract." });
         }
     } else if (newStatus === 'Renew' && !contract.tenantCode) {
          toast({ variant: 'destructive', title: 'Cannot Renew', description: 'Please select a tenant before setting status to "Renew".' });

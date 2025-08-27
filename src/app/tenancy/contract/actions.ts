@@ -54,7 +54,39 @@ async function writeContracts(data: Contract[]) {
 
 export async function getAllContracts() {
     const contracts = await readContracts();
-    return contracts.sort((a,b) => a.contractNo.localeCompare(b.contractNo));
+    
+    // Sort contracts by tenant and then by start date to check for continuity
+    const sortedContracts = [...contracts].sort((a, b) => {
+        if (a.tenantCode! < b.tenantCode!) return -1;
+        if (a.tenantCode! > b.tenantCode!) return 1;
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
+    
+    const contractsWithStatus = sortedContracts.map((contract, index) => {
+        let periodStatus: "OK" | "Gap" | "Overlap" = "OK";
+
+        const previousContract = sortedContracts[index - 1];
+
+        // Check continuity only if it's the same tenant and unit/room
+        if (previousContract && previousContract.tenantCode === contract.tenantCode && previousContract.property === contract.property && previousContract.unitCode === contract.unitCode && previousContract.roomCode === contract.roomCode) {
+            const prevEndDate = parseISO(previousContract.endDate);
+            const currentStartDate = parseISO(contract.startDate);
+            const daysBetween = differenceInDays(currentStartDate, prevEndDate);
+
+            if (daysBetween > 1) {
+                periodStatus = "Gap";
+            } else if (daysBetween < 1) {
+                periodStatus = "Overlap";
+            }
+        }
+        
+        return {
+            ...contract,
+            periodStatus,
+        };
+    });
+
+    return contractsWithStatus;
 }
 
 
