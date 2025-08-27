@@ -23,14 +23,16 @@ export function AssetsClient({ initialAssets }: { initialAssets: Asset[] }) {
 
   return (
     <div>
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-4 no-print">
              <AddAssetDialog onAssetAdded={refreshAssets}>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" /> Add New Asset
                 </Button>
             </AddAssetDialog>
         </div>
-        <AssetList initialAssets={assets} onAssetUpdate={refreshAssets} />
+        <div id="printable-area">
+          <AssetList initialAssets={assets} onAssetUpdate={refreshAssets} />
+        </div>
     </div>
   );
 }
