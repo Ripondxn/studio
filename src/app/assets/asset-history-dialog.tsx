@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useRef } from 'react';
 import { type Asset, type AssetHistory } from './schema';
 import {
   Dialog,
@@ -13,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, CircleDot, Info } from 'lucide-react';
+import { CheckCircle, Info, Printer } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 interface AssetHistoryDialogProps {
@@ -24,6 +25,25 @@ interface AssetHistoryDialogProps {
 
 export function AssetHistoryDialog({ asset, isOpen, setIsOpen }: AssetHistoryDialogProps) {
   const history = asset.history || [];
+  const printRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = () => {
+    const printContent = printRef.current?.innerHTML;
+    if (printContent) {
+      const printWindow = window.open('', '', 'height=600,width=800');
+      if (printWindow) {
+        printWindow.document.write('<html><head><title>Asset History</title>');
+        printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; } .no-print { display: none; } </style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(`<h1>History for: ${asset.assetName} (${asset.assetCode})</h1>`);
+        printWindow.document.write(printContent);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
+  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -34,14 +54,14 @@ export function AssetHistoryDialog({ asset, isOpen, setIsOpen }: AssetHistoryDia
             A complete audit trail of all changes and assignments for this asset.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh] p-1">
+        <ScrollArea className="max-h-[60vh] p-1" ref={printRef}>
             <div className="relative pl-6">
                 {/* Vertical line */}
                 <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border"></div>
                 
                 {history.slice().reverse().map((entry, index) => (
                     <div key={index} className="relative mb-8 pl-8">
-                        <div className="absolute left-0 top-1.5 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full bg-background">
+                        <div className="absolute left-0 top-1.5 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full bg-background no-print">
                             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary ring-4 ring-background">
                                 <CheckCircle className="h-3 w-3 text-primary-foreground" />
                             </span>
@@ -67,6 +87,9 @@ export function AssetHistoryDialog({ asset, isOpen, setIsOpen }: AssetHistoryDia
             </div>
         </ScrollArea>
         <DialogFooter>
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" /> Print
+          </Button>
           <DialogClose asChild>
             <Button>Close</Button>
           </DialogClose>
@@ -75,5 +98,3 @@ export function AssetHistoryDialog({ asset, isOpen, setIsOpen }: AssetHistoryDia
     </Dialog>
   );
 }
-
-    
