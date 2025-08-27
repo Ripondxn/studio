@@ -27,3 +27,5 @@ export const assetSchema = z.object({
 
 export type Asset = z.infer<typeof assetSchema>;
 export type AssetHistory = z.infer<typeof assetHistorySchema>;
+
+    

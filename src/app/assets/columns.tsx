@@ -177,3 +177,5 @@ export const columns = ({ onAssetUpdate }: { onAssetUpdate: () => void }): Colum
       cell: ({ row }) => <ActionsCell row={row} onAssetUpdate={onAssetUpdate} />,
     },
 ];
+
+    

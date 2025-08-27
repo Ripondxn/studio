@@ -15,3 +15,5 @@ export function AssetList({ initialAssets, onAssetUpdate }: { initialAssets: Ass
 
   return <DataTable columns={columns({ onAssetUpdate })} data={assets} />;
 }
+
+    

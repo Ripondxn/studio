@@ -34,3 +34,5 @@ export function AssetsClient({ initialAssets }: { initialAssets: Asset[] }) {
     </div>
   );
 }
+
+    

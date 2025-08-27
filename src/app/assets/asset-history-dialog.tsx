@@ -75,3 +75,5 @@ export function AssetHistoryDialog({ asset, isOpen, setIsOpen }: AssetHistoryDia
     </Dialog>
   );
 }
+
+    
