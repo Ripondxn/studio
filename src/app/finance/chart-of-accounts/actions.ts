@@ -10,12 +10,15 @@ import { accountSchema, type Account } from './schema';
 import { type BankAccount } from '../banking/schema';
 import { type Payment } from '../payment/schema';
 import { getAssets } from '@/app/assets/actions';
+import { type StockTransaction } from '@/app/stores/schema';
+
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 const equityTransactionsFilePath = path.join(process.cwd(), 'src/app/finance/equity/transactions.json');
+const stockTransactionsFilePath = path.join(process.cwd(), 'src/app/stores/stock-transactions.json');
 
 
 async function readData(filePath: string) {
@@ -44,6 +47,8 @@ export async function getAccounts(): Promise<Account[]> {
     const payments: Payment[] = await readData(paymentsFilePath);
     const equityTransactions: any[] = await readData(equityTransactionsFilePath);
     const assets = await getAssets();
+    const stockTransactions: StockTransaction[] = await readData(stockTransactionsFilePath);
+
 
     // Create a map for easy access and modification
     const accountMap = new Map<string, Account>(accounts.map(acc => [acc.code, { ...acc, balance: 0, children: [] as Account[] }]));
@@ -69,8 +74,21 @@ export async function getAccounts(): Promise<Account[]> {
         accountMap.get('1220')!.balance = totalFixedAssets;
     }
 
+    // 4. Aggregate stock value into inventory account
+    const inventoryValue = stockTransactions.reduce((acc, tx) => {
+        const products = readData(path.join(process.cwd(), 'src/app/products/products-data.json'));
+        const product = products.find((p:any) => p.id === tx.productId);
+        const cost = product?.costPrice || 0;
+        if(tx.type === 'IN') return acc + (tx.quantity * cost);
+        if(tx.type === 'OUT') return acc - (tx.quantity * cost);
+        return acc;
+    }, 0);
+    if (accountMap.has('1140')) {
+        accountMap.get('1140')!.balance = inventoryValue;
+    }
 
-    // 4. Aggregate payments into expense and revenue accounts
+
+    // 5. Aggregate payments into expense and revenue accounts
     payments.forEach(payment => {
         if (payment.currentStatus !== 'POSTED') return; // Only consider posted transactions
 
@@ -85,7 +103,7 @@ export async function getAccounts(): Promise<Account[]> {
         }
     });
     
-    // 5. Calculate Equity
+    // 6. Calculate Equity
     let capital = 0;
     let drawings = 0;
     equityTransactions.forEach(t => {
@@ -100,7 +118,7 @@ export async function getAccounts(): Promise<Account[]> {
     if(accountMap.has('3120')) accountMap.get('3120')!.balance = drawings;
 
 
-    // 6. Build tree structure for balance recalculation
+    // 7. Build tree structure for balance recalculation
     const roots: Account[] = [];
     accountMap.forEach(acc => {
         const parent = acc.parentCode ? accountMap.get(acc.parentCode) : null;
@@ -114,7 +132,7 @@ export async function getAccounts(): Promise<Account[]> {
         }
     });
 
-    // 7. Recalculate parent balances from the bottom up using a post-order traversal
+    // 8. Recalculate parent balances from the bottom up using a post-order traversal
     function calculateParentBalances(account: Account): number {
         if (!account.isGroup) {
             return account.balance;

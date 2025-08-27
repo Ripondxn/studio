@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const storeSchema = z.object({
@@ -34,3 +35,4 @@ export const stockTransactionSchema = z.object({
 export type Store = z.infer<typeof storeSchema>;
 export type StockItem = z.infer<typeof stockItemSchema>;
 export type StockTransaction = z.infer<typeof stockTransactionSchema>;
+export type Product = z.infer<typeof productSchema>;

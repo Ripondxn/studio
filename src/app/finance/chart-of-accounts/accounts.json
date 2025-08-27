@@ -1,3 +1,4 @@
+
 [
   {
     "code": "1000",
@@ -38,6 +39,15 @@
   {
     "code": "1130",
     "name": "Prepaid Expenses",
+    "type": "Asset",
+    "status": "Active",
+    "balance": 0,
+    "isGroup": false,
+    "parentCode": "1100"
+  },
+  {
+    "code": "1140",
+    "name": "Inventory",
     "type": "Asset",
     "status": "Active",
     "balance": 0,

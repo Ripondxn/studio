@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -154,7 +155,34 @@ export async function recordStockTransaction(data: z.infer<typeof transactionSch
     allTransactions.push(newTransaction);
     await writeData(stockTransactionsFilePath, allTransactions);
 
+    // 3. Financial Impact
+    const cost = product?.costPrice || 0;
+    const value = quantity * cost;
+    
+    // This is a simplified financial integration.
+    // A more robust system would create journal entries.
+    const allAccounts = await readData<Account>(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
+    const inventoryAccountIndex = allAccounts.findIndex(a => a.code === '1140');
+    const expenseAccountIndex = allAccounts.findIndex(a => a.code === '5140'); // Maintenance & Repairs
+
+    if (transactionType === 'IN') {
+        if (inventoryAccountIndex > -1) {
+            allAccounts[inventoryAccountIndex].balance = (allAccounts[inventoryAccountIndex].balance || 0) + value;
+        }
+    } else { // OUT
+        if (inventoryAccountIndex > -1) {
+             allAccounts[inventoryAccountIndex].balance = (allAccounts[inventoryAccountIndex].balance || 0) - value;
+        }
+        if (expenseAccountIndex > -1) {
+             allAccounts[expenseAccountIndex].balance = (allAccounts[expenseAccountIndex].balance || 0) + value;
+        }
+    }
+    
+    await writeData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'), allAccounts);
+
+
     revalidatePath('/stores');
+    revalidatePath('/finance/chart-of-accounts');
     return { success: true };
 }
 

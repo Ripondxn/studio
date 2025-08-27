@@ -3,5 +3,10 @@
     "name": "Main-Warehouse",
     "location": "Musaffa-M26, Abu Dhabi- UAE",
     "id": "STORE-1756290389505"
+  },
+  {
+    "name": "Branch-Store",
+    "location": "Ajman - UAE",
+    "id": "STORE-1756290643856"
   }
 ]
