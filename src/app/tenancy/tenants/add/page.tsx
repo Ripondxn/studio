@@ -30,7 +30,8 @@ import {
   DollarSign,
   Calendar,
   BedDouble,
-  DoorOpen
+  DoorOpen,
+  Move
 } from 'lucide-react';
 import {
   Table,
@@ -62,6 +63,7 @@ import { type Room } from '@/app/property/rooms/schema';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { MoveTenantDialog } from './move-tenant-dialog';
 
 type Attachment = {
   id: number;
@@ -534,12 +536,20 @@ export default function TenantPage() {
             </TabsContent>
             <TabsContent value="rental-details">
                  <Card>
-                    <CardHeader>
-                        <CardTitle>Rental Details</CardTitle>
-                        <CardDescription>Information about the contract and property occupied by the tenant.</CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Rental Details</CardTitle>
+                            <CardDescription>Information about the contract and property occupied by the tenant.</CardDescription>
+                        </div>
+                         {contractData.id && !isEditing && (
+                            <MoveTenantDialog 
+                                contractId={contractData.id}
+                                currentLocation={{ property: contractData.property!, unit: contractData.unitCode!, room: contractData.roomCode }}
+                            />
+                        )}
                     </CardHeader>
                     <CardContent>
-                        {contractData.id && unitData.property ? (
+                        {contractData.id && (unitData.property || roomData) ? (
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <Card>
@@ -558,11 +568,11 @@ export default function TenantPage() {
                                 <Card>
                                     <CardHeader><CardTitle>Property & Unit</CardTitle></CardHeader>
                                     <CardContent className="space-y-2 text-sm">
-                                        <div className="flex justify-between"><span>Property:</span> <span className="font-medium">{unitData.property.name}</span></div>
+                                        <div className="flex justify-between"><span>Property:</span> <span className="font-medium">{unitData.property?.name}</span></div>
                                         <div className="flex justify-between"><span>Unit Code:</span> <span className="font-medium">{unitData.unitCode}</span></div>
                                         <div className="flex justify-between"><span>Unit Type:</span> <span className="font-medium">{unitData.unitType}</span></div>
                                         <div className="flex justify-between"><span>Floor:</span> <span className="font-medium">{unitData.floor}</span></div>
-                                        <div className="flex justify-between"><span>Address:</span> <span className="font-medium text-right">{unitData.property.address1}</span></div>
+                                        <div className="flex justify-between"><span>Address:</span> <span className="font-medium text-right">{unitData.property?.address1}</span></div>
                                         <Button asChild className="w-full mt-4">
                                             <Link href={`/property/properties?code=${unitData.propertyCode}`}>View Full Property</Link>
                                         </Button>
@@ -710,7 +720,7 @@ export default function TenantPage() {
                 </Card>
             </TabsContent>
         </Tabs>
-
+      
 
        <div className="mt-6 flex justify-end">
          <AlertDialog>
@@ -746,4 +756,3 @@ export default function TenantPage() {
     </div>
   );
 }
-

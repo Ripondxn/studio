@@ -1,92 +1,34 @@
 [
   {
-    "id": "PAY-1756202482359",
-    "type": "Receipt",
-    "date": "2025-08-26",
-    "partyType": "Tenant",
-    "partyName": "Tanvir Ahmed",
-    "amount": 15000,
-    "paymentMethod": "Cash",
-    "bankAccountId": "acc_1756197739796",
-    "paymentFrom": "Bank",
-    "referenceNo": "CASH-FOR-123456",
-    "property": "LT-C38",
-    "unitCode": "F201",
-    "roomCode": "",
-    "description": "Cash received for returned cheque #123456",
-    "status": "Received",
-    "currentStatus": "POSTED",
-    "createdByUser": "Super Admin",
-    "approvalHistory": [
-      {
-        "action": "Created & Submitted",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T10:01:22.359Z",
-        "comments": "Status updated to Returned with Cash"
-      },
-      {
-        "action": "Approved by Admin",
-        "actorId": "ripondxn@gmail.com",
-        "actorRole": "Admin",
-        "timestamp": "2025-08-26T10:03:21.818Z",
-        "comments": ""
-      },
-      {
-        "action": "Final Approval & Posted",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T10:04:14.192Z",
-        "comments": ""
-      }
-    ]
-  },
-  {
     "type": "Payment",
-    "date": "2025-08-05",
-    "partyType": "Agent",
-    "partyName": "A0001",
+    "date": "2025-08-27",
+    "partyType": "Vendor",
+    "partyName": "Md Ripon Ahmed",
     "amount": 1000,
     "paymentMethod": "Cash",
     "paymentFrom": "Bank",
     "property": "LT-C38",
-    "unitCode": "F101",
+    "unitCode": "",
     "roomCode": "",
+    "referenceType": "Bill",
     "description": "",
-    "remarks": "Commission payment for agent Abdulla Mohamed Humaid Almheiri (A0001)",
     "status": "Paid",
     "createdByUser": "Super Admin",
-    "billAllocations": [],
-    "id": "PAY-1756228865072",
-    "currentStatus": "POSTED",
+    "billAllocations": [
+      {
+        "billId": "BILL-1756298346114",
+        "amount": 1000
+      }
+    ],
+    "id": "PAY-1756298671470",
+    "currentStatus": "DRAFT",
     "approvalHistory": [
       {
         "action": "Created Transaction",
         "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-08-26T17:21:05.072Z",
-        "comments": "Initial Draft"
-      },
-      {
-        "action": "Submitted for Approval",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T17:21:22.431Z",
-        "comments": ""
-      },
-      {
-        "action": "Approved by Admin",
-        "actorId": "ripondxn@gmail.com",
-        "actorRole": "Admin",
-        "timestamp": "2025-08-26T17:22:12.207Z",
-        "comments": ""
-      },
-      {
-        "action": "Final Approval & Posted",
-        "actorId": "super.admin@propvue.com",
-        "actorRole": "Super Admin",
-        "timestamp": "2025-08-26T17:23:02.291Z",
-        "comments": ""
+        "timestamp": "2025-08-27T12:44:31.470Z",
+        "comments": "Initial status set to DRAFT"
       }
     ]
   }

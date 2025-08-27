@@ -71,6 +71,8 @@ async function createChequesFromContract(contract: Contract) {
                 type: 'Incoming',
                 partyName: contract.tenantName,
                 property: contract.property,
+                unitCode: contract.unitCode,
+                roomCode: contract.roomCode,
                 contractNo: contract.contractNo,
                 remarks: `Installment ${installment.installment}`,
             });
@@ -287,7 +289,7 @@ export async function getUnitsForProperty(propertyCode: string) {
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
     // Units that are fully occupied by a contract on the unit itself (not room-based)
-    const fullyOccupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode).map(c => c.unitCode));
+    const fullyOccupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
 
     // Rooms that are occupied by a contract
     const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
@@ -360,4 +362,62 @@ export async function getRoomDetails(roomCode: string) {
         return { success: false, error: 'Room not found' };
     }
     return { success: true, data: room };
+}
+
+const moveTenantSchema = z.object({
+    contractId: z.string(),
+    newPropertyCode: z.string(),
+    newUnitCode: z.string(),
+    newRoomCode: z.string().optional(),
+    moveDate: z.string(),
+});
+
+export async function moveTenant(data: z.infer<typeof moveTenantSchema>) {
+    const validation = moveTenantSchema.safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: 'Invalid data provided.' };
+    }
+
+    const { contractId, newPropertyCode, newUnitCode, newRoomCode, moveDate } = validation.data;
+
+    try {
+        const allContracts = await readContracts();
+        const contractIndex = allContracts.findIndex(c => c.id === contractId);
+
+        if (contractIndex === -1) {
+            return { success: false, error: 'Active contract not found for this tenant.' };
+        }
+
+        const contract = allContracts[contractIndex];
+        const oldLocation = `${contract.property}/${contract.unitCode}${contract.roomCode ? '/'+contract.roomCode : ''}`;
+        const newLocation = `${newPropertyCode}/${newUnitCode}${newRoomCode ? '/'+newRoomCode : ''}`;
+
+        // Update contract with new location
+        contract.property = newPropertyCode;
+        contract.unitCode = newUnitCode;
+        contract.roomCode = newRoomCode;
+
+        // Add a note to the payment schedule to log the movement
+        contract.paymentSchedule.push({
+            installment: 0, // Use 0 or a special marker for non-payment entries
+            dueDate: moveDate,
+            amount: 0,
+            status: 'paid', // Mark as 'paid' to not show as due
+            chequeNo: 'MOVEMENT',
+            bankName: `Moved from ${oldLocation} to ${newLocation}`,
+        });
+        
+        allContracts[contractIndex] = contract;
+
+        await writeContracts(allContracts);
+
+        revalidatePath('/tenancy/tenants/add');
+        revalidatePath('/property/properties');
+        revalidatePath('/property/units/vacant');
+        
+        return { success: true };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
 }
