@@ -3,8 +3,12 @@ import { getProblematicContracts, getMovementHistory } from './actions';
 import { ContinuityClient } from './client';
 
 export default async function ContractContinuityPage() {
-  const overlapContracts = await getProblematicContracts();
+  const problematicContracts = await getProblematicContracts();
   const movementHistory = await getMovementHistory();
+
+  const overlapContracts = problematicContracts.filter(c => c.periodStatus === 'Overlap');
+  const gapContracts = problematicContracts.filter(c => c.periodStatus === 'Gap');
+
 
   return (
     <div className="container mx-auto py-10">
@@ -18,6 +22,7 @@ export default async function ContractContinuityPage() {
       </div>
       <ContinuityClient 
         initialOverlapContracts={overlapContracts} 
+        initialGapContracts={gapContracts}
         initialMovementHistory={movementHistory}
       />
     </div>

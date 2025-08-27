@@ -65,9 +65,9 @@ export async function getProblematicContracts(): Promise<Contract[]> {
     };
   });
 
-  // Filter for only problematic contracts (Overlaps only for now)
+  // Filter for only problematic contracts
   return contractsWithStatus.filter(
-    c => c.periodStatus === 'Overlap'
+    c => c.periodStatus === 'Overlap' || c.periodStatus === 'Gap'
   );
 }
 
