@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,10 +22,11 @@ import { Plus, Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { maintenanceTicketSchema, type MaintenanceTicket } from './schema';
-import { addTicket, getLookups } from './actions';
+import { addTicket, getLookups, getNextTicketNumber } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
+import { Switch } from '@/components/ui/switch';
 
 type TicketFormData = Omit<MaintenanceTicket, 'id'>;
 const ticketFormSchema = maintenanceTicketSchema.omit({ id: true });
@@ -40,6 +42,7 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], tenants: [] });
+  const [isAutoCode, setIsAutoCode] = useState(true);
 
   const {
     register,
@@ -51,20 +54,6 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
     formState: { errors },
   } = useForm<TicketFormData>({
     resolver: zodResolver(ticketFormSchema),
-    defaultValues: {
-        ticketNo: `TKT-${Date.now()}`,
-        requestDate: format(new Date(), 'yyyy-MM-dd'),
-        propertyCode: '',
-        unitCode: '',
-        tenantName: '',
-        issueType: '',
-        description: '',
-        priority: 'Medium',
-        status: 'Open',
-        assignedTo: '',
-        resolutionDetails: '',
-        completedDate: '',
-    }
   });
 
   const watchedPropertyCode = watch('propertyCode');
@@ -72,10 +61,11 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
   const filteredUnits = lookups.units.filter(u => u.propertyCode === watchedPropertyCode);
 
   useEffect(() => {
-      if(isOpen) {
+      const initializeForm = async () => {
         getLookups().then(setLookups);
+        const nextCode = await getNextTicketNumber();
         reset({
-            ticketNo: `TKT-${Date.now()}`,
+            ticketNo: nextCode,
             requestDate: format(new Date(), 'yyyy-MM-dd'),
             propertyCode: '',
             unitCode: '',
@@ -89,11 +79,14 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
             completedDate: '',
         });
       }
+      if(isOpen) {
+        initializeForm();
+      }
   }, [isOpen, reset]);
 
   const onSubmit = async (data: TicketFormData) => {
     setIsSaving(true);
-    const result = await addTicket(data);
+    const result = await addTicket(data, isAutoCode);
 
     if (result.success) {
       toast({
@@ -131,7 +124,16 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="ticketNo">Ticket No</Label>
-                        <Input id="ticketNo" {...register('ticketNo')} disabled />
+                        <Input id="ticketNo" {...register('ticketNo')} disabled={isAutoCode} />
+                         {errors.ticketNo && <p className="text-destructive text-xs mt-1">{errors.ticketNo.message}</p>}
+                    </div>
+                     <div className="flex items-end space-x-2 pb-1">
+                        <Switch
+                            id="auto-code-switch"
+                            checked={isAutoCode}
+                            onCheckedChange={setIsAutoCode}
+                        />
+                        <Label htmlFor="auto-code-switch">Auto-generate No.</Label>
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="requestDate">Request Date</Label>

@@ -46,9 +46,24 @@ export async function getOpenTickets(): Promise<{ value: string, label: string }
         .map(t => ({ value: t.id, label: `${t.ticketNo} - ${t.issueType}` }));
 }
 
+export async function getNextTicketNumber() {
+    const allTickets = await readTickets();
+    let maxNum = 0;
+    allTickets.forEach(ticket => {
+        const match = ticket.ticketNo.match(/^TKT-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `TKT-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
 const addTicketFormSchema = maintenanceTicketSchema.omit({ id: true });
 
-export async function addTicket(data: z.infer<typeof addTicketFormSchema>) {
+export async function addTicket(data: z.infer<typeof addTicketFormSchema>, isAutoCode: boolean) {
     const validation = addTicketFormSchema.safeParse(data);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
@@ -56,9 +71,19 @@ export async function addTicket(data: z.infer<typeof addTicketFormSchema>) {
 
     try {
         const allTickets = await readTickets();
+        const ticketData = validation.data;
+
+        if (isAutoCode) {
+            ticketData.ticketNo = await getNextTicketNumber();
+        } else {
+             const ticketExists = allTickets.some(t => t.ticketNo === ticketData.ticketNo);
+             if (ticketExists) {
+                return { success: false, error: `Ticket with number "${ticketData.ticketNo}" already exists.` };
+             }
+        }
         
         const newTicket: MaintenanceTicket = {
-            ...validation.data,
+            ...ticketData,
             id: `TKT-${Date.now()}`,
         };
 
