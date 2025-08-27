@@ -29,6 +29,7 @@ import {
   ChevronRight,
   UserSquare,
   ArrowUp,
+  Move,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -69,6 +70,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     totalProperties,
     totalLandlords,
     upcomingLandlordPayments,
+    totalMovements,
   } = initialDashboardData;
   
   // Pagination for expiring contracts
@@ -107,12 +109,12 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       icon: <Users className="h-6 w-6 text-muted-foreground" />,
       href: '/tenancy/tenants',
     },
-    {
-      title: 'Total Landlords',
-      value: totalLandlords,
-      change: 'View all landlords',
-      icon: <UserSquare className="h-6 w-6 text-muted-foreground" />,
-      href: '/landlord',
+     {
+      title: 'Tenant Movements',
+      value: totalMovements,
+      change: 'View movement history',
+      icon: <Move className="h-6 w-6 text-muted-foreground" />,
+      href: '/tenancy/movement-history',
     },
     {
       title: 'Vacant Units',
