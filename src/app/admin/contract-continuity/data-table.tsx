@@ -7,7 +7,9 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getPaginationRowModel
+  getPaginationRowModel,
+  getFilteredRowModel,
+  ColumnFiltersState,
 } from '@tanstack/react-table';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -24,6 +26,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
 
 // Extend jsPDF type to include autoTable from the plugin
 declare module 'jspdf' {
@@ -36,18 +40,28 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   reportTitle: string;
+  searchColumn?: string;
+  searchPlaceholder?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  reportTitle
+  reportTitle,
+  searchColumn = 'tenantName',
+  searchPlaceholder = 'Filter by tenant name...',
 }: DataTableProps<TData, TValue>) {
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      columnFilters,
+    }
   });
   
   const handleExportPDF = () => {
@@ -60,7 +74,7 @@ export function DataTable<TData, TValue>({
       return (col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id || '';
     })];
     
-    const body = data.map((row: any, rowIndex: number) =>
+    const body = data.map((row: any) =>
       exportableColumns.map(col => {
         if(col.id === 'relatedContracts') {
             const exited = row.previousContractNo ? `Exited: ${row.previousContractNo}` : '';
@@ -93,12 +107,12 @@ export function DataTable<TData, TValue>({
 
   const handleExportExcel = () => {
     const exportableColumns = columns.filter(c => c.id !== 'actions');
-    const dataToExport = data.map((row: any, rowIndex: number) => {
+    const dataToExport = data.map((row: any) => {
         let obj: any = {};
         exportableColumns.forEach(col => {
             const header = typeof col.header === 'string' ? col.header : ((col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id);
             
-            if(col.id === 'relatedContracts') {
+             if(col.id === 'relatedContracts') {
                 const exited = row.previousContractNo ? `Exited: ${row.previousContractNo}` : '';
                 const entered = row.nextContractNo ? `Entered: ${row.nextContractNo}` : '';
                 obj[header] = [exited, entered].filter(Boolean).join('; ');
@@ -127,7 +141,7 @@ export function DataTable<TData, TValue>({
   };
   
    const handlePrint = () => {
-    const printArea = document.getElementById('printable-area');
+    const printArea = document.getElementById(`printable-area-${reportTitle.replace(/\s/g, '-')}`);
     if (printArea) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
@@ -153,22 +167,31 @@ export function DataTable<TData, TValue>({
           body * {
             visibility: hidden;
           }
-          #printable-area, #printable-area * {
+          #printable-area-${reportTitle.replace(/\s/g, '-')} *,
+          #printable-area-${reportTitle.replace(/\s/g, '-')} {
             visibility: visible;
           }
-          #printable-area {
+          #printable-area-${reportTitle.replace(/\s/g, '-')} {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
           }
           .no-print {
-            display: none;
+            display: none !important;
           }
         }
       `}</style>
       <div>
         <div className="flex items-center py-4 gap-2 no-print">
+            <Input
+              placeholder={searchPlaceholder}
+              value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ''}
+              onChange={(event) =>
+                table.getColumn(searchColumn)?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
             <div className="ml-auto flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={handlePrint}>
                     <Printer className="mr-2 h-4 w-4" /> Print
@@ -181,7 +204,7 @@ export function DataTable<TData, TValue>({
                 </Button>
             </div>
         </div>
-        <div id="printable-area">
+        <div id={`printable-area-${reportTitle.replace(/\s/g, '-')}`}>
           <div className="rounded-md border">
           <Table>
               <TableHeader>

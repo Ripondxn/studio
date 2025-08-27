@@ -97,16 +97,40 @@ export function ContinuityClient({
           <TabsTrigger value="vacant">Vacant Periods ({initialVacantPeriods.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="movement">
-           <DataTable columns={movementColumns} data={initialMovementHistory} reportTitle="Movement History Report" />
+           <DataTable 
+             columns={movementColumns} 
+             data={initialMovementHistory} 
+             reportTitle="Movement History Report"
+             searchColumn="tenantName"
+             searchPlaceholder="Filter by tenant name..."
+            />
         </TabsContent>
         <TabsContent value="overlaps">
-           <DataTable columns={problemColumns} data={initialOverlapContracts} reportTitle="Overlapping Contracts Report" />
+           <DataTable 
+            columns={problemColumns} 
+            data={initialOverlapContracts} 
+            reportTitle="Overlapping Contracts Report" 
+            searchColumn="tenantName"
+            searchPlaceholder="Filter by tenant, property, or unit..."
+           />
         </TabsContent>
         <TabsContent value="gaps">
-           <DataTable columns={problemColumns} data={initialGapContracts} reportTitle="Contract Gaps Report" />
+           <DataTable 
+            columns={problemColumns} 
+            data={initialGapContracts} 
+            reportTitle="Contract Gaps Report" 
+            searchColumn="tenantName"
+            searchPlaceholder="Filter by tenant, property, or unit..."
+            />
         </TabsContent>
          <TabsContent value="vacant">
-           <DataTable columns={vacantPeriodColumns} data={initialVacantPeriods} reportTitle="Vacant Periods Report" />
+           <DataTable 
+            columns={vacantPeriodColumns} 
+            data={initialVacantPeriods} 
+            reportTitle="Vacant Periods Report"
+            searchColumn="property"
+            searchPlaceholder="Filter by property or unit..."
+            />
         </TabsContent>
       </Tabs>
     </div>
