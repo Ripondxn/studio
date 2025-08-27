@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -9,6 +8,10 @@ import { revalidatePath } from 'next/cache';
 import { billSchema, type Bill } from './schema';
 import { isBefore, parseISO } from 'date-fns';
 import { type Payment } from '@/app/finance/payment/schema';
+import { getContractLookups } from '@/app/tenancy/contract/actions';
+import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
+import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
+import { getProducts } from '@/app/products/actions';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -55,7 +58,23 @@ export async function getNextBillNumber() {
     return `BL-${(maxNum + 1).toString().padStart(4, '0')}`;
 }
 
-export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }) {
+export async function getBillLookups() {
+    const [contractLookups, openTickets, expenseAccounts, products] = await Promise.all([
+        getContractLookups(),
+        getOpenTickets(),
+        getExpenseAccounts(),
+        getProducts()
+    ]);
+    return {
+        properties: contractLookups.properties,
+        maintenanceTickets: openTickets,
+        expenseAccounts,
+        products
+    }
+}
+
+
+export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid'> & { id?: string, isAutoBillNo?: boolean }) {
     const { isAutoBillNo, ...billData } = data;
     const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(billData);
 

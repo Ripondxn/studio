@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -28,16 +29,15 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveBill, getNextBillNumber } from './actions';
+import { saveBill, getNextBillNumber, getBillLookups } from './actions';
 import { billSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
+import { useCurrency } from '@/context/currency-context';
 import { getProducts } from '@/app/products/actions';
 import { type Product } from '@/app/products/schema';
-import { useCurrency } from '@/context/currency-context';
 
 const formSchema = billSchema.omit({ id: true });
 type BillFormData = z.infer<typeof formSchema>;
@@ -64,7 +64,9 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
     units: {value: string, label: string}[],
     rooms: {value: string, label: string}[],
     products: Product[],
-  }>({ properties: [], units: [], rooms: [], products: [] });
+    expenseAccounts: {value: string, label: string}[],
+    maintenanceTickets: {value: string, label: string}[],
+  }>({ properties: [], units: [], rooms: [], products: [], expenseAccounts: [], maintenanceTickets: [] });
 
   const {
     register,
@@ -90,34 +92,8 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   const watchedUnit = watch('unitCode');
 
   useEffect(() => {
-    getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
-     getProducts().then(data => setLookups(prev => ({...prev, products: data})));
+    getBillLookups().then(setLookups);
   }, []);
-
-  useEffect(() => {
-    const fetchUnits = async () => {
-        if (watchedProperty) {
-            const units = await getUnitsForProperty(watchedProperty);
-            setLookups(prev => ({...prev, units}));
-        } else {
-            setLookups(prev => ({...prev, units: []}));
-        }
-    }
-    fetchUnits();
-  }, [watchedProperty]);
-
-  useEffect(() => {
-    const fetchSubUnits = async () => {
-        if (watchedProperty && watchedUnit) {
-            const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
-            setLookups(prev => ({...prev, rooms}));
-        } else {
-            setLookups(prev => ({...prev, rooms: []}));
-        }
-    }
-    fetchSubUnits();
-  }, [watchedProperty, watchedUnit]);
-
 
   useEffect(() => {
     if (!watchedItems) return;
@@ -246,7 +222,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{bill ? 'Edit Bill' : 'Create New Bill'}</DialogTitle>
@@ -255,7 +231,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[60vh] overflow-y-auto p-1">
+          <div className="max-h-[70vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
               <div><Label>Bill #</Label><Input {...register('billNo')} disabled={isAutoBillNo} /></div>
               <div><Label>Vendor</Label><Input value={vendor.name} disabled/></div>
@@ -272,17 +248,34 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                 <Label htmlFor="auto-bill-no-switch">Auto-generate Bill No</Label>
             </div>
 
-            <div className="flex items-center space-x-2 mb-4">
-                <Switch 
-                    id="property-invoice-switch" 
-                    checked={isPropertyInvoice} 
-                    onCheckedChange={setIsPropertyInvoice}
-                />
-                <Label htmlFor="property-invoice-switch">Property-Related Bill</Label>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="flex items-center space-x-2">
+                    <Switch 
+                        id="property-invoice-switch" 
+                        checked={isPropertyInvoice} 
+                        onCheckedChange={setIsPropertyInvoice}
+                    />
+                    <Label htmlFor="property-invoice-switch">Property-Related Bill</Label>
+                </div>
+                <div>
+                  <Label>Maintenance Ticket</Label>
+                  <Controller
+                    name="maintenanceTicketId"
+                    control={control}
+                    render={({ field }) => (
+                      <Combobox
+                        options={lookups.maintenanceTickets}
+                        value={field.value || ''}
+                        onSelect={field.onChange}
+                        placeholder="Link to a ticket"
+                      />
+                    )}
+                  />
+                </div>
             </div>
-
+            
             {isPropertyInvoice && (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4 p-4 border rounded-md bg-muted/50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 border rounded-md bg-muted/50">
                   <div>
                       <Label>Property</Label>
                       <Controller
@@ -344,6 +337,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
               <TableHeader>
                   <TableRow>
                       <TableHead className="w-2/5">Item / Description</TableHead>
+                      <TableHead>Expense Account</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead className="text-right">Total</TableHead>
@@ -354,15 +348,29 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                   {fields.map((field, index) => (
                       <TableRow key={field.id}>
                           <TableCell>
-                             <Combobox
+                            <Combobox
                                 options={lookups.products.map(p => ({value: p.itemCode, label: p.itemName}))}
                                 value={watchedItems?.[index]?.description}
                                 onSelect={(value) => handleItemSelect(index, value)}
                                 placeholder="Select or type item..."
                              />
                           </TableCell>
-                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true })} /></TableCell>
-                          <TableCell><Input type="number" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
+                          <TableCell>
+                            <Controller
+                                name={`items.${index}.expenseAccountId`}
+                                control={control}
+                                render={({ field }) => (
+                                    <Combobox
+                                        options={lookups.expenseAccounts}
+                                        value={field.value || ''}
+                                        onSelect={field.onChange}
+                                        placeholder="Select Account"
+                                    />
+                                )}
+                            />
+                          </TableCell>
+                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} /></TableCell>
+                          <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
                           <TableCell className="text-right">
                             {formatCurrency((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                           </TableCell>
