@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -79,13 +78,13 @@ export function ContinuityClient({
           <TabsTrigger value="gaps">Gaps ({initialGapContracts.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="movement">
-           <DataTable columns={movementColumns} data={initialMovementHistory} />
+           <DataTable columns={movementColumns} data={initialMovementHistory} reportTitle="Movement History Report" />
         </TabsContent>
         <TabsContent value="overlaps">
-           <DataTable columns={problemColumns} data={initialOverlapContracts} />
+           <DataTable columns={problemColumns} data={initialOverlapContracts} reportTitle="Overlapping Contracts Report" />
         </TabsContent>
         <TabsContent value="gaps">
-           <DataTable columns={problemColumns} data={initialGapContracts} />
+           <DataTable columns={problemColumns} data={initialGapContracts} reportTitle="Contract Gaps Report" />
         </TabsContent>
       </Tabs>
     </div>
