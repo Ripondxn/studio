@@ -27,6 +27,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { Switch } from '@/components/ui/switch';
+import { type Room } from '@/app/property/rooms/schema';
 
 type TicketFormData = Omit<MaintenanceTicket, 'id'>;
 const ticketFormSchema = maintenanceTicketSchema.omit({ id: true });
@@ -34,6 +35,7 @@ const ticketFormSchema = maintenanceTicketSchema.omit({ id: true });
 type Lookups = {
     properties: { value: string, label: string }[];
     units: { value: string, label: string, propertyCode: string }[];
+    rooms: (Room & { value: string, label: string })[];
     tenants: { value: string, label: string }[];
 }
 
@@ -41,7 +43,7 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], tenants: [] });
+  const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [], tenants: [] });
   const [isAutoCode, setIsAutoCode] = useState(true);
 
   const {
@@ -61,6 +63,7 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
   const watchedRoomCode = watch('roomCode');
 
   const filteredUnits = lookups.units.filter(u => u.propertyCode === watchedPropertyCode);
+  const filteredRooms = lookups.rooms.filter(r => r.propertyCode === watchedPropertyCode && r.unitCode === watchedUnitCode);
 
   const fetchTenantName = useCallback(async (property: string, unit: string, room?: string) => {
     if (property && unit) {
@@ -88,6 +91,7 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
             requestDate: format(new Date(), 'yyyy-MM-dd'),
             propertyCode: '',
             unitCode: '',
+            roomCode: '',
             tenantName: '',
             issueType: '',
             description: '',
@@ -161,7 +165,7 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="propertyCode">Property</Label>
                         <Controller
@@ -174,6 +178,7 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
                                 onSelect={(value) => {
                                     field.onChange(value);
                                     setValue('unitCode', '');
+                                    setValue('roomCode', '');
                                 }}
                                 placeholder="Select Property"
                             />
@@ -190,13 +195,32 @@ export function AddTicketDialog({ onTicketAdded }: { onTicketAdded: () => void }
                             <Combobox
                                 options={filteredUnits}
                                 value={field.value}
-                                onSelect={field.onChange}
+                                onSelect={(value) => {
+                                    field.onChange(value);
+                                    setValue('roomCode', '');
+                                }}
                                 placeholder="Select Unit"
                                 disabled={!watchedPropertyCode}
                             />
                             )}
                         />
                         {errors.unitCode && <p className="text-destructive text-xs mt-1">{errors.unitCode.message}</p>}
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="roomCode">Room</Label>
+                        <Controller
+                            name="roomCode"
+                            control={control}
+                            render={({ field }) => (
+                            <Combobox
+                                options={filteredRooms}
+                                value={field.value || ''}
+                                onSelect={field.onChange}
+                                placeholder="Select Room"
+                                disabled={!watchedUnitCode}
+                            />
+                            )}
+                        />
                     </div>
                 </div>
                  <div className="space-y-2">

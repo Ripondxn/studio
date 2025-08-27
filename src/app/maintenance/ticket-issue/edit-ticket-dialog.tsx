@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -25,12 +26,15 @@ import { maintenanceTicketSchema, type MaintenanceTicket } from './schema';
 import { updateTicket, getLookups } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type Room } from '@/app/property/rooms/schema';
+
 
 const ticketFormSchema = maintenanceTicketSchema;
 
 type Lookups = {
     properties: { value: string, label: string }[];
     units: { value: string, label: string, propertyCode: string }[];
+    rooms: (Room & { value: string, label: string })[];
     tenants: { value: string, label: string }[];
 }
 
@@ -38,7 +42,7 @@ export function EditTicketDialog({ ticket, isOpen, setIsOpen }: { ticket: Mainte
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], tenants: [] });
+  const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [], tenants: [] });
 
   const {
     register,
@@ -54,6 +58,7 @@ export function EditTicketDialog({ ticket, isOpen, setIsOpen }: { ticket: Mainte
 
   const watchedPropertyCode = watch('propertyCode');
   const filteredUnits = lookups.units.filter(u => u.propertyCode === watchedPropertyCode);
+  const filteredRooms = lookups.rooms.filter(r => r.propertyCode === watchedPropertyCode && r.unitCode === watch('unitCode'));
 
   useEffect(() => {
     if(isOpen) {
@@ -115,7 +120,7 @@ export function EditTicketDialog({ ticket, isOpen, setIsOpen }: { ticket: Mainte
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="propertyCode">Property</Label>
                         <Controller
@@ -151,6 +156,22 @@ export function EditTicketDialog({ ticket, isOpen, setIsOpen }: { ticket: Mainte
                             )}
                         />
                         {errors.unitCode && <p className="text-destructive text-xs mt-1">{errors.unitCode.message}</p>}
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="roomCode">Room</Label>
+                        <Controller
+                            name="roomCode"
+                            control={control}
+                            render={({ field }) => (
+                            <Combobox
+                                options={filteredRooms}
+                                value={field.value || ''}
+                                onSelect={field.onChange}
+                                placeholder="Select Room"
+                                disabled={!watch('unitCode')}
+                            />
+                            )}
+                        />
                     </div>
                 </div>
                  <div className="space-y-2">
