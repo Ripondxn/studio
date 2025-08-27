@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -60,6 +60,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 type Attachment = {
   id: number;
@@ -96,6 +97,7 @@ export default function LandlordPage() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isAutoCode, setIsAutoCode] = useState(true);
   
   const [landlordData, setLandlordData] = useState(initialLandlordData);
   const [initialData, setInitialData] = useState(initialLandlordData);
@@ -253,7 +255,7 @@ export default function LandlordPage() {
         })),
       };
 
-      const result = await saveLandlordData(dataToSave, isNewRecord);
+      const result = await saveLandlordData(dataToSave, isNewRecord, isAutoCode);
       if (result.success) {
         toast({
           title: "Success",
@@ -261,7 +263,7 @@ export default function LandlordPage() {
         });
         setIsEditing(false);
         if (isNewRecord) {
-            router.push(`/landlord/add?code=${landlordData.code}`);
+            router.push(`/landlord/add?code=${result.data.code}`);
         } else {
             setInitialAllData(dataToSave);
         }
@@ -404,11 +406,17 @@ export default function LandlordPage() {
                     <div className="flex items-end gap-2">
                         <div className="flex-grow">
                             <Label htmlFor="code">Code</Label>
-                            <Input id="code" value={landlordData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled />
+                            <Input id="code" value={landlordData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={isAutoCode || !isNewRecord} />
                         </div>
-                        <Button variant="outline" size="icon" onClick={() => router.push('/landlord/add')} disabled={isFinding || !isNewRecord}>
-                            <Plus className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center space-x-2 pt-6">
+                            <Switch
+                                id="auto-code-switch"
+                                checked={isAutoCode}
+                                onCheckedChange={setIsAutoCode}
+                                disabled={!isNewRecord || !isEditing}
+                            />
+                            <Label htmlFor="auto-code-switch">Auto</Label>
+                        </div>
                     </div>
                     <div>
                       <Label htmlFor="name">Name</Label>
@@ -738,6 +746,7 @@ export default function LandlordPage() {
          <AlertDialog>
             <AlertDialogTrigger asChild>
             <Button
+                type="button"
                 variant="destructive"
                 disabled={isNewRecord || isEditing}
             >
@@ -767,3 +776,4 @@ export default function LandlordPage() {
     </div>
   );
 }
+
