@@ -13,15 +13,19 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowDown, ArrowUp, Printer } from 'lucide-react';
+import { Loader2, ArrowDown, ArrowUp, Printer, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { type StockTransaction } from './schema';
-import { getTransactionHistory } from './actions';
+import { getTransactionHistory, deleteStockTransaction } from './actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { type UserRole } from '@/app/admin/user-roles/schema';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 
 interface TransactionHistoryDialogProps {
   isOpen: boolean;
@@ -32,16 +36,42 @@ export function TransactionHistoryDialog({ isOpen, setIsOpen }: TransactionHisto
   const [transactions, setTransactions] = useState<StockTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchHistory = async () => {
+    setIsLoading(true);
+    const data = await getTransactionHistory();
+    setTransactions(data);
+    setIsLoading(false);
+  }
 
   useEffect(() => {
+    const storedProfile = sessionStorage.getItem('userProfile');
+    if (storedProfile) {
+        setCurrentUserRole(JSON.parse(storedProfile).role);
+    }
     if (isOpen) {
-        setIsLoading(true);
-        getTransactionHistory()
-            .then(setTransactions)
-            .finally(() => setIsLoading(false));
+        fetchHistory();
     }
   }, [isOpen]);
   
+  const handleDelete = async () => {
+    if (!selectedTxId) return;
+    setIsDeleting(true);
+    const result = await deleteStockTransaction(selectedTxId);
+    if (result.success) {
+        toast({title: 'Success', description: 'Transaction has been deleted and financials reversed.'});
+        fetchHistory(); // Refresh list
+    } else {
+        toast({variant: 'destructive', title: 'Error', description: result.error});
+    }
+    setIsDeleting(false);
+    setSelectedTxId(null);
+  }
+
   const handlePrint = () => {
     const printContent = printRef.current?.innerHTML;
     if (printContent) {
@@ -51,7 +81,7 @@ export function TransactionHistoryDialog({ isOpen, setIsOpen }: TransactionHisto
             printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; } h1 { text-align: center; } .no-print { display: none; } </style>');
             printWindow.document.write('</head><body>');
             printWindow.document.write('<h1>Stock Transaction History</h1>');
-            printWindow.document.write(printContent);
+            printWindow.document.write(printContent.innerHTML);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.print();
@@ -62,6 +92,20 @@ export function TransactionHistoryDialog({ isOpen, setIsOpen }: TransactionHisto
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
+       <AlertDialog open={!!selectedTxId} onOpenChange={(open) => !open && setSelectedTxId(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>This will permanently delete the transaction and reverse its financial impact. This action cannot be undone.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
             <DialogTitle>Stock Transaction History</DialogTitle>
@@ -79,18 +123,19 @@ export function TransactionHistoryDialog({ isOpen, setIsOpen }: TransactionHisto
                             <TableHead>Item</TableHead>
                             <TableHead className="text-right">Quantity</TableHead>
                             <TableHead>Notes/Job</TableHead>
+                            {currentUserRole === 'Super Admin' && <TableHead className="text-right no-print">Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
+                                <TableCell colSpan={6} className="h-24 text-center">
                                     <Loader2 className="mx-auto h-6 w-6 animate-spin"/>
                                 </TableCell>
                             </TableRow>
                         ) : transactions.length === 0 ? (
                              <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">No transactions yet.</TableCell>
+                                <TableCell colSpan={6} className="h-24 text-center">No transactions yet.</TableCell>
                             </TableRow>
                         ) : (
                             transactions.slice().reverse().map(tx => (
@@ -103,6 +148,23 @@ export function TransactionHistoryDialog({ isOpen, setIsOpen }: TransactionHisto
                                         {tx.quantity}
                                     </TableCell>
                                     <TableCell>{tx.jobId || tx.notes}</TableCell>
+                                     {currentUserRole === 'Super Admin' && (
+                                        <TableCell className="text-right no-print">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem disabled>
+                                                        <Edit className="mr-2 h-4 w-4"/> Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive" onSelect={() => setSelectedTxId(tx.id)}>
+                                                        <Trash2 className="mr-2 h-4 w-4"/> Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))
                         )}

@@ -21,5 +21,27 @@
     "type": "OUT",
     "notes": "ahsan habiv",
     "jobId": "lewa tower"
+  },
+  {
+    "id": "TXN-1756293050417-OUT",
+    "date": "2025-08-27T11:10:50.417Z",
+    "storeId": "STORE-1756290389505",
+    "storeName": "Main-Warehouse",
+    "productId": "PROD-1756270306717",
+    "productName": "Washing Machine",
+    "quantity": 1,
+    "type": "OUT",
+    "notes": "Transfer to Branch-Store. Ref: TRN-1756293050417. stock Transfer"
+  },
+  {
+    "id": "TXN-1756293050417-IN",
+    "date": "2025-08-27T11:10:50.417Z",
+    "storeId": "STORE-1756290643856",
+    "storeName": "Branch-Store",
+    "productId": "PROD-1756270306717",
+    "productName": "Washing Machine",
+    "quantity": 1,
+    "type": "IN",
+    "notes": "Transfer from Main-Warehouse. Ref: TRN-1756293050417. stock Transfer"
   }
 ]

@@ -3,6 +3,12 @@
     "id": "STOCK-1756292540080",
     "storeId": "STORE-1756290389505",
     "productId": "PROD-1756270306717",
-    "quantity": 4
+    "quantity": 3
+  },
+  {
+    "id": "STOCK-1756293050411",
+    "storeId": "STORE-1756290643856",
+    "productId": "PROD-1756270306717",
+    "quantity": 1
   }
 ]

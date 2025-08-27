@@ -303,3 +303,57 @@ export async function transferStock(data: z.infer<typeof transferSchema>) {
     revalidatePath('/stores');
     return { success: true };
 }
+
+
+export async function deleteStockTransaction(transactionId: string) {
+    const allTransactions = await readData<StockTransaction>(stockTransactionsFilePath);
+    const transactionToDelete = allTransactions.find(t => t.id === transactionId);
+
+    if (!transactionToDelete) {
+        return { success: false, error: "Transaction not found." };
+    }
+    
+    // Reverse stock level
+    const allStock = await readData<StockItem>(stockFilePath);
+    const stockItemIndex = allStock.findIndex(item => item.storeId === transactionToDelete.storeId && item.productId === transactionToDelete.productId);
+
+    if (stockItemIndex > -1) {
+        if (transactionToDelete.type === 'IN') {
+            allStock[stockItemIndex].quantity -= transactionToDelete.quantity;
+        } else { // OUT
+            allStock[stockItemIndex].quantity += transactionToDelete.quantity;
+        }
+        await writeData(stockFilePath, allStock);
+    }
+
+    // Reverse financial impact
+    const products = await readData<Product>(productsFilePath);
+    const product = products.find(p => p.id === transactionToDelete.productId);
+    const cost = product?.costPrice || 0;
+    const value = transactionToDelete.quantity * cost;
+    const allAccounts = await readData<any>(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
+    const inventoryAccountIndex = allAccounts.findIndex(a => a.code === '1140');
+    const expenseAccountIndex = allAccounts.findIndex(a => a.code === '5140');
+
+    if (transactionToDelete.type === 'IN') {
+        if (inventoryAccountIndex > -1) {
+            allAccounts[inventoryAccountIndex].balance -= value;
+        }
+    } else { // OUT
+        if (inventoryAccountIndex > -1) {
+             allAccounts[inventoryAccountIndex].balance += value;
+        }
+        if (expenseAccountIndex > -1) {
+             allAccounts[expenseAccountIndex].balance -= value;
+        }
+    }
+    await writeData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'), allAccounts);
+
+    // Remove transaction log
+    const updatedTransactions = allTransactions.filter(t => t.id !== transactionId);
+    await writeData(stockTransactionsFilePath, updatedTransactions);
+    
+    revalidatePath('/stores');
+    revalidatePath('/finance/chart-of-accounts');
+    return { success: true };
+}
