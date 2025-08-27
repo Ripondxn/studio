@@ -1,3 +1,4 @@
+
 [
   {
     "feature": "Properties",
@@ -246,6 +247,13 @@
         "allowedRoles": [
           "Super Admin",
           "Admin"
+        ]
+      },
+      {
+        "action": "contract_continuity",
+        "description": "Review and fix contract data issues",
+        "allowedRoles": [
+          "Super Admin"
         ]
       }
     ]

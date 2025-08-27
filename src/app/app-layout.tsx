@@ -148,6 +148,7 @@ const navLinks = [
             { href: '/admin/payment-gateway', label: 'Payment Gateway' },
             { href: '/admin/access-control', label: 'Access Control' },
             { href: '/admin/workflow-settings', label: 'Workflow Settings' },
+            { href: '/admin/contract-continuity', label: 'Contract Continuity' },
         ]
     },
 ];
