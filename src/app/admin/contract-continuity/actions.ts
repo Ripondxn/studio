@@ -5,7 +5,7 @@ import {promises as fs} from 'fs';
 import path from 'path';
 import {revalidatePath} from 'next/cache';
 import {type Contract} from '@/app/tenancy/contract/schema';
-import {differenceInDays, parseISO, addDays} from 'date-fns';
+import {differenceInDays, parseISO, addDays, isBefore} from 'date-fns';
 
 const contractsFilePath = path.join(
   process.cwd(),
