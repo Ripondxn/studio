@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -39,7 +38,7 @@ import { useCurrency } from '@/context/currency-context';
 import { getProducts } from '@/app/products/actions';
 import { type Product } from '@/app/products/schema';
 
-const formSchema = billSchema.omit({ id: true });
+const formSchema = billSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type BillFormData = z.infer<typeof formSchema>;
 
 interface BillDialogProps {
@@ -191,11 +190,13 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
     }
   }
   
-  const handleItemSelect = (index: number, productCode: string) => {
-    const product = lookups.products.find(p => p.itemCode === productCode);
+  const handleItemSelect = (index: number, value: string, label?: string) => {
+    const product = lookups.products.find(p => p.itemCode.toLowerCase() === value.toLowerCase() || p.itemName.toLowerCase() === value.toLowerCase());
     if(product) {
         setValue(`items.${index}.description`, product.itemName);
         setValue(`items.${index}.unitPrice`, product.costPrice);
+    } else {
+        setValue(`items.${index}.description`, label || value);
     }
   }
 
@@ -264,9 +265,9 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                     control={control}
                     render={({ field }) => (
                       <Combobox
-                        options={lookups.maintenanceTickets}
+                        options={lookups.maintenanceTickets || []}
                         value={field.value || ''}
-                        onSelect={field.onChange}
+                        onSelect={(value) => field.onChange(value)}
                         placeholder="Link to a ticket"
                       />
                     )}
@@ -283,7 +284,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                           control={control}
                           render={({ field }) => (
                               <Combobox
-                                  options={lookups.properties}
+                                  options={lookups.properties || []}
                                   value={field.value || ''}
                                   onSelect={(value) => {
                                       field.onChange(value);
@@ -302,7 +303,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                           control={control}
                           render={({ field }) => (
                               <Combobox
-                                  options={lookups.units}
+                                  options={lookups.units || []}
                                   value={field.value || ''}
                                   onSelect={(value) => {
                                       field.onChange(value);
@@ -321,9 +322,9 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                           control={control}
                           render={({ field }) => (
                               <Combobox
-                                  options={lookups.rooms}
+                                  options={lookups.rooms || []}
                                   value={field.value || ''}
-                                  onSelect={field.onChange}
+                                  onSelect={(value) => field.onChange(value)}
                                   placeholder="Select Room"
                                   disabled={!watchedUnit || lookups.rooms.length === 0}
                               />
@@ -350,8 +351,8 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                           <TableCell>
                             <Combobox
                                 options={lookups.products.map(p => ({value: p.itemCode, label: p.itemName}))}
-                                value={watchedItems?.[index]?.description}
-                                onSelect={(value) => handleItemSelect(index, value)}
+                                value={watchedItems?.[index]?.description || ''}
+                                onSelect={(value, label) => handleItemSelect(index, value, label)}
                                 placeholder="Select or type item..."
                              />
                           </TableCell>
@@ -361,9 +362,9 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                                 control={control}
                                 render={({ field }) => (
                                     <Combobox
-                                        options={lookups.expenseAccounts}
+                                        options={lookups.expenseAccounts || []}
                                         value={field.value || ''}
-                                        onSelect={field.onChange}
+                                        onSelect={(value) => field.onChange(value)}
                                         placeholder="Select Account"
                                     />
                                 )}

@@ -14,5 +14,13 @@
     "itemType": "Service",
     "salePrice": 150,
     "costPrice": 50
+  },
+  {
+    "itemCode": "ITEM-0001",
+    "itemName": "Washing Machine",
+    "itemType": "Product",
+    "salePrice": 0,
+    "costPrice": 1400,
+    "id": "PROD-1756270306717"
   }
 ]

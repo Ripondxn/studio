@@ -224,11 +224,13 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     }
   }
   
-  const handleItemSelect = (index: number, productCode: string) => {
-    const product = lookups.products.find(p => p.itemCode === productCode);
+  const handleItemSelect = (index: number, value: string, label?: string) => {
+    const product = lookups.products.find(p => p.itemCode.toLowerCase() === value.toLowerCase() || p.itemName.toLowerCase() === value.toLowerCase());
     if(product) {
         setValue(`items.${index}.description`, product.itemName);
         setValue(`items.${index}.unitPrice`, product.salePrice);
+    } else {
+        setValue(`items.${index}.description`, label || value);
     }
   }
 
@@ -339,7 +341,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                               <Combobox
                                   options={lookups.rooms}
                                   value={field.value || ''}
-                                  onSelect={field.onChange}
+                                  onSelect={(value) => field.onChange(value)}
                                   placeholder="Select Room"
                                   disabled={!watchedUnit || lookups.rooms.length === 0}
                               />
@@ -365,8 +367,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                           <TableCell>
                             <Combobox
                                 options={lookups.products.map(p => ({value: p.itemCode, label: p.itemName}))}
-                                value={watchedItems?.[index]?.description}
-                                onSelect={(value) => handleItemSelect(index, value)}
+                                value={watchedItems?.[index]?.description || ''}
+                                onSelect={(value, label) => handleItemSelect(index, value, label)}
                                 placeholder="Select or type item..."
                              />
                           </TableCell>
