@@ -60,32 +60,14 @@ export function DataTable<TData, TValue>({
       return (col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id || '';
     })];
     
-    const body = data.map((row: TData, rowIndex: number) =>
+    const body = data.map((row: any, rowIndex: number) =>
       exportableColumns.map(col => {
-        const cell = table.getRowModel().rows[rowIndex]?.getVisibleCells().find(cell => cell.column.id === col.id);
-        if (cell) {
-          const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext());
-          if (typeof renderedCell === 'string' || typeof renderedCell === 'number') {
-            return String(renderedCell);
-          }
-           if (React.isValidElement(renderedCell)) {
-            // Attempt to extract text from simple React elements. This might not cover all cases.
-            const textContent = (function extractText(element: React.ReactNode): string {
-                if (typeof element === 'string' || typeof element === 'number') {
-                    return String(element);
-                }
-                if (Array.isArray(element)) {
-                    return element.map(extractText).join(' ');
-                }
-                if (React.isValidElement(element) && element.props.children) {
-                    return extractText(element.props.children);
-                }
-                return '';
-            })(renderedCell);
-            return textContent;
-          }
+        if(col.id === 'relatedContracts') {
+            const exited = row.previousContractNo ? `Exited: ${row.previousContractNo}` : '';
+            const entered = row.nextContractNo ? `Entered: ${row.nextContractNo}` : '';
+            return [exited, entered].filter(Boolean).join('\n');
         }
-        // @ts-ignore
+        
         let value = row[(col as any).accessorKey as keyof TData] as any;
         const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
         // @ts-ignore
@@ -111,31 +93,18 @@ export function DataTable<TData, TValue>({
 
   const handleExportExcel = () => {
     const exportableColumns = columns.filter(c => c.id !== 'actions');
-    const dataToExport = data.map((row: TData, rowIndex: number) => {
+    const dataToExport = data.map((row: any, rowIndex: number) => {
         let obj: any = {};
         exportableColumns.forEach(col => {
             const header = typeof col.header === 'string' ? col.header : ((col as any).accessorKey?.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()) || col.id);
-            const cell = table.getRowModel().rows[rowIndex]?.getVisibleCells().find(cell => cell.column.id === col.id);
-            if (cell) {
-              const renderedCell = flexRender(cell.column.columnDef.cell, cell.getContext());
-              if (typeof renderedCell === 'string' || typeof renderedCell === 'number') {
-                obj[header] = renderedCell;
+            
+            if(col.id === 'relatedContracts') {
+                const exited = row.previousContractNo ? `Exited: ${row.previousContractNo}` : '';
+                const entered = row.nextContractNo ? `Entered: ${row.nextContractNo}` : '';
+                obj[header] = [exited, entered].filter(Boolean).join('; ');
                 return;
-              }
-               if (React.isValidElement(renderedCell)) {
-                // Attempt to extract text content, this might be brittle
-                const textContent = (function extractText(element: React.ReactNode): string {
-                  if (typeof element === 'string' || typeof element === 'number') return String(element);
-                  if (Array.isArray(element)) return element.map(extractText).join(' ');
-                  if (React.isValidElement(element) && element.props.children) return extractText(element.props.children);
-                  return '';
-                })(renderedCell);
-                 obj[header] = textContent;
-                 return;
-              }
             }
             
-            // @ts-ignore
             let value = row[(col as any).accessorKey as keyof TData] as any;
             const dateKeys = ['startDate', 'endDate', 'date', 'vacancyStartDate', 'vacancyEndDate'];
             // @ts-ignore
