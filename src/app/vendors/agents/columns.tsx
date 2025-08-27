@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -161,11 +162,7 @@ export const columns = (onRecordPayment: (agent: Agent) => void): ColumnDef<Agen
     header: 'Associated Vendor',
     cell: ({ row }) => {
         const agent = row.original;
-        return agent.vendorCode ? (
-            <Button variant="link" asChild className="p-0 h-auto font-normal">
-                <Link href={`/vendors/add?code=${agent.vendorCode}`}>{agent.vendorName}</Link>
-            </Button>
-        ) : <span className="text-muted-foreground">N/A</span>
+        return agent.vendorName || <span className="text-muted-foreground">N/A</span>
     }
   },
   {
