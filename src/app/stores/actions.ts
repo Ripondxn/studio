@@ -161,7 +161,7 @@ export async function recordStockTransaction(data: z.infer<typeof transactionSch
     
     // This is a simplified financial integration.
     // A more robust system would create journal entries.
-    const allAccounts = await readData<Account>(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
+    const allAccounts = await readData<any>(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
     const inventoryAccountIndex = allAccounts.findIndex(a => a.code === '1140');
     const expenseAccountIndex = allAccounts.findIndex(a => a.code === '5140'); // Maintenance & Repairs
 
