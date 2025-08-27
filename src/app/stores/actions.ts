@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -85,6 +84,42 @@ export async function getStockForStore(storeId: string): Promise<StockItem[]> {
         }));
 }
 
+export async function getAggregatedStock(): Promise<any[]> {
+    const allStock = await readData<StockItem>(stockFilePath);
+    const products = await readData<Product>(productsFilePath);
+    const stores = await getStores();
+
+    const productMap = new Map(products.map(p => [p.id, p]));
+    const storeMap = new Map(stores.map(s => [s.id, s]));
+    
+    const aggregatedStock = new Map<string, any>();
+
+    for(const item of allStock) {
+        if (!productMap.has(item.productId)) continue;
+
+        if (!aggregatedStock.has(item.productId)) {
+            const product = productMap.get(item.productId)!;
+            aggregatedStock.set(item.productId, {
+                productId: item.productId,
+                itemName: product.itemName,
+                itemCode: product.itemCode,
+                totalQuantity: 0,
+                locations: [],
+            });
+        }
+
+        const aggItem = aggregatedStock.get(item.productId)!;
+        aggItem.totalQuantity += item.quantity;
+        aggItem.locations.push({
+            storeName: storeMap.get(item.storeId)?.name || 'Unknown Store',
+            quantity: item.quantity,
+        });
+    }
+
+    return Array.from(aggregatedStock.values());
+}
+
+
 export async function getProductsForSelect(): Promise<{value: string, label: string}[]> {
     const products = await readData<Product>(productsFilePath);
     return products.map(p => ({ value: p.id, label: `${p.itemName} (${p.itemCode})`}));
@@ -95,7 +130,7 @@ export async function getProductsForSelect(): Promise<{value: string, label: str
 const transactionSchema = z.object({
     storeId: z.string(),
     productId: z.string(),
-    quantity: z.number().min(1, 'Quantity must be at least 1.'),
+    quantity: z.coerce.number().min(1, 'Quantity must be at least 1.'),
     transactionType: z.enum(['IN', 'OUT']),
     notes: z.string().optional(),
     jobId: z.string().optional(),

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { AddStoreDialog } from './add-store-dialog';
 import { type Store } from './schema';
-import { getStores } from './actions';
+import { getStores, getAggregatedStock } from './actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Building, MapPin, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import {
@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { StockManagement } from './stock-management';
 import { deleteStore } from './actions';
 import { useToast } from '@/hooks/use-toast';
+import { GlobalStockView } from './global-stock-view';
 
 const StoreCard = ({ store, onEdit, onDelete }: { store: Store, onEdit: (store: Store) => void, onDelete: (storeId: string) => void }) => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -128,6 +129,10 @@ export function StoresClient({ initialStores }: { initialStores: Store[] }) {
             </Button>
         </div>
         
+        <div className="mb-8">
+            <GlobalStockView />
+        </div>
+
         {stores.length === 0 ? (
             <div className="text-center py-20 border-2 border-dashed rounded-lg">
                 <Building className="mx-auto h-12 w-12 text-muted-foreground" />
