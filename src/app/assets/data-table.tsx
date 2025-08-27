@@ -17,7 +17,7 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { FileText, FileSpreadsheet } from 'lucide-react';
+import { FileText, FileSpreadsheet, Printer } from 'lucide-react';
 
 import {
   Table,
@@ -106,6 +106,10 @@ export function DataTable<TData extends Asset, TValue>({
     XLSX.writeFile(wb, "asset-report.xlsx");
   };
 
+  const handlePrint = () => {
+    window.print();
+  }
+
   return (
     <div className="rounded-md border p-4">
       <div className="flex items-center py-4 gap-4">
@@ -126,6 +130,9 @@ export function DataTable<TData extends Asset, TValue>({
           className="max-w-sm"
         />
         <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+                <Printer className="mr-2 h-4 w-4" /> Print Report
+            </Button>
             <Button variant="outline" size="sm" onClick={handleExportPDF}>
                 <FileText className="mr-2 h-4 w-4" /> Export PDF
             </Button>
@@ -205,5 +212,3 @@ export function DataTable<TData extends Asset, TValue>({
     </div>
   );
 }
-
-    
