@@ -18,21 +18,26 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Printer } from 'lucide-react';
-import { format } from 'date-fns';
+import { Printer, Loader2 } from 'lucide-react';
+import { format, differenceInDays, parseISO } from 'date-fns';
 import { getAllContracts } from '../contract/actions';
-import { type Contract, type PaymentInstallment } from '../contract/schema';
+import { type Contract } from '../contract/schema';
+import { Input } from '@/components/ui/input';
 
 type MovementHistoryItem = {
     date: string;
     details: string;
     tenantName: string;
+    tenantCode: string;
     contractNo: string;
+    contractStartDate: string;
+    daysInPreviousLocation: number | null;
 };
 
 export default function TenantMovementHistoryPage() {
     const [history, setHistory] = useState<MovementHistoryItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [filter, setFilter] = useState('');
     const printRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -43,12 +48,28 @@ export default function TenantMovementHistoryPage() {
             allContracts.forEach(contract => {
                 const movements = contract.paymentSchedule
                     .filter(item => item.chequeNo === 'MOVEMENT')
-                    .map(item => ({
-                        date: item.dueDate,
-                        details: item.bankName || 'Unknown Movement',
-                        tenantName: contract.tenantName,
-                        contractNo: contract.contractNo,
-                    }));
+                    .map((item, index, arr) => {
+                        // Find the previous relevant date: either contract start date or the previous move date.
+                        const previousMovements = arr.slice(0, index);
+                        const lastMoveDate = previousMovements.length > 0 
+                            ? parseISO(previousMovements[previousMovements.length - 1].dueDate) 
+                            : null;
+                        
+                        const startDateOfStay = lastMoveDate || parseISO(contract.startDate);
+                        const moveOutDate = parseISO(item.dueDate);
+                        
+                        const daysStayed = differenceInDays(moveOutDate, startDateOfStay);
+
+                        return {
+                            date: item.dueDate,
+                            details: item.bankName || 'Unknown Movement',
+                            tenantName: contract.tenantName,
+                            tenantCode: contract.tenantCode || '',
+                            contractNo: contract.contractNo,
+                            contractStartDate: contract.startDate,
+                            daysInPreviousLocation: daysStayed,
+                        };
+                    });
                 allMovements.push(...movements);
             });
 
@@ -59,13 +80,22 @@ export default function TenantMovementHistoryPage() {
         fetchMovementHistory();
     }, []);
 
+    const filteredHistory = useMemo(() => {
+        const lowercasedFilter = filter.toLowerCase();
+        if (!lowercasedFilter) return history;
+        return history.filter(item => 
+            item.tenantName.toLowerCase().includes(lowercasedFilter) ||
+            item.tenantCode.toLowerCase().includes(lowercasedFilter)
+        );
+    }, [history, filter]);
+
     const handlePrint = () => {
         const printContent = printRef.current;
         if (printContent) {
         const printWindow = window.open('', '', 'height=600,width=800');
         if (printWindow) {
             printWindow.document.write('<html><head><title>Tenant Movement History</title>');
-            printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; } h1, h2 { text-align: center; } .no-print { display: none; } </style>');
+            printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; font-size: 9pt; } h1, h2 { text-align: center; } .no-print { display: none; } </style>');
             printWindow.document.write('</head><body>');
             printWindow.document.write('<h1>Global Tenant Movement History</h1>');
             printWindow.document.write(printContent.innerHTML);
@@ -79,12 +109,22 @@ export default function TenantMovementHistoryPage() {
     return (
         <div className="container mx-auto py-10">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Global Tenant Movement History</CardTitle>
-                        <CardDescription>A log of all tenant relocations across all properties.</CardDescription>
+                <CardHeader>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <CardTitle>Global Tenant Movement History</CardTitle>
+                            <CardDescription>A log of all tenant relocations across all properties.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <Input 
+                                placeholder="Filter by tenant name or code..."
+                                value={filter}
+                                onChange={(e) => setFilter(e.target.value)}
+                                className="max-w-sm"
+                            />
+                            <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print History</Button>
+                        </div>
                     </div>
-                    <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print History</Button>
                 </CardHeader>
                 <CardContent>
                     <div ref={printRef}>
@@ -93,29 +133,34 @@ export default function TenantMovementHistoryPage() {
                                 <TableRow>
                                     <TableHead>Movement Date</TableHead>
                                     <TableHead>Tenant</TableHead>
-                                    <TableHead>Contract No</TableHead>
+                                    <TableHead>Contract Start</TableHead>
                                     <TableHead>Movement Details</TableHead>
+                                    <TableHead className="text-right">Days In Previous</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
-                                            Loading movement history...
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary"/>
                                         </TableCell>
                                     </TableRow>
-                                ) : history.length > 0 ? (
-                                    history.map((item, index) => (
+                                ) : filteredHistory.length > 0 ? (
+                                    filteredHistory.map((item, index) => (
                                         <TableRow key={index}>
                                             <TableCell>{format(new Date(item.date), 'PP')}</TableCell>
-                                            <TableCell>{item.tenantName}</TableCell>
-                                            <TableCell>{item.contractNo}</TableCell>
+                                            <TableCell>
+                                                <div>{item.tenantName}</div>
+                                                <div className="text-xs text-muted-foreground">{item.tenantCode}</div>
+                                            </TableCell>
+                                            <TableCell>{format(new Date(item.contractStartDate), 'PP')}</TableCell>
                                             <TableCell>{item.details}</TableCell>
+                                            <TableCell className="text-right">{item.daysInPreviousLocation !== null ? `${item.daysInPreviousLocation} days` : 'N/A'}</TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center">
+                                        <TableCell colSpan={5} className="h-24 text-center">
                                             No movement history found.
                                         </TableCell>
                                     </TableRow>
