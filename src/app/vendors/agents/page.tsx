@@ -1,9 +1,10 @@
 
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { getAllAgents } from './actions';
-import { AgentContent } from './agents-content';
+import { AgentContent } from './agent-content';
 import { Agent } from './schema';
 
 export default async function AgentsPage() {
