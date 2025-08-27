@@ -28,6 +28,22 @@ async function writeCustomers(data: any) {
     await fs.writeFile(customersFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+async function getNextCustomerCode() {
+    const allCustomers = await getCustomers();
+    let maxNum = 0;
+    allCustomers.forEach((c: any) => {
+        const code = c.customerData.code || '';
+        const match = code.match(/^C(\d+)$/);
+        if(match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `C${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
 
 export async function getAllCustomers() {
     const customers = await getCustomers();
@@ -37,23 +53,31 @@ export async function getAllCustomers() {
     }));
 }
 
-export async function saveCustomerData(dataToSave: any, isNewRecord: boolean) {
+export async function saveCustomerData(dataToSave: any, isNewRecord: boolean, isAutoCode: boolean) {
   try {
     const allCustomers = await getCustomers();
+    let customerData = dataToSave.customerData;
+    let savedCustomer;
     
     if (isNewRecord) {
-        const { code } = dataToSave.customerData;
+        if (isAutoCode) {
+            customerData.code = await getNextCustomerCode();
+        }
+
+        const { code } = customerData;
         const customerExists = allCustomers.some((c: any) => c.customerData.code === code);
         if (customerExists) {
             return { success: false, error: `Customer with code "${code}" already exists.` };
         }
         const newCustomer = {
             id: `C${Date.now()}`,
-            ...dataToSave
+            ...dataToSave,
+            customerData,
         };
         allCustomers.push(newCustomer);
+        savedCustomer = newCustomer;
     } else {
-        const { code } = dataToSave.customerData;
+        const { code } = customerData;
         const index = allCustomers.findIndex((c: any) => c.customerData.code === code);
 
         if (index !== -1) {
@@ -62,6 +86,7 @@ export async function saveCustomerData(dataToSave: any, isNewRecord: boolean) {
                 ...dataToSave,
                 id: allCustomers[index].id
             };
+            savedCustomer = allCustomers[index];
         } else {
             return { success: false, error: `Customer with code "${code}" not found.` };
         }
@@ -70,7 +95,7 @@ export async function saveCustomerData(dataToSave: any, isNewRecord: boolean) {
     await writeCustomers(allCustomers);
     revalidatePath('/tenancy/customer');
 
-    return { success: true };
+    return { success: true, data: savedCustomer.customerData };
   } catch (error) {
     console.error('Failed to save customer data:', error);
     return { success: false, error: (error as Error).message || 'An unknown error occurred' };
@@ -82,18 +107,7 @@ export async function findCustomerData(customerCode: string) {
     const allCustomers = await getCustomers();
 
     if (customerCode === 'new') {
-        let maxNum = 0;
-        allCustomers.forEach((c: any) => {
-            const code = c.customerData.code || '';
-            const match = code.match(/^C(\d+)$/);
-            if(match) {
-                const num = parseInt(match[1], 10);
-                if (num > maxNum) {
-                    maxNum = num;
-                }
-            }
-        });
-        const newCode = `C${(maxNum + 1).toString().padStart(4, '0')}`;
+        const newCode = await getNextCustomerCode();
         return { success: true, data: { customerData: { code: newCode } } };
     }
 

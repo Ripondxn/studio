@@ -52,6 +52,7 @@ import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '../invoice/actions';
 import { type Invoice } from '../invoice/schema';
 import { PaymentReceiptList } from '../payment-receipt-list';
+import { Switch } from '@/components/ui/switch';
 
 
 type Attachment = {
@@ -76,6 +77,7 @@ export default function CustomerAddPage() {
   const [isNewRecord, setIsNewRecord] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFinding, setIsFinding] = useState(false);
+  const [isAutoCode, setIsAutoCode] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -126,11 +128,13 @@ export default function CustomerAddPage() {
             setInitialAllData(result.data);
             setIsNewRecord(false);
             setIsEditing(false);
+            setIsAutoCode(false);
             fetchInvoices(result.data.customerData.code);
         } else {
             setInitialAllData({ customerData: { ...initialCustomerData, code: result.data.customerData.code } });
             setIsNewRecord(true);
             setIsEditing(true);
+            setIsAutoCode(true);
         }
       } else {
         toast({
@@ -245,15 +249,15 @@ export default function CustomerAddPage() {
         })),
       };
 
-      const result = await saveCustomerData(dataToSave, isNewRecord);
-      if (result.success) {
+      const result = await saveCustomerData(dataToSave, isNewRecord, isAutoCode);
+      if (result.success && result.data) {
         toast({
           title: "Success",
           description: `Customer "${customerData.name}" saved successfully.`,
         });
         setIsEditing(false);
         if (isNewRecord) {
-            router.push(`/tenancy/customer/add?code=${customerData.code}`);
+            router.push(`/tenancy/customer/add?code=${result.data.code}`);
         } else {
             setInitialAllData(dataToSave);
         }
@@ -351,11 +355,17 @@ export default function CustomerAddPage() {
                     <div className="flex items-end gap-2">
                         <div className="flex-grow">
                             <Label htmlFor="code">Code</Label>
-                            <Input id="code" value={customerData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled />
+                            <Input id="code" value={customerData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={isAutoCode || !isNewRecord || !isEditing} />
                         </div>
-                        <Button variant="outline" size="icon" onClick={() => router.push('/tenancy/customer/add')} disabled={isFinding || !isNewRecord}>
-                            <Plus className="h-4 w-4" />
-                        </Button>
+                         <div className="flex items-center space-x-2 pt-6">
+                            <Switch
+                                id="auto-code-switch"
+                                checked={isAutoCode}
+                                onCheckedChange={setIsAutoCode}
+                                disabled={!isNewRecord || !isEditing}
+                            />
+                            <Label htmlFor="auto-code-switch">Auto</Label>
+                        </div>
                     </div>
                     <div>
                     <Label htmlFor="name">Name</Label>
@@ -439,7 +449,7 @@ export default function CustomerAddPage() {
                                                     disabled={!isEditing}
                                                 />
                                             )}
-                                            <Button variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
                                                 {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                             </Button>
                                         </div>
@@ -459,7 +469,7 @@ export default function CustomerAddPage() {
                                         )}
                                     </TableCell>
                                     <TableCell>
-                                    <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                     </TableCell>
@@ -467,7 +477,7 @@ export default function CustomerAddPage() {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>
