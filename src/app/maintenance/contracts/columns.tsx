@@ -129,6 +129,14 @@ export const columns: ColumnDef<MaintenanceContract>[] = [
   {
     accessorKey: 'contractNo',
     header: 'Contract No',
+    cell: ({ row }) => {
+        const contract = row.original;
+        return (
+            <Button asChild variant="link" className="p-0 h-auto font-normal">
+                <Link href={`/maintenance/contracts/add?id=${contract.id}`}>{contract.contractNo}</Link>
+            </Button>
+        )
+    }
   },
   {
     accessorKey: 'serviceType',

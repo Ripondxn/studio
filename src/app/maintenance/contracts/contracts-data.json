@@ -1,1 +1,25 @@
-[]
+[
+  {
+    "contractNo": "MC-0001",
+    "contractDate": "2025-08-02",
+    "propertyCode": "LT-C38",
+    "vendorCode": "V001",
+    "serviceType": "Chiller Maintenance",
+    "startDate": "2025-08-27",
+    "endDate": "2025-09-26",
+    "totalValue": 2500,
+    "status": "Active",
+    "paymentFrequency": "Monthly",
+    "numberOfPayments": 1,
+    "paymentSchedule": [
+      {
+        "installment": 1,
+        "dueDate": "2025-08-27",
+        "amount": 2500,
+        "status": "unpaid"
+      }
+    ],
+    "terms": "",
+    "id": "MCON-1756274936441"
+  }
+]
