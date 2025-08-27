@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React from 'react';
@@ -8,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { Building2 } from 'lucide-react';
 import { useCurrency } from '@/context/currency-context';
+import { useCompanyProfile } from '@/context/company-profile-context';
 
 interface PrintableContractProps {
   contract: Omit<MaintenanceContract, 'id'>;
@@ -20,6 +20,7 @@ interface PrintableContractProps {
 export const PrintableMaintenanceContract = React.forwardRef<HTMLDivElement, PrintableContractProps>(
   ({ contract, lookups }, ref) => {
     const { formatCurrency } = useCurrency();
+    const { profile } = useCompanyProfile();
     const vendorName = lookups.vendors.find(v => v.value === contract.vendorCode)?.label || contract.vendorCode;
     const propertyName = lookups.properties.find(p => p.value === contract.propertyCode)?.label || contract.propertyCode;
 
@@ -28,10 +29,10 @@ export const PrintableMaintenanceContract = React.forwardRef<HTMLDivElement, Pri
         <header className="flex justify-between items-start pb-6 mb-6 border-b">
             <div className="flex items-center gap-4">
                 <div className="p-3 bg-primary/10 text-primary rounded-lg">
-                    <Building2 className="h-8 w-8" />
+                    {profile.logo ? <img src={profile.logo} alt="Company Logo" className="h-8 w-8 object-contain"/> : <Building2 className="h-8 w-8" />}
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800">Trust Famous Real Estate</h1>
+                    <h1 className="text-3xl font-bold text-gray-800">{profile.name}</h1>
                     <p className="text-sm text-gray-500">Maintenance Service Contract</p>
                 </div>
             </div>
@@ -98,7 +99,7 @@ export const PrintableMaintenanceContract = React.forwardRef<HTMLDivElement, Pri
 
         <footer className="mt-16 pt-8 grid grid-cols-2 gap-8 text-center text-xs text-gray-600">
              <div className="border-t border-gray-400 pt-2">
-                <p className="font-semibold">For Trust Famous Real Estate</p>
+                <p className="font-semibold">For {profile.name}</p>
             </div>
             <div className="border-t border-gray-400 pt-2">
                 <p className="font-semibold">For Vendor</p>

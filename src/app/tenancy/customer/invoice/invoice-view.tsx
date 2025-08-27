@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { type Invoice } from './schema';
@@ -7,21 +6,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { Building2 } from 'lucide-react';
 import { useCurrency } from '@/context/currency-context';
+import { useCompanyProfile } from '@/context/company-profile-context';
 
 export function InvoiceView({ invoice }: { invoice: Invoice }) {
     const { formatCurrency } = useCurrency();
+    const { profile } = useCompanyProfile();
 
     return (
         <div className="p-8 bg-white text-black max-w-4xl mx-auto my-4 border rounded-sm shadow-sm">
             <header className="flex justify-between items-start pb-6 mb-6 border-b">
                 <div className="flex items-center gap-4">
                      <div className="p-3 bg-primary/10 text-primary rounded-lg">
-                        <Building2 className="h-8 w-8" />
+                        {profile.logo ? <img src={profile.logo} alt="Company Logo" className="h-8 w-8 object-contain"/> : <Building2 className="h-8 w-8" />}
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Trust Famous Real Estate</h1>
-                        <p className="text-sm text-gray-500">123 Business Rd, Suite 100, City, State 12345</p>
-                        <p className="text-sm text-gray-500">contact@yourcompany.com</p>
+                        <h1 className="text-3xl font-bold text-gray-800">{profile.name}</h1>
+                        <p className="text-sm text-gray-500">{profile.address}</p>
+                        <p className="text-sm text-gray-500">{profile.email}</p>
                     </div>
                 </div>
                 <div className="text-right">
@@ -34,7 +35,7 @@ export function InvoiceView({ invoice }: { invoice: Invoice }) {
                 <div>
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Bill To</h3>
                     <p className="font-bold text-gray-800">{invoice.customerName}</p>
-                    <p className="text-sm text-gray-600">{/* Customer Address would go here */}</p>
+                    {/* Add more customer details if needed */}
                 </div>
                 <div className="text-right">
                      <div className="mb-2">
@@ -103,7 +104,7 @@ export function InvoiceView({ invoice }: { invoice: Invoice }) {
 
             <footer className="mt-16 pt-4 border-t text-center text-xs text-gray-500">
                 <p>Thank you for your business!</p>
-                 <p>Please make all payments to "Your Company Name".</p>
+                 <p>Please make all payments to "{profile.name}".</p>
             </footer>
         </div>
     )

@@ -131,6 +131,8 @@ const navLinks = [
         label: 'Settings', 
         icon: <Settings />,
         subItems: [
+            { href: '/admin/profile', label: 'User Profile' },
+            { href: '/admin/company-profile', label: 'Company Profile' },
             { href: '/admin/user-roles', label: 'User Roles' },
             { href: '/admin/communication', label: 'Communication' },
             { href: '/admin/backup', label: 'Backup & Restore' },
@@ -211,7 +213,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isMobile]);
 
   React.useEffect(() => {
-    if (pathname === '/login') return;
+    if (pathname === '/login' || pathname.startsWith('/pay')) return;
 
     try {
       const storedProfile = sessionStorage.getItem('userProfile');
@@ -232,7 +234,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  if (pathname === '/login' || !userProfile) {
+  if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile) {
     return <>{children}</>;
   }
   
@@ -304,7 +306,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild><Link href="/admin/profile">Profile</Link></DropdownMenuItem>
-                            <DropdownMenuItem>Settings</DropdownMenuItem>
+                            <DropdownMenuItem asChild><Link href="/admin/company-profile">Company Profile</Link></DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={handleLogout}>
                                 <LogOut className="mr-2 h-4 w-4" />

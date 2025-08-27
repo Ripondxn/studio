@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/table';
 import { Building2 } from 'lucide-react';
 import { useCurrency } from '@/context/currency-context';
+import { useCompanyProfile } from '@/context/company-profile-context';
 
 interface PrintablePaymentHistoryProps {
   payments: Payment[];
@@ -26,6 +27,7 @@ interface PrintablePaymentHistoryProps {
 export const PrintablePaymentHistory = React.forwardRef<HTMLDivElement, PrintablePaymentHistoryProps>(
   ({ payments, invoices, customerName }, ref) => {
     const { formatCurrency } = useCurrency();
+    const { profile } = useCompanyProfile();
     
     const paymentsByInvoice = payments.reduce((acc, p) => {
         if (p.invoiceAllocations && p.invoiceAllocations.length > 0) {
@@ -59,10 +61,10 @@ export const PrintablePaymentHistory = React.forwardRef<HTMLDivElement, Printabl
             <header className="flex justify-between items-start pb-6 mb-6 border-b border-gray-300">
                 <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary/10 text-primary rounded-lg">
-                        <Building2 className="h-8 w-8" />
+                         {profile.logo ? <img src={profile.logo} alt="Company Logo" className="h-8 w-8 object-contain"/> : <Building2 className="h-8 w-8" />}
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-800">Trust Famous Real Estate</h1>
+                        <h1 className="text-2xl font-bold text-gray-800">{profile.name}</h1>
                         <p className="text-xs text-gray-500">Statement of Account</p>
                     </div>
                 </div>
