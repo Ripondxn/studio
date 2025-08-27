@@ -686,12 +686,6 @@ export default function TenancyContractPage() {
                                             <SelectItem value="Cancel">Cancel</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                     {contract.periodStatus === 'Orphaned' && (
-                                        <p className="text-xs text-amber-600 flex gap-1 items-center mt-1">
-                                            <AlertCircle className="h-3 w-3" />
-                                            This is an orphaned renewal. Change status to "New" to fix.
-                                        </p>
-                                    )}
                                 </div>
                             </div>
                         </CardContent>

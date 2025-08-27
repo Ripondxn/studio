@@ -12,7 +12,7 @@ import { type Floor } from '@/app/property/floors/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { addCheque } from '@/app/finance/cheque-deposit/actions';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, addDays } from 'date-fns';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
@@ -54,61 +54,7 @@ async function writeContracts(data: Contract[]) {
 
 export async function getAllContracts() {
     const contracts = await readContracts();
-    return processContracts(contracts);
-}
-
-function processContracts(contracts: Contract[]): Contract[] {
-    const contractsByTenant = new Map<string, Contract[]>();
-
-    for (const contract of contracts) {
-        if (!contract.tenantCode) continue;
-        if (!contractsByTenant.has(contract.tenantCode)) {
-            contractsByTenant.set(contract.tenantCode, []);
-        }
-        contractsByTenant.get(contract.tenantCode)!.push(contract);
-    }
-    
-    const processedContracts: Contract[] = [];
-
-    for (const tenantContracts of contractsByTenant.values()) {
-        const sortedContracts = tenantContracts.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-
-        for (let i = 0; i < sortedContracts.length; i++) {
-            const current = sortedContracts[i];
-            const previous = i > 0 ? sortedContracts[i - 1] : null;
-
-            if (!previous) {
-                 if (current.status === 'Renew') {
-                    current.periodStatus = 'Orphaned';
-                } else {
-                    current.periodStatus = 'OK';
-                }
-            } else {
-                const prevEndDate = parseISO(previous.endDate);
-                const currStartDate = parseISO(current.startDate);
-                const daysDiff = differenceInDays(currStartDate, prevEndDate);
-
-                if (daysDiff === 1) {
-                    current.periodStatus = 'OK';
-                } else if (daysDiff > 1) {
-                    current.periodStatus = 'Gap';
-                } else { // daysDiff <= 0
-                    current.periodStatus = 'Overlap';
-                }
-            }
-             processedContracts.push(current);
-        }
-    }
-    
-    // Add back contracts without tenant codes
-    const contractsWithTenantCode = new Set(processedContracts.map(c => c.id));
-    contracts.forEach(c => {
-        if(!c.tenantCode) {
-            processedContracts.push(c);
-        }
-    });
-
-    return processedContracts.sort((a,b) => a.contractNo.localeCompare(b.contractNo));
+    return contracts.sort((a,b) => a.contractNo.localeCompare(b.contractNo));
 }
 
 
@@ -149,19 +95,6 @@ export async function saveContractData(data: Omit<Contract, 'id'> & { id?: strin
     try {
         const allContracts = await readContracts();
         const validatedData = validation.data;
-        
-        // Prevent creating orphaned "Renew" contracts
-        if (validatedData.status === 'Renew') {
-            const otherContractsForTenant = allContracts.filter(
-                c => c.tenantCode === validatedData.tenantCode && c.id !== data.id
-            );
-            if (otherContractsForTenant.length === 0) {
-                return {
-                    success: false,
-                    error: 'Cannot create a "Renew" contract for a tenant with no prior contracts. Please set status to "New".'
-                };
-            }
-        }
         
         let savedContract: Contract;
         
@@ -242,9 +175,7 @@ export async function findContract(query: { unitCode?: string, tenantName?: stri
         }
 
         if (foundContract) {
-            const processedContracts = processContracts(allContracts);
-            const finalContractData = processedContracts.find(c => c.id === foundContract!.id);
-            return { success: true, data: finalContractData };
+            return { success: true, data: foundContract };
         } else {
             return { success: false, error: 'Contract not found.' };
         }

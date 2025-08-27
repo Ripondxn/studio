@@ -77,7 +77,6 @@ export const featurePermissions: FeaturePermission[] = [
         { action: 'communication', description: 'Manage communication (Email/SMS) settings', allowedRoles: ['Super Admin', 'Admin'] },
         { action: 'backup', description: 'Manage data backup and restore', allowedRoles: ['Super Admin'] },
         { action: 'notifications', description: 'Send system-wide notifications', allowedRoles: ['Super Admin', 'Admin'] },
-        { action: 'contract_continuity', description: 'Review and fix contract data issues', allowedRoles: ['Super Admin'] },
     ]
   }
 ];

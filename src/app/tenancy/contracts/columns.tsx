@@ -189,13 +189,6 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
   Cancel: 'destructive',
 };
 
-const continuityStatusConfig = {
-    'OK': { label: 'OK', className: 'bg-green-500/20 text-green-700', icon: <CheckCircle className="h-3 w-3" /> },
-    'Gap': { label: 'Gap', className: 'bg-yellow-500/20 text-yellow-700', icon: <AlertTriangle className="h-3 w-3" /> },
-    'Overlap': { label: 'Overlap', className: 'bg-red-500/20 text-red-700', icon: <AlertTriangle className="h-3 w-3" /> },
-    'Orphaned': { label: 'Orphaned', className: 'bg-purple-500/20 text-purple-700', icon: <HelpCircle className="h-3 w-3" /> },
-}
-
 export const columns: ColumnDef<Contract>[] = [
   {
     id: 'select',
@@ -274,16 +267,6 @@ export const columns: ColumnDef<Contract>[] = [
         }
         
         return <Badge variant={statusVariantMap[status] || 'default'} className="capitalize">{statusText}</Badge>;
-    }
-  },
-  {
-    accessorKey: 'periodStatus',
-    header: 'Continuity',
-    cell: ({ row }) => {
-        const status = row.original.periodStatus;
-        if (!status) return null;
-        const config = continuityStatusConfig[status];
-        return <Badge variant="outline" className={cn('gap-1 border-transparent', config.className)}>{config.icon}{config.label}</Badge>;
     }
   },
   {

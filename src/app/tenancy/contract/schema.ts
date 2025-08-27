@@ -41,7 +41,6 @@ export const contractSchema = z.object({
   tawtheeqRegistrationNo: z.string().optional(),
   tawtheeqStatus: z.enum(['Not Registered', 'Under Process', 'Registered']).optional(),
   tawtheeqRegistrationDate: z.string().optional(),
-  periodStatus: z.enum(['OK', 'Gap', 'Overlap', 'Orphaned']).optional(),
 });
 
 export type PaymentInstallment = z.infer<typeof paymentInstallmentSchema>;
