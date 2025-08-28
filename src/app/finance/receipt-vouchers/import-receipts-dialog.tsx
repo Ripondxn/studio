@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -50,8 +51,8 @@ export function ImportReceiptsDialog({ onDataImport }: ImportReceiptsDialogProps
         const json = XLSX.utils.sheet_to_json(worksheet) as any[];
         
         if (json.length > 0) {
-            const headers = Object.keys(json[0]);
-            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+            const headers = Object.keys(json[0]).map(h => h.toLowerCase());
+            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h.toLowerCase()));
             if (missingHeaders.length > 0) {
                 toast({ variant: 'destructive', title: 'Invalid File Format', description: `Missing required columns: ${missingHeaders.join(', ')}`});
                 return;
