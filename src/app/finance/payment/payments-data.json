@@ -130,5 +130,32 @@
         "comments": "Initial status set to DRAFT"
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T182",
+    "amount": 1900,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "referenceType": "Receipt Book",
+    "referenceNo": "002-3252",
+    "description": "Payment for Receipt Book: Book: 002, Receipt: 3252",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "invoiceAllocations": [],
+    "billAllocations": [],
+    "id": "PAY-1756369411527",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T08:23:31.527Z",
+        "comments": "Initial status set to DRAFT"
+      }
+    ]
   }
 ]

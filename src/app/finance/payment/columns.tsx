@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, User, Building, Wrench, Edit, Trash2, X } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, User, Building, Wrench, Edit, Trash2, X, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   AlertDialog,
@@ -46,10 +46,11 @@ const partyTypeConfig: {
   'Landlord': { icon: <Building className="h-3 w-3" /> },
   'Vendor': { icon: <Wrench className="h-3 w-3" /> },
   'Customer': { icon: <User className="h-3 w-3" /> },
+  'Agent': { icon: <User className="h-3 w-3" /> },
 };
 
 
-const ActionsCell = ({ row }: { row: { original: Payment } }) => {
+const ActionsCell = ({ row, onEdit }: { row: { original: Payment }, onEdit: (payment: Payment) => void; }) => {
     const payment = row.original;
     const { toast } = useToast();
     const router = useRouter();
@@ -112,6 +113,11 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
         // Allow cancelling posted transactions, but permanent deletion only for drafts
         return payment.currentStatus !== 'POSTED';
     }
+
+    const canEdit = (): boolean => {
+        if (currentUserRole === 'Super Admin') return true;
+        return payment.currentStatus === 'DRAFT';
+    }
     
     return (
         <>
@@ -144,7 +150,7 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onSelect={() => alert('Edit functionality coming soon!')} disabled={payment.currentStatus !== 'DRAFT'}>
+                    <DropdownMenuItem onSelect={() => onEdit(payment)} disabled={!canEdit()}>
                         <Edit className="mr-2 h-4 w-4"/> Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -162,7 +168,7 @@ const ActionsCell = ({ row }: { row: { original: Payment } }) => {
     )
 }
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns = ({ onEdit }: { onEdit: (payment: Payment) => void }): ColumnDef<Payment>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -261,6 +267,6 @@ export const columns: ColumnDef<Payment>[] = [
   },
   {
     id: 'actions',
-    cell: ActionsCell,
+    cell: ({ row }) => <ActionsCell row={row} onEdit={onEdit} />,
   },
 ];

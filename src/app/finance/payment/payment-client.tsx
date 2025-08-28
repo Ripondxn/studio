@@ -35,6 +35,9 @@ export function PaymentsClient() {
   const accountIdFilter = searchParams.get('accountId');
   const router = useRouter();
   const { toast } = useToast();
+  
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
   useEffect(() => {
     try {
@@ -101,6 +104,20 @@ export function PaymentsClient() {
     });
   }, [payments, accountIdFilter]);
 
+  const handleAddPayment = () => {
+    setSelectedPayment(null);
+    setIsPaymentDialogOpen(true);
+  }
+
+  const handleEditPayment = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setIsPaymentDialogOpen(true);
+  }
+  
+  const handlePaymentAdded = () => {
+    refreshData();
+  }
+
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -111,11 +128,9 @@ export function PaymentsClient() {
             </p>
         </div>
         <div className="flex items-center gap-2">
-            <AddPaymentDialog onPaymentAdded={refreshData}>
-              <Button>
+            <Button onClick={handleAddPayment}>
                 <Receipt className="mr-2 h-4 w-4" /> Record New Payment
-              </Button>
-            </AddPaymentDialog>
+            </Button>
             <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
                 <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
@@ -150,8 +165,15 @@ export function PaymentsClient() {
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </div>
       ) : (
-        <DataTable columns={columns} data={filteredPayments} />
+        <DataTable columns={columns({onEdit: handleEditPayment})} data={filteredPayments} />
       )}
+      
+       <AddPaymentDialog
+        isOpen={isPaymentDialogOpen}
+        setIsOpen={setIsPaymentDialogOpen}
+        defaultValues={selectedPayment || undefined}
+        onPaymentAdded={handlePaymentAdded}
+      />
     </div>
   );
 }
