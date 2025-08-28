@@ -32,7 +32,7 @@
         "installment": 2,
         "dueDate": "2025-09-28",
         "amount": 1000,
-        "status": "paid",
+        "status": "unpaid",
         "chequeNo": "12346",
         "bankName": "abc"
       },

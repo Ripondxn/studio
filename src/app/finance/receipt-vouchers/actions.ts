@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache';
 import { receiptVoucherSchema, type ReceiptVoucher } from './schema';
 import { type ReceiptBook } from '@/app/finance/book-management/schema';
 import { type UserRole } from '@/app/admin/user-roles/schema';
-import { addPayment } from '../payment/actions';
+import { addPayment, deletePayment } from '../payment/actions';
 import { type Contract } from '@/app/tenancy/contract/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { type Property } from '@/app/property/properties/list/schema';
@@ -24,6 +24,7 @@ const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invo
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
+const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 
 
 async function readData<T>(filePath: string, defaultValue: T[] = []): Promise<T[]> {
@@ -45,7 +46,8 @@ async function writeVouchers(data: ReceiptVoucher[]) {
 }
 
 export async function getReceiptVouchers(): Promise<ReceiptVoucher[]> {
-    return await readData<ReceiptVoucher>(vouchersFilePath, []);
+    const vouchers = await readData<ReceiptVoucher>(vouchersFilePath, []);
+    return vouchers.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export async function getReceiptVoucherLookups() {
@@ -151,6 +153,57 @@ export async function saveReceiptVoucherBatch(data: z.infer<typeof batchFormSche
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+async function reverseReceiptBookUsage(receiptNo: string) {
+    try {
+        const books = await readData<ReceiptBook>(receiptBooksFilePath);
+        const [bookNo] = receiptNo.split('-');
+        if (!bookNo) return;
+
+        const bookIndex = books.findIndex(b => b.bookNo === bookNo);
+        if (bookIndex !== -1) {
+            books[bookIndex].leafsUsed = Math.max(0, (books[bookIndex].leafsUsed || 0) - 1);
+            if (books[bookIndex].status === 'Finished') {
+                books[bookIndex].status = 'Active';
+            }
+            await fs.writeFile(receiptBooksFilePath, JSON.stringify(books, null, 2), 'utf-8');
+        }
+    } catch (error) {
+        console.error(`Failed to reverse receipt book usage for receipt #${receiptNo}`, error);
+    }
+}
+
+
+export async function deleteReceiptVoucher(voucherId: string) {
+    const allVouchers = await getReceiptVouchers();
+    const voucherToDelete = allVouchers.find(v => v.id === voucherId);
+    
+    if (!voucherToDelete) {
+        return { success: false, error: "Receipt voucher not found." };
+    }
+
+    const allPayments = await readData<Payment>(paymentsFilePath);
+    const associatedPayment = allPayments.find(p => p.referenceNo === voucherToDelete.receiptNo);
+
+    if (associatedPayment) {
+        const deleteResult = await deletePayment(associatedPayment.id!);
+        if (!deleteResult.success) {
+            return { success: false, error: `Could not delete associated payment: ${deleteResult.error}` };
+        }
+    }
+    
+    await reverseReceiptBookUsage(voucherToDelete.receiptNo);
+
+    const updatedVouchers = allVouchers.filter(v => v.id !== voucherId);
+    await writeVouchers(updatedVouchers);
+
+    revalidatePath('/finance/receipt-vouchers');
+    revalidatePath('/finance/payment');
+    revalidatePath('/finance/book-management');
+
+    return { success: true };
+}
+
 
 export async function getDueAmountForParty(partyType: 'Tenant' | 'Customer', partyCode: string) {
     let totalDue = 0;
