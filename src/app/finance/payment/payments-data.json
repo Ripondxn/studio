@@ -190,5 +190,34 @@
         "comments": "Initial status set to POSTED"
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 3000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "bankAccountId": "",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "referenceType": "Receipt Book",
+    "referenceNo": "002-3270",
+    "description": "Payment received via Receipt Voucher #002-3270. Collected by Shakil.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756409618235",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T19:33:38.236Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ]
   }
 ]

@@ -5,9 +5,12 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { type Payment } from '../finance/payment/schema';
+import { z } from 'zod';
+import { vendorSchema, type Vendor } from './schema';
 
 const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+
 
 async function getVendors() {
     try {
@@ -163,4 +166,48 @@ export async function getPaymentsForVendor(vendorCode: string): Promise<Payment[
         console.error('Failed to get payments for vendor:', error);
         return [];
     }
+}
+
+const importVendorSchema = vendorSchema.omit({ id: true, attachments: true });
+
+export async function importVendors(data: unknown) {
+  const validation = z.array(importVendorSchema).safeParse(data);
+  if (!validation.success) {
+    return { success: false, error: "Invalid data format." };
+  }
+
+  try {
+    const allVendors = await getVendors();
+    let updatedCount = 0;
+    let addedCount = 0;
+
+    validation.data.forEach(importedVendor => {
+      const existingVendorIndex = allVendors.findIndex(
+        (v: any) => v.vendorData.code === importedVendor.code
+      );
+
+      if (existingVendorIndex > -1) {
+        // Update existing vendor
+        allVendors[existingVendorIndex].vendorData = {
+          ...allVendors[existingVendorIndex].vendorData,
+          ...importedVendor,
+        };
+        updatedCount++;
+      } else {
+        // Add new vendor
+        allVendors.push({
+          id: `V-${Date.now()}-${Math.random()}`.replace('.', ''),
+          vendorData: importedVendor,
+          attachments: [],
+        });
+        addedCount++;
+      }
+    });
+
+    await writeVendors(allVendors);
+    revalidatePath('/vendors');
+    return { success: true, added: addedCount, updated: updatedCount };
+  } catch (error) {
+    return { success: false, error: "Failed to import vendors." };
+  }
 }
