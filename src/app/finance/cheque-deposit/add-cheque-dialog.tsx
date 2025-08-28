@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -44,6 +45,9 @@ type ContractLookup = {
 type Lookups = {
     tenants: { value: string, label: string, contractNo?: string }[];
     landlords: { value: string, label: string }[];
+    vendors: { value: string, label: string }[];
+    agents: { value: string, label: string }[];
+    customers: { value: string, label: string }[];
     tenancyContracts: ContractLookup[];
     leaseContracts: ContractLookup[];
     units: { value: string, label: string, propertyCode: string }[];
@@ -54,7 +58,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], tenancyContracts: [], leaseContracts: [], units: [], rooms: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], agents: [], customers: [], tenancyContracts: [], leaseContracts: [], units: [], rooms: [] });
   const { formatCurrency } = useCurrency();
 
   const {
@@ -74,6 +78,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
         bankName: '',
         status: 'In Hand',
         type: 'Incoming',
+        partyType: 'Tenant',
         partyName: '',
         property: '',
         unitCode: '',
@@ -91,12 +96,19 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
   }, [isOpen, reset]);
   
   const chequeType = watch('type');
+  const partyType = watch('partyType');
   const selectedContractNo = watch('contractNo');
   const selectedPartyName = watch('partyName');
   const selectedProperty = watch('property');
 
-  const contractOptions = chequeType === 'Incoming' ? lookups.tenancyContracts : lookups.leaseContracts;
-  const partyOptions = chequeType === 'Incoming' ? lookups.tenants : lookups.landlords;
+  const contractOptions = partyType === 'Tenant' ? lookups.tenancyContracts : partyType === 'Landlord' ? lookups.leaseContracts : [];
+  const partyOptions = {
+      'Tenant': lookups.tenants,
+      'Landlord': lookups.landlords,
+      'Customer': lookups.customers,
+      'Vendor': lookups.vendors,
+      'Agent': lookups.agents,
+  }[partyType] || [];
   
   const filteredContracts = contractOptions.filter(c => c.partyName === selectedPartyName);
   const filteredUnits = lookups.units.filter(u => u.propertyCode === selectedProperty);
@@ -152,6 +164,15 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
     }
     setIsSaving(false);
   };
+  
+  const handleTypeChange = (type: 'Incoming' | 'Outgoing') => {
+    setValue('type', type);
+    if(type === 'Incoming') setValue('partyType', 'Tenant');
+    if(type === 'Outgoing') setValue('partyType', 'Landlord');
+    setValue('partyName', '');
+    setValue('contractNo', '');
+    setValue('property', '');
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -169,33 +190,52 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
             </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
-                
-                <div className="space-y-2">
-                    <Label>Cheque Type</Label>
-                    <Controller
-                        name="type"
-                        control={control}
-                        render={({ field }) => (
-                            <Select onValueChange={(value) => {
-                                field.onChange(value);
-                                setValue('partyName', '');
-                                setValue('contractNo', '');
-                                setValue('property', '');
-                                setValue('unitCode', '');
-                                setValue('roomCode', '');
-                            }} value={field.value}>
-                                <SelectTrigger><SelectValue/></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Incoming">Incoming (from Tenant)</SelectItem>
-                                    <SelectItem value="Outgoing">Outgoing (to Landlord)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        )} />
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Cheque Type</Label>
+                        <Controller
+                            name="type"
+                            control={control}
+                            render={({ field }) => (
+                                <Select onValueChange={(value: 'Incoming' | 'Outgoing') => handleTypeChange(value)} value={field.value}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Incoming">Incoming</SelectItem>
+                                        <SelectItem value="Outgoing">Outgoing</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Party Type</Label>
+                        <Controller
+                            name="partyType"
+                            control={control}
+                            render={({ field }) => (
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        {chequeType === 'Incoming' ? (
+                                            <>
+                                                <SelectItem value="Tenant">Tenant</SelectItem>
+                                                <SelectItem value="Customer">Customer</SelectItem>
+                                            </>
+                                        ) : (
+                                            <>
+                                                 <SelectItem value="Landlord">Landlord</SelectItem>
+                                                 <SelectItem value="Vendor">Vendor</SelectItem>
+                                                 <SelectItem value="Agent">Agent</SelectItem>
+                                            </>
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            )} />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div className="space-y-2">
-                        <Label htmlFor="partyName">{chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}</Label>
+                        <Label htmlFor="partyName">{partyType}</Label>
                         <Controller
                             name="partyName"
                             control={control}
@@ -208,7 +248,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                                         setValue('contractNo', '');
                                         setValue('property', '');
                                     }}
-                                    placeholder={`Select ${chequeType === 'Incoming' ? 'Tenant' : 'Landlord'}`}
+                                    placeholder={`Select ${partyType}`}
                                 />
                             )}
                         />
@@ -225,7 +265,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                                     value={field.value}
                                     onSelect={handleContractSelect}
                                     placeholder="Select Contract"
-                                    disabled={!selectedPartyName}
+                                    disabled={!selectedPartyName || contractOptions.length === 0}
                                 />
                             )}
                         />

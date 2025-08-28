@@ -10,7 +10,8 @@ export const chequeSchema = z.object({
   bankName: z.string().min(1, "Bank name is required."),
   status: z.enum(['In Hand', 'Deposited', 'Cleared', 'Bounced', 'Cancelled', 'Returned', 'Returned with Cash']),
   type: z.enum(['Incoming', 'Outgoing']),
-  partyName: z.string().min(1, "Party name is required."), // Tenant or Landlord name
+  partyType: z.enum(['Tenant', 'Landlord', 'Customer', 'Vendor', 'Agent']),
+  partyName: z.string().min(1, "Party name is required."),
   property: z.string().optional(),
   unitCode: z.string().optional(),
   roomCode: z.string().optional(),

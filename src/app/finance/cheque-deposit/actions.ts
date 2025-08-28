@@ -19,10 +19,16 @@ import { type Unit } from '@/app/property/units/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 import { applyFinancialImpact } from '@/app/workflow/actions';
+import { type Customer } from '@/app/tenancy/customer/schema';
+import { type Vendor } from '@/app/vendors/schema';
+import { type Agent } from '@/app/vendors/agents/schema';
 
 const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
+const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
+const agentsFilePath = path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json');
+const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
 const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
@@ -86,7 +92,7 @@ async function writePayments(data: Payment[]) {
 
 export async function getCheques() {
     const cheques = await readCheques();
-    return cheques.sort((a,b) => new Date(b.chequeDate).getTime() - new Date(a.date).getTime());
+    return cheques.sort((a,b) => new Date(b.chequeDate).getTime() - new Date(a.chequeDate).getTime());
 }
 
 export async function addCheque(data: Omit<Cheque, 'id'>) {
@@ -154,9 +160,9 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
         allCheques[chequeIndex] = updatedCheque;
         
         const basePayment: Omit<Payment, 'id'> = {
-            type: 'Receipt',
+            type: originalCheque.type === 'Incoming' ? 'Receipt' : 'Payment',
             date: date,
-            partyType: originalCheque.type === 'Incoming' ? 'Tenant' : 'Landlord',
+            partyType: originalCheque.partyType,
             partyName: originalCheque.partyName,
             amount: originalCheque.amount,
             property: originalCheque.property,
@@ -193,7 +199,6 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
             newPayment = {
                 ...basePayment,
                 id: `PAY-${Date.now()}`,
-                type: originalCheque.type === 'Incoming' ? 'Receipt' : 'Payment',
                 paymentMethod: 'Cheque',
                 bankAccountId: bankAccountId,
                 paymentFrom: 'Bank',
@@ -256,6 +261,9 @@ export async function deleteCheque(chequeId: string) {
 export async function getLookups() {
     const tenants: {tenantData: Tenant}[] = await fs.readFile(tenantsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const landlords: {landlordData: Landlord}[] = await fs.readFile(landlordsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const vendors: {vendorData: Vendor}[] = await fs.readFile(vendorsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const agents: Agent[] = await fs.readFile(agentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+    const customers: {customerData: Customer}[] = await fs.readFile(customersFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const tenancyContracts: TenancyContract[] = await fs.readFile(tenancyContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const leaseContracts: LeaseContract[] = await fs.readFile(leaseContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
     const bankAccounts: BankAccount[] = await fs.readFile(bankAccountsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
@@ -276,6 +284,9 @@ export async function getLookups() {
     return {
         tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
         landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
+        vendors: vendors.map(v => ({ value: v.vendorData.name, label: v.vendorData.name })),
+        agents: agents.map(a => ({ value: a.name, label: a.name })),
+        customers: customers.map(c => ({ value: c.customerData.name, label: c.customerData.name })),
         tenancyContracts: tenancyContracts.map(c => ({ 
             value: c.contractNo, 
             label: c.contractNo, 
@@ -473,7 +484,7 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
                     id: `PAY-${Date.now()}-${cheque.id}`,
                     type: 'Payment',
                     date: format(new Date(), 'yyyy-MM-dd'),
-                    partyType: 'Tenant', // Assuming return is always to tenant
+                    partyType: cheque.partyType,
                     partyName: cheque.partyName,
                     amount: cheque.amount,
                     paymentMethod: 'Cash',
@@ -504,7 +515,7 @@ export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }
                     id: `PAY-${Date.now()}-${cheque.id}`,
                     type: 'Payment',
                     date: format(new Date(), 'yyyy-MM-dd'),
-                    partyType: 'Tenant', // Assuming return is always to tenant
+                    partyType: cheque.partyType,
                     partyName: cheque.partyName,
                     amount: cheque.amount,
                     paymentMethod: 'Cash', // Or another appropriate method
