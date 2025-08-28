@@ -10,6 +10,7 @@ import { Unit } from '@/app/property/units/schema';
 import { DashboardClient } from './dashboard-client';
 import { type LeaseContract } from '@/app/lease/contract/schema';
 import { type Cheque } from '@/app/finance/cheque-deposit/schema';
+import { getBankAccounts } from '@/app/finance/banking/actions';
 
 async function getExpiryReport() {
     const contracts = await getAllContracts();
@@ -125,12 +126,14 @@ export default async function DashboardPage() {
     const dashboardData = await getDashboardData();
     const expiringContracts = await getExpiryReport();
     const vacantUnits = await getVacantUnits();
+    const bankAccounts = await getBankAccounts();
 
     return (
         <DashboardClient
             initialDashboardData={dashboardData}
             initialExpiringContracts={expiringContracts}
             initialVacantUnits={vacantUnits}
+            initialBankAccounts={bankAccounts}
         />
     );
 }

@@ -30,6 +30,8 @@ import {
   UserSquare,
   ArrowUp,
   Move,
+  Landmark,
+  Wallet
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -38,21 +40,24 @@ import { Unit } from '@/app/property/units/schema';
 import { SendRenewalDialogWrapper } from '@/components/send-renewal-dialog-wrapper';
 import { type Cheque } from '@/app/finance/cheque-deposit/schema';
 import { useCurrency } from '@/context/currency-context';
+import { type BankAccount } from '@/app/finance/banking/schema';
+import { Separator } from '@/components/ui/separator';
 
 
 type DashboardClientProps = {
     initialDashboardData: any;
     initialExpiringContracts: Contract[];
     initialVacantUnits: Unit[];
+    initialBankAccounts: BankAccount[];
 };
 
-export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialVacantUnits }: DashboardClientProps) {
+export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialVacantUnits, initialBankAccounts }: DashboardClientProps) {
   const [expiringCurrentPage, setExpiringCurrentPage] = useState(1);
   const [vacantCurrentPage, setVacantCurrentPage] = useState(1);
   const [landlordPaymentsPage, setLandlordPaymentsPage] = useState(1);
   const { formatCurrency } = useCurrency();
 
-  const expiringItemsPerPage = 10;
+  const expiringItemsPerPage = 5;
   const vacantItemsPerPage = 5;
   const landlordPaymentsItemsPerPage = 5;
 
@@ -70,6 +75,8 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     upcomingLandlordPayments,
   } = initialDashboardData;
   
+  const totalBalance = initialBankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+
   // Pagination for expiring contracts
   const expiringTotalPages = Math.ceil(initialExpiringContracts.length / expiringItemsPerPage);
   const paginatedExpiringContracts = initialExpiringContracts.slice(
@@ -158,115 +165,63 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
           </Card>
         ))}
       </div>
-      <div className="grid gap-6 md:grid-cols-2">
-           <Card>
-              <CardHeader>
-                <CardTitle>Tenancy Expiry Report (Next 30 Days)</CardTitle>
-                <CardDescription>
-                  Contracts that are due for renewal soon.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Unit</TableHead>
-                      <TableHead>Tenant</TableHead>
-                      <TableHead className="text-right">Days Remaining</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedExpiringContracts.map((item) => (
-                      <TableRow key={item.contractNo}>
-                        <TableCell>{item.unitCode}</TableCell>
-                        <TableCell>{item.tenantName}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant="destructive">{differenceInDays(parseISO(item.endDate), new Date())} days</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-               <CardFooter className="flex justify-end items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setExpiringCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={expiringCurrentPage === 1}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                        Page {expiringCurrentPage} of {expiringTotalPages}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setExpiringCurrentPage(prev => Math.min(prev + 1, expiringTotalPages))}
-                        disabled={expiringCurrentPage === expiringTotalPages}
-                    >
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-              </CardFooter>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Unit Vacant List</CardTitle>
-                <CardDescription>
-                  A list of all currently available units.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Property</TableHead>
-                      <TableHead>Unit</TableHead>
-                      <TableHead className="text-right">Annual Rent</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedVacantUnits.map((item) => (
-                      <TableRow key={`${item.propertyCode}-${item.unitCode}`}>
-                        <TableCell>{item.propertyCode}</TableCell>
-                        <TableCell>{item.unitCode}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.annualRent)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-              <CardFooter className="flex justify-end items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setVacantCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={vacantCurrentPage === 1}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                        Page {vacantCurrentPage} of {vacantTotalPages}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setVacantCurrentPage(prev => Math.min(prev + 1, vacantTotalPages))}
-                        disabled={vacantCurrentPage === vacantTotalPages}
-                    >
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-              </CardFooter>
-            </Card>
-        </div>
-        <div className="grid gap-6">
-            <Card>
-                <CardHeader>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+           <div className="lg:col-span-2 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tenancy Expiry Report (Next 30 Days)</CardTitle>
+                    <CardDescription>
+                      Contracts that are due for renewal soon.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Unit</TableHead>
+                          <TableHead>Tenant</TableHead>
+                          <TableHead className="text-right">Days Remaining</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedExpiringContracts.map((item) => (
+                          <TableRow key={item.contractNo}>
+                            <TableCell>{item.unitCode}</TableCell>
+                            <TableCell>{item.tenantName}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant="destructive">{differenceInDays(parseISO(item.endDate), new Date())} days</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                   <CardFooter className="flex justify-end items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setExpiringCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={expiringCurrentPage === 1}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                            Page {expiringCurrentPage} of {expiringTotalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setExpiringCurrentPage(prev => Math.min(prev + 1, expiringTotalPages))}
+                            disabled={expiringCurrentPage === expiringTotalPages}
+                        >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                  </CardFooter>
+                </Card>
+                <Card>
+                  <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <ArrowUp className="h-5 w-5 text-red-500" />
                         Upcoming Payments to Landlords
@@ -321,6 +276,86 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                     </Button>
                 </CardFooter>
             </Card>
+           </div>
+           <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Balances</CardTitle>
+                <CardDescription>
+                  Your current cash & bank positions.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                 <ul className="space-y-4">
+                    {initialBankAccounts.map(account => (
+                      <li key={account.id} className="flex justify-between items-center text-sm">
+                        <span className="flex items-center gap-2">
+                           {account.id === 'acc_3' ? <Wallet className="h-4 w-4 text-muted-foreground" /> : <Landmark className="h-4 w-4 text-muted-foreground" />}
+                           {account.accountName}
+                        </span>
+                        <span className="font-mono font-medium">{formatCurrency(account.balance)}</span>
+                      </li>
+                    ))}
+                 </ul>
+                 <Separator className="my-4" />
+                  <div className="flex justify-between font-bold">
+                    <span>Total Balance</span>
+                    <span>{formatCurrency(totalBalance)}</span>
+                  </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Unit Vacant List</CardTitle>
+                <CardDescription>
+                  A list of all currently available units.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Unit</TableHead>
+                      <TableHead className="text-right">Rent</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedVacantUnits.map((item) => (
+                      <TableRow key={`${item.propertyCode}-${item.unitCode}`}>
+                        <TableCell>{item.propertyCode}</TableCell>
+                        <TableCell>{item.unitCode}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.annualRent)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+              <CardFooter className="flex justify-end items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setVacantCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={vacantCurrentPage === 1}
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                        Page {vacantCurrentPage} of {vacantTotalPages}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setVacantCurrentPage(prev => Math.min(prev + 1, vacantTotalPages))}
+                        disabled={vacantCurrentPage === vacantTotalPages}
+                    >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+              </CardFooter>
+            </Card>
+           </div>
         </div>
     </div>
   );
