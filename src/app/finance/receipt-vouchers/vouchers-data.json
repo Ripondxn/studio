@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "receiptNo": "002-3260",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 5050,
+    "paymentMethod": "Cash",
+    "bankAccountId": "",
+    "chequeNo": "",
+    "chequeDate": "",
+    "bankName": "",
+    "collectedBy": "Super Admin",
+    "notes": "",
+    "invoiceId": "",
+    "contractId": "",
+    "id": "RV-1756407695198-qj5jy",
+    "createdBy": "Super Admin"
+  }
+]
