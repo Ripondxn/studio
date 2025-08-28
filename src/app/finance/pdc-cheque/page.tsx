@@ -1,6 +1,7 @@
 
-import { ChequesClient } from '../cheque-deposit/cheques-client';
-import { getCheques, getSummary } from '../cheque-deposit/actions';
+
+import { ChequesClient } from '@/app/finance/cheque-management/cheques-client';
+import { getCheques, getSummary } from '@/app/finance/cheque-management/actions';
 
 
 export default async function PdcChequePage() {
@@ -11,4 +12,5 @@ export default async function PdcChequePage() {
     <ChequesClient initialCheques={cheques} initialSummary={summary} />
   );
 }
+
 

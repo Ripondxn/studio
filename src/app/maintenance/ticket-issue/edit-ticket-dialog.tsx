@@ -72,6 +72,12 @@ export function EditTicketDialog({ ticket, isOpen, setIsOpen }: { ticket: Mainte
     formState: { errors, isDirty },
   } = useForm<z.infer<typeof ticketFormSchema>>({
     resolver: zodResolver(ticketFormSchema),
+    defaultValues: {
+        ...ticket,
+        assignedTo: ticket.assignedTo || '',
+        resolutionDetails: ticket.resolutionDetails || '',
+        completedDate: ticket.completedDate || '',
+    }
   });
 
   const watchedPropertyCode = watch('propertyCode');
@@ -81,7 +87,12 @@ export function EditTicketDialog({ ticket, isOpen, setIsOpen }: { ticket: Mainte
   useEffect(() => {
     if(isOpen) {
         getLookups().then(setLookups);
-        reset(ticket);
+        reset({
+            ...ticket,
+            assignedTo: ticket.assignedTo || '',
+            resolutionDetails: ticket.resolutionDetails || '',
+            completedDate: ticket.completedDate || '',
+        });
     }
   }, [ticket, reset, isOpen]);
 

@@ -1,6 +1,6 @@
 
 import { getCheques, getSummary } from './actions';
-import { ChequesClient } from './cheques-client';
+import { ChequesClient } from './cheques-client.tsx';
 
 
 export default async function ChequeManagementPage() {

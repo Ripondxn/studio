@@ -73,5 +73,32 @@
         "comments": "Initial status set to DRAFT"
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 700,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "referenceType": "Receipt Book",
+    "referenceNo": "002-3260",
+    "description": "Payment for Receipt Book: Book: 002, Receipt: 3260",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "invoiceAllocations": [],
+    "billAllocations": [],
+    "id": "PAY-1756365887080",
+    "currentStatus": "DRAFT",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T07:24:47.080Z",
+        "comments": "Initial status set to DRAFT"
+      }
+    ]
   }
 ]
