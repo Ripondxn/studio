@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -52,7 +53,7 @@ export default function BookManagementPage() {
         const storedProfile = sessionStorage.getItem('userProfile');
         if (storedProfile) {
             const profile: { role: UserRole['role'] } = JSON.parse(storedProfile);
-            if (['Super Admin', 'Admin', 'Accountant'].includes(profile.role)) {
+            if (profile.role === 'Super Admin') {
                 setIsAuthorized(true);
                 fetchBooks();
             } else {
