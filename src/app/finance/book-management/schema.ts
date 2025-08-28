@@ -1,6 +1,4 @@
 
-'use server';
-
 import { z } from 'zod';
 
 export const chequeBookSchema = z.object({
