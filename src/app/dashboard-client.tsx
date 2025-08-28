@@ -24,9 +24,10 @@ import {
   FileClock,
   Home,
   Users,
-  ChevronLeft,
-  ChevronRight,
-  ArrowUp,
+  Route,
+  CheckCircle,
+  Clock,
+  ListTodo,
   Landmark,
   Wallet
 } from 'lucide-react';
@@ -47,11 +48,20 @@ type DashboardClientProps = {
     initialBankAccounts: BankAccount[];
 };
 
-export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts }: DashboardClientProps) {
-  const [landlordPaymentsPage, setLandlordPaymentsPage] = useState(1);
-  const { formatCurrency } = useCurrency();
+const roadmapItems = [
+  { feature: 'Core Modules (Properties, Units, Tenants)', status: 'Done', statusColor: 'bg-green-100 text-green-800' },
+  { feature: 'Financial Management (Accounts, Payments)', status: 'Done', statusColor: 'bg-green-100 text-green-800' },
+  { feature: 'Workflow & Approvals', status: 'Done', statusColor: 'bg-green-100 text-green-800' },
+  { feature: 'User & Access Control', status: 'Done', statusColor: 'bg-green-100 text-green-800' },
+  { feature: 'Reporting (PDF/Excel)', status: 'In Progress', statusColor: 'bg-yellow-100 text-yellow-800' },
+  { feature: 'Integrations (Payment Gateways)', status: 'In Progress', statusColor: 'bg-yellow-100 text-yellow-800' },
+  { feature: 'Advanced Analytics & AI Insights', status: 'Planned', statusColor: 'bg-blue-100 text-blue-800' },
+  { feature: 'Mobile App for Tenants & Landlords', status: 'Planned', statusColor: 'bg-blue-100 text-blue-800' },
+];
 
-  const landlordPaymentsItemsPerPage = 5;
+
+export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts }: DashboardClientProps) {
+  const { formatCurrency } = useCurrency();
 
   if (!initialDashboardData) {
     return <div>Loading...</div>;
@@ -64,18 +74,10 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     leaseExpiringSoonCount,
     totalTenants,
     totalProperties,
-    upcomingLandlordPayments,
   } = initialDashboardData;
   
   const totalBalance = initialBankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   
-  // Pagination for upcoming landlord payments
-  const landlordPaymentsTotalPages = Math.ceil(upcomingLandlordPayments.length / landlordPaymentsItemsPerPage);
-  const paginatedLandlordPayments = upcomingLandlordPayments.slice(
-    (landlordPaymentsPage - 1) * landlordPaymentsItemsPerPage,
-    landlordPaymentsPage * landlordPaymentsItemsPerPage
-  );
-
   const kpiData = [
      {
       title: 'Total Properties',
@@ -148,58 +150,38 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <ArrowUp className="h-5 w-5 text-red-500" />
-                        Upcoming Payments to Landlords
+                        <Route className="h-5 w-5 text-blue-500" />
+                        Software Roadmap
                     </CardTitle>
                     <CardDescription>
-                        A list of upcoming post-dated cheques to be paid out.
+                        An overview of current and upcoming features.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                      <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Landlord</TableHead>
-                                <TableHead>Cheque No.</TableHead>
-                                <TableHead>Due Date</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
+                                <TableHead>Feature</TableHead>
+                                <TableHead className="text-right">Status</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {paginatedLandlordPayments.map((cheque: Cheque) => (
-                                <TableRow key={cheque.id}>
-                                    <TableCell>{cheque.partyName}</TableCell>
-                                    <TableCell>{cheque.chequeNo}</TableCell>
-                                    <TableCell>{format(parseISO(cheque.chequeDate), 'PP')}</TableCell>
-                                    <TableCell className="text-right font-medium">{formatCurrency(cheque.amount)}</TableCell>
+                            {roadmapItems.map((item) => (
+                                <TableRow key={item.feature}>
+                                    <TableCell className="font-medium">{item.feature}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Badge variant="outline" className={cn(item.statusColor, 'border-transparent')}>
+                                             {item.status === 'Done' && <CheckCircle className="mr-2 h-4 w-4" />}
+                                             {item.status === 'In Progress' && <Clock className="mr-2 h-4 w-4" />}
+                                             {item.status === 'Planned' && <ListTodo className="mr-2 h-4 w-4" />}
+                                             {item.status}
+                                        </Badge>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </CardContent>
-                 <CardFooter className="flex justify-end items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setLandlordPaymentsPage(prev => Math.max(prev - 1, 1))}
-                        disabled={landlordPaymentsPage === 1}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                        Page {landlordPaymentsPage} of {landlordPaymentsTotalPages}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setLandlordPaymentsPage(prev => Math.min(prev + 1, landlordPaymentsTotalPages))}
-                        disabled={landlordPaymentsPage === landlordPaymentsTotalPages}
-                    >
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </CardFooter>
             </Card>
            </div>
            <div className="space-y-6">

@@ -45,14 +45,7 @@ async function getDashboardData() {
       path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json'), 'utf-8'
     ).catch(() => '[]');
     const allLeaseContracts: LeaseContract[] = JSON.parse(leaseContractsData);
-
-    const landlordsData = await fs.readFile(
-      path.join(process.cwd(), 'src/app/landlord/landlords-data.json'), 'utf-8'
-    ).catch(() => '[]');
-    const allLandlords = JSON.parse(landlordsData);
     
-    const landlordMap = new Map(allLandlords.map((l: any) => [l.landlordData.code, l.landlordData.name]));
-
     // KPI: Vacant Units
     const activeContractUnitCodes = new Set(
         contracts
@@ -77,23 +70,6 @@ async function getDashboardData() {
         return daysRemaining >= 0 && daysRemaining <= 30;
     }).length;
 
-    // Data for Landlord Payments
-    const upcomingLandlordPayments = allLeaseContracts
-      .filter(c => c.paymentSchedule)
-      .flatMap(c => c.paymentSchedule
-        .filter(p => p.status !== 'paid' && isFuture(parseISO(p.dueDate)))
-        .map(p => ({
-          id: `${c.id}-${p.installment}`,
-          partyName: landlordMap.get(c.landlordCode) || c.landlordCode,
-          chequeNo: p.chequeNo || `INST-${p.installment}`,
-          chequeDate: p.dueDate,
-          amount: p.amount,
-          type: 'Outgoing',
-          status: 'In Hand' // Simplified status for dashboard view
-        } as Cheque)) // Use Cheque type for structure compatibility
-      )
-      .sort((a, b) => new Date(a.chequeDate).getTime() - new Date(b.chequeDate).getTime());
-
     return {
         vacantUnitsCount,
         totalUnits,
@@ -101,8 +77,6 @@ async function getDashboardData() {
         leaseExpiringSoonCount,
         totalTenants: tenants.length,
         totalProperties: allProperties.length,
-        totalLandlords: allLandlords.length,
-        upcomingLandlordPayments,
     };
 }
 
