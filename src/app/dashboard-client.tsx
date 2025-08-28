@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -24,7 +24,9 @@ import {
   Wallet,
   ArrowRight,
   FileSignature,
-  Wrench
+  Wrench,
+  FileText,
+  Building2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
