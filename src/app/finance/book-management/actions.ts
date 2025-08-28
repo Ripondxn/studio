@@ -5,7 +5,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { chequeBookSchema, receiptBookSchema, type ChequeBook, type ReceiptBook, type ReceiptLeaf } from './schema';
+import { chequeBookSchema, receiptBookSchema, type ChequeBook, type ReceiptBook, type ReceiptLeaf, type ChequeLeaf } from './schema';
 import { type Payment } from '../payment/schema';
 
 const chequeBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/cheque-books-data.json');
@@ -152,6 +152,55 @@ export async function getReceiptBookReportData(): Promise<{ success: boolean, da
 
     } catch (error) {
         console.error('Failed to generate receipt book report:', error);
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+
+export async function getChequeBookReportData(): Promise<{ success: boolean, data: ChequeLeaf[], error?: string }> {
+    try {
+        const books = await readData<ChequeBook>(chequeBooksFilePath);
+        const payments = await readData<Payment>(paymentsFilePath);
+        
+        const usedCheques = new Map<string, Payment>();
+        payments.forEach(p => {
+            if (p.paymentMethod === 'Cheque' && p.referenceNo) {
+                usedCheques.set(p.referenceNo, p);
+            }
+        });
+
+        const allLeaves: ChequeLeaf[] = [];
+
+        books.forEach(book => {
+            for (let i = book.chequeStartNo; i <= book.chequeEndNo; i++) {
+                const chequeNo = String(i);
+                const payment = usedCheques.get(chequeNo);
+
+                if (payment) {
+                    allLeaves.push({
+                        chequeNo,
+                        bookNo: book.bookNo,
+                        bankName: book.bankName,
+                        status: 'Used',
+                        date: payment.date,
+                        partyName: payment.partyName,
+                        amount: payment.amount,
+                    });
+                } else {
+                    allLeaves.push({
+                        chequeNo,
+                        bookNo: book.bookNo,
+                        bankName: book.bankName,
+                        status: 'Unused',
+                    });
+                }
+            }
+        });
+        
+        return { success: true, data: allLeaves };
+
+    } catch (error) {
+        console.error('Failed to generate cheque book report:', error);
         return { success: false, error: (error as Error).message };
     }
 }
