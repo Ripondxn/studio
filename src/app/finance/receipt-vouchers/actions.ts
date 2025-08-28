@@ -41,10 +41,11 @@ export async function getReceiptVoucherLookups() {
     const books = await readData<ReceiptBook>(receiptBooksFilePath);
     const users = await readData<UserRole>(usersFilePath);
     
+    // In a real app, we would also filter out used receipt numbers here.
+    // For this example, we show all possible numbers.
     const availableReceipts: { value: string, label: string }[] = [];
     books.filter(b => b.status === 'Active').forEach(book => {
         for (let i = book.receiptStartNo; i <= book.receiptEndNo; i++) {
-            // This is simplified. A real system would check if 'i' is already used.
             availableReceipts.push({
                 value: `${book.bookNo}-${i}`,
                 label: `Book: ${book.bookNo}, Receipt: ${i}`
@@ -58,67 +59,73 @@ export async function getReceiptVoucherLookups() {
     }
 }
 
-const formSchema = receiptVoucherSchema.omit({ id: true });
-export async function saveReceiptVoucher(data: z.infer<typeof formSchema>) {
-    const validation = formSchema.safeParse(data);
+const batchFormSchema = z.object({
+  vouchers: z.array(receiptVoucherSchema.omit({ id: true, createdBy: true })),
+});
+
+export async function saveReceiptVoucherBatch(data: z.infer<typeof batchFormSchema>, createdBy: string) {
+    const validation = batchFormSchema.safeParse(data);
     if (!validation.success) {
         return { success: false, error: validation.error.errors.map(e => e.message).join(', ') };
     }
 
     try {
         const allVouchers = await getReceiptVouchers();
-        const voucherExists = allVouchers.some(v => v.receiptNo === data.receiptNo);
-        if (voucherExists) {
-            return { success: false, error: `A voucher with receipt number "${data.receiptNo}" already exists.` };
-        }
-
-        const newVoucher: ReceiptVoucher = {
-            ...validation.data,
-            id: `RV-${Date.now()}`,
-        };
+        const newVouchers: ReceiptVoucher[] = [];
         
-        // Create a corresponding financial transaction
-        const paymentResult = await addPayment({
-            type: 'Receipt',
-            date: newVoucher.date,
-            partyType: newVoucher.partyType,
-            partyName: newVoucher.partyName,
-            amount: newVoucher.amount,
-            paymentMethod: newVoucher.paymentMethod,
-            bankAccountId: newVoucher.bankAccountId,
-            paymentFrom: newVoucher.bankAccountId ? 'Bank' : 'Petty Cash',
-            referenceNo: newVoucher.receiptNo,
-            description: `Payment received via Receipt Voucher #${newVoucher.receiptNo}. Collected by ${newVoucher.collectedBy}.`,
-            createdByUser: newVoucher.createdBy,
-            status: 'Received',
-        });
+        for (const voucherData of validation.data.vouchers) {
+            const voucherExists = allVouchers.some(v => v.receiptNo === voucherData.receiptNo);
+            if (voucherExists) {
+                // Optionally skip or return error for duplicates in a batch
+                console.warn(`Skipping duplicate receipt number: ${voucherData.receiptNo}`);
+                continue;
+            }
 
-        if (!paymentResult.success) {
-            return { success: false, error: `Failed to create financial transaction: ${paymentResult.error}` };
+            const newVoucher: ReceiptVoucher = {
+                ...voucherData,
+                id: `RV-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                createdBy,
+            };
+            
+            const paymentResult = await addPayment({
+                type: 'Receipt',
+                date: newVoucher.date,
+                partyType: newVoucher.partyType,
+                partyName: newVoucher.partyName,
+                amount: newVoucher.amount,
+                paymentMethod: newVoucher.paymentMethod,
+                bankAccountId: newVoucher.bankAccountId,
+                paymentFrom: newVoucher.bankAccountId ? 'Bank' : 'Petty Cash',
+                referenceNo: newVoucher.receiptNo,
+                description: `Payment received via Receipt Voucher #${newVoucher.receiptNo}. Collected by ${newVoucher.collectedBy}.`,
+                createdByUser: createdBy,
+                status: 'Received',
+            });
+
+            if (!paymentResult.success) {
+                // Rollback or handle error. For this simplified fs-based system, we'll just log and continue.
+                console.error(`Failed to create financial transaction for receipt ${newVoucher.receiptNo}: ${paymentResult.error}`);
+                continue; // Skip adding this voucher if payment creation fails
+            }
+
+            newVouchers.push(newVoucher);
         }
 
-        allVouchers.push(newVoucher);
+        if (newVouchers.length === 0) {
+            return { success: false, error: "No valid new vouchers to save. They might be duplicates." };
+        }
+
+        allVouchers.push(...newVouchers);
         await writeVouchers(allVouchers);
 
-        // Update the receipt book usage
-        const books = await readData<ReceiptBook>(receiptBooksFilePath);
-        const [bookNo, receiptNoStr] = data.receiptNo.split('-');
-        const receiptNo = parseInt(receiptNoStr, 10);
-        
-        const bookIndex = books.findIndex(b => b.bookNo === bookNo);
-        if(bookIndex !== -1) {
-            books[bookIndex].leafsUsed = (books[bookIndex].leafsUsed || 0) + 1;
-            if (books[bookIndex].leafsUsed >= books[bookIndex].noOfLeafs) {
-                books[bookIndex].status = 'Finished';
-            }
-             await fs.writeFile(receiptBooksFilePath, JSON.stringify(books, null, 2), 'utf-8');
-        }
-
         revalidatePath('/finance/receipt-vouchers');
-        revalidatePath('/finance/book-management');
         revalidatePath('/finance/payment');
-        return { success: true, data: newVoucher };
+        revalidatePath('/finance/book-management');
+
+        return { success: true, count: newVouchers.length };
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+
