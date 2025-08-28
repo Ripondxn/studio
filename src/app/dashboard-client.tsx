@@ -33,6 +33,7 @@ import {
   Receipt,
   UserSquare,
   Package,
+  LineChart as FinanceIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -54,7 +55,7 @@ type DashboardClientProps = {
 };
 
 
-const workflowSteps = [
+const operationalWorkflowSteps = [
     {
         category: 'Landlord Onboarding',
         items: [
@@ -88,19 +89,45 @@ const workflowSteps = [
     }
 ];
 
-const WorkflowDiagram = () => (
+const financeWorkflowSteps = [
+    {
+        category: 'Daily Finance Operations',
+        items: [
+            { title: 'Receipt Vouchers', href: '/finance/receipt-vouchers', icon: <Receipt className="h-5 w-5" /> },
+            { title: 'Payment Vouchers', href: '/finance/payment', icon: <Banknote className="h-5 w-5" /> },
+            { title: 'Cheque Management', href: '/finance/cheque-management', icon: <FileText className="h-5 w-5" /> },
+            { title: 'Daily Checkout', href: '/finance/daily-checkout', icon: <CheckCircle className="h-5 w-5" /> },
+        ]
+    },
+];
+
+interface WorkflowDiagramProps {
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+    steps: {
+        category: string;
+        items: {
+            title: string;
+            href: string;
+            icon: React.ReactNode;
+        }[];
+    }[];
+}
+
+const WorkflowDiagram = ({ title, description, icon, steps }: WorkflowDiagramProps) => (
     <Card>
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
-                <Route className="h-5 w-5 text-blue-500" />
-                Operational Workflow
+                {icon}
+                {title}
             </CardTitle>
             <CardDescription>
-                A visual guide to your property management process.
+                {description}
             </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            {workflowSteps.map((step, stepIndex) => (
+            {steps.map((step, stepIndex) => (
                 <div key={step.category} className="space-y-3">
                     <h3 className="font-semibold text-muted-foreground">{step.category}</h3>
                     <div className="flex flex-wrap items-center gap-4">
@@ -118,7 +145,7 @@ const WorkflowDiagram = () => (
                             </React.Fragment>
                         ))}
                     </div>
-                    {stepIndex < workflowSteps.length - 1 && <Separator className="my-6" />}
+                    {stepIndex < steps.length - 1 && <Separator className="my-6" />}
                 </div>
             ))}
         </CardContent>
@@ -233,7 +260,18 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
            <div className="lg:col-span-2 space-y-6">
-               <WorkflowDiagram />
+               <WorkflowDiagram 
+                title="Operational Workflow"
+                description="A visual guide to your property management process."
+                icon={<Route className="h-5 w-5 text-blue-500" />}
+                steps={operationalWorkflowSteps}
+               />
+                <WorkflowDiagram 
+                title="Finance Workflow"
+                description="A guide to your daily financial operations."
+                icon={<FinanceIcon className="h-5 w-5 text-green-500" />}
+                steps={financeWorkflowSteps}
+               />
            </div>
            <div className="space-y-6">
             <Card>
