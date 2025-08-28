@@ -62,8 +62,10 @@ export default function AddReceiptVoucherPage() {
         }
     });
 
+    const { control, watch, setValue } = form;
+
     const { fields, append, remove, replace } = useFieldArray({
-        control: form.control,
+        control,
         name: "vouchers",
     });
 
