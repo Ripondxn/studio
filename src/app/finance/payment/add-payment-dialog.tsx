@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -36,6 +37,7 @@ import { getBillsForVendor } from '@/app/vendors/bill/actions';
 import { type Bill } from '@/app/vendors/bill/schema';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { type Agent } from '@/app/vendors/agents/schema';
+import { type ReceiptBook } from '../book-management/schema';
 
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
@@ -51,8 +53,9 @@ type Lookups = {
     units: {value: string, label: string}[];
     rooms: {value: string, label: string}[];
     partitions: {value: string, label: string}[];
-    references: {value: string, label: string, amount?: number, propertyCode?: string, unitCode?: string, roomCode?: string, partitionCode?: string}[];
+    references: {value: string, label: string, amount?: number, propertyCode?: string, unitCode?: string, roomCode?: string, partitionCode?: string, book?: ReceiptBook}[];
     users: { value: string, label: string }[];
+    receiptBooks: ReceiptBook[];
 }
 
 interface AddPaymentDialogProps {
@@ -72,7 +75,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], agents: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [], references: [], users: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], agents: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [], references: [], users: [], receiptBooks: [] });
   const [currentUser, setCurrentUser] = useState<string>('');
 
   const {
@@ -108,6 +111,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const watchedInvoiceAllocations = watch('invoiceAllocations');
   const watchedBillAllocations = watch('billAllocations');
   const watchedCollector = watch('createdByUser');
+  const watchedReferenceNo = watch('referenceNo');
 
   const [invoicesForCustomer, setInvoicesForCustomer] = useState<Invoice[]>(customerInvoices);
   const [billsForVendor, setBillsForVendor] = useState<Bill[]>(vendorBills);
@@ -251,6 +255,28 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
         setValue('referenceNo', '');
     }
   }, [paymentType, setValue, defaultValues]);
+
+  useEffect(() => {
+    if (referenceType === 'Receipt Book' && watchedReferenceNo) {
+        const receiptNumberOnly = watchedReferenceNo.split('-').pop()?.trim();
+        if (receiptNumberOnly && /^\d+$/.test(receiptNumberOnly)) {
+             const leafNumber = parseInt(receiptNumberOnly, 10);
+             for(const book of lookups.receiptBooks) {
+                if(leafNumber >= book.receiptStartNo && leafNumber <= book.receiptEndNo) {
+                    if (book.assignedTo && book.assignedTo !== watchedCollector) {
+                        setValue('createdByUser', book.assignedTo);
+                    }
+                    const formattedRef = `Book: ${book.bookNo}, Receipt: ${leafNumber}`;
+                    const existingRef = lookups.references.find(r => r.label === formattedRef);
+                    if(!existingRef) {
+                        setValue('referenceNo', `Book: ${book.bookNo}-${leafNumber}`);
+                    }
+                    break;
+                }
+             }
+        }
+    }
+  }, [watchedReferenceNo, referenceType, lookups.receiptBooks, setValue, watchedCollector, lookups.references]);
   
   const partyOptions = {
       'Tenant': lookups.tenants,

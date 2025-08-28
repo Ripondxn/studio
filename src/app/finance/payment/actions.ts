@@ -332,6 +332,7 @@ export async function getLookups() {
     const customers: {customerData: Customer}[] = await readData(customersFilePath);
     const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
     const users = await readData(path.join(process.cwd(), 'src/app/admin/user-roles/users.json'));
+    const receiptBooks = await readData(receiptBooksFilePath) as ReceiptBook[];
 
     return {
         tenants: tenants.map(t => ({ value: t.tenantData.code, label: t.tenantData.name })),
@@ -340,7 +341,8 @@ export async function getLookups() {
         agents: agents.map(a => ({ value: a.code, label: a.name })),
         customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
         bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`})),
-        users: users.map(u => ({ value: u.name, label: u.name }))
+        users: users.map((u: any) => ({ value: u.name, label: u.name })),
+        receiptBooks: receiptBooks
     }
 }
 
@@ -495,11 +497,11 @@ export async function getReferences(partyType: string, partyCode: string, refere
             const books = await readData(receiptBooksFilePath) as ReceiptBook[];
             const usedReceipts = new Set(allPayments.filter(p => p.referenceType === 'Receipt Book').map(p => p.referenceNo));
 
-            const availableReceipts: { value: string, label: string }[] = [];
+            const availableReceipts: { value: string, label: string, book: ReceiptBook }[] = [];
             
             const relevantBooks = assignedTo 
                 ? books.filter(b => b.assignedTo === assignedTo && b.status === 'Active') 
-                : books.filter(b => b.status === 'Active' && !b.assignedTo);
+                : books.filter(b => b.status === 'Active');
 
             relevantBooks.forEach(book => {
                 const start = book.receiptStartNo;
@@ -507,7 +509,11 @@ export async function getReferences(partyType: string, partyCode: string, refere
                 for (let i = start; i <= end; i++) {
                     const receiptNo = `${book.bookNo}-${i}`;
                     if (!usedReceipts.has(receiptNo)) {
-                        availableReceipts.push({ value: receiptNo, label: `Book: ${book.bookNo}, Receipt: ${i}` });
+                        availableReceipts.push({ 
+                            value: receiptNo, 
+                            label: `Book: ${book.bookNo}, Receipt: ${i}`,
+                            book: book,
+                        });
                     }
                 }
             });
