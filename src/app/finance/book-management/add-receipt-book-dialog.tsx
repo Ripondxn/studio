@@ -142,8 +142,8 @@ export function AddReceiptBookDialog({ isOpen, setIsOpen, book, onSuccess }: Add
                            <Combobox
                              options={users}
                              value={field.value || ''}
-                             onSelect={field.onChange}
-                             placeholder="Select user..."
+                             onSelect={(value) => field.onChange(value)}
+                             placeholder="Select or enter collector..."
                            />
                         )}
                     />

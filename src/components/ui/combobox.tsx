@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -30,11 +31,16 @@ type ComboboxProps = {
 
 export function Combobox({ options = [], value, onSelect, placeholder, disabled }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [inputValue, setInputValue] = React.useState("")
 
   const selectedOption = options.find((option) => 
     (option.value?.toLowerCase() === value?.toLowerCase())
   );
   
+  React.useEffect(() => {
+    setInputValue(selectedOption?.label || value || '')
+  }, [value, selectedOption])
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -54,15 +60,25 @@ export function Combobox({ options = [], value, onSelect, placeholder, disabled 
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
         <Command>
           <CommandInput 
-            placeholder="Search option..."
-            onValueChange={(searchValue) => {
-              if (!options.some(opt => opt.label.toLowerCase().includes(searchValue.toLowerCase()))) {
-                 onSelect(searchValue, searchValue);
-              }
-            }}
+            placeholder="Search or enter new..."
+            value={inputValue}
+            onValueChange={setInputValue}
            />
           <CommandList>
-            <CommandEmpty>No option found.</CommandEmpty>
+            <CommandEmpty onSelect={() => {
+                onSelect(inputValue, inputValue)
+                setOpen(false)
+            }}>
+                <div 
+                    className="py-2 px-4 text-sm cursor-pointer hover:bg-accent"
+                    onClick={() => {
+                         onSelect(inputValue, inputValue)
+                         setOpen(false)
+                    }}
+                >
+                    Add new: "{inputValue}"
+                </div>
+            </CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
