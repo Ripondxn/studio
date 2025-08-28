@@ -44,7 +44,8 @@ import {
   Briefcase,
   Package,
   Route,
-  Warehouse
+  Warehouse,
+  Code,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -149,6 +150,7 @@ const navLinks = [
             { href: '/admin/access-control', label: 'Access Control' },
             { href: '/admin/workflow-settings', label: 'Workflow Settings' },
             { href: '/admin/contract-continuity', label: 'Contract Continuity' },
+            { href: '/admin/developer-credit', label: 'Developer Credit' },
         ]
     },
 ];
