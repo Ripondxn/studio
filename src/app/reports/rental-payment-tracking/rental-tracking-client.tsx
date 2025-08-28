@@ -199,7 +199,7 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
     XLSX.writeFile(wb, "rental-payment-tracking.xlsx");
   };
 
-  const cellPadding = "px-2 py-1";
+  const cellPadding = "px-2 py-1 h-10";
 
   return (
     <Card>
@@ -285,7 +285,7 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
                 <TableRow>
                     <TableHead rowSpan={2} className={cn("sticky left-0 bg-muted z-20 border-r shadow-md w-[40px]", cellPadding)}>S.L</TableHead>
                     <TableHead rowSpan={2} className={cn("sticky left-[40px] bg-muted z-20 border-r min-w-[150px] shadow-md", cellPadding)}>Tenant Name</TableHead>
-                    <TableHead rowSpan={2} className={cellPadding}>Flat No.</TableHead>
+                    <TableHead rowSpan={2} className={cn("whitespace-nowrap", cellPadding)}>Flat No.</TableHead>
                     <TableHead rowSpan={2} className={cellPadding}>Nationality</TableHead>
                     <TableHead rowSpan={2} className={cellPadding}>Mobile No.</TableHead>
                     <TableHead colSpan={2} className={cn("text-center", cellPadding)}>Rent Period</TableHead>
@@ -310,7 +310,7 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
                 <TableRow key={tenant.contractNo}>
                     <TableCell className={cn("sticky left-0 bg-background z-10 border-r shadow-md", cellPadding)}>{index + 1}</TableCell>
                     <TableCell className={cn("sticky left-[40px] bg-background z-10 border-r font-medium shadow-md", cellPadding)}>{tenant.tenantName}</TableCell>
-                    <TableCell className={cellPadding}>{tenant.flatNo}</TableCell>
+                    <TableCell className={cn("whitespace-nowrap", cellPadding)}>{tenant.flatNo}</TableCell>
                     <TableCell className={cellPadding}>{tenant.nationality}</TableCell>
                     <TableCell className={cellPadding}>{tenant.mobile}</TableCell>
                     <TableCell className={cellPadding}>{format(new Date(tenant.rentPeriodFrom), 'dd.MM.yy')}</TableCell>

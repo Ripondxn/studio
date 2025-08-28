@@ -156,7 +156,10 @@ export async function updatePaymentStatus(contractNo: string, dueDate: string, n
              return { success: false, error: 'Payment installment not found for the given due date.' };
         }
 
-        contract.paymentSchedule[installmentIndex].status = newStatus.toLowerCase() as 'paid' | 'unpaid'; // The schema uses lowercase.
+        // The schema uses lowercase 'paid'/'unpaid'. 'Partial' is a client-side state for now.
+        // If we want to persist 'Partial', the schema needs to be updated. For now, we cycle through the saved states.
+        const persistentStatus = newStatus === 'Paid' ? 'paid' : 'unpaid';
+        contract.paymentSchedule[installmentIndex].status = persistentStatus;
 
         await writeContracts(allContracts);
         revalidatePath('/reports/rental-payment-tracking');
