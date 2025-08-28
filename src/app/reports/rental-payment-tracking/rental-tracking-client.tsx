@@ -24,10 +24,11 @@ import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface RentalTrackingClientProps {
   initialData: TenantPaymentData[];
+  properties: { value: string, label: string }[];
 }
 
 const statusConfig: { [key in MonthlyPayment['status']]: { color: string; icon: React.ReactNode } } = {
@@ -45,22 +46,21 @@ const statusConfig: { [key in MonthlyPayment['status']]: { color: string; icon: 
   },
 };
 
-export function RentalTrackingClient({ initialData }: RentalTrackingClientProps) {
+export function RentalTrackingClient({ initialData, properties }: RentalTrackingClientProps) {
   const [paymentData, setPaymentData] = useState(initialData);
   const [filter, setFilter] = useState('');
   const [dateRange, setDateRange] = useState<{ from?: Date, to?: Date}>({});
+  const [propertyFilter, setPropertyFilter] = useState<string>('');
   const { formatCurrency } = useCurrency();
   const [updatingCells, setUpdatingCells] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   
   const displayedMonths = useMemo(() => {
     const { from, to } = dateRange;
-    // If a valid date range is selected, generate months for that interval
     if (from && to && !isBefore(to, from)) {
         const months = eachMonthOfInterval({ start: from, end: to });
         return months.map(month => format(month, 'MMM-yy'));
     }
-    // Default to the next 6 months if no range is selected
     const today = new Date();
     const defaultMonths = eachMonthOfInterval({
         start: startOfMonth(today),
@@ -81,6 +81,10 @@ export function RentalTrackingClient({ initialData }: RentalTrackingClientProps)
           return false;
         }
 
+        if (propertyFilter && tenant.property !== propertyFilter) {
+          return false;
+        }
+
         if (dateRange.from || dateRange.to) {
             const hasPaymentInDateRange = tenant.payments.some(payment => {
                 const paymentDate = parseISO(payment.date);
@@ -94,11 +98,12 @@ export function RentalTrackingClient({ initialData }: RentalTrackingClientProps)
         return true;
       }
     );
-  }, [paymentData, filter, dateRange]);
+  }, [paymentData, filter, dateRange, propertyFilter]);
   
   const handleClearFilters = () => {
     setFilter('');
     setDateRange({});
+    setPropertyFilter('');
   }
 
   const togglePaymentStatus = async (contractNo: string, dueDate: string, currentStatus: MonthlyPayment['status']) => {
@@ -204,23 +209,32 @@ export function RentalTrackingClient({ initialData }: RentalTrackingClientProps)
             </div>
             <div className="flex items-center gap-2">
                 <Input
-                placeholder="Filter table..."
+                placeholder="Filter by tenant, flat, nationality..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="max-w-sm"
+                className="max-w-xs"
                 />
+                 <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by property"/>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="">All Properties</SelectItem>
+                        {properties.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                    </SelectContent>
+                </Select>
                  <Popover>
                     <PopoverTrigger asChild>
                         <Button
                             id="date-from"
                             variant={"outline"}
                             className={cn(
-                                "w-[240px] justify-start text-left font-normal",
+                                "w-[150px] justify-start text-left font-normal",
                                 !dateRange.from && "text-muted-foreground"
                             )}
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateRange.from ? format(dateRange.from, "PPP") : <span>From date</span>}
+                            {dateRange.from ? format(dateRange.from, "MMM yyyy") : <span>From date</span>}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -238,7 +252,7 @@ export function RentalTrackingClient({ initialData }: RentalTrackingClientProps)
                             id="date-to"
                             variant={"outline"}
                             className={cn(
-                                "w-[240px] justify-start text-left font-normal",
+                                "w-[150px] justify-start text-left font-normal",
                                 !dateRange.to && "text-muted-foreground"
                             )}
                         >
@@ -255,7 +269,7 @@ export function RentalTrackingClient({ initialData }: RentalTrackingClientProps)
                         />
                     </PopoverContent>
                 </Popover>
-                <Button variant="ghost" onClick={handleClearFilters} disabled={!filter && !dateRange.from && !dateRange.to}><X className="mr-2 h-4 w-4"/>Clear</Button>
+                <Button variant="ghost" onClick={handleClearFilters} disabled={!filter && !dateRange.from && !dateRange.to && !propertyFilter}><X className="mr-2 h-4 w-4"/>Clear</Button>
                  <Button variant="outline" onClick={handleExportExcel} size="sm">
                     <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
                 </Button>

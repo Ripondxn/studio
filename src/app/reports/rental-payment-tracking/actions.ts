@@ -24,6 +24,7 @@ export interface TenantPaymentData {
     tenantName: string;
     nationality?: string;
     mobile?: string;
+    property: string;
     flatNo: string;
     rentPeriodFrom: string;
     rentPeriodTo: string;
@@ -74,6 +75,7 @@ export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
             tenantName: contract.tenantName,
             nationality: tenantInfo?.tenantData.nationality,
             mobile: tenantInfo?.tenantData.mobile,
+            property: contract.property || '',
             flatNo: `${contract.unitCode || ''}${contract.roomCode ? ` / ${contract.roomCode}` : ''}`,
             rentPeriodFrom: contract.startDate,
             rentPeriodTo: contract.endDate,
