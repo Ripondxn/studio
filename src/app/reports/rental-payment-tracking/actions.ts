@@ -74,7 +74,7 @@ export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
             tenantName: contract.tenantName,
             nationality: tenantInfo?.tenantData.nationality,
             mobile: tenantInfo?.tenantData.mobile,
-            flatNo: `${contract.property}-${contract.unitCode}${contract.roomCode ? `/${contract.roomCode}` : ''}`,
+            flatNo: `${contract.unitCode || ''}${contract.roomCode ? ` / ${contract.roomCode}` : ''}`,
             rentPeriodFrom: contract.startDate,
             rentPeriodTo: contract.endDate,
             monthlyRent: contract.totalRent / 12, // Simplified for this example
