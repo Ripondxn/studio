@@ -1,55 +1,5 @@
 [
   {
-    "type": "Receipt",
-    "date": "2025-08-28",
-    "partyType": "Tenant",
-    "partyName": "T001",
-    "amount": 500,
-    "paymentMethod": "Bank Transfer",
-    "paymentFrom": "Petty Cash",
-    "bankAccountId": "",
-    "referenceNo": "001-1",
-    "description": "Payment received via Receipt Voucher #001-1. Collected by Tanvir Ahmed.",
-    "status": "Received",
-    "createdByUser": "Super Admin",
-    "id": "PAY-1756360270763",
-    "currentStatus": "POSTED",
-    "approvalHistory": [
-      {
-        "action": "Created Transaction",
-        "actorId": "Super Admin",
-        "actorRole": "User",
-        "timestamp": "2025-08-28T05:51:10.763Z",
-        "comments": "Initial status set to POSTED"
-      }
-    ]
-  },
-  {
-    "type": "Receipt",
-    "date": "2025-08-28",
-    "partyType": "Tenant",
-    "partyName": "T002",
-    "amount": 1200,
-    "paymentMethod": "Cash",
-    "paymentFrom": "Petty Cash",
-    "bankAccountId": "",
-    "referenceNo": "001-2",
-    "description": "Payment received via Receipt Voucher #001-2. Collected by Super Admin.",
-    "status": "Received",
-    "createdByUser": "Super Admin",
-    "id": "PAY-1756360632276",
-    "currentStatus": "POSTED",
-    "approvalHistory": [
-      {
-        "action": "Created Transaction",
-        "actorId": "Super Admin",
-        "actorRole": "User",
-        "timestamp": "2025-08-28T05:57:12.276Z",
-        "comments": "Initial status set to POSTED"
-      }
-    ]
-  },
-  {
     "id": "PAY-1756369796656",
     "type": "Receipt",
     "date": "2025-08-28",
@@ -73,6 +23,36 @@
         "actorRole": "User",
         "timestamp": "2025-08-28T08:29:56.656Z",
         "comments": "Initial status set to DRAFT"
+      }
+    ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T082",
+    "amount": 1300,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "property": "LT-C38",
+    "unitCode": "F203",
+    "roomCode": "",
+    "referenceType": "Tenancy Contract",
+    "referenceNo": "",
+    "description": "",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "invoiceAllocations": [],
+    "billAllocations": [],
+    "id": "PAY-1756390228757",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T14:10:28.757Z",
+        "comments": "Initial status set to POSTED"
       }
     ]
   }

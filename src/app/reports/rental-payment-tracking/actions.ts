@@ -5,11 +5,13 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { type Contract, type PaymentInstallment } from '@/app/tenancy/contract/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
+import { type Payment } from '@/app/finance/payment/schema';
 import { format, getMonth, getYear, parseISO, isEqual } from 'date-fns';
 import { revalidatePath } from 'next/cache';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
+const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 
 
 export interface MonthlyPayment {
@@ -53,19 +55,45 @@ async function writeContracts(data: Contract[]) {
 export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
     const contracts: Contract[] = await readData(contractsFilePath);
     const tenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
+    const payments: Payment[] = await readData(paymentsFilePath);
 
     const tenantMap = new Map<string, {tenantData: Tenant}>(tenants.map(t => [t.tenantData.code, t]));
+    
+    // Create a map of payments for quick lookup
+    const paymentsMap = new Map<string, Payment[]>();
+    for (const payment of payments) {
+        if (payment.referenceNo && payment.status !== 'Cancelled') {
+            if (!paymentsMap.has(payment.referenceNo)) {
+                paymentsMap.set(payment.referenceNo, []);
+            }
+            paymentsMap.get(payment.referenceNo)!.push(payment);
+        }
+    }
 
     const paymentData = contracts.map(contract => {
         const tenantInfo = tenantMap.get(contract.tenantCode || '');
         
-        const payments = contract.paymentSchedule.map(installment => {
+        const monthlyPayments = contract.paymentSchedule.map(installment => {
             const dueDate = new Date(installment.dueDate);
             const monthKey = format(dueDate, 'MMM-yy');
+            
+            const installmentId = `${contract.contractNo}-${installment.installment}`;
+            const relatedPayments = paymentsMap.get(installmentId) || [];
+            const totalPaid = relatedPayments.reduce((sum, p) => sum + p.amount, 0);
+            
+            let status: MonthlyPayment['status'] = 'Unpaid';
+            if (totalPaid >= installment.amount) {
+                status = 'Paid';
+            } else if (totalPaid > 0) {
+                status = 'Partial';
+            } else {
+                 status = installment.status === 'paid' ? 'Paid' : 'Unpaid';
+            }
+
             return {
                 month: monthKey,
                 amount: installment.amount,
-                status: installment.status === 'paid' ? 'Paid' : 'Unpaid',
+                status: status,
                 date: installment.dueDate,
             };
         });
@@ -81,7 +109,7 @@ export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
             rentPeriodTo: contract.endDate,
             monthlyRent: contract.totalRent / 12, // Simplified for this example
             yearlyRent: contract.totalRent,
-            payments,
+            payments: monthlyPayments,
             contractNo: contract.contractNo,
         };
     });
