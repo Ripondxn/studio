@@ -1,23 +1,5 @@
 [
   {
-    "id": "USR-001",
-    "name": "Jane Doe",
-    "email": "jane.doe@example.com",
-    "role": "Admin",
-    "status": "Active",
-    "lastLogin": "2024-07-29T10:00:00Z",
-    "password": "password123"
-  },
-  {
-    "id": "USR-002",
-    "name": "John Smith",
-    "email": "john.smith@example.com",
-    "role": "User",
-    "status": "Active",
-    "lastLogin": "2024-07-29T11:30:00Z",
-    "password": "password123"
-  },
-  {
     "id": "USR-003",
     "name": "Super Admin",
     "email": "super.admin@propvue.com",
@@ -27,22 +9,15 @@
     "password": "25051983"
   },
   {
-    "id": "USR-004",
-    "name": "Peter Jones",
-    "email": "peter.jones@example.com",
-    "role": "Property Manager",
-    "status": "Inactive",
-    "lastLogin": "2024-06-15T14:00:00Z",
-    "password": "password123"
-  },
-  {
     "id": "USR-1755625374992",
     "name": "Ripon Ahmed",
-    "email": "ripondxn@gmail.com",
+    "email": "admin@trustfamous.com",
     "role": "Admin",
     "status": "Active",
     "lastLogin": "2025-08-19T17:42:54.992Z",
-    "password": "25051983"
+    "password": "25051983",
+    "modifiedAt": "2025-08-28T18:14:36.634Z",
+    "modifiedBy": "Super Admin"
   },
   {
     "name": "Tanvir Ahmed",
@@ -52,5 +27,16 @@
     "status": "Active",
     "id": "USR-1755627733298",
     "lastLogin": "2025-08-19T18:22:13.298Z"
+  },
+  {
+    "name": "Ripon Ahmed",
+    "email": "ripondxn@gmail.com",
+    "password": "Developer@#1983",
+    "role": "Developer",
+    "status": "Active",
+    "id": "USR-1756404979145",
+    "lastLogin": "2025-08-28T18:16:19.145Z",
+    "createdAt": "2025-08-28T18:16:19.145Z",
+    "createdBy": "Super Admin"
   }
 ]
