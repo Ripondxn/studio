@@ -1,8 +1,10 @@
+
 'use server';
 
 import { promises as fs } from 'fs';
 import path from 'path';
 import { differenceInDays, addDays, format, parseISO } from 'date-fns';
+import { getLicenseSettings } from '@/app/admin/license/actions';
 
 const licenseFilePath = path.join(process.cwd(), 'license.json');
 const TRIAL_PERIOD_DAYS = 30;
@@ -38,6 +40,18 @@ async function createLicenseFile(): Promise<LicenseInfo> {
 }
 
 export async function checkLicenseStatus(): Promise<LicenseStatus> {
+    const settings = await getLicenseSettings();
+
+    // If trial check is disabled, always return an active status.
+    if (!settings.trialCheckEnabled) {
+        return {
+            isActive: true,
+            isTrial: false, // Indicates it's considered a full version
+            daysRemaining: 9999,
+            expiryDate: 'N/A',
+        };
+    }
+
     let license = await readLicenseFile();
 
     if (!license) {
