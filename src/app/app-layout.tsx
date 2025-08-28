@@ -100,7 +100,6 @@ const navLinks = [
             { href: '/finance/chart-of-accounts', label: 'Chart of Accounts' },
             { href: '/finance/banking', label: 'Banking' },
             { href: '/finance/cheque-deposit', label: 'Cheque Management' },
-            { href: '/finance/pdc-cheque', label: 'PDC Cheque' },
             { href: '/finance/payment', label: 'Payment' },
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/book-management', label: 'Book Management' },

@@ -28,6 +28,9 @@ import {
   FileText,
   Building2,
   TrendingUp,
+  AlertTriangle,
+  Hourglass,
+  Banknote,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -45,6 +48,7 @@ type DashboardClientProps = {
     initialDashboardData: any;
     initialExpiringContracts: Contract[];
     initialBankAccounts: BankAccount[];
+    initialChequeSummary: any;
 };
 
 
@@ -115,7 +119,7 @@ const WorkflowDiagram = () => (
 );
 
 
-export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts }: DashboardClientProps) {
+export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts, initialChequeSummary }: DashboardClientProps) {
   const { formatCurrency } = useCurrency();
 
   if (!initialDashboardData) {
@@ -130,6 +134,19 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     totalTenants,
     totalProperties,
   } = initialDashboardData;
+  
+  const {
+    inHandCount,
+    inHandTotal,
+    dueThisWeekCount,
+    dueThisWeekTotal,
+    depositedCount,
+    depositedTotal,
+    clearedThisMonthCount,
+    clearedThisMonthTotal,
+    overdueCount,
+    overdueTotal,
+  } = initialChequeSummary;
   
   const totalBalance = initialBankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   
@@ -170,11 +187,11 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       href: '/lease/contracts',
     },
     {
-      title: 'Future KPI',
-      value: '1,234',
-      change: 'Description for KPI',
-      icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />,
-      href: '#',
+      title: 'Overdue Cheques',
+      value: formatCurrency(overdueTotal),
+      change: `${overdueCount} cheques need attention`,
+      icon: <AlertTriangle className="h-6 w-6 text-destructive" />,
+      href: '/finance/cheque-deposit',
     },
   ];
 
@@ -236,6 +253,48 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                     <span>Total Balance</span>
                     <span>{formatCurrency(totalBalance)}</span>
                   </div>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader>
+                <CardTitle>Cheque Summary</CardTitle>
+                <CardDescription>
+                  Status of post-dated cheques.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 <div className="flex items-center">
+                   <Hourglass className="h-4 w-4 mr-4 text-muted-foreground" />
+                   <div className="flex-1">
+                        <p className="text-sm">In Hand</p>
+                        <p className="text-xs text-muted-foreground">{inHandCount} cheques pending</p>
+                   </div>
+                   <div className="font-mono font-medium">{formatCurrency(inHandTotal)}</div>
+                </div>
+                 <div className="flex items-center">
+                   <Clock className="h-4 w-4 mr-4 text-muted-foreground" />
+                   <div className="flex-1">
+                        <p className="text-sm">Due This Week</p>
+                        <p className="text-xs text-muted-foreground">{dueThisWeekCount} cheques to be deposited</p>
+                   </div>
+                   <div className="font-mono font-medium">{formatCurrency(dueThisWeekTotal)}</div>
+                </div>
+                 <div className="flex items-center">
+                   <Banknote className="h-4 w-4 mr-4 text-muted-foreground" />
+                   <div className="flex-1">
+                        <p className="text-sm">Deposited</p>
+                        <p className="text-xs text-muted-foreground">{depositedCount} cheques awaiting clearance</p>
+                   </div>
+                   <div className="font-mono font-medium">{formatCurrency(depositedTotal)}</div>
+                </div>
+                 <div className="flex items-center">
+                   <CheckCircle className="h-4 w-4 mr-4 text-muted-foreground" />
+                   <div className="flex-1">
+                        <p className="text-sm">Cleared This Month</p>
+                        <p className="text-xs text-muted-foreground">{clearedThisMonthCount} cheques cleared</p>
+                   </div>
+                   <div className="font-mono font-medium">{formatCurrency(clearedThisMonthTotal)}</div>
+                </div>
               </CardContent>
             </Card>
            </div>
