@@ -12,6 +12,7 @@ import { type LeaseContract } from '@/app/lease/contract/schema';
 import { type Cheque } from '@/app/finance/cheque-deposit/schema';
 import { getBankAccounts } from '@/app/finance/banking/actions';
 import { getSummary as getChequeSummary } from '@/app/finance/cheque-deposit/actions';
+import { getMovementHistory } from './admin/contract-continuity/actions';
 
 async function getExpiryReport() {
     const contracts = await getAllContracts();
@@ -87,6 +88,7 @@ export default async function DashboardPage() {
     const expiringContracts = await getExpiryReport();
     const bankAccounts = await getBankAccounts();
     const chequeSummary = await getChequeSummary();
+    const movementHistory = await getMovementHistory();
 
     return (
         <DashboardClient
@@ -94,6 +96,7 @@ export default async function DashboardPage() {
             initialExpiringContracts={expiringContracts}
             initialBankAccounts={bankAccounts}
             initialChequeSummary={chequeSummary}
+            initialMovementHistoryCount={movementHistory.length}
         />
     );
 }

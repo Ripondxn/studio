@@ -35,6 +35,7 @@ import {
   UserSquare,
   Package,
   LineChart as FinanceIcon,
+  Shuffle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -53,6 +54,7 @@ type DashboardClientProps = {
     initialExpiringContracts: Contract[];
     initialBankAccounts: BankAccount[];
     initialChequeSummary: any;
+    initialMovementHistoryCount: number;
 };
 
 
@@ -151,7 +153,7 @@ const WorkflowDiagram = ({ title, description, icon, steps }: WorkflowDiagramPro
 );
 
 
-export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts, initialChequeSummary }: DashboardClientProps) {
+export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts, initialChequeSummary, initialMovementHistoryCount }: DashboardClientProps) {
   const { formatCurrency } = useCurrency();
 
   if (!initialDashboardData) {
@@ -219,11 +221,11 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       href: '/lease/contracts',
     },
     {
-      title: 'Overdue Cheques',
-      value: formatCurrency(overdueTotal),
-      change: `${overdueCount} cheques need attention`,
-      icon: <AlertTriangle className="h-6 w-6 text-destructive" />,
-      href: '/finance/cheque-deposit',
+      title: 'Tenant Movements',
+      value: initialMovementHistoryCount,
+      change: 'Total recorded relocations',
+      icon: <Shuffle className="h-6 w-6 text-muted-foreground" />,
+      href: '/admin/contract-continuity',
     },
   ];
 
