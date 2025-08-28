@@ -48,11 +48,9 @@ type DashboardClientProps = {
 };
 
 export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts }: DashboardClientProps) {
-  const [expiringCurrentPage, setExpiringCurrentPage] = useState(1);
   const [landlordPaymentsPage, setLandlordPaymentsPage] = useState(1);
   const { formatCurrency } = useCurrency();
 
-  const expiringItemsPerPage = 5;
   const landlordPaymentsItemsPerPage = 5;
 
   if (!initialDashboardData) {
@@ -70,13 +68,6 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
   } = initialDashboardData;
   
   const totalBalance = initialBankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
-
-  // Pagination for expiring contracts
-  const expiringTotalPages = Math.ceil(initialExpiringContracts.length / expiringItemsPerPage);
-  const paginatedExpiringContracts = initialExpiringContracts.slice(
-    (expiringCurrentPage - 1) * expiringItemsPerPage,
-    expiringCurrentPage * expiringItemsPerPage
-  );
   
   // Pagination for upcoming landlord payments
   const landlordPaymentsTotalPages = Math.ceil(upcomingLandlordPayments.length / landlordPaymentsItemsPerPage);
@@ -154,59 +145,6 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
            <div className="lg:col-span-2 space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tenancy Expiry Report (Next 30 Days)</CardTitle>
-                    <CardDescription>
-                      Contracts that are due for renewal soon.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Unit</TableHead>
-                          <TableHead>Tenant</TableHead>
-                          <TableHead className="text-right">Days Remaining</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedExpiringContracts.map((item) => (
-                          <TableRow key={item.contractNo}>
-                            <TableCell>{item.unitCode}</TableCell>
-                            <TableCell>{item.tenantName}</TableCell>
-                            <TableCell className="text-right">
-                              <Badge variant="destructive">{differenceInDays(parseISO(item.endDate), new Date())} days</Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                   <CardFooter className="flex justify-end items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setExpiringCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={expiringCurrentPage === 1}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Previous
-                        </Button>
-                        <span className="text-sm text-muted-foreground">
-                            Page {expiringCurrentPage} of {expiringTotalPages}
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setExpiringCurrentPage(prev => Math.min(prev + 1, expiringTotalPages))}
-                            disabled={expiringCurrentPage === expiringTotalPages}
-                        >
-                            Next
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                  </CardFooter>
-                </Card>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
