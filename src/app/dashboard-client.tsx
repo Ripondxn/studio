@@ -27,6 +27,7 @@ import {
   Wrench,
   FileText,
   Building2,
+  TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -167,6 +168,13 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       change: 'View lease contracts',
       icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
       href: '/lease/contracts',
+    },
+    {
+      title: 'Future KPI',
+      value: '1,234',
+      change: 'Description for KPI',
+      icon: <TrendingUp className="h-6 w-6 text-muted-foreground" />,
+      href: '#',
     },
   ];
 
