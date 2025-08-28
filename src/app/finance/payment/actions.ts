@@ -331,6 +331,7 @@ export async function getLookups() {
     const agents: Agent[] = await readData(agentsFilePath);
     const customers: {customerData: Customer}[] = await readData(customersFilePath);
     const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
+    const users = await readData(path.join(process.cwd(), 'src/app/admin/user-roles/users.json'));
 
     return {
         tenants: tenants.map(t => ({ value: t.tenantData.code, label: t.tenantData.name })),
@@ -338,7 +339,8 @@ export async function getLookups() {
         vendors: vendors.map(v => ({ value: v.vendorData.code, label: v.vendorData.name })),
         agents: agents.map(a => ({ value: a.code, label: a.name })),
         customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
-        bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`}))
+        bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`})),
+        users: users.map(u => ({ value: u.name, label: u.name }))
     }
 }
 
@@ -398,15 +400,15 @@ export async function getSummary() {
     return summary;
 }
 
-export async function getReferences(partyType: string, partyCode: string, referenceType: string, paymentType?: 'Payment' | 'Receipt') {
-    if (!partyType || !partyCode || !referenceType) return [];
+export async function getReferences(partyType: string, partyCode: string, referenceType: string, paymentType?: 'Payment' | 'Receipt', assignedTo?: string) {
+    if (!partyType && !referenceType) return [];
     
     const allPayments: Payment[] = await readPayments();
     const paidInstallmentIds = new Set(allPayments.filter(p => p.status !== 'Cancelled').map(p => p.referenceNo));
 
     switch(referenceType) {
         case 'Tenancy Contract': {
-            if (partyType !== 'Tenant') return [];
+            if (partyType !== 'Tenant' || !partyCode) return [];
             const contracts: TenancyContract[] = await readData(tenancyContractsFilePath);
             const tenantContracts = contracts.filter(c => c.tenantCode === partyCode);
             let installments = [];
@@ -428,7 +430,7 @@ export async function getReferences(partyType: string, partyCode: string, refere
             return installments;
         }
         case 'Lease Contract': {
-            if (partyType !== 'Landlord') return [];
+            if (partyType !== 'Landlord' || !partyCode) return [];
             const contracts: LeaseContract[] = await readData(leaseContractsFilePath);
             const landlordContracts = contracts.filter(c => c.landlordCode === partyCode);
             let installments = [];
@@ -448,7 +450,7 @@ export async function getReferences(partyType: string, partyCode: string, refere
             return installments;
         }
         case 'Invoice': {
-            if (partyType !== 'Customer') return [];
+            if (partyType !== 'Customer' || !partyCode) return [];
             const invoices: Invoice[] = await readData(invoicesFilePath);
             return invoices
                 .filter(i => i.customerCode === partyCode && i.status !== 'Paid' && i.status !== 'Cancelled')
@@ -465,7 +467,7 @@ export async function getReferences(partyType: string, partyCode: string, refere
                 });
         }
          case 'Bill': {
-            if (partyType !== 'Vendor') return [];
+            if (partyType !== 'Vendor' || !partyCode) return [];
             const bills: Bill[] = await readData(billsFilePath);
 
             // If it's a refund (Receipt), show paid bills. If it's a payment, show unpaid bills.
@@ -490,8 +492,27 @@ export async function getReferences(partyType: string, partyCode: string, refere
                 });
         }
         case 'Receipt Book': {
-            // No options to return, as this is for manual entry.
-            return [];
+            const books = await readData(receiptBooksFilePath) as ReceiptBook[];
+            const usedReceipts = new Set(allPayments.filter(p => p.referenceType === 'Receipt Book').map(p => p.referenceNo));
+
+            const availableReceipts: { value: string, label: string }[] = [];
+            
+            const relevantBooks = assignedTo 
+                ? books.filter(b => b.assignedTo === assignedTo && b.status === 'Active') 
+                : books.filter(b => b.status === 'Active');
+
+            relevantBooks.forEach(book => {
+                const start = book.receiptStartNo;
+                const end = book.receiptEndNo;
+                for (let i = start; i <= end; i++) {
+                    const receiptNo = `${book.bookNo}-${i}`;
+                    if (!usedReceipts.has(receiptNo)) {
+                        availableReceipts.push({ value: receiptNo, label: receiptNo });
+                    }
+                }
+            });
+            
+            return availableReceipts;
         }
         default:
             return [];

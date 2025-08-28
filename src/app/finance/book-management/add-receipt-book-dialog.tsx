@@ -21,6 +21,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { receiptBookSchema, type ReceiptBook } from './schema';
 import { saveReceiptBook } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
+import { type UserRole } from '@/app/admin/user-roles/schema';
+import { getUsers } from '@/app/admin/user-roles/actions';
 
 const formSchema = receiptBookSchema.omit({ id: true });
 
@@ -33,6 +36,7 @@ interface AddReceiptBookDialogProps {
 
 export function AddReceiptBookDialog({ isOpen, setIsOpen, book, onSuccess }: AddReceiptBookDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [users, setUsers] = useState<{ value: string; label: string }[]>([]);
   const { toast } = useToast();
 
   const {
@@ -61,6 +65,9 @@ export function AddReceiptBookDialog({ isOpen, setIsOpen, book, onSuccess }: Add
 
   useEffect(() => {
     if (isOpen) {
+        getUsers().then(usersData => {
+            setUsers(usersData.map(u => ({ value: u.name, label: u.name })));
+        });
         reset(book || {
             bookNo: '',
             receiptStartNo: 0,
@@ -68,6 +75,7 @@ export function AddReceiptBookDialog({ isOpen, setIsOpen, book, onSuccess }: Add
             noOfLeafs: 0,
             status: 'Active',
             leafsUsed: 0,
+            assignedTo: '',
         });
     }
   }, [isOpen, book, reset]);
@@ -124,6 +132,22 @@ export function AddReceiptBookDialog({ isOpen, setIsOpen, book, onSuccess }: Add
                 <div className="space-y-2">
                     <Label htmlFor="noOfLeafs">Total Leafs</Label>
                     <Input id="noOfLeafs" type="number" {...register('noOfLeafs')} disabled />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="assignedTo">Assigned To</Label>
+                    <Controller
+                        name="assignedTo"
+                        control={control}
+                        render={({ field }) => (
+                           <Combobox
+                             options={users}
+                             value={field.value || ''}
+                             onSelect={field.onChange}
+                             placeholder="Select user..."
+                           />
+                        )}
+                    />
+                    {errors.assignedTo && <p className="text-destructive text-xs mt-1">{errors.assignedTo.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>

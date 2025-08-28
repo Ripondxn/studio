@@ -20,6 +20,7 @@ export const receiptBookSchema = z.object({
     noOfLeafs: z.coerce.number(),
     leafsUsed: z.coerce.number().optional().default(0),
     status: z.enum(['Active', 'Finished', 'Cancelled']),
+    assignedTo: z.string().optional(),
 });
 
 export type ChequeBook = z.infer<typeof chequeBookSchema>;

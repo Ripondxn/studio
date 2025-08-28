@@ -53,6 +53,7 @@ type Lookups = {
     rooms: {value: string, label: string}[];
     partitions: {value: string, label: string}[];
     references: {value: string, label: string, amount?: number, propertyCode?: string, unitCode?: string, roomCode?: string, partitionCode?: string}[];
+    users: { value: string, label: string }[];
 }
 
 interface AddPaymentDialogProps {
@@ -72,7 +73,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], agents: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [], references: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], agents: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [], references: [], users: [] });
   const [currentUser, setCurrentUser] = useState<string>('');
 
   const {
@@ -107,6 +108,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   const paymentFrom = watch('paymentFrom');
   const watchedInvoiceAllocations = watch('invoiceAllocations');
   const watchedBillAllocations = watch('billAllocations');
+  const watchedCollector = watch('createdByUser');
 
   const [invoicesForCustomer, setInvoicesForCustomer] = useState<Invoice[]>(customerInvoices);
   const [billsForVendor, setBillsForVendor] = useState<Bill[]>(vendorBills);
@@ -182,15 +184,15 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
    
    useEffect(() => {
     const fetchReferences = async () => {
-        if (partyType && partyName && referenceType) {
-            const data = await getReferences(partyType, partyName, referenceType, paymentType);
+        if (referenceType) {
+            const data = await getReferences(partyType, partyName, referenceType, paymentType, watchedCollector);
             setLookups(prev => ({...prev, references: data}));
         } else {
             setLookups(prev => ({...prev, references: []}));
         }
     };
     fetchReferences();
-   }, [partyType, partyName, referenceType, paymentType]);
+   }, [partyType, partyName, referenceType, paymentType, watchedCollector]);
 
 
    useEffect(() => {
@@ -369,6 +371,18 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         <div className="space-y-2"><Label>Party Name *</Label><Controller name="partyName" control={control} render={({ field }) => (<Combobox options={partyOptions} value={field.value || ''} onSelect={handlePartySelect} placeholder="Select party"/>)} /></div>
                         <div className="space-y-2"><Label>Amount *</Label><Input type="number" placeholder="0.00" {...register('amount', { valueAsNumber: true })} /></div>
                         <div className="space-y-2"><Label>Payment Method *</Label><Controller name="paymentMethod" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select payment method"/></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></div>
+                        {paymentType === 'Receipt' && referenceType === 'Receipt Book' && (
+                             <div className="space-y-2">
+                                <Label>Collector</Label>
+                                 <Controller name="createdByUser" control={control} render={({ field }) => (
+                                    <Combobox 
+                                        options={lookups.users} 
+                                        value={field.value || ''} 
+                                        onSelect={field.onChange} 
+                                        placeholder="Select Collector"/>
+                                )} />
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
