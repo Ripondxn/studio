@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -10,7 +11,6 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { getReceiptVoucherLookups, saveReceiptVoucherBatch, getDueAmountForParty } from '../actions';
-import { getLookups as getPartyLookups } from '@/app/finance/payment/actions';
 import { receiptVoucherSchema, type ReceiptVoucher } from '../schema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,16 +38,19 @@ type BatchFormData = z.infer<typeof batchFormSchema>;
 type Lookups = {
     receipts: { value: string; label: string; book: ReceiptBook }[];
     collectors: { value: string; label: string }[];
-    tenants: { value: string, label: string }[];
-    customers: { value: string, label: string }[];
-    bankAccounts: { value: string, label: string }[];
+    tenants: { value: string; label: string }[];
+    customers: { value: string; label: string }[];
+    bankAccounts: { value: string; label: string }[];
+    properties: {value: string, label: string}[];
+    units: {value: string, label: string, propertyCode: string}[];
+    rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[];
 };
 
 export default function AddReceiptVoucherPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
-    const [lookups, setLookups] = useState<Lookups>({ receipts: [], collectors: [], tenants: [], customers: [], bankAccounts: [] });
+    const [lookups, setLookups] = useState<Lookups>({ receipts: [], collectors: [], tenants: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [] });
     const [currentUser, setCurrentUser] = useState<UserRole | null>(null);
     const { formatCurrency } = useCurrency();
 
@@ -64,20 +67,15 @@ export default function AddReceiptVoucherPage() {
         name: "vouchers",
     });
 
+    const watchedVouchers = watch('vouchers');
+
     useEffect(() => {
         const userProfile = sessionStorage.getItem('userProfile');
         if (userProfile) {
             setCurrentUser(JSON.parse(userProfile));
         }
 
-        Promise.all([getReceiptVoucherLookups(), getPartyLookups()]).then(([voucherLookups, partyLookups]) => {
-            setLookups({
-                ...voucherLookups,
-                tenants: partyLookups.tenants,
-                customers: partyLookups.customers,
-                bankAccounts: partyLookups.bankAccounts
-            });
-        });
+        getReceiptVoucherLookups().then(setLookups);
     }, []);
     
     useEffect(() => {
@@ -125,6 +123,7 @@ export default function AddReceiptVoucherPage() {
     const handleReceiptSelect = (index: number, receiptNo: string) => {
         form.setValue(`vouchers.${index}.receiptNo`, receiptNo);
         const selectedReceipt = lookups.receipts.find(r => r.value === receiptNo);
+        const currentCollector = form.getValues(`vouchers.${index}.collectedBy`);
         if(selectedReceipt?.book?.assignedTo) {
             form.setValue(`vouchers.${index}.collectedBy`, selectedReceipt.book.assignedTo);
         }
@@ -252,9 +251,9 @@ export default function AddReceiptVoucherPage() {
                                                  <TableCell><FormField name={`vouchers.${index}.date`} control={form.control} render={({ field }) => ( <Input type="date" {...field} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.partyType`} control={form.control} render={({ field }) => ( <Select onValueChange={(value) => { field.onChange(value); form.setValue(`vouchers.${index}.partyName`, ''); }} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.partyName`} control={form.control} render={({ field }) => (<Combobox options={form.watch(`vouchers.${index}.partyType`) === 'Tenant' ? lookups.tenants : lookups.customers} value={field.value || ''} onSelect={(value) => handlePartySelect(index, value, form.watch(`vouchers.${index}.partyType`))} placeholder="Select Party" />)}/></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.property`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.unitCode`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.roomCode`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.property`} control={form.control} render={({ field }) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => {field.onChange(value); form.setValue(`vouchers.${index}.unitCode`, ''); form.setValue(`vouchers.${index}.roomCode`, '');}} placeholder="Property" />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.unitCode`} control={form.control} render={({ field }) => (<Combobox options={lookups.units.filter(u => u.propertyCode === form.watch(`vouchers.${index}.property`))} value={field.value || ''} onSelect={(value) => {field.onChange(value); form.setValue(`vouchers.${index}.roomCode`, '');}} placeholder="Unit" disabled={!form.watch(`vouchers.${index}.property`)} />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.roomCode`} control={form.control} render={({ field }) => (<Combobox options={lookups.rooms.filter(r => r.propertyCode === form.watch(`vouchers.${index}.property`) && r.unitCode === form.watch(`vouchers.${index}.unitCode`))} value={field.value || ''} onSelect={field.onChange} placeholder="Room" disabled={!form.watch(`vouchers.${index}.unitCode`)} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.amount`} control={form.control} render={({ field }) => ( <Input type="number" {...field} className="text-right" onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.paymentMethod`} control={form.control} render={({ field }) => ( <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.collectedBy`} control={form.control} render={({ field }) => ( <Combobox options={lookups.collectors} value={field.value || ''} onSelect={field.onChange} placeholder="Collector..."/>)} /></TableCell>

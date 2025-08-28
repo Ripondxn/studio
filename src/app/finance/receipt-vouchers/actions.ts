@@ -12,12 +12,18 @@ import { type UserRole } from '@/app/admin/user-roles/schema';
 import { addPayment } from '../payment/actions';
 import { type Contract } from '@/app/tenancy/contract/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { type Property } from '@/app/property/properties/list/schema';
+import { type Unit } from '@/app/property/units/schema';
+import { type Room } from '@/app/property/rooms/schema';
 
 const vouchersFilePath = path.join(process.cwd(), 'src/app/finance/receipt-vouchers/vouchers-data.json');
 const receiptBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/receipt-books-data.json');
 const usersFilePath = path.join(process.cwd(), 'src/app/admin/user-roles/users.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
+const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
+const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 
 
 async function readData<T>(filePath: string, defaultValue: T[] = []): Promise<T[]> {
@@ -48,6 +54,10 @@ export async function getReceiptVoucherLookups() {
     const allVouchers = await getReceiptVouchers();
     const usedReceiptNos = new Set(allVouchers.map(v => v.receiptNo));
     
+    const properties: {propertyData: Property}[] = await readData(propertiesFilePath);
+    const units: Unit[] = await readData(unitsFilePath);
+    const rooms: Room[] = await readData(roomsFilePath);
+    
     const availableReceipts: { value: string, label: string, book: ReceiptBook }[] = [];
     books.filter(b => b.status === 'Active').forEach(book => {
         for (let i = book.receiptStartNo; i <= book.receiptEndNo; i++) {
@@ -65,6 +75,9 @@ export async function getReceiptVoucherLookups() {
     return {
         receipts: availableReceipts,
         collectors: users.map(u => ({ value: u.name, label: u.name })),
+        properties: properties.map(p => ({ value: p.propertyData.code, label: p.propertyData.name })),
+        units: units.map(u => ({ value: u.unitCode, label: u.unitCode, propertyCode: u.propertyCode })),
+        rooms: rooms.map(r => ({ value: r.roomCode, label: r.roomCode, propertyCode: r.propertyCode, unitCode: r.unitCode })),
     }
 }
 
