@@ -107,6 +107,9 @@ export async function saveReceiptVoucherBatch(data: z.infer<typeof batchFormSche
                 description: `Payment received via Receipt Voucher #${newVoucher.receiptNo}. Collected by ${newVoucher.collectedBy}.`,
                 createdByUser: createdBy,
                 status: 'Received',
+                property: newVoucher.property,
+                unitCode: newVoucher.unitCode,
+                roomCode: newVoucher.roomCode,
             });
 
             if (!paymentResult.success) {
@@ -134,27 +137,37 @@ export async function saveReceiptVoucherBatch(data: z.infer<typeof batchFormSche
     }
 }
 
-export async function getDueAmountForParty(partyType: 'Tenant' | 'Customer', partyCode: string): Promise<number> {
+export async function getDueAmountForParty(partyType: 'Tenant' | 'Customer', partyCode: string) {
+    let totalDue = 0;
+    let property = '', unitCode = '', roomCode = '';
+
     if (partyType === 'Tenant') {
         const contracts = await readData<Contract>(contractsFilePath);
         const tenantContracts = contracts.filter(c => c.tenantCode === partyCode && (c.status === 'New' || c.status === 'Renew'));
-        let totalDue = 0;
-        tenantContracts.forEach(c => {
-            c.paymentSchedule.forEach(p => {
+        if (tenantContracts.length > 0) {
+            const latestContract = tenantContracts.sort((a,b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0];
+            property = latestContract.property || '';
+            unitCode = latestContract.unitCode || '';
+            roomCode = latestContract.roomCode || '';
+            latestContract.paymentSchedule.forEach(p => {
                 if (p.status === 'unpaid') {
                     totalDue += p.amount;
                 }
-            })
-        });
-        return totalDue;
+            });
+        }
     } else if (partyType === 'Customer') {
         const invoices = await readData<Invoice>(invoicesFilePath);
         const customerInvoices = invoices.filter(i => i.customerCode === partyCode && i.status !== 'Paid' && i.status !== 'Cancelled');
-        let totalDue = 0;
+        if (customerInvoices.length > 0) {
+            const firstUnpaidInvoice = customerInvoices.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())[0];
+             property = firstUnpaidInvoice.property || '';
+             unitCode = firstUnpaidInvoice.unitCode || '';
+             roomCode = firstUnpaidInvoice.roomCode || '';
+        }
         customerInvoices.forEach(i => {
             totalDue += i.total - (i.amountPaid || 0);
         });
-        return totalDue;
     }
-    return 0;
+    
+    return { totalDue, property, unitCode, roomCode };
 }

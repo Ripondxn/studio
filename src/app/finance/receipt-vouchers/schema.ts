@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const receiptVoucherSchema = z.object({
@@ -18,6 +19,10 @@ export const receiptVoucherSchema = z.object({
   createdBy: z.string(),
   invoiceId: z.string().optional(), // Link to an invoice if applicable
   contractId: z.string().optional(), // Link to a contract if applicable
+  property: z.string().optional(),
+  unitCode: z.string().optional(),
+  roomCode: z.string().optional(),
 });
 
 export type ReceiptVoucher = z.infer<typeof receiptVoucherSchema>;
+

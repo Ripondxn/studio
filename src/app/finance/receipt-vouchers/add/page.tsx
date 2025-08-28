@@ -96,13 +96,19 @@ export default function AddReceiptVoucherPage() {
             notes: '',
             invoiceId: '',
             contractId: '',
+            property: '',
+            unitCode: '',
+            roomCode: '',
         });
     }
 
     const handlePartySelect = async (index: number, partyCode: string, partyType: 'Tenant' | 'Customer') => {
         form.setValue(`vouchers.${index}.partyName`, partyCode);
-        const dueAmount = await getDueAmountForParty(partyType, partyCode);
-        form.setValue(`vouchers.${index}.amount`, dueAmount);
+        const result = await getDueAmountForParty(partyType, partyCode);
+        form.setValue(`vouchers.${index}.amount`, result.totalDue);
+        if (result.property) form.setValue(`vouchers.${index}.property`, result.property);
+        if (result.unitCode) form.setValue(`vouchers.${index}.unitCode`, result.unitCode);
+        if (result.roomCode) form.setValue(`vouchers.${index}.roomCode`, result.roomCode);
     }
 
     const onSubmit = async (data: BatchFormData) => {
@@ -154,9 +160,12 @@ export default function AddReceiptVoucherPage() {
                                             <TableHead className="w-1/12">Date</TableHead>
                                             <TableHead className="w-1/12">Party</TableHead>
                                             <TableHead className="w-2/12">Party Name</TableHead>
+                                            <TableHead className="w-[100px]">Property</TableHead>
+                                            <TableHead className="w-[100px]">Unit</TableHead>
+                                            <TableHead className="w-[100px]">Room</TableHead>
                                             <TableHead className="w-1/12">Amount</TableHead>
                                             <TableHead className="w-1/12">Method</TableHead>
-                                            <TableHead className="w-3/12">Details</TableHead>
+                                            <TableHead className="w-2/12">Details</TableHead>
                                             <TableHead className="w-1/12">Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -167,6 +176,9 @@ export default function AddReceiptVoucherPage() {
                                                  <TableCell><FormField name={`vouchers.${index}.date`} control={form.control} render={({ field }) => ( <Input type="date" {...field} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.partyType`} control={form.control} render={({ field }) => ( <Select onValueChange={(value) => { field.onChange(value); form.setValue(`vouchers.${index}.partyName`, ''); }} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.partyName`} control={form.control} render={({ field }) => (<Combobox options={form.watch(`vouchers.${index}.partyType`) === 'Tenant' ? lookups.tenants : lookups.customers} value={field.value || ''} onSelect={(value) => handlePartySelect(index, value, form.watch(`vouchers.${index}.partyType`))} placeholder="Select Party" />)}/></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.property`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.unitCode`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.roomCode`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.amount`} control={form.control} render={({ field }) => ( <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.paymentMethod`} control={form.control} render={({ field }) => ( <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></TableCell>
                                                  <TableCell>
