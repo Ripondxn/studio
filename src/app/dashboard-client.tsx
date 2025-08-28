@@ -47,6 +47,7 @@ import { useCurrency } from '@/context/currency-context';
 import { type BankAccount } from '@/app/finance/banking/schema';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { GlobalStockView } from '@/app/stores/global-stock-view';
 
 
 type DashboardClientProps = {
@@ -294,6 +295,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                   </div>
               </CardContent>
             </Card>
+            <GlobalStockView />
              <Card>
               <CardHeader>
                 <CardTitle>Cheque Summary</CardTitle>
