@@ -21,6 +21,7 @@ export interface TenantPaymentData {
     flatNo: string;
     totalRent: number;
     payments: MonthlyPayment[];
+    contractNo: string;
 }
 
 // This is a simplified function. A real-world scenario would be much more complex.
@@ -86,6 +87,7 @@ export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
             flatNo: `${contract.property}-${contract.unitCode}${contract.roomCode ? `-${contract.roomCode}` : ''}`,
             totalRent: contract.totalRent,
             payments,
+            contractNo: contract.contractNo,
         };
     });
 

@@ -147,7 +147,7 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
             </TableHeader>
             <TableBody>
                 {filteredData.map((tenant) => (
-                <TableRow key={`${tenant.tenantCode}-${tenant.flatNo}`}>
+                <TableRow key={tenant.contractNo}>
                     <TableCell className="sticky left-0 bg-background font-medium">{tenant.tenantName}</TableCell>
                     <TableCell>{tenant.flatNo}</TableCell>
                     <TableCell>{tenant.nationality}</TableCell>
