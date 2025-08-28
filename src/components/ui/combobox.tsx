@@ -80,9 +80,9 @@ export function Combobox({ options = [], value, onSelect, placeholder, disabled 
                 </div>
             </CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {options.map((option, index) => (
                 <CommandItem
-                  key={option.value}
+                  key={`${option.value}-${index}`}
                   value={option.label}
                   onSelect={(currentLabel) => {
                     const selected = options.find(opt => opt.label.toLowerCase() === currentLabel.toLowerCase())
