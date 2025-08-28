@@ -199,6 +199,8 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
     XLSX.writeFile(wb, "rental-payment-tracking.xlsx");
   };
 
+  const cellPadding = "px-2 py-1";
+
   return (
     <Card>
       <CardHeader>
@@ -278,43 +280,43 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
       </CardHeader>
       <CardContent>
         <ScrollArea className="w-full h-[60vh] border rounded-md">
-            <Table className="relative min-w-full border-collapse">
+            <Table className="relative min-w-full border-collapse text-xs">
             <TableHeader className="sticky top-0 bg-muted z-10">
                 <TableRow>
-                    <TableHead rowSpan={2} className="sticky left-0 bg-muted z-20 border-r w-[50px] shadow-md">S.L</TableHead>
-                    <TableHead rowSpan={2} className="sticky left-[50px] bg-muted z-20 border-r min-w-[200px] shadow-md">Tenant Name</TableHead>
-                    <TableHead rowSpan={2}>Flat No.</TableHead>
-                    <TableHead rowSpan={2}>Nationality</TableHead>
-                    <TableHead rowSpan={2}>Mobile No.</TableHead>
-                    <TableHead colSpan={2} className="text-center">Rent Period</TableHead>
-                    <TableHead colSpan={2} className="text-center">Rent</TableHead>
+                    <TableHead rowSpan={2} className={cn("sticky left-0 bg-muted z-20 border-r shadow-md w-[40px]", cellPadding)}>S.L</TableHead>
+                    <TableHead rowSpan={2} className={cn("sticky left-[40px] bg-muted z-20 border-r min-w-[150px] shadow-md", cellPadding)}>Tenant Name</TableHead>
+                    <TableHead rowSpan={2} className={cellPadding}>Flat No.</TableHead>
+                    <TableHead rowSpan={2} className={cellPadding}>Nationality</TableHead>
+                    <TableHead rowSpan={2} className={cellPadding}>Mobile No.</TableHead>
+                    <TableHead colSpan={2} className={cn("text-center", cellPadding)}>Rent Period</TableHead>
+                    <TableHead colSpan={2} className={cn("text-center", cellPadding)}>Rent</TableHead>
                     {displayedMonths.map((month) => (
-                        <TableHead key={month} colSpan={2} className="text-center">{month}</TableHead>
+                        <TableHead key={month} colSpan={2} className={cn("text-center", cellPadding)}>{month}</TableHead>
                     ))}
                 </TableRow>
                 <TableRow>
-                    <TableHead>From</TableHead>
-                    <TableHead>To</TableHead>
-                    <TableHead>Monthly</TableHead>
-                    <TableHead>Yearly</TableHead>
+                    <TableHead className={cellPadding}>From</TableHead>
+                    <TableHead className={cellPadding}>To</TableHead>
+                    <TableHead className={cellPadding}>Monthly</TableHead>
+                    <TableHead className={cellPadding}>Yearly</TableHead>
                     {displayedMonths.flatMap((month) => [
-                        <TableHead key={`${month}-date`}>Date</TableHead>,
-                        <TableHead key={`${month}-payment`} className="text-right">Payment</TableHead>
+                        <TableHead key={`${month}-date`} className={cellPadding}>Date</TableHead>,
+                        <TableHead key={`${month}-payment`} className={cn("text-right", cellPadding)}>Payment</TableHead>
                     ])}
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {filteredData.map((tenant, index) => (
                 <TableRow key={tenant.contractNo}>
-                    <TableCell className="sticky left-0 bg-background z-10 border-r shadow-md">{index + 1}</TableCell>
-                    <TableCell className="sticky left-[50px] bg-background z-10 border-r font-medium shadow-md">{tenant.tenantName}</TableCell>
-                    <TableCell>{tenant.flatNo}</TableCell>
-                    <TableCell>{tenant.nationality}</TableCell>
-                    <TableCell>{tenant.mobile}</TableCell>
-                    <TableCell>{format(new Date(tenant.rentPeriodFrom), 'dd.MM.yyyy')}</TableCell>
-                    <TableCell>{format(new Date(tenant.rentPeriodTo), 'dd.MM.yyyy')}</TableCell>
-                    <TableCell>{formatCurrency(tenant.monthlyRent)}</TableCell>
-                    <TableCell>{formatCurrency(tenant.yearlyRent)}</TableCell>
+                    <TableCell className={cn("sticky left-0 bg-background z-10 border-r shadow-md", cellPadding)}>{index + 1}</TableCell>
+                    <TableCell className={cn("sticky left-[40px] bg-background z-10 border-r font-medium shadow-md", cellPadding)}>{tenant.tenantName}</TableCell>
+                    <TableCell className={cellPadding}>{tenant.flatNo}</TableCell>
+                    <TableCell className={cellPadding}>{tenant.nationality}</TableCell>
+                    <TableCell className={cellPadding}>{tenant.mobile}</TableCell>
+                    <TableCell className={cellPadding}>{format(new Date(tenant.rentPeriodFrom), 'dd.MM.yy')}</TableCell>
+                    <TableCell className={cellPadding}>{format(new Date(tenant.rentPeriodTo), 'dd.MM.yy')}</TableCell>
+                    <TableCell className={cellPadding}>{formatCurrency(tenant.monthlyRent)}</TableCell>
+                    <TableCell className={cellPadding}>{formatCurrency(tenant.yearlyRent)}</TableCell>
                     
                     {displayedMonths.map((month) => {
                         const payment = tenant.payments.find((p) => p.month === month);
@@ -324,13 +326,13 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
                         return (
                            <React.Fragment key={month}>
                             <TableCell 
-                                className={cn("cursor-pointer", payment ? config.color : 'bg-gray-100')}
+                                className={cn("cursor-pointer", cellPadding, payment ? config.color : 'bg-gray-100')}
                                 onClick={() => payment && togglePaymentStatus(tenant.contractNo, payment.date, payment.status)}
                             >
-                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment ? format(new Date(payment.date), 'dd.MM.yyyy') : '-')}
+                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment ? format(new Date(payment.date), 'dd.MM') : '-')}
                             </TableCell>
                             <TableCell
-                                className={cn("cursor-pointer text-right", payment ? config.color : 'bg-gray-100')}
+                                className={cn("cursor-pointer text-right", cellPadding, payment ? config.color : 'bg-gray-100')}
                                 onClick={() => payment && togglePaymentStatus(tenant.contractNo, payment.date, payment.status)}
                             >
                                 {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment ? formatCurrency(payment.amount) : '-')}
@@ -343,12 +345,12 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
             </TableBody>
              <TableFooter className="sticky bottom-0 bg-muted z-10">
                 <TableRow>
-                    <TableCell colSpan={9} className="text-right font-bold">Monthly Totals</TableCell>
+                    <TableCell colSpan={9} className={cn("text-right font-bold", cellPadding)}>Monthly Totals</TableCell>
                     {displayedMonths.flatMap(month => {
                         const total = monthTotals[month];
                         return [
-                             <TableCell key={`${month}-total-label`} className="text-right font-bold" colSpan={1}></TableCell>,
-                             <TableCell key={`${month}-total-value`} className="text-right font-bold">{formatCurrency(total.expected)}</TableCell>
+                             <TableCell key={`${month}-total-label`} className={cn("text-right font-bold", cellPadding)} colSpan={1}></TableCell>,
+                             <TableCell key={`${month}-total-value`} className={cn("text-right font-bold", cellPadding)}>{formatCurrency(total.expected)}</TableCell>
                         ]
                     })}
                 </TableRow>
