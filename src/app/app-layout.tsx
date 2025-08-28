@@ -47,6 +47,7 @@ import {
   Warehouse,
   Code,
   Receipt,
+  FileText as ReportIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -132,6 +133,11 @@ const navLinks = [
             { href: '/maintenance/ticket-issue', label: 'Ticket Issue' },
             { href: '/maintenance/contracts', label: 'Service Contracts' },
         ]
+    },
+    {
+        label: 'Reports',
+        href: '/reports',
+        icon: <ReportIcon />,
     },
     {
         label: 'Workflow',
