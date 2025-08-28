@@ -6,7 +6,7 @@ import path from 'path';
 import { type Contract, type PaymentInstallment } from '@/app/tenancy/contract/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Payment } from '@/app/finance/payment/schema';
-import { format, getMonth, getYear, parseISO, isEqual } from 'date-fns';
+import { format, getMonth, getYear, parseISO, isEqual, isSameDay } from 'date-fns';
 import { revalidatePath } from 'next/cache';
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
@@ -59,35 +59,55 @@ export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
 
     const tenantMap = new Map<string, {tenantData: Tenant}>(tenants.map(t => [t.tenantData.code, t]));
     
-    // Create a map of payments for quick lookup
-    const paymentsMap = new Map<string, Payment[]>();
+    // Create a map of payments by tenant code for easier lookup
+    const paymentsByTenant = new Map<string, Payment[]>();
     for (const payment of payments) {
-        if (payment.referenceNo && payment.status !== 'Cancelled') {
-            if (!paymentsMap.has(payment.referenceNo)) {
-                paymentsMap.set(payment.referenceNo, []);
+        if (payment.partyType === 'Tenant' && payment.partyName && payment.status !== 'Cancelled') {
+            if (!paymentsByTenant.has(payment.partyName)) {
+                paymentsByTenant.set(payment.partyName, []);
             }
-            paymentsMap.get(payment.referenceNo)!.push(payment);
+            paymentsByTenant.get(payment.partyName)!.push(payment);
         }
     }
 
     const paymentData = contracts.map(contract => {
         const tenantInfo = tenantMap.get(contract.tenantCode || '');
+        const tenantPayments = paymentsByTenant.get(contract.tenantCode || '') || [];
         
         const monthlyPayments = contract.paymentSchedule.map(installment => {
-            const dueDate = new Date(installment.dueDate);
+            const dueDate = parseISO(installment.dueDate);
             const monthKey = format(dueDate, 'MMM-yy');
             
             const installmentId = `${contract.contractNo}-${installment.installment}`;
-            const relatedPayments = paymentsMap.get(installmentId) || [];
-            const totalPaid = relatedPayments.reduce((sum, p) => sum + p.amount, 0);
+            
+            // Find payments related to this installment
+            const relatedPayments = tenantPayments.filter(p => {
+                // Direct match by reference number (most reliable)
+                if (p.referenceNo === installmentId) return true;
+                
+                // Fallback: match by amount and due date for payments without a specific reference
+                if (!p.referenceNo && p.amount === installment.amount && isSameDay(parseISO(p.date), dueDate)) {
+                    return true;
+                }
+
+                // Another fallback for general payments made to the tenant
+                if(!p.referenceNo && p.property === contract.property && p.unitCode === contract.unitCode && p.amount === installment.amount) {
+                    return true;
+                }
+                
+                return false;
+            });
+            
+            const totalPaidForInstallment = relatedPayments.reduce((sum, p) => sum + p.amount, 0);
             
             let status: MonthlyPayment['status'] = 'Unpaid';
-            if (totalPaid >= installment.amount) {
+            if (totalPaidForInstallment >= installment.amount) {
                 status = 'Paid';
-            } else if (totalPaid > 0) {
+            } else if (totalPaidForInstallment > 0) {
                 status = 'Partial';
             } else {
-                 status = installment.status === 'paid' ? 'Paid' : 'Unpaid';
+                // Trust the status on the installment if no payments are found
+                status = installment.status === 'paid' ? 'Paid' : 'Unpaid';
             }
 
             return {
