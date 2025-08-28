@@ -26,3 +26,4 @@ export const receiptVoucherSchema = z.object({
 
 export type ReceiptVoucher = z.infer<typeof receiptVoucherSchema>;
 
+

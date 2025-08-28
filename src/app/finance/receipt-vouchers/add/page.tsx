@@ -9,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { getReceiptVoucherLookups, saveReceiptVoucherBatch, getDueAmountForParty } from '../actions';
 import { getLookups as getPartyLookups } from '@/app/finance/payment/actions';
-import { receiptVoucherSchema } from '../schema';
+import { receiptVoucherSchema, type ReceiptVoucher } from '../schema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import { Loader2, Save, X, Receipt, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { type ReceiptBook } from '../../book-management/schema';
 
 
 const batchFormSchema = z.object({
@@ -32,7 +33,7 @@ type BatchFormData = z.infer<typeof batchFormSchema>;
 
 
 type Lookups = {
-    receiptNumbers: { value: string; label: string }[];
+    receipts: { value: string; label: string; book: ReceiptBook }[];
     collectors: { value: string; label: string }[];
     tenants: { value: string, label: string }[];
     customers: { value: string, label: string }[];
@@ -43,7 +44,7 @@ export default function AddReceiptVoucherPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
-    const [lookups, setLookups] = useState<Lookups>({ receiptNumbers: [], collectors: [], tenants: [], customers: [], bankAccounts: [] });
+    const [lookups, setLookups] = useState<Lookups>({ receipts: [], collectors: [], tenants: [], customers: [], bankAccounts: [] });
     const [currentUser, setCurrentUser] = useState<UserRole | null>(null);
 
     const form = useForm<BatchFormData>({
@@ -110,6 +111,14 @@ export default function AddReceiptVoucherPage() {
         if (result.unitCode) form.setValue(`vouchers.${index}.unitCode`, result.unitCode);
         if (result.roomCode) form.setValue(`vouchers.${index}.roomCode`, result.roomCode);
     }
+    
+    const handleReceiptSelect = (index: number, receiptNo: string) => {
+        form.setValue(`vouchers.${index}.receiptNo`, receiptNo);
+        const selectedReceipt = lookups.receipts.find(r => r.value === receiptNo);
+        if(selectedReceipt?.book?.assignedTo) {
+            form.setValue(`vouchers.${index}.collectedBy`, selectedReceipt.book.assignedTo);
+        }
+    }
 
     const onSubmit = async (data: BatchFormData) => {
         if (!currentUser) {
@@ -165,6 +174,7 @@ export default function AddReceiptVoucherPage() {
                                             <TableHead className="w-[100px]">Room</TableHead>
                                             <TableHead className="w-1/12">Amount</TableHead>
                                             <TableHead className="w-1/12">Method</TableHead>
+                                            <TableHead className="w-1/12">Collector</TableHead>
                                             <TableHead className="w-2/12">Details</TableHead>
                                             <TableHead className="w-1/12">Action</TableHead>
                                         </TableRow>
@@ -172,7 +182,7 @@ export default function AddReceiptVoucherPage() {
                                     <TableBody>
                                         {fields.map((field, index) => (
                                             <TableRow key={field.id}>
-                                                 <TableCell><FormField name={`vouchers.${index}.receiptNo`} control={form.control} render={({ field }) => ( <Combobox options={lookups.receiptNumbers} value={field.value || ''} onSelect={field.onChange} placeholder="Select..."/>)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.receiptNo`} control={form.control} render={({ field }) => ( <Combobox options={lookups.receipts} value={field.value || ''} onSelect={(value) => handleReceiptSelect(index, value)} placeholder="Select..."/>)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.date`} control={form.control} render={({ field }) => ( <Input type="date" {...field} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.partyType`} control={form.control} render={({ field }) => ( <Select onValueChange={(value) => { field.onChange(value); form.setValue(`vouchers.${index}.partyName`, ''); }} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.partyName`} control={form.control} render={({ field }) => (<Combobox options={form.watch(`vouchers.${index}.partyType`) === 'Tenant' ? lookups.tenants : lookups.customers} value={field.value || ''} onSelect={(value) => handlePartySelect(index, value, form.watch(`vouchers.${index}.partyType`))} placeholder="Select Party" />)}/></TableCell>
@@ -181,6 +191,7 @@ export default function AddReceiptVoucherPage() {
                                                  <TableCell><FormField name={`vouchers.${index}.roomCode`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.amount`} control={form.control} render={({ field }) => ( <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.paymentMethod`} control={form.control} render={({ field }) => ( <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.collectedBy`} control={form.control} render={({ field }) => ( <Combobox options={lookups.collectors} value={field.value || ''} onSelect={field.onChange} placeholder="Collector..."/>)} /></TableCell>
                                                  <TableCell>
                                                     {form.watch(`vouchers.${index}.paymentMethod`) === 'Cheque' && (
                                                         <div className="grid grid-cols-3 gap-2">

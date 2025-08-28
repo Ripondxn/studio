@@ -48,21 +48,22 @@ export async function getReceiptVoucherLookups() {
     const allVouchers = await getReceiptVouchers();
     const usedReceiptNos = new Set(allVouchers.map(v => v.receiptNo));
     
-    const availableReceipts: { value: string, label: string }[] = [];
+    const availableReceipts: { value: string, label: string, book: ReceiptBook }[] = [];
     books.filter(b => b.status === 'Active').forEach(book => {
         for (let i = book.receiptStartNo; i <= book.receiptEndNo; i++) {
              const receiptNo = `${book.bookNo}-${i}`;
              if (!usedReceiptNos.has(receiptNo)) {
                 availableReceipts.push({
                     value: receiptNo,
-                    label: `Book: ${book.bookNo}, Receipt: ${i}`
+                    label: `Book: ${book.bookNo}, Receipt: ${i}`,
+                    book: book,
                 });
             }
         }
     });
 
     return {
-        receiptNumbers: availableReceipts,
+        receipts: availableReceipts,
         collectors: users.map(u => ({ value: u.name, label: u.name })),
     }
 }
@@ -103,6 +104,7 @@ export async function saveReceiptVoucherBatch(data: z.infer<typeof batchFormSche
                 paymentMethod: newVoucher.paymentMethod,
                 bankAccountId: newVoucher.bankAccountId,
                 paymentFrom: newVoucher.bankAccountId ? 'Bank' : 'Petty Cash',
+                referenceType: 'Receipt Book',
                 referenceNo: newVoucher.receiptNo,
                 description: `Payment received via Receipt Voucher #${newVoucher.receiptNo}. Collected by ${newVoucher.collectedBy}.`,
                 createdByUser: createdBy,

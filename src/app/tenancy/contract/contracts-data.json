@@ -1,1 +1,53 @@
-[]
+[
+  {
+    "contractNo": "TC-0001",
+    "contractDate": "2025-08-28",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "tenantCode": "T001",
+    "tenantName": "MR. ABDUL KADER",
+    "email": "mr.abdul.kader@example.com",
+    "startDate": "2025-08-28",
+    "endDate": "2025-11-30",
+    "totalRent": 3000,
+    "paymentMode": "cash",
+    "status": "New",
+    "renewalCount": 0,
+    "terminationDate": "",
+    "rentBasedOn": "Monthly",
+    "paymentFrequency": "Monthly",
+    "numberOfPayments": 3,
+    "gracePeriod": 0,
+    "paymentSchedule": [
+      {
+        "installment": 1,
+        "dueDate": "2025-08-28",
+        "amount": 1000,
+        "status": "unpaid",
+        "chequeNo": "12345",
+        "bankName": "abc"
+      },
+      {
+        "installment": 2,
+        "dueDate": "2025-09-28",
+        "amount": 1000,
+        "status": "unpaid",
+        "chequeNo": "12346",
+        "bankName": "abc"
+      },
+      {
+        "installment": 3,
+        "dueDate": "2025-10-28",
+        "amount": 1000,
+        "status": "unpaid",
+        "chequeNo": "12347",
+        "bankName": "abc"
+      }
+    ],
+    "terms": "",
+    "tawtheeqRegistrationNo": "",
+    "tawtheeqStatus": "Not Registered",
+    "tawtheeqRegistrationDate": ""
+  }
+]

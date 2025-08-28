@@ -106,5 +106,89 @@
         "comments": "Initial status set to POSTED"
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 3000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "bankAccountId": "",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "referenceNo": "001-3",
+    "description": "Payment received via Receipt Voucher #001-3. Collected by Super Admin.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756408739751",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T19:18:59.751Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 3000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "bankAccountId": "",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "referenceNo": "001-4",
+    "description": "Payment received via Receipt Voucher #001-4. Collected by Super Admin.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756408739759",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T19:18:59.759Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 3000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "bankAccountId": "",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "referenceNo": "001-42",
+    "description": "Payment received via Receipt Voucher #001-42. Collected by Super Admin.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756408739764",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T19:18:59.764Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ]
   }
 ]
