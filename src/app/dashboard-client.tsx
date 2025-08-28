@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -54,7 +53,6 @@ type DashboardClientProps = {
     initialDashboardData: any;
     initialExpiringContracts: Contract[];
     initialBankAccounts: BankAccount[];
-    initialChequeSummary: any;
     initialMovementHistoryCount: number;
 };
 
@@ -154,7 +152,7 @@ const WorkflowDiagram = ({ title, description, icon, steps }: WorkflowDiagramPro
 );
 
 
-export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts, initialChequeSummary, initialMovementHistoryCount }: DashboardClientProps) {
+export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts, initialMovementHistoryCount }: DashboardClientProps) {
   const { formatCurrency } = useCurrency();
 
   if (!initialDashboardData) {
@@ -169,19 +167,6 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     totalTenants,
     totalProperties,
   } = initialDashboardData;
-  
-  const {
-    inHandCount,
-    inHandTotal,
-    dueThisWeekCount,
-    dueThisWeekTotal,
-    depositedCount,
-    depositedTotal,
-    clearedThisMonthCount,
-    clearedThisMonthTotal,
-    overdueCount,
-    overdueTotal,
-  } = initialChequeSummary;
   
   const totalBalance = initialBankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
   
@@ -232,7 +217,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
          <div className="flex items-center space-x-2">
             <Button>View All Reports</Button>
@@ -241,7 +226,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       </div>
       
       {/* Key Metrics Overview */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {kpiData.map((kpi) => (
           <Card key={kpi.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -251,7 +236,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
             <CardContent>
               <div className="text-2xl font-bold">{kpi.value}</div>
               <p className={`text-xs text-muted-foreground`}>
-                <Link href={kpi.href}>
+                <Link href={kpi.href} className='hover:underline'>
                   {kpi.change}
                 </Link>
               </p>
@@ -296,48 +281,6 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
               </CardContent>
             </Card>
             <GlobalStockView />
-             <Card>
-              <CardHeader>
-                <CardTitle>Cheque Summary</CardTitle>
-                <CardDescription>
-                  Status of post-dated cheques.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                 <div className="flex items-center">
-                   <Hourglass className="h-4 w-4 mr-4 text-muted-foreground" />
-                   <div className="flex-1">
-                        <p className="text-sm">In Hand</p>
-                        <p className="text-xs text-muted-foreground">{inHandCount} cheques pending</p>
-                   </div>
-                   <div className="font-mono font-medium">{formatCurrency(inHandTotal)}</div>
-                </div>
-                 <div className="flex items-center">
-                   <Clock className="h-4 w-4 mr-4 text-muted-foreground" />
-                   <div className="flex-1">
-                        <p className="text-sm">Due This Week</p>
-                        <p className="text-xs text-muted-foreground">{dueThisWeekCount} cheques to be deposited</p>
-                   </div>
-                   <div className="font-mono font-medium">{formatCurrency(dueThisWeekTotal)}</div>
-                </div>
-                 <div className="flex items-center">
-                   <Banknote className="h-4 w-4 mr-4 text-muted-foreground" />
-                   <div className="flex-1">
-                        <p className="text-sm">Deposited</p>
-                        <p className="text-xs text-muted-foreground">{depositedCount} cheques awaiting clearance</p>
-                   </div>
-                   <div className="font-mono font-medium">{formatCurrency(depositedTotal)}</div>
-                </div>
-                 <div className="flex items-center">
-                   <CheckCircle className="h-4 w-4 mr-4 text-muted-foreground" />
-                   <div className="flex-1">
-                        <p className="text-sm">Cleared This Month</p>
-                        <p className="text-xs text-muted-foreground">{clearedThisMonthCount} cheques cleared</p>
-                   </div>
-                   <div className="font-mono font-medium">{formatCurrency(clearedThisMonthTotal)}</div>
-                </div>
-              </CardContent>
-            </Card>
            </div>
         </div>
     </div>
