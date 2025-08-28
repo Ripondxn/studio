@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -37,7 +38,7 @@ export const columns: ColumnDef<ChequeLeaf>[] = [
   },
   {
     accessorKey: 'partyName',
-    header: 'Party Name',
+    header: 'Party',
     cell: ({ row }) => {
         const party = row.original;
         if (!party.partyName) return <span className="text-muted-foreground">N/A</span>;
@@ -48,6 +49,18 @@ export const columns: ColumnDef<ChequeLeaf>[] = [
             </div>
         )
     },
+  },
+    {
+    accessorKey: 'property',
+    header: 'Property/Unit',
+    cell: ({row}) => {
+        const item = row.original;
+        if (!item.property) return <span className="text-muted-foreground">N/A</span>;
+        let displayText = item.property;
+        if (item.unitCode) displayText += ` / ${item.unitCode}`;
+        if (item.roomCode) displayText += ` / ${item.roomCode}`;
+        return <div className="text-xs">{displayText}</div>;
+    }
   },
   {
     accessorKey: 'amount',

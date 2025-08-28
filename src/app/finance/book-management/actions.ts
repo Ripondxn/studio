@@ -177,6 +177,9 @@ export async function getReceiptBookReportData(): Promise<{ success: boolean, da
                         partyName: partyNameLookups[payment.partyName] || payment.partyName,
                         amount: payment.amount,
                         collectedBy: payment.createdByUser || book.assignedTo || 'N/A',
+                        property: payment.property,
+                        unitCode: payment.unitCode,
+                        roomCode: payment.roomCode
                     });
                 } else {
                     allLeaves.push({
@@ -228,6 +231,9 @@ export async function getChequeBookReportData(): Promise<{ success: boolean, dat
                         partyCode: payment.partyName,
                         partyName: partyNameLookups[payment.partyName] || payment.partyName,
                         amount: payment.amount,
+                        property: payment.property,
+                        unitCode: payment.unitCode,
+                        roomCode: payment.roomCode,
                     });
                 } else {
                     allLeaves.push({
@@ -247,5 +253,6 @@ export async function getChequeBookReportData(): Promise<{ success: boolean, dat
         return { success: false, error: (error as Error).message };
     }
 }
+
 
 

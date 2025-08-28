@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -43,13 +44,14 @@ export function BookReportsClient({ initialReportData, isLoading }: BookReportsC
         const doc = new jsPDF();
         doc.text("Receipt Book Report", 14, 16);
         (doc as any).autoTable({
-            head: [['Receipt No', 'Book No', 'Status', 'Date', 'Party', 'Amount', 'Collector']],
+            head: [['Receipt No', 'Book No', 'Status', 'Date', 'Party', 'Property', 'Amount', 'Collector']],
             body: filteredData.map(item => [
                 item.receiptNo,
                 item.bookNo,
                 item.status,
                 item.date ? format(new Date(item.date), 'PP') : 'N/A',
                 item.partyName ? `${item.partyName} (${item.partyCode})` : 'N/A',
+                item.property ? `${item.property}${item.unitCode ? `/${item.unitCode}` : ''}${item.roomCode ? `/${item.roomCode}` : ''}`: 'N/A',
                 item.amount ? formatCurrency(item.amount) : 'N/A',
                 item.collectedBy || 'N/A'
             ]),
@@ -66,6 +68,9 @@ export function BookReportsClient({ initialReportData, isLoading }: BookReportsC
             'Date': item.date ? format(new Date(item.date), 'yyyy-MM-dd') : 'N/A',
             'Party Name': item.partyName || 'N/A',
             'Party Code': item.partyCode || 'N/A',
+            'Property': item.property,
+            'Unit': item.unitCode,
+            'Room': item.roomCode,
             'Amount': item.amount || 0,
             'Collected By': item.collectedBy || 'N/A',
         }));

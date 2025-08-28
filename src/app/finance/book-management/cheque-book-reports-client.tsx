@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -42,7 +43,7 @@ export function ChequeBookReportsClient({ initialReportData, isLoading }: Cheque
         const doc = new jsPDF();
         doc.text("Cheque Book Report", 14, 16);
         (doc as any).autoTable({
-            head: [['Cheque No', 'Book No', 'Bank', 'Status', 'Date Used', 'Party', 'Amount']],
+            head: [['Cheque No', 'Book No', 'Bank', 'Status', 'Date Used', 'Party', 'Property', 'Amount']],
             body: filteredData.map(item => [
                 item.chequeNo,
                 item.bookNo,
@@ -50,6 +51,7 @@ export function ChequeBookReportsClient({ initialReportData, isLoading }: Cheque
                 item.status,
                 item.date ? format(new Date(item.date), 'PP') : 'N/A',
                 item.partyName ? `${item.partyName} (${item.partyCode})` : 'N/A',
+                item.property ? `${item.property}${item.unitCode ? `/${item.unitCode}` : ''}${item.roomCode ? `/${item.roomCode}` : ''}`: 'N/A',
                 item.amount ? formatCurrency(item.amount) : 'N/A'
             ]),
             startY: 20,
@@ -66,6 +68,9 @@ export function ChequeBookReportsClient({ initialReportData, isLoading }: Cheque
             'Date Used': item.date ? format(new Date(item.date), 'yyyy-MM-dd') : 'N/A',
             'Party Name': item.partyName || 'N/A',
             'Party Code': item.partyCode || 'N/A',
+            'Property': item.property,
+            'Unit': item.unitCode,
+            'Room': item.roomCode,
             'Amount': item.amount || 0,
         }));
 

@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const chequeBookSchema = z.object({
@@ -8,8 +9,8 @@ export const chequeBookSchema = z.object({
     chequeStartNo: z.coerce.number().min(1, "Starting number is required."),
     chequeEndNo: z.coerce.number().min(1, "Ending number is required."),
     noOfLeafs: z.coerce.number(),
-    leafsUsed: z.coerce.number().optional().default(0),
     status: z.enum(['Active', 'Finished', 'Cancelled']),
+    leafsUsed: z.coerce.number().optional().default(0),
 });
 
 export const receiptBookSchema = z.object({
@@ -32,6 +33,9 @@ export const receiptLeafSchema = z.object({
     partyName: z.string().optional(),
     amount: z.number().optional(),
     collectedBy: z.string().optional(),
+    property: z.string().optional(),
+    unitCode: z.string().optional(),
+    roomCode: z.string().optional(),
 });
 
 
@@ -44,6 +48,9 @@ export const chequeLeafSchema = z.object({
     partyCode: z.string().optional(),
     partyName: z.string().optional(),
     amount: z.number().optional(),
+    property: z.string().optional(),
+    unitCode: z.string().optional(),
+    roomCode: z.string().optional(),
 });
 
 
