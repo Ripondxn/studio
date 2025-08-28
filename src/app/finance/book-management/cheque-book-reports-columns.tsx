@@ -38,7 +38,16 @@ export const columns: ColumnDef<ChequeLeaf>[] = [
   {
     accessorKey: 'partyName',
     header: 'Party Name',
-    cell: ({ row }) => row.original.partyName || <span className="text-muted-foreground">N/A</span>,
+    cell: ({ row }) => {
+        const party = row.original;
+        if (!party.partyName) return <span className="text-muted-foreground">N/A</span>;
+        return (
+            <div>
+                <div>{party.partyName}</div>
+                {party.partyCode && <div className="text-xs text-muted-foreground">{party.partyCode}</div>}
+            </div>
+        )
+    },
   },
   {
     accessorKey: 'amount',

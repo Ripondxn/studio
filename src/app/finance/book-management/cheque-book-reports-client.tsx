@@ -49,7 +49,7 @@ export function ChequeBookReportsClient({ initialReportData, isLoading }: Cheque
                 item.bankName,
                 item.status,
                 item.date ? format(new Date(item.date), 'PP') : 'N/A',
-                item.partyName || 'N/A',
+                item.partyName ? `${item.partyName} (${item.partyCode})` : 'N/A',
                 item.amount ? formatCurrency(item.amount) : 'N/A'
             ]),
             startY: 20,
@@ -65,6 +65,7 @@ export function ChequeBookReportsClient({ initialReportData, isLoading }: Cheque
             'Status': item.status,
             'Date Used': item.date ? format(new Date(item.date), 'yyyy-MM-dd') : 'N/A',
             'Party Name': item.partyName || 'N/A',
+            'Party Code': item.partyCode || 'N/A',
             'Amount': item.amount || 0,
         }));
 

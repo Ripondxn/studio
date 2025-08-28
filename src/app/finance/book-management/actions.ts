@@ -7,10 +7,20 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { chequeBookSchema, receiptBookSchema, type ChequeBook, type ReceiptBook, type ReceiptLeaf, type ChequeLeaf } from './schema';
 import { type Payment } from '../payment/schema';
+import { type Tenant } from '@/app/tenancy/tenants/schema';
+import { type Customer } from '@/app/tenancy/customer/schema';
+import { type Landlord } from '@/app/landlord/schema';
+import { type Vendor } from '@/app/vendors/schema';
+import { type Agent } from '@/app/vendors/agents/schema';
 
 const chequeBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/cheque-books-data.json');
 const receiptBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/receipt-books-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
+const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
+const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
+const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
+const agentsFilePath = path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json');
 
 
 async function readData<T>(filePath: string): Promise<T[]> {
@@ -107,11 +117,40 @@ export async function deleteReceiptBook(id: string) {
     return { success: true };
 }
 
+async function getPartyNameLookups(): Promise<Record<string, string>> {
+    const tenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
+    const landlords: {landlordData: Landlord}[] = await readData(landlordsFilePath);
+    const vendors: {vendorData: Vendor}[] = await readData(vendorsFilePath);
+    const agents: Agent[] = await readData(agentsFilePath);
+    const customers: {customerData: Customer}[] = await readData(customersFilePath);
+
+    const lookups: Record<string, string> = {};
+
+    tenants.forEach(t => {
+        if(t.tenantData.code) lookups[t.tenantData.code] = t.tenantData.name;
+    });
+    landlords.forEach(l => {
+        if(l.landlordData.code) lookups[l.landlordData.code] = l.landlordData.name;
+    });
+    vendors.forEach(v => {
+        if(v.vendorData.code) lookups[v.vendorData.code] = v.vendorData.name;
+    });
+     agents.forEach(a => {
+        if(a.code) lookups[a.code] = a.name;
+    });
+    customers.forEach(c => {
+        if(c.customerData.code) lookups[c.customerData.code] = c.customerData.name;
+    });
+    return lookups;
+}
+
+
 // Report Actions
 export async function getReceiptBookReportData(): Promise<{ success: boolean, data: ReceiptLeaf[], error?: string }> {
     try {
         const books = await readData<ReceiptBook>(receiptBooksFilePath);
         const payments = await readData<Payment>(paymentsFilePath);
+        const partyNameLookups = await getPartyNameLookups();
         
         const usedReceipts = new Map<string, Payment>();
         payments.forEach(p => {
@@ -133,7 +172,8 @@ export async function getReceiptBookReportData(): Promise<{ success: boolean, da
                         bookNo: book.bookNo,
                         status: 'Used',
                         date: payment.date,
-                        partyName: payment.partyName,
+                        partyCode: payment.partyName,
+                        partyName: partyNameLookups[payment.partyName] || payment.partyName,
                         amount: payment.amount,
                         collectedBy: payment.createdByUser || book.assignedTo || 'N/A',
                     });
@@ -161,6 +201,7 @@ export async function getChequeBookReportData(): Promise<{ success: boolean, dat
     try {
         const books = await readData<ChequeBook>(chequeBooksFilePath);
         const payments = await readData<Payment>(paymentsFilePath);
+        const partyNameLookups = await getPartyNameLookups();
         
         const usedCheques = new Map<string, Payment>();
         payments.forEach(p => {
@@ -183,7 +224,8 @@ export async function getChequeBookReportData(): Promise<{ success: boolean, dat
                         bankName: book.bankName,
                         status: 'Used',
                         date: payment.date,
-                        partyName: payment.partyName,
+                        partyCode: payment.partyName,
+                        partyName: partyNameLookups[payment.partyName] || payment.partyName,
                         amount: payment.amount,
                     });
                 } else {
@@ -204,3 +246,4 @@ export async function getChequeBookReportData(): Promise<{ success: boolean, dat
         return { success: false, error: (error as Error).message };
     }
 }
+

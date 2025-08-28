@@ -28,6 +28,7 @@ export const receiptLeafSchema = z.object({
     bookNo: z.string(),
     status: z.enum(['Used', 'Unused']),
     date: z.string().optional(),
+    partyCode: z.string().optional(),
     partyName: z.string().optional(),
     amount: z.number().optional(),
     collectedBy: z.string().optional(),
@@ -40,6 +41,7 @@ export const chequeLeafSchema = z.object({
     bankName: z.string(),
     status: z.enum(['Used', 'Unused']),
     date: z.string().optional(),
+    partyCode: z.string().optional(),
     partyName: z.string().optional(),
     amount: z.number().optional(),
 });
