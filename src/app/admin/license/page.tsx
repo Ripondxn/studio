@@ -89,7 +89,7 @@ export default function LicenseSettingsPage() {
         const storedProfile = sessionStorage.getItem('userProfile');
         if (storedProfile) {
             const profile: { role: UserRole['role'] } = JSON.parse(storedProfile);
-            if (profile.role === 'Super Admin') {
+            if (profile.role === 'Developer') {
                 setIsAuthorized(true);
                 const settingsData = await getLicenseSettings();
                 setSettings(settingsData);

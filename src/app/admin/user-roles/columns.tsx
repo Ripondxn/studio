@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, ShieldQuestion, UserPlus } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, ShieldQuestion, UserPlus, Code } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 
@@ -39,7 +39,8 @@ const roleVariantMap: { [key in UserRole['role']]: "default" | "secondary" | "de
     'Admin': 'default',
     'User': 'secondary',
     'Property Manager': 'outline',
-    'Accountant': 'outline'
+    'Accountant': 'outline',
+    'Developer': 'default'
 };
 
 const ActionsCell = ({ row }: { row: { original: UserRole } }) => {
@@ -190,6 +191,9 @@ export const columns: ColumnDef<UserRole>[] = [
     header: 'Role',
     cell: ({ row }) => {
         const role = row.getValue('role') as UserRole['role'];
+        if (role === 'Developer') {
+            return <Badge variant="destructive" className="bg-purple-600 hover:bg-purple-700"><Code className="mr-1 h-3 w-3"/>{role}</Badge>;
+        }
         return <Badge variant={roleVariantMap[role]}>{role}</Badge>;
     }
   },

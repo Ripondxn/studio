@@ -172,6 +172,7 @@ export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, is
                                         <SelectItem value="Super Admin">Super Admin</SelectItem>
                                         <SelectItem value="Property Manager">Property Manager</SelectItem>
                                         <SelectItem value="Accountant">Accountant</SelectItem>
+                                        <SelectItem value="Developer">Developer</SelectItem>
                                     </SelectContent>
                                 </Select>
                             )}

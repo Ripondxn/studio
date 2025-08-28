@@ -157,6 +157,7 @@ export function AddUserDialog() {
                                         <SelectItem value="Super Admin">Super Admin</SelectItem>
                                         <SelectItem value="Property Manager">Property Manager</SelectItem>
                                         <SelectItem value="Accountant">Accountant</SelectItem>
+                                        <SelectItem value="Developer">Developer</SelectItem>
                                     </SelectContent>
                                 </Select>
                             )}
