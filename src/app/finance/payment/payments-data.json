@@ -219,5 +219,83 @@
         "comments": "Initial status set to POSTED"
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 3000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "property": "LT-C38",
+    "referenceType": "Receipt Book",
+    "referenceNo": "002-3258",
+    "description": "Payment received via Receipt Voucher #002-3258. Collected by Shakil.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756411451864",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T20:04:11.864Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 3000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "property": "LT-C38",
+    "referenceType": "Receipt Book",
+    "referenceNo": "002-3259",
+    "description": "Payment received via Receipt Voucher #002-3259. Collected by Shakil.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756411451887",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T20:04:11.887Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 3000,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "property": "LT-C38",
+    "referenceType": "Receipt Book",
+    "referenceNo": "002-3261",
+    "description": "Payment received via Receipt Voucher #002-3261. Collected by Shakil.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756411451922",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T20:04:11.922Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ]
   }
 ]
