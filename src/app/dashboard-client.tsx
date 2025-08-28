@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -55,7 +56,7 @@ type DashboardClientProps = {
 };
 
 
-const operationalWorkflowSteps = [
+const workflowSteps = [
     {
         category: 'Landlord Onboarding',
         items: [
@@ -86,10 +87,7 @@ const operationalWorkflowSteps = [
             { title: 'Products & Services', href: '/products', icon: <Package className="h-5 w-5" /> },
             { title: 'Bills', href: '/vendors', icon: <FileText className="h-5 w-5" /> },
         ]
-    }
-];
-
-const financeWorkflowSteps = [
+    },
     {
         category: 'Daily Finance Operations',
         items: [
@@ -261,16 +259,10 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
            <div className="lg:col-span-2 space-y-6">
                <WorkflowDiagram 
-                title="Operational Workflow"
-                description="A visual guide to your property management process."
+                title="Business Workflow"
+                description="A visual guide to your property management and finance process."
                 icon={<Route className="h-5 w-5 text-blue-500" />}
-                steps={operationalWorkflowSteps}
-               />
-                <WorkflowDiagram 
-                title="Finance Workflow"
-                description="A guide to your daily financial operations."
-                icon={<FinanceIcon className="h-5 w-5 text-green-500" />}
-                steps={financeWorkflowSteps}
+                steps={workflowSteps}
                />
            </div>
            <div className="space-y-6">
