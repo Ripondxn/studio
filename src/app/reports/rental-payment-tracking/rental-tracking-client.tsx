@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import * as React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -15,13 +14,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { type TenantPaymentData, type MonthlyPayment } from './actions';
+import { type TenantPaymentData, type MonthlyPayment, updatePaymentStatus } from './actions';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/context/currency-context';
 import { format } from 'date-fns';
-import { DollarSign, CheckCircle, XCircle, AlertCircle, Info, FileSpreadsheet } from 'lucide-react';
+import { DollarSign, CheckCircle, XCircle, AlertCircle, Info, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as XLSX from 'xlsx';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface RentalTrackingClientProps {
   initialData: TenantPaymentData[];
@@ -47,6 +48,9 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
   const [paymentData, setPaymentData] = useState(initialData);
   const [filter, setFilter] = useState('');
   const { formatCurrency } = useCurrency();
+  const [updatingCells, setUpdatingCells] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
+
 
   const filteredData = useMemo(() => {
     return paymentData.filter(
@@ -57,26 +61,46 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
     );
   }, [paymentData, filter]);
 
-  const togglePaymentStatus = (contractNo: string, month: string) => {
-    setPaymentData((prevData) =>
-      prevData.map((tenant) => {
-        if (tenant.contractNo === contractNo) {
-          return {
-            ...tenant,
-            payments: tenant.payments.map((payment) => {
-              if (payment.month === month) {
-                const statusCycle: MonthlyPayment['status'][] = ['Unpaid', 'Partial', 'Paid'];
-                const currentIndex = statusCycle.indexOf(payment.status);
-                const newStatus = statusCycle[(currentIndex + 1) % statusCycle.length];
-                return { ...payment, status: newStatus };
-              }
-              return payment;
-            }),
-          };
-        }
-        return tenant;
-      })
-    );
+  const togglePaymentStatus = async (contractNo: string, dueDate: string, currentStatus: MonthlyPayment['status']) => {
+    const cellId = `${contractNo}-${dueDate}`;
+    setUpdatingCells(prev => new Set(prev).add(cellId));
+
+    const statusCycle: MonthlyPayment['status'][] = ['Unpaid', 'Partial', 'Paid'];
+    const currentIndex = statusCycle.indexOf(currentStatus);
+    const newStatus = statusCycle[(currentIndex + 1) % statusCycle.length];
+
+    const result = await updatePaymentStatus(contractNo, dueDate, newStatus);
+
+    if (result.success) {
+        setPaymentData((prevData) =>
+          prevData.map((tenant) => {
+            if (tenant.contractNo === contractNo) {
+              return {
+                ...tenant,
+                payments: tenant.payments.map((payment) => {
+                  if (payment.date === dueDate) {
+                    return { ...payment, status: newStatus };
+                  }
+                  return payment;
+                }),
+              };
+            }
+            return tenant;
+          })
+        );
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Update Failed',
+            description: result.error || 'Could not update payment status.'
+        });
+    }
+
+    setUpdatingCells(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(cellId);
+        return newSet;
+    });
   };
   
   const monthTotals = useMemo(() => {
@@ -193,20 +217,22 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
                     
                     {displayedMonths.map((month) => {
                         const payment = tenant.payments.find((p) => p.month === month);
+                        const cellId = `${tenant.contractNo}-${payment?.date}`;
+                        const isUpdating = updatingCells.has(cellId);
                         const config = statusConfig[payment?.status || 'Unpaid'];
                         return (
                            <React.Fragment key={month}>
                             <TableCell 
                                 className={cn("cursor-pointer", payment ? config.color : 'bg-gray-100')}
-                                onClick={() => payment && togglePaymentStatus(tenant.contractNo, month)}
+                                onClick={() => payment && togglePaymentStatus(tenant.contractNo, payment.date, payment.status)}
                             >
-                                {payment ? format(new Date(payment.date), 'dd.MM.yyyy') : '-'}
+                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment ? format(new Date(payment.date), 'dd.MM.yyyy') : '-')}
                             </TableCell>
                             <TableCell
                                 className={cn("cursor-pointer text-right", payment ? config.color : 'bg-gray-100')}
-                                onClick={() => payment && togglePaymentStatus(tenant.contractNo, month)}
+                                onClick={() => payment && togglePaymentStatus(tenant.contractNo, payment.date, payment.status)}
                             >
-                                {payment ? formatCurrency(payment.amount) : '-'}
+                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment ? formatCurrency(payment.amount) : '-')}
                             </TableCell>
                            </React.Fragment>
                         );
