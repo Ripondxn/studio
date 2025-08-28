@@ -120,18 +120,18 @@ export function AddReceiptBookDialog({ isOpen, setIsOpen, book, onSuccess }: Add
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="receiptStartNo">Start No.</Label>
-                        <Input id="receiptStartNo" type="number" {...register('receiptStartNo')} />
+                        <Input id="receiptStartNo" type="number" {...register('receiptStartNo', { valueAsNumber: true })} />
                         {errors.receiptStartNo && <p className="text-destructive text-xs mt-1">{errors.receiptStartNo.message}</p>}
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="receiptEndNo">End No.</Label>
-                        <Input id="receiptEndNo" type="number" {...register('receiptEndNo')} />
+                        <Input id="receiptEndNo" type="number" {...register('receiptEndNo', { valueAsNumber: true })} />
                         {errors.receiptEndNo && <p className="text-destructive text-xs mt-1">{errors.receiptEndNo.message}</p>}
                     </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="noOfLeafs">Total Leafs</Label>
-                    <Input id="noOfLeafs" type="number" {...register('noOfLeafs')} disabled />
+                    <Input id="noOfLeafs" type="number" {...register('noOfLeafs', { valueAsNumber: true })} disabled />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="assignedTo">Assigned To</Label>
