@@ -1,4 +1,6 @@
 
+'use server';
+
 import { z } from 'zod';
 
 export const chequeBookSchema = z.object({
@@ -27,4 +29,3 @@ export const receiptBookSchema = z.object({
 
 export type ChequeBook = z.infer<typeof chequeBookSchema>;
 export type ReceiptBook = z.infer<typeof receiptBookSchema>;
-
