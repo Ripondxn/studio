@@ -5,27 +5,41 @@ import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChequeBookClient } from './cheque-book-client';
 import { ReceiptBookClient } from './receipt-book-client';
-import { getBooks } from './actions';
-import { type ChequeBook, type ReceiptBook } from './schema';
+import { getBooks, getReceiptBookReportData } from './actions';
+import { type ChequeBook, type ReceiptBook, type ReceiptLeaf } from './schema';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { UserRole } from '@/app/admin/user-roles/schema';
+import { BookReportsClient } from './book-reports-client';
 
 export default function BookManagementPage() {
     const [chequeBooks, setChequeBooks] = useState<ChequeBook[]>([]);
     const [receiptBooks, setReceiptBooks] = useState<ReceiptBook[]>([]);
+    const [reportData, setReportData] = useState<ReceiptLeaf[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthorized, setIsAuthorized] = useState(false);
     const router = useRouter();
 
     const fetchBooks = useCallback(async () => {
         setIsLoading(true);
-        const result = await getBooks();
-        if(result.success) {
-            setChequeBooks(result.data.chequeBooks);
-            setReceiptBooks(result.data.receiptBooks);
+        try {
+            const [booksResult, reportResult] = await Promise.all([
+                getBooks(),
+                getReceiptBookReportData()
+            ]);
+
+            if(booksResult.success) {
+                setChequeBooks(booksResult.data.chequeBooks);
+                setReceiptBooks(booksResult.data.receiptBooks);
+            }
+            if (reportResult.success) {
+                setReportData(reportResult.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch book data:", error);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     }, []);
 
     useEffect(() => {
@@ -70,6 +84,7 @@ export default function BookManagementPage() {
                 <TabsList>
                     <TabsTrigger value="cheque-book">Cheque Book</TabsTrigger>
                     <TabsTrigger value="receipt-book">Receipt Book</TabsTrigger>
+                    <TabsTrigger value="book-reports">Book Reports</TabsTrigger>
                 </TabsList>
                 <TabsContent value="cheque-book">
                     <ChequeBookClient 
@@ -82,6 +97,12 @@ export default function BookManagementPage() {
                     <ReceiptBookClient
                         initialBooks={receiptBooks}
                         onSuccess={fetchBooks}
+                        isLoading={isLoading}
+                    />
+                </TabsContent>
+                 <TabsContent value="book-reports">
+                    <BookReportsClient
+                        initialReportData={reportData}
                         isLoading={isLoading}
                     />
                 </TabsContent>

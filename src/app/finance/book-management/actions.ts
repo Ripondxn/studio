@@ -5,10 +5,13 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { chequeBookSchema, receiptBookSchema, type ChequeBook, type ReceiptBook } from './schema';
+import { chequeBookSchema, receiptBookSchema, type ChequeBook, type ReceiptBook, type ReceiptLeaf } from './schema';
+import { type Payment } from '../payment/schema';
 
 const chequeBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/cheque-books-data.json');
 const receiptBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/receipt-books-data.json');
+const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
+
 
 async function readData<T>(filePath: string): Promise<T[]> {
     try {
@@ -102,4 +105,53 @@ export async function deleteReceiptBook(id: string) {
     await writeData(receiptBooksFilePath, updatedBooks);
     revalidatePath('/finance/book-management');
     return { success: true };
+}
+
+// Report Actions
+export async function getReceiptBookReportData(): Promise<{ success: boolean, data: ReceiptLeaf[], error?: string }> {
+    try {
+        const books = await readData<ReceiptBook>(receiptBooksFilePath);
+        const payments = await readData<Payment>(paymentsFilePath);
+        
+        const usedReceipts = new Map<string, Payment>();
+        payments.forEach(p => {
+            if (p.referenceType === 'Receipt Book' && p.referenceNo) {
+                usedReceipts.set(p.referenceNo, p);
+            }
+        });
+
+        const allLeaves: ReceiptLeaf[] = [];
+
+        books.forEach(book => {
+            for (let i = book.receiptStartNo; i <= book.receiptEndNo; i++) {
+                const receiptNo = `${book.bookNo}-${i}`;
+                const payment = usedReceipts.get(receiptNo);
+
+                if (payment) {
+                    allLeaves.push({
+                        receiptNo,
+                        bookNo: book.bookNo,
+                        status: 'Used',
+                        date: payment.date,
+                        partyName: payment.partyName,
+                        amount: payment.amount,
+                        collectedBy: payment.createdByUser || book.assignedTo || 'N/A',
+                    });
+                } else {
+                    allLeaves.push({
+                        receiptNo,
+                        bookNo: book.bookNo,
+                        status: 'Unused',
+                        collectedBy: book.assignedTo || 'N/A',
+                    });
+                }
+            }
+        });
+        
+        return { success: true, data: allLeaves };
+
+    } catch (error) {
+        console.error('Failed to generate receipt book report:', error);
+        return { success: false, error: (error as Error).message };
+    }
 }

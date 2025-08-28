@@ -23,5 +23,16 @@ export const receiptBookSchema = z.object({
     assignedTo: z.string().optional(),
 });
 
+export const receiptLeafSchema = z.object({
+    receiptNo: z.string(),
+    bookNo: z.string(),
+    status: z.enum(['Used', 'Unused']),
+    date: z.string().optional(),
+    partyName: z.string().optional(),
+    amount: z.number().optional(),
+    collectedBy: z.string().optional(),
+});
+
 export type ChequeBook = z.infer<typeof chequeBookSchema>;
 export type ReceiptBook = z.infer<typeof receiptBookSchema>;
+export type ReceiptLeaf = z.infer<typeof receiptLeafSchema>;
