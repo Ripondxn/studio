@@ -25,7 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 
 
 type ReceiptVoucherFormData = z.infer<typeof receiptVoucherSchema>;
-const formSchema = receiptVoucherSchema.omit({ id: true });
+const formSchema = receiptVoucherSchema.omit({ id: true, createdBy: true });
 
 type Lookups = {
     receiptNumbers: { value: string; label: string }[];
@@ -44,12 +44,45 @@ export default function AddReceiptVoucherPage() {
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
+        defaultValues: {
+            receiptNo: '',
+            date: format(new Date(), 'yyyy-MM-dd'),
+            partyType: 'Tenant',
+            partyName: '',
+            amount: 0,
+            paymentMethod: 'Cash',
+            bankAccountId: '',
+            chequeNo: '',
+            chequeDate: '',
+            bankName: '',
+            collectedBy: '',
+            notes: '',
+            invoiceId: '',
+            contractId: '',
+        }
     });
 
     useEffect(() => {
         const userProfile = sessionStorage.getItem('userProfile');
         if (userProfile) {
-            setCurrentUser(JSON.parse(userProfile));
+            const parsedProfile = JSON.parse(userProfile);
+            setCurrentUser(parsedProfile);
+            form.reset({
+                date: format(new Date(), 'yyyy-MM-dd'),
+                partyType: 'Tenant',
+                paymentMethod: 'Cash',
+                collectedBy: parsedProfile.name, // Set default collector
+                 receiptNo: '',
+                partyName: '',
+                amount: 0,
+                bankAccountId: '',
+                chequeNo: '',
+                chequeDate: '',
+                bankName: '',
+                notes: '',
+                invoiceId: '',
+                contractId: '',
+            });
         }
 
         Promise.all([getReceiptVoucherLookups(), getPartyLookups()]).then(([voucherLookups, partyLookups]) => {
@@ -59,12 +92,6 @@ export default function AddReceiptVoucherPage() {
                 customers: partyLookups.customers,
                 bankAccounts: partyLookups.bankAccounts
             });
-        });
-
-        form.reset({
-            date: format(new Date(), 'yyyy-MM-dd'),
-            partyType: 'Tenant',
-            paymentMethod: 'Cash',
         });
     }, [form]);
 
