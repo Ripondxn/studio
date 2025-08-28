@@ -3,7 +3,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { type Contract } from '@/app/tenancy/contract/schema';
+import { type Contract, type PaymentInstallment } from '@/app/tenancy/contract/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { format, getMonth, getYear } from 'date-fns';
 
@@ -11,6 +11,7 @@ export interface MonthlyPayment {
     month: string; // e.g., 'Mar-25'
     amount: number;
     status: 'Paid' | 'Unpaid' | 'Partial';
+    date: string; // The due date for the payment
 }
 
 export interface TenantPaymentData {
@@ -19,12 +20,14 @@ export interface TenantPaymentData {
     nationality?: string;
     mobile?: string;
     flatNo: string;
-    totalRent: number;
+    rentPeriodFrom: string;
+    rentPeriodTo: string;
+    monthlyRent: number;
+    yearlyRent: number;
     payments: MonthlyPayment[];
     contractNo: string;
 }
 
-// This is a simplified function. A real-world scenario would be much more complex.
 export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
     const contracts: Contract[] = await fs.readFile(path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json'), 'utf-8').then(JSON.parse);
     const tenants: {tenantData: Tenant}[] = await fs.readFile(path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json'), 'utf-8').then(JSON.parse);
@@ -33,59 +36,28 @@ export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
 
     const paymentData = contracts.map(contract => {
         const tenantInfo = tenantMap.get(contract.tenantCode || '');
-        const paymentMonths = new Map<string, { expected: number; paid: number }>();
-
-        // Populate expected amounts
-        contract.paymentSchedule.forEach(installment => {
+        
+        const payments = contract.paymentSchedule.map(installment => {
             const dueDate = new Date(installment.dueDate);
             const monthKey = format(dueDate, 'MMM-yy');
-            const current = paymentMonths.get(monthKey) || { expected: 0, paid: 0 };
-            current.expected += installment.amount;
-            paymentMonths.set(monthKey, current);
-        });
-        
-        // This is a placeholder for actual payment data aggregation
-        // In a real app, you would fetch from a payments table.
-        contract.paymentSchedule.forEach(installment => {
-            if (installment.status === 'paid') {
-                 const dueDate = new Date(installment.dueDate);
-                 const monthKey = format(dueDate, 'MMM-yy');
-                 const current = paymentMonths.get(monthKey) || { expected: 0, paid: 0 };
-                 current.paid += installment.amount;
-                 paymentMonths.set(monthKey, current);
-            }
-        });
-
-        const payments: MonthlyPayment[] = Array.from(paymentMonths.entries()).map(([month, data]) => {
-            let status: 'Paid' | 'Unpaid' | 'Partial' = 'Unpaid';
-            if (data.paid >= data.expected) {
-                status = 'Paid';
-            } else if (data.paid > 0) {
-                status = 'Partial';
-            }
             return {
-                month,
-                amount: data.expected,
-                status,
+                month: monthKey,
+                amount: installment.amount,
+                status: installment.status === 'paid' ? 'Paid' : 'Unpaid',
+                date: installment.dueDate,
             };
         });
-
-        // Ensure we have entries for specific months mentioned in the prompt, even if empty.
-        const targetMonths = ['Mar-25', 'Apr-25', 'May-25', 'Jun-25'];
-        targetMonths.forEach(m => {
-            if(!paymentMonths.has(m)) {
-                payments.push({ month: m, amount: 0, status: 'Unpaid' });
-            }
-        })
-
 
         return {
             tenantCode: contract.tenantCode || '',
             tenantName: contract.tenantName,
             nationality: tenantInfo?.tenantData.nationality,
             mobile: tenantInfo?.tenantData.mobile,
-            flatNo: `${contract.property}-${contract.unitCode}${contract.roomCode ? `-${contract.roomCode}` : ''}`,
-            totalRent: contract.totalRent,
+            flatNo: `${contract.property}-${contract.unitCode}${contract.roomCode ? `/${contract.roomCode}` : ''}`,
+            rentPeriodFrom: contract.startDate,
+            rentPeriodTo: contract.endDate,
+            monthlyRent: contract.totalRent / 12, // Simplified for this example
+            yearlyRent: contract.totalRent,
             payments,
             contractNo: contract.contractNo,
         };
