@@ -10,9 +10,6 @@ export const chequeBookSchema = z.object({
     noOfLeafs: z.coerce.number(),
     leafsUsed: z.coerce.number().optional().default(0),
     status: z.enum(['Active', 'Finished', 'Cancelled']),
-}).refine(data => data.chequeEndNo >= data.chequeStartNo, {
-    message: "Ending number must be greater than or equal to the starting number.",
-    path: ["chequeEndNo"],
 });
 
 export const receiptBookSchema = z.object({

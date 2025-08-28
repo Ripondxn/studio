@@ -48,6 +48,10 @@ export async function saveChequeBook(data: z.infer<typeof chequeBookFormSchema>,
     const validation = chequeBookFormSchema.safeParse(data);
     if (!validation.success) return { success: false, error: 'Invalid data format.' };
 
+    if (validation.data.chequeEndNo < validation.data.chequeStartNo) {
+        return { success: false, error: 'Ending number must be greater than or equal to the starting number.' };
+    }
+
     const books = await readData<ChequeBook>(chequeBooksFilePath);
     if (id) { // Update
         const index = books.findIndex(b => b.id === id);
