@@ -316,7 +316,7 @@ export const columns: ColumnDef<Cheque>[] = [
     header: () => <div className="text-right">Amount</div>,
     cell: function Cell({ row }) {
       const { formatCurrency } = useCurrency();
-      const amount = parseFloat(row.getValue('amount'));
+      const amount = parseFloat(String(row.getValue('amount')));
       return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
     },
   },

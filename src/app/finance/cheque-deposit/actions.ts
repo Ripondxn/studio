@@ -155,7 +155,9 @@ export async function updateChequeStatus(chequeId: string, status: Cheque['statu
             updatedCheque.clearanceDate = date;
         } else if (status === 'Bounced') {
             updatedCheque.clearanceDate = date;
-        } 
+        } else if (status === 'Returned with Cash') {
+            updatedCheque.clearanceDate = date;
+        }
         
         allCheques[chequeIndex] = updatedCheque;
         
