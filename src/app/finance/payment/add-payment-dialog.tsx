@@ -326,19 +326,18 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   };
 
   const referenceTypeOptions = () => {
-    if (partyType === 'Vendor') {
-      return <SelectItem value="Bill">Bill</SelectItem>
+    if (paymentType === 'Payment') {
+        return [
+            <SelectItem key="Lease Contract" value="Lease Contract">Lease Contract</SelectItem>,
+            <SelectItem key="Bill" value="Bill">Bill</SelectItem>,
+        ];
+    } else { // Receipt
+        return [
+            <SelectItem key="Tenancy Contract" value="Tenancy Contract">Tenancy Contract</SelectItem>,
+            <SelectItem key="Invoice" value="Invoice">Invoice</SelectItem>,
+            <SelectItem key="Receipt Book" value="Receipt Book">Receipt Book</SelectItem>,
+        ];
     }
-    if (partyType === 'Customer') {
-       return <SelectItem value="Invoice">Invoice</SelectItem>
-    }
-    if (partyType === 'Tenant') {
-       return <SelectItem value="Tenancy Contract">Tenancy Contract</SelectItem>
-    }
-     if (partyType === 'Landlord') {
-       return <SelectItem value="Lease Contract">Lease Contract</SelectItem>
-    }
-    return null;
   }
 
   return (
@@ -369,7 +368,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         <div className="space-y-2"><Label>Party Type *</Label><Controller name="partyType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select party type"/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Landlord">Landlord</SelectItem><SelectItem value="Vendor">Vendor</SelectItem><SelectItem value="Agent">Agent</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></div>
                         <div className="space-y-2"><Label>Party Name *</Label><Controller name="partyName" control={control} render={({ field }) => (<Combobox options={partyOptions} value={field.value || ''} onSelect={handlePartySelect} placeholder="Select party"/>)} /></div>
                         <div className="space-y-2"><Label>Amount *</Label><Input type="number" placeholder="0.00" {...register('amount', { valueAsNumber: true })} /></div>
-                        <div className="space-y-2"><Label>Payment Method *</Label><Controller name="paymentMethod" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select payment method"/></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></div>
+                        <div className="space-y-2"><Label>Payment Method *</Label><Controller name="paymentMethod" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select payment method"/></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></div>
                     </CardContent>
                 </Card>
 

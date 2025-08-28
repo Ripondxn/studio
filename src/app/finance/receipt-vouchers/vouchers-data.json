@@ -1,2 +1,56 @@
-
-[]
+[
+  {
+    "receiptNo": "001-1",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 500,
+    "paymentMethod": "Bank Transfer",
+    "bankAccountId": "",
+    "chequeNo": "",
+    "chequeDate": "",
+    "bankName": "",
+    "collectedBy": "Tanvir Ahmed",
+    "notes": "",
+    "createdBy": "Super Admin",
+    "invoiceId": "",
+    "contractId": "",
+    "id": "RV-1756360270759"
+  },
+  {
+    "receiptNo": "001-2",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T002",
+    "amount": 1200,
+    "paymentMethod": "Cash",
+    "bankAccountId": "",
+    "chequeNo": "",
+    "chequeDate": "",
+    "bankName": "",
+    "collectedBy": "Super Admin",
+    "notes": "",
+    "createdBy": "Super Admin",
+    "invoiceId": "",
+    "contractId": "",
+    "id": "RV-1756360632272"
+  },
+  {
+    "receiptNo": "001-3",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T007",
+    "amount": 1300,
+    "paymentMethod": "Cash",
+    "bankAccountId": "",
+    "chequeNo": "",
+    "chequeDate": "",
+    "bankName": "",
+    "collectedBy": "Tanvir Ahmed",
+    "notes": "",
+    "createdBy": "Super Admin",
+    "invoiceId": "",
+    "contractId": "",
+    "id": "RV-1756360762871"
+  }
+]

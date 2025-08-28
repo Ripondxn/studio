@@ -1,33 +1,75 @@
 [
   {
-    "type": "Payment",
-    "date": "2025-08-27",
-    "partyType": "Vendor",
-    "partyName": "Md Ripon Ahmed",
-    "amount": 1000,
-    "paymentMethod": "Cash",
-    "paymentFrom": "Bank",
-    "property": "LT-C38",
-    "unitCode": "",
-    "roomCode": "",
-    "referenceType": "Bill",
-    "description": "",
-    "status": "Paid",
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T001",
+    "amount": 500,
+    "paymentMethod": "Bank Transfer",
+    "paymentFrom": "Petty Cash",
+    "bankAccountId": "",
+    "referenceNo": "001-1",
+    "description": "Payment received via Receipt Voucher #001-1. Collected by Tanvir Ahmed.",
+    "status": "Received",
     "createdByUser": "Super Admin",
-    "billAllocations": [
+    "id": "PAY-1756360270763",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
       {
-        "billId": "BILL-1756298346114",
-        "amount": 1000
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T05:51:10.763Z",
+        "comments": "Initial status set to POSTED"
       }
-    ],
-    "id": "PAY-1756298671470",
+    ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T002",
+    "amount": 1200,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "bankAccountId": "",
+    "referenceNo": "001-2",
+    "description": "Payment received via Receipt Voucher #001-2. Collected by Super Admin.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756360632276",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-08-28T05:57:12.276Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Tenant",
+    "partyName": "T007",
+    "amount": 1300,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "bankAccountId": "",
+    "referenceNo": "001-3",
+    "description": "Payment received via Receipt Voucher #001-3. Collected by Tanvir Ahmed.",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "id": "PAY-1756360762873",
     "currentStatus": "DRAFT",
     "approvalHistory": [
       {
         "action": "Created Transaction",
         "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-08-27T12:44:31.470Z",
+        "timestamp": "2025-08-28T05:59:22.873Z",
         "comments": "Initial status set to DRAFT"
       }
     ]

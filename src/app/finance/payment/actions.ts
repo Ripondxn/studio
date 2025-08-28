@@ -23,6 +23,7 @@ import { applyPaymentToBills } from '@/app/vendors/bill/actions';
 import { type Cheque } from '../cheque-deposit/schema';
 import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 import { applyFinancialImpact } from '@/app/workflow/actions';
+import { type ReceiptBook } from '../book-management/schema';
 
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -38,6 +39,7 @@ const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
+const receiptBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/receipt-books-data.json');
 
 
 async function readData(filePath: string) {
@@ -109,6 +111,27 @@ export async function getPayments(user: { email: string; role: string; name?: st
     return userPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
+async function updateReceiptBookUsage(receiptNo: string) {
+    try {
+        const books = await readData(receiptBooksFilePath) as ReceiptBook[];
+        const [bookNo] = receiptNo.split('-');
+        if (!bookNo) return;
+
+        const bookIndex = books.findIndex(b => b.bookNo === bookNo);
+        if (bookIndex !== -1) {
+            books[bookIndex].leafsUsed = (books[bookIndex].leafsUsed || 0) + 1;
+             if (books[bookIndex].leafsUsed >= books[bookIndex].noOfLeafs) {
+                books[bookIndex].status = 'Finished';
+            }
+            await writeData(receiptBooksFilePath, books);
+            revalidatePath('/finance/book-management');
+        }
+    } catch (error) {
+        console.error(`Failed to update receipt book for receipt #${receiptNo}`, error);
+    }
+}
+
+
 export async function addPayment(data: z.infer<typeof paymentSchema>) {
     const validation = paymentSchema.safeParse(data);
     if (!validation.success) {
@@ -144,6 +167,10 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
 
         if (newPayment.type === 'Payment' && newPayment.billAllocations && newPayment.billAllocations.length > 0) {
             await applyPaymentToBills(newPayment.billAllocations, newPayment.partyName);
+        }
+        
+        if (newPayment.referenceType === 'Receipt Book' && newPayment.referenceNo) {
+            await updateReceiptBookUsage(newPayment.referenceNo);
         }
 
         if (initialStatus === 'POSTED') {
@@ -461,6 +488,10 @@ export async function getReferences(partyType: string, partyCode: string, refere
                         roomCode: b.roomCode,
                     };
                 });
+        }
+        case 'Receipt Book': {
+            // No options to return, as this is for manual entry.
+            return [];
         }
         default:
             return [];
