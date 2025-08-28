@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -371,18 +370,6 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                         <div className="space-y-2"><Label>Party Name *</Label><Controller name="partyName" control={control} render={({ field }) => (<Combobox options={partyOptions} value={field.value || ''} onSelect={handlePartySelect} placeholder="Select party"/>)} /></div>
                         <div className="space-y-2"><Label>Amount *</Label><Input type="number" placeholder="0.00" {...register('amount', { valueAsNumber: true })} /></div>
                         <div className="space-y-2"><Label>Payment Method *</Label><Controller name="paymentMethod" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue placeholder="Select payment method"/></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></div>
-                        {paymentType === 'Receipt' && referenceType === 'Receipt Book' && (
-                             <div className="space-y-2">
-                                <Label>Collector</Label>
-                                 <Controller name="createdByUser" control={control} render={({ field }) => (
-                                    <Combobox 
-                                        options={lookups.users} 
-                                        value={field.value || ''} 
-                                        onSelect={field.onChange} 
-                                        placeholder="Select Collector"/>
-                                )} />
-                            </div>
-                        )}
                     </CardContent>
                 </Card>
 
@@ -465,6 +452,18 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                                     )} 
                                 />
                            </div>
+                           {paymentType === 'Receipt' && referenceType === 'Receipt Book' && (
+                                <div className="space-y-2">
+                                    <Label>Collector</Label>
+                                    <Controller name="createdByUser" control={control} render={({ field }) => (
+                                        <Combobox 
+                                            options={lookups.users} 
+                                            value={field.value || ''} 
+                                            onSelect={field.onChange} 
+                                            placeholder="Select Collector"/>
+                                    )} />
+                                </div>
+                            )}
                            <div className="space-y-2"><Label>Reference Number</Label><Controller name="referenceNo" control={control} render={({ field }) => (<Combobox options={lookups.references} value={field.value || ''} onSelect={handleReferenceSelect} placeholder="Enter or select a reference" />)} /></div>
                         </div>
                         <div className="space-y-2"><Label>Description</Label><Textarea placeholder="Additional notes or description" rows={3} {...register('description')} /></div>

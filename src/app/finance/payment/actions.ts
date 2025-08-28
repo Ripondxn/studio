@@ -499,7 +499,7 @@ export async function getReferences(partyType: string, partyCode: string, refere
             
             const relevantBooks = assignedTo 
                 ? books.filter(b => b.assignedTo === assignedTo && b.status === 'Active') 
-                : books.filter(b => b.status === 'Active');
+                : books.filter(b => b.status === 'Active' && !b.assignedTo);
 
             relevantBooks.forEach(book => {
                 const start = book.receiptStartNo;
@@ -507,7 +507,7 @@ export async function getReferences(partyType: string, partyCode: string, refere
                 for (let i = start; i <= end; i++) {
                     const receiptNo = `${book.bookNo}-${i}`;
                     if (!usedReceipts.has(receiptNo)) {
-                        availableReceipts.push({ value: receiptNo, label: receiptNo });
+                        availableReceipts.push({ value: receiptNo, label: `Book: ${book.bookNo}, Receipt: ${i}` });
                     }
                 }
             });
