@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -214,12 +214,12 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
                 onChange={(e) => setFilter(e.target.value)}
                 className="max-w-xs"
                 />
-                 <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+                 <Select value={propertyFilter || 'all'} onValueChange={(value) => setPropertyFilter(value === 'all' ? '' : value)}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Filter by property"/>
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">All Properties</SelectItem>
+                        <SelectItem value="all">All Properties</SelectItem>
                         {properties.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                     </SelectContent>
                 </Select>
