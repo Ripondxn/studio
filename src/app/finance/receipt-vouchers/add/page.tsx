@@ -1,29 +1,31 @@
-
-
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { getReceiptVoucherLookups, saveReceiptVoucherBatch, getDueAmountForParty } from '../actions';
 import { getLookups as getPartyLookups } from '@/app/finance/payment/actions';
 import { receiptVoucherSchema, type ReceiptVoucher } from '../schema';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, X, Receipt, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Save, X, Plus, Trash2, FileUp, FileText, FileSpreadsheet } from 'lucide-react';
 import { format } from 'date-fns';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { type ReceiptBook } from '../../book-management/schema';
-
+import { ImportReceiptsDialog } from './import-receipts-dialog';
+import { useCurrency } from '@/context/currency-context';
 
 const batchFormSchema = z.object({
   vouchers: z.array(receiptVoucherSchema.omit({ id: true, createdBy: true })),
@@ -46,6 +48,8 @@ export default function AddReceiptVoucherPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [lookups, setLookups] = useState<Lookups>({ receipts: [], collectors: [], tenants: [], customers: [], bankAccounts: [] });
     const [currentUser, setCurrentUser] = useState<UserRole | null>(null);
+    const { formatCurrency } = useCurrency();
+
 
     const form = useForm<BatchFormData>({
         resolver: zodResolver(batchFormSchema),
@@ -54,7 +58,7 @@ export default function AddReceiptVoucherPage() {
         }
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         control: form.control,
         name: "vouchers",
     });
@@ -125,6 +129,19 @@ export default function AddReceiptVoucherPage() {
         }
         form.setValue(`vouchers.${index}.notes`, `Payment received via Receipt Voucher #${receiptNo}. Collected by ${form.getValues(`vouchers.${index}.collectedBy`)}.`);
     }
+    
+    const handleDataImport = (data: any[]) => {
+        const transformedData = data.map(row => ({
+            ...row,
+            partyType: row.partyType || 'Tenant',
+            date: row.date ? format(new Date(row.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+            amount: parseFloat(row.amount) || 0,
+            paymentMethod: row.paymentMethod || 'Cash',
+            collectedBy: row.collectedBy || currentUser?.name || '',
+        }));
+        replace(transformedData);
+        toast({ title: "Import Successful", description: `${data.length} rows have been loaded into the form.`});
+    };
 
     const onSubmit = async (data: BatchFormData) => {
         if (!currentUser) {
@@ -143,6 +160,45 @@ export default function AddReceiptVoucherPage() {
         }
         setIsSaving(false);
     };
+    
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        doc.text("Receipt Voucher Batch", 14, 16);
+        (doc as any).autoTable({
+            head: [['Date', 'Party', 'Receipt #', 'Amount', 'Method', 'Collector']],
+            body: form.getValues('vouchers').map(v => [
+                v.date,
+                v.partyName,
+                v.receiptNo,
+                formatCurrency(v.amount),
+                v.paymentMethod,
+                v.collectedBy
+            ]),
+            startY: 20,
+        });
+        doc.save(`receipt-batch-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    };
+
+    const handleExportExcel = () => {
+        const dataToExport = form.getValues('vouchers').map(v => ({
+            'ReceiptNo': v.receiptNo,
+            'Date': v.date,
+            'PartyType': v.partyType,
+            'PartyName': v.partyName,
+            'Property': v.property,
+            'Unit': v.unitCode,
+            'Room': v.roomCode,
+            'Amount': v.amount,
+            'PaymentMethod': v.paymentMethod,
+            'CollectedBy': v.collectedBy,
+            'Notes': v.notes,
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Receipt Vouchers");
+        XLSX.writeFile(wb, `receipt-batch-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    };
 
 
     return (
@@ -153,6 +209,9 @@ export default function AddReceiptVoucherPage() {
                     <p className="text-muted-foreground">Record multiple payment receipts at once.</p>
                 </div>
                 <div className="flex items-center gap-2">
+                     <ImportReceiptsDialog onDataImport={handleDataImport} />
+                     <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4"/>PDF</Button>
+                     <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4"/>Excel</Button>
                     <Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving}>
                         {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                         Save Vouchers
@@ -171,18 +230,18 @@ export default function AddReceiptVoucherPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-1/12">Receipt #</TableHead>
-                                            <TableHead className="w-1/12">Date</TableHead>
-                                            <TableHead className="w-1/12">Party</TableHead>
-                                            <TableHead className="w-2/12">Party Name</TableHead>
-                                            <TableHead className="w-[100px]">Property</TableHead>
-                                            <TableHead className="w-[100px]">Unit</TableHead>
-                                            <TableHead className="w-[100px]">Room</TableHead>
-                                            <TableHead className="w-1/12">Amount</TableHead>
-                                            <TableHead className="w-1/12">Method</TableHead>
-                                            <TableHead className="w-1/12">Collector</TableHead>
-                                            <TableHead className="w-2/12">Details</TableHead>
-                                            <TableHead className="w-1/12">Action</TableHead>
+                                            <TableHead className="w-[12%]">Receipt #</TableHead>
+                                            <TableHead className="w-[10%]">Date</TableHead>
+                                            <TableHead className="w-[10%]">Party Type</TableHead>
+                                            <TableHead className="w-[15%]">Party Name</TableHead>
+                                            <TableHead className="w-[10%]">Property</TableHead>
+                                            <TableHead className="w-[8%]">Unit</TableHead>
+                                            <TableHead className="w-[8%]">Room</TableHead>
+                                            <TableHead className="w-[8%] text-right">Amount</TableHead>
+                                            <TableHead className="w-[10%]">Method</TableHead>
+                                            <TableHead className="w-[10%]">Collector</TableHead>
+                                            <TableHead className="w-[15%]">Details</TableHead>
+                                            <TableHead className="w-[5%]">Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -195,7 +254,7 @@ export default function AddReceiptVoucherPage() {
                                                  <TableCell><FormField name={`vouchers.${index}.property`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.unitCode`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.roomCode`} control={form.control} render={({ field }) => ( <Input {...field} disabled />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.amount`} control={form.control} render={({ field }) => ( <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.amount`} control={form.control} render={({ field }) => ( <Input type="number" {...field} className="text-right" onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.paymentMethod`} control={form.control} render={({ field }) => ( <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.collectedBy`} control={form.control} render={({ field }) => ( <Combobox options={lookups.collectors} value={field.value || ''} onSelect={field.onChange} placeholder="Collector..."/>)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.notes`} control={form.control} render={({ field }) => ( <Input placeholder="Notes..." {...field} />)} /></TableCell>
