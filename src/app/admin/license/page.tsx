@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, KeyRound } from 'lucide-react';
 import { saveLicenseSettings, getLicenseSettings, type LicenseSettings } from './actions';
+import type { UserRole } from '@/app/admin/user-roles/schema';
 
 function LicenseSettingsClient({ initialSettings }: { initialSettings: LicenseSettings }) {
     const { toast } = useToast();
@@ -78,21 +80,41 @@ function LicenseSettingsClient({ initialSettings }: { initialSettings: LicenseSe
 
 export default function LicenseSettingsPage() {
   const [settings, setSettings] = useState<LicenseSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const router = useRouter();
   
   useEffect(() => {
-    getLicenseSettings().then(setSettings);
-  }, []);
+    const checkAuthAndFetchData = async () => {
+        const storedProfile = sessionStorage.getItem('userProfile');
+        if (storedProfile) {
+            const profile: { role: UserRole['role'] } = JSON.parse(storedProfile);
+            if (profile.role === 'Super Admin') {
+                setIsAuthorized(true);
+                const settingsData = await getLicenseSettings();
+                setSettings(settingsData);
+            } else {
+                router.push('/');
+            }
+        } else {
+             router.push('/login');
+        }
+        setIsLoading(false);
+    };
 
-  if (!settings) {
+    checkAuthAndFetchData();
+  }, [router]);
+
+  if (isLoading || !isAuthorized) {
     return (
       <div className="flex h-full w-full items-center justify-center p-10">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading Settings...</span>
+          <span>Loading...</span>
         </div>
       </div>
     );
   }
   
-  return <LicenseSettingsClient initialSettings={settings} />;
+  return <LicenseSettingsClient initialSettings={settings!} />;
 }
