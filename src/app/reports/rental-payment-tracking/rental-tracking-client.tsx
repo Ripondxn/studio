@@ -17,11 +17,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { type TenantPaymentData, type MonthlyPayment, updatePaymentStatus } from './actions';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/context/currency-context';
-import { format } from 'date-fns';
-import { DollarSign, CheckCircle, XCircle, AlertCircle, Info, FileSpreadsheet, Loader2 } from 'lucide-react';
+import { format, isAfter, isBefore, parseISO } from 'date-fns';
+import { DollarSign, CheckCircle, XCircle, AlertCircle, Info, FileSpreadsheet, Loader2, CalendarIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 
 interface RentalTrackingClientProps {
@@ -47,6 +49,7 @@ const statusConfig: { [key in MonthlyPayment['status']]: { color: string; icon: 
 export function RentalTrackingClient({ initialData, displayedMonths }: RentalTrackingClientProps) {
   const [paymentData, setPaymentData] = useState(initialData);
   const [filter, setFilter] = useState('');
+  const [dateRange, setDateRange] = useState<{ from?: Date, to?: Date}>({});
   const { formatCurrency } = useCurrency();
   const [updatingCells, setUpdatingCells] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -54,12 +57,29 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
 
   const filteredData = useMemo(() => {
     return paymentData.filter(
-      (tenant) =>
-        tenant.tenantName.toLowerCase().includes(filter.toLowerCase()) ||
-        tenant.flatNo.toLowerCase().includes(filter.toLowerCase()) ||
-        tenant.nationality?.toLowerCase().includes(filter.toLowerCase())
+      (tenant) => {
+        const nameMatch = tenant.tenantName.toLowerCase().includes(filter.toLowerCase());
+        const flatMatch = tenant.flatNo.toLowerCase().includes(filter.toLowerCase());
+        const nationalityMatch = tenant.nationality?.toLowerCase().includes(filter.toLowerCase());
+
+        if (filter && !(nameMatch || flatMatch || nationalityMatch)) {
+          return false;
+        }
+
+        if (dateRange.from || dateRange.to) {
+            const hasPaymentInDateRange = tenant.payments.some(payment => {
+                const paymentDate = parseISO(payment.date);
+                const fromDateOk = dateRange.from ? !isBefore(paymentDate, dateRange.from) : true;
+                const toDateOk = dateRange.to ? !isAfter(paymentDate, dateRange.to) : true;
+                return fromDateOk && toDateOk;
+            });
+            if (!hasPaymentInDateRange) return false;
+        }
+        
+        return true;
+      }
     );
-  }, [paymentData, filter]);
+  }, [paymentData, filter, dateRange]);
 
   const togglePaymentStatus = async (contractNo: string, dueDate: string, currentStatus: MonthlyPayment['status']) => {
     const cellId = `${contractNo}-${dueDate}`;
@@ -169,6 +189,50 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
                 onChange={(e) => setFilter(e.target.value)}
                 className="max-w-sm"
                 />
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-[240px] justify-start text-left font-normal",
+                                !dateRange.from && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateRange.from ? format(dateRange.from, "PPP") : <span>From date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={dateRange.from}
+                            onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-[240px] justify-start text-left font-normal",
+                                !dateRange.to && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateRange.to ? format(dateRange.to, "PPP") : <span>To date</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="single"
+                            selected={dateRange.to}
+                            onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
                  <Button variant="outline" onClick={handleExportExcel} size="sm">
                     <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
                 </Button>
@@ -242,9 +306,7 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
             </TableBody>
              <TableFooter className="sticky bottom-0 bg-muted z-10">
                 <TableRow>
-                    <TableCell colSpan={7} className="text-right font-bold">Monthly Totals</TableCell>
-                    <TableCell className="text-right font-bold">{formatCurrency(Object.values(monthTotals).reduce((s, m) => s + (filteredData[0]?.monthlyRent || 0), 0))}</TableCell>
-                    <TableCell className="text-right font-bold">{formatCurrency(Object.values(monthTotals).reduce((s, m) => s + (filteredData[0]?.yearlyRent || 0), 0))}</TableCell>
+                    <TableCell colSpan={9} className="text-right font-bold">Monthly Totals</TableCell>
                     {displayedMonths.flatMap(month => {
                         const total = monthTotals[month];
                         return [
