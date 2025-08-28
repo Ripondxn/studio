@@ -55,5 +55,31 @@
         "comments": "Initial status set to POSTED"
       }
     ]
+  },
+  {
+    "id": "PAY-1756406337817",
+    "type": "Receipt",
+    "date": "2025-08-28",
+    "partyType": "Customer",
+    "partyName": "Cheque Deposit - 2025-08-28",
+    "amount": 60000,
+    "paymentMethod": "Cheque",
+    "paymentFrom": "Bank",
+    "bankAccountId": "acc_1756122990669",
+    "referenceNo": "DEP-1756406337817",
+    "description": "Deposit of 4 cheques: 123457, 123456, 123457, 123458",
+    "remarks": "Cheque IDs: CHQ-1756311744398, CHQ-1756196420568, CHQ-1756311744396, CHQ-1756311744350",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created & Submitted",
+        "actorId": "super.admin@propvue.com",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-28T18:38:57.817Z",
+        "comments": "Cheque deposit voucher created."
+      }
+    ]
   }
 ]

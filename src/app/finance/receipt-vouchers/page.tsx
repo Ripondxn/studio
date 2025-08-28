@@ -1,4 +1,5 @@
 
+
 import { getReceiptVouchers } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';

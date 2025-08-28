@@ -1,4 +1,3 @@
-
 [
   {
     "chequeNo": "123456",
@@ -22,7 +21,7 @@
     "chequeDate": "2025-09-24",
     "amount": 15000,
     "bankName": "ABC",
-    "status": "In Hand",
+    "status": "Deposited",
     "type": "Incoming",
     "partyName": "T001",
     "property": "LT-C38",
@@ -30,14 +29,16 @@
     "roomCode": "",
     "contractNo": "TC-0002",
     "remarks": "",
-    "id": "CHQ-1756196420568"
+    "id": "CHQ-1756196420568",
+    "depositDate": "2025-08-28",
+    "bankAccountId": "acc_1756122990669"
   },
   {
     "chequeNo": "123456",
     "chequeDate": "2025-08-24",
     "amount": 15000,
     "bankName": "ABC",
-    "status": "In Hand",
+    "status": "Deposited",
     "type": "Incoming",
     "partyName": "T001",
     "property": "LT-C38",
@@ -45,14 +46,16 @@
     "roomCode": "",
     "contractNo": "TC-0002",
     "remarks": "Installment 1",
-    "id": "CHQ-1756311744350"
+    "id": "CHQ-1756311744350",
+    "depositDate": "2025-08-28",
+    "bankAccountId": "acc_1756122990669"
   },
   {
     "chequeNo": "123457",
     "chequeDate": "2025-09-24",
     "amount": 15000,
     "bankName": "ABC",
-    "status": "In Hand",
+    "status": "Deposited",
     "type": "Incoming",
     "partyName": "T001",
     "property": "LT-C38",
@@ -60,14 +63,16 @@
     "roomCode": "",
     "contractNo": "TC-0002",
     "remarks": "Installment 2",
-    "id": "CHQ-1756311744396"
+    "id": "CHQ-1756311744396",
+    "depositDate": "2025-08-28",
+    "bankAccountId": "acc_1756122990669"
   },
   {
     "chequeNo": "123458",
     "chequeDate": "2025-10-24",
     "amount": 15000,
     "bankName": "ABC",
-    "status": "In Hand",
+    "status": "Deposited",
     "type": "Incoming",
     "partyName": "T001",
     "property": "LT-C38",
@@ -75,6 +80,8 @@
     "roomCode": "",
     "contractNo": "TC-0002",
     "remarks": "Installment 3",
-    "id": "CHQ-1756311744398"
+    "id": "CHQ-1756311744398",
+    "depositDate": "2025-08-28",
+    "bankAccountId": "acc_1756122990669"
   }
 ]
