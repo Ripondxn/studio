@@ -1,13 +1,14 @@
 
-import { getPdcCheques, getSummary } from './actions';
-import { PdcChequesClient } from './cheques-client';
+import { ChequesClient } from '../cheque-deposit/cheques-client';
+import { getCheques, getSummary } from '../cheque-deposit/actions';
 
 
 export default async function PdcChequePage() {
-  const cheques = await getPdcCheques();
+  const cheques = await getCheques();
   const summary = await getSummary();
 
   return (
-    <PdcChequesClient initialCheques={cheques} initialSummary={summary} />
+    <ChequesClient initialCheques={cheques} initialSummary={summary} />
   );
 }
+

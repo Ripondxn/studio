@@ -1,2 +1,12 @@
-
-[]
+[
+  {
+    "bankName": "Trust Famous-5117",
+    "bookNo": "001",
+    "chequeStartNo": 2301,
+    "chequeEndNo": 2350,
+    "noOfLeafs": 50,
+    "leafsUsed": 0,
+    "status": "Active",
+    "id": "CB-1756356439868"
+  }
+]
