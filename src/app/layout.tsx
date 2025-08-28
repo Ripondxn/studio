@@ -5,11 +5,15 @@ import { AppLayout } from '@/app/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 import { CurrencyProvider } from '@/context/currency-context';
 import { CompanyProfileProvider } from '@/context/company-profile-context';
+import { getCompanyProfile } from './admin/company-profile/actions';
 
-export const metadata: Metadata = {
-  title: 'Trust Famous Real Estate',
-  description: 'Integrated Property Management Dashboard & Workflow Design',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const profile = await getCompanyProfile();
+  return {
+    title: profile.name || 'Trust Famous Real Estate',
+    description: 'Integrated Property Management Dashboard & Workflow Design',
+  }
+}
 
 export default function RootLayout({
   children,

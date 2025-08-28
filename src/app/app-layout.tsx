@@ -52,6 +52,7 @@ import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCompanyProfile } from '@/context/company-profile-context';
 
 
 // A type for the user profile stored in session storage
@@ -218,6 +219,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
   const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const { profile: companyProfile } = useCompanyProfile();
+
 
   React.useEffect(() => {
     if (isMobile) {
@@ -262,8 +265,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         isCollapsed && "justify-center"
                     )}
                     >
-                    <Building2 className="h-6 w-6 text-sidebar-primary" />
-                    {!isCollapsed && <span className="font-headline text-sidebar-foreground">PropVue</span>}
+                    {companyProfile.logo ? <img src={companyProfile.logo} alt="Company Logo" className="h-8 w-8 object-contain"/> : <Building2 className="h-6 w-6 text-sidebar-primary" />}
+                    {!isCollapsed && <span className="font-headline text-sidebar-foreground">{companyProfile.name}</span>}
                 </Link>
                  <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(prev => !prev)} className="md:hidden">
                     <PanelLeft />
