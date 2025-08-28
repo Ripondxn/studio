@@ -142,6 +142,17 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
 
     try {
         const allPayments = await readPayments();
+        
+        if (paymentData.referenceNo && paymentData.referenceType !== 'Other') {
+            const isDuplicate = allPayments.some(p => 
+                p.referenceNo === paymentData.referenceNo &&
+                p.status !== 'Cancelled'
+            );
+            if (isDuplicate) {
+                return { success: false, error: `A payment for reference "${paymentData.referenceNo}" already exists.` };
+            }
+        }
+
         const workflowSettings = await getWorkflowSettings();
 
         const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
