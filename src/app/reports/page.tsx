@@ -13,7 +13,8 @@ import {
     Briefcase,
     AlertTriangle,
     Shuffle,
-    Building2
+    Building2,
+    DollarSign,
 } from 'lucide-react';
 
 const reportList = [
@@ -28,6 +29,12 @@ const reportList = [
         description: "Track and manage the status of all post-dated cheques.",
         href: "/finance/cheque-management",
         icon: <Banknote className="h-8 w-8 text-primary" />,
+    },
+     {
+        title: "Rental Payment Tracking",
+        description: "An interactive dashboard to track monthly rental payments from all tenants.",
+        href: "/reports/rental-payment-tracking",
+        icon: <DollarSign className="h-8 w-8 text-primary" />,
     },
     {
         title: "Book Management Reports",
