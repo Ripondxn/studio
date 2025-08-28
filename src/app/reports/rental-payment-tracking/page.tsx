@@ -6,9 +6,6 @@ export const dynamic = 'force-dynamic';
 
 export default async function RentalPaymentTrackingPage() {
   const paymentData = await getRentalPaymentData();
-  
-  // For the purpose of this dashboard, we'll focus on a fixed set of months
-  const displayedMonths = ['Mar-25', 'Apr-25', 'May-25', 'Jun-25'];
 
   return (
     <div className="container mx-auto py-10">
@@ -18,7 +15,7 @@ export default async function RentalPaymentTrackingPage() {
           An interactive dashboard to track and manage monthly rental payments.
         </p>
       </div>
-      <RentalTrackingClient initialData={paymentData} displayedMonths={displayedMonths} />
+      <RentalTrackingClient initialData={paymentData} />
     </div>
   );
 }

@@ -17,8 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { type TenantPaymentData, type MonthlyPayment, updatePaymentStatus } from './actions';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/context/currency-context';
-import { format, isAfter, isBefore, parseISO } from 'date-fns';
-import { DollarSign, CheckCircle, XCircle, AlertCircle, Info, FileSpreadsheet, Loader2, CalendarIcon } from 'lucide-react';
+import { format, isAfter, isBefore, parseISO, eachMonthOfInterval, addMonths, startOfMonth, endOfMonth, isEqual } from 'date-fns';
+import { DollarSign, CheckCircle, XCircle, AlertCircle, Info, FileSpreadsheet, Loader2, CalendarIcon, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
@@ -28,7 +28,6 @@ import { Calendar } from '@/components/ui/calendar';
 
 interface RentalTrackingClientProps {
   initialData: TenantPaymentData[];
-  displayedMonths: string[];
 }
 
 const statusConfig: { [key in MonthlyPayment['status']]: { color: string; icon: React.ReactNode } } = {
@@ -46,13 +45,29 @@ const statusConfig: { [key in MonthlyPayment['status']]: { color: string; icon: 
   },
 };
 
-export function RentalTrackingClient({ initialData, displayedMonths }: RentalTrackingClientProps) {
+export function RentalTrackingClient({ initialData }: RentalTrackingClientProps) {
   const [paymentData, setPaymentData] = useState(initialData);
   const [filter, setFilter] = useState('');
   const [dateRange, setDateRange] = useState<{ from?: Date, to?: Date}>({});
   const { formatCurrency } = useCurrency();
   const [updatingCells, setUpdatingCells] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  
+  const displayedMonths = useMemo(() => {
+    const { from, to } = dateRange;
+    // If a valid date range is selected, generate months for that interval
+    if (from && to && !isBefore(to, from)) {
+        const months = eachMonthOfInterval({ start: from, end: to });
+        return months.map(month => format(month, 'MMM-yy'));
+    }
+    // Default to the next 6 months if no range is selected
+    const today = new Date();
+    const defaultMonths = eachMonthOfInterval({
+        start: startOfMonth(today),
+        end: endOfMonth(addMonths(today, 5)),
+    });
+    return defaultMonths.map(month => format(month, 'MMM-yy'));
+  }, [dateRange]);
 
 
   const filteredData = useMemo(() => {
@@ -69,8 +84,8 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
         if (dateRange.from || dateRange.to) {
             const hasPaymentInDateRange = tenant.payments.some(payment => {
                 const paymentDate = parseISO(payment.date);
-                const fromDateOk = dateRange.from ? !isBefore(paymentDate, dateRange.from) : true;
-                const toDateOk = dateRange.to ? !isAfter(paymentDate, dateRange.to) : true;
+                const fromDateOk = dateRange.from ? !isBefore(paymentDate, startOfMonth(dateRange.from)) : true;
+                const toDateOk = dateRange.to ? !isAfter(paymentDate, endOfMonth(dateRange.to)) : true;
                 return fromDateOk && toDateOk;
             });
             if (!hasPaymentInDateRange) return false;
@@ -80,6 +95,11 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
       }
     );
   }, [paymentData, filter, dateRange]);
+  
+  const handleClearFilters = () => {
+    setFilter('');
+    setDateRange({});
+  }
 
   const togglePaymentStatus = async (contractNo: string, dueDate: string, currentStatus: MonthlyPayment['status']) => {
     const cellId = `${contractNo}-${dueDate}`;
@@ -98,7 +118,7 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
               return {
                 ...tenant,
                 payments: tenant.payments.map((payment) => {
-                  if (payment.date === dueDate) {
+                  if (isEqual(parseISO(payment.date), parseISO(dueDate))) {
                     return { ...payment, status: newStatus };
                   }
                   return payment;
@@ -189,9 +209,10 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
                 onChange={(e) => setFilter(e.target.value)}
                 className="max-w-sm"
                 />
-                <Popover>
+                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
+                            id="date-from"
                             variant={"outline"}
                             className={cn(
                                 "w-[240px] justify-start text-left font-normal",
@@ -213,7 +234,8 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
                 </Popover>
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button
+                         <Button
+                            id="date-to"
                             variant={"outline"}
                             className={cn(
                                 "w-[240px] justify-start text-left font-normal",
@@ -233,6 +255,7 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
                         />
                     </PopoverContent>
                 </Popover>
+                <Button variant="ghost" onClick={handleClearFilters} disabled={!filter && !dateRange.from && !dateRange.to}><X className="mr-2 h-4 w-4"/>Clear</Button>
                  <Button variant="outline" onClick={handleExportExcel} size="sm">
                     <FileSpreadsheet className="mr-2 h-4 w-4" /> Export Excel
                 </Button>
