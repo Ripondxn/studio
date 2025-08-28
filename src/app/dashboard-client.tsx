@@ -65,10 +65,8 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
     totalUnits,
     expiringSoonCount,
     leaseExpiringSoonCount,
-    chequeSummary,
     totalTenants,
     totalProperties,
-    totalLandlords,
     upcomingLandlordPayments,
   } = initialDashboardData;
   

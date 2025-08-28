@@ -1,11 +1,9 @@
 
-
 import { promises as fs } from 'fs';
 import path from 'path';
 import { differenceInDays, parseISO, format, getMonth, getYear, isFuture } from 'date-fns';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { getUnits } from '@/app/property/units/actions';
-import { getSummary as getPdcChequeSummary } from '@/app/finance/pdc-cheque/actions';
 import { getAllTenants } from '@/app/tenancy/tenants/actions';
 import { Contract } from '@/app/tenancy/contract/schema';
 import { Unit } from '@/app/property/units/schema';
@@ -50,7 +48,6 @@ async function getVacantUnits() {
 async function getDashboardData() {
     const contracts = await getAllContracts();
     const allUnits = await getUnits();
-    const chequeSummary = await getPdcChequeSummary();
     const tenants = await getAllTenants();
     
     const propertiesData = await fs.readFile(
@@ -116,7 +113,6 @@ async function getDashboardData() {
         totalUnits,
         expiringSoonCount,
         leaseExpiringSoonCount,
-        chequeSummary,
         totalTenants: tenants.length,
         totalProperties: allProperties.length,
         totalLandlords: allLandlords.length,
