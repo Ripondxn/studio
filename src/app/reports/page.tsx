@@ -12,7 +12,8 @@ import {
     Wrench, 
     Briefcase,
     AlertTriangle,
-    Shuffle
+    Shuffle,
+    Building2
 } from 'lucide-react';
 
 const reportList = [
@@ -57,6 +58,12 @@ const reportList = [
         description: "View and manage a complete list of all company assets.",
         href: "/assets",
         icon: <Briefcase className="h-8 w-8 text-primary" />,
+    },
+     {
+        title: "Property-wise Overview",
+        description: "Get a summary of units, occupancy, and status for each property.",
+        href: "/reports/property-overview",
+        icon: <Building2 className="h-8 w-8 text-primary" />,
     },
 ];
 
