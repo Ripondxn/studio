@@ -24,7 +24,7 @@
         "installment": 1,
         "dueDate": "2025-08-28",
         "amount": 1000,
-        "status": "paid",
+        "status": "unpaid",
         "chequeNo": "12345",
         "bankName": "abc"
       },
@@ -40,7 +40,7 @@
         "installment": 3,
         "dueDate": "2025-10-28",
         "amount": 1000,
-        "status": "paid",
+        "status": "unpaid",
         "chequeNo": "12347",
         "bankName": "abc"
       }

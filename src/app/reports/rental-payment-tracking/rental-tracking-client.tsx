@@ -309,7 +309,7 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
                 {filteredData.map((tenant, index) => (
                 <TableRow key={tenant.contractNo}>
                     <TableCell className={cn("sticky left-0 bg-background z-10 border-r shadow-md", cellPadding)}>{index + 1}</TableCell>
-                    <TableCell className={cn("sticky left-[40px] bg-background z-10 border-r font-medium shadow-md", cellPadding)}>{tenant.tenantName}</TableCell>
+                    <TableCell className={cn("sticky left-[40px] bg-background z-10 border-r font-medium shadow-md whitespace-nowrap", cellPadding)}>{tenant.tenantName}</TableCell>
                     <TableCell className={cn("whitespace-nowrap", cellPadding)}>{tenant.flatNo}</TableCell>
                     <TableCell className={cellPadding}>{tenant.nationality}</TableCell>
                     <TableCell className={cellPadding}>{tenant.mobile}</TableCell>
@@ -322,20 +322,23 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
                         const payment = tenant.payments.find((p) => p.month === month);
                         const cellId = `${tenant.contractNo}-${payment?.date}`;
                         const isUpdating = updatingCells.has(cellId);
-                        const config = statusConfig[payment?.status || 'Unpaid'];
+                        const status = payment?.status || 'Unpaid';
+                        const config = statusConfig[status];
+                        const showData = status === 'Paid' || status === 'Partial';
+
                         return (
                            <React.Fragment key={month}>
                             <TableCell 
-                                className={cn("cursor-pointer", cellPadding, payment ? config.color : 'bg-gray-100')}
+                                className={cn("cursor-pointer", cellPadding, config.color)}
                                 onClick={() => payment && togglePaymentStatus(tenant.contractNo, payment.date, payment.status)}
                             >
-                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment ? format(new Date(payment.date), 'dd.MM') : '-')}
+                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment && showData ? format(new Date(payment.date), 'dd.MM') : <>&nbsp;</>)}
                             </TableCell>
                             <TableCell
-                                className={cn("cursor-pointer text-right", cellPadding, payment ? config.color : 'bg-gray-100')}
+                                className={cn("cursor-pointer text-right", cellPadding, config.color)}
                                 onClick={() => payment && togglePaymentStatus(tenant.contractNo, payment.date, payment.status)}
                             >
-                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment ? formatCurrency(payment.amount) : '-')}
+                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment && showData ? formatCurrency(payment.amount) : <>&nbsp;</>)}
                             </TableCell>
                            </React.Fragment>
                         );
