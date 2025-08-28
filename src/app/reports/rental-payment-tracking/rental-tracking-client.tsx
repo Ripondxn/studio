@@ -281,8 +281,8 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
             <Table className="relative min-w-full border-collapse">
             <TableHeader className="sticky top-0 bg-muted z-10">
                 <TableRow>
-                    <TableHead rowSpan={2} className="sticky left-0 bg-muted z-20 border-r w-[50px]">S.L</TableHead>
-                    <TableHead rowSpan={2} className="sticky left-[50px] bg-muted z-20 border-r min-w-[200px]">Tenant Name</TableHead>
+                    <TableHead rowSpan={2} className="sticky left-0 bg-muted z-20 border-r w-[50px] shadow-md">S.L</TableHead>
+                    <TableHead rowSpan={2} className="sticky left-[50px] bg-muted z-20 border-r min-w-[200px] shadow-md">Tenant Name</TableHead>
                     <TableHead rowSpan={2}>Flat No.</TableHead>
                     <TableHead rowSpan={2}>Nationality</TableHead>
                     <TableHead rowSpan={2}>Mobile No.</TableHead>
@@ -306,8 +306,8 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
             <TableBody>
                 {filteredData.map((tenant, index) => (
                 <TableRow key={tenant.contractNo}>
-                    <TableCell className="sticky left-0 bg-background z-10 border-r">{index + 1}</TableCell>
-                    <TableCell className="sticky left-[50px] bg-background z-10 border-r font-medium">{tenant.tenantName}</TableCell>
+                    <TableCell className="sticky left-0 bg-background z-10 border-r shadow-md">{index + 1}</TableCell>
+                    <TableCell className="sticky left-[50px] bg-background z-10 border-r font-medium shadow-md">{tenant.tenantName}</TableCell>
                     <TableCell>{tenant.flatNo}</TableCell>
                     <TableCell>{tenant.nationality}</TableCell>
                     <TableCell>{tenant.mobile}</TableCell>
