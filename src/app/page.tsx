@@ -31,21 +31,6 @@ async function getExpiryReport() {
     return Array.from(uniqueContracts.values());
 }
 
-async function getVacantUnits() {
-    const allUnits = await getUnits();
-    const vacantUnits = allUnits.filter(unit => unit.occupancyStatus === 'Vacant');
-    
-    const uniqueVacantUnits = new Map<string, Unit>();
-    for (const unit of vacantUnits) {
-        const uniqueKey = `${unit.propertyCode}-${unit.unitCode}`;
-        if (!uniqueVacantUnits.has(uniqueKey)) {
-            uniqueVacantUnits.set(uniqueKey, unit);
-        }
-    }
-    
-    return Array.from(uniqueVacantUnits.values());
-}
-
 async function getDashboardData() {
     const contracts = await getAllContracts();
     const allUnits = await getUnits();
@@ -125,14 +110,12 @@ async function getDashboardData() {
 export default async function DashboardPage() {
     const dashboardData = await getDashboardData();
     const expiringContracts = await getExpiryReport();
-    const vacantUnits = await getVacantUnits();
     const bankAccounts = await getBankAccounts();
 
     return (
         <DashboardClient
             initialDashboardData={dashboardData}
             initialExpiringContracts={expiringContracts}
-            initialVacantUnits={vacantUnits}
             initialBankAccounts={bankAccounts}
         />
     );

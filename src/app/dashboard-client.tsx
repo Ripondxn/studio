@@ -21,15 +21,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  TrendingUp,
   FileClock,
   Home,
   Users,
   ChevronLeft,
   ChevronRight,
-  UserSquare,
   ArrowUp,
-  Move,
   Landmark,
   Wallet
 } from 'lucide-react';
@@ -47,18 +44,15 @@ import { Separator } from '@/components/ui/separator';
 type DashboardClientProps = {
     initialDashboardData: any;
     initialExpiringContracts: Contract[];
-    initialVacantUnits: Unit[];
     initialBankAccounts: BankAccount[];
 };
 
-export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialVacantUnits, initialBankAccounts }: DashboardClientProps) {
+export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts }: DashboardClientProps) {
   const [expiringCurrentPage, setExpiringCurrentPage] = useState(1);
-  const [vacantCurrentPage, setVacantCurrentPage] = useState(1);
   const [landlordPaymentsPage, setLandlordPaymentsPage] = useState(1);
   const { formatCurrency } = useCurrency();
 
   const expiringItemsPerPage = 5;
-  const vacantItemsPerPage = 5;
   const landlordPaymentsItemsPerPage = 5;
 
   if (!initialDashboardData) {
@@ -82,13 +76,6 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
   const paginatedExpiringContracts = initialExpiringContracts.slice(
     (expiringCurrentPage - 1) * expiringItemsPerPage,
     expiringCurrentPage * expiringItemsPerPage
-  );
-
-  // Pagination for vacant units
-  const vacantTotalPages = Math.ceil(initialVacantUnits.length / vacantItemsPerPage);
-  const paginatedVacantUnits = initialVacantUnits.slice(
-    (vacantCurrentPage - 1) * vacantItemsPerPage,
-    vacantCurrentPage * vacantItemsPerPage
   );
   
   // Pagination for upcoming landlord payments
@@ -303,57 +290,6 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                     <span>{formatCurrency(totalBalance)}</span>
                   </div>
               </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Unit Vacant List</CardTitle>
-                <CardDescription>
-                  A list of all currently available units.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Property</TableHead>
-                      <TableHead>Unit</TableHead>
-                      <TableHead className="text-right">Rent</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedVacantUnits.map((item) => (
-                      <TableRow key={`${item.propertyCode}-${item.unitCode}`}>
-                        <TableCell>{item.propertyCode}</TableCell>
-                        <TableCell>{item.unitCode}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.annualRent)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-              <CardFooter className="flex justify-end items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setVacantCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={vacantCurrentPage === 1}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                        Page {vacantCurrentPage} of {vacantTotalPages}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setVacantCurrentPage(prev => Math.min(prev + 1, vacantTotalPages))}
-                        disabled={vacantCurrentPage === vacantTotalPages}
-                    >
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-              </CardFooter>
             </Card>
            </div>
         </div>
