@@ -46,6 +46,7 @@ import {
   Route,
   Warehouse,
   Code,
+  Receipt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -99,7 +100,8 @@ const navLinks = [
         subItems: [
             { href: '/finance/chart-of-accounts', label: 'Chart of Accounts' },
             { href: '/finance/banking', label: 'Banking' },
-            { href: '/finance/cheque-deposit', label: 'Cheque Management' },
+            { href: '/finance/cheque-management', label: 'Cheque Management' },
+            { href: '/finance/receipt-vouchers', label: 'Receipt Vouchers' },
             { href: '/finance/payment', label: 'Payment' },
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/book-management', label: 'Book Management' },
