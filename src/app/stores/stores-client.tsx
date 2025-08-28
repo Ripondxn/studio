@@ -27,7 +27,6 @@ import { Button } from '@/components/ui/button';
 import { StockManagement } from './stock-management';
 import { deleteStore } from './actions';
 import { useToast } from '@/hooks/use-toast';
-import { GlobalStockView } from './global-stock-view';
 import { StockTransferDialog } from './stock-transfer-dialog';
 
 const StoreCard = ({ store, onEdit, onDelete }: { store: Store, onEdit: (store: Store) => void, onDelete: (storeId: string) => void }) => {
@@ -143,7 +142,7 @@ export function StoresClient({ initialStores }: { initialStores: Store[] }) {
         </div>
         
         <div className="mb-8">
-            <GlobalStockView />
+            
         </div>
 
         {stores.length === 0 ? (

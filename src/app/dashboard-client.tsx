@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -46,7 +47,7 @@ import { useCurrency } from '@/context/currency-context';
 import { type BankAccount } from '@/app/finance/banking/schema';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { GlobalStockView } from '@/app/stores/global-stock-view';
+import { ReportCenterWidget } from './reports/report-center-widget';
 
 
 type DashboardClientProps = {
@@ -115,7 +116,7 @@ interface WorkflowDiagramProps {
 }
 
 const WorkflowDiagram = ({ title, description, icon, steps }: WorkflowDiagramProps) => (
-    <Card>
+    <Card className="h-full">
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
                 {icon}
@@ -220,7 +221,9 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
          <div className="flex items-center space-x-2">
-            <Button>View All Reports</Button>
+            <Button asChild>
+                <Link href="/reports">View All Reports</Link>
+            </Button>
             <SendRenewalDialogWrapper expiringContracts={initialExpiringContracts.map(c => ({ unit: c.unitCode, tenant: c.tenantName, endDate: c.endDate }))} />
         </div>
       </div>
@@ -280,7 +283,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
                   </div>
               </CardContent>
             </Card>
-            <GlobalStockView />
+            <ReportCenterWidget />
            </div>
         </div>
     </div>
