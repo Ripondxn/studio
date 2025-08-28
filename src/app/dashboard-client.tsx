@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -33,6 +32,7 @@ import {
   Banknote,
   Receipt,
   UserSquare,
+  Package,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -74,6 +74,7 @@ const workflowSteps = [
         category: 'Customer Billing',
         items: [
             { title: 'Customers', href: '/tenancy/customer', icon: <Users className="h-5 w-5" /> },
+            { title: 'Products & Services', href: '/products', icon: <Package className="h-5 w-5" /> },
             { title: 'Invoices', href: '/tenancy/customer', icon: <Receipt className="h-5 w-5" /> },
         ]
     },
@@ -81,6 +82,7 @@ const workflowSteps = [
         category: 'Vendor Management',
         items: [
             { title: 'Vendors / Suppliers', href: '/vendors', icon: <UserSquare className="h-5 w-5" /> },
+            { title: 'Products & Services', href: '/products', icon: <Package className="h-5 w-5" /> },
             { title: 'Bills', href: '/vendors', icon: <FileText className="h-5 w-5" /> },
         ]
     }
