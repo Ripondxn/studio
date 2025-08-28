@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import * as React from 'react';
 import {
   Table,
   TableBody,
@@ -155,7 +156,7 @@ export function RentalTrackingClient({ initialData, displayedMonths }: RentalTra
             <Table className="relative min-w-full border-collapse">
             <TableHeader className="sticky top-0 bg-muted z-10">
                 <TableRow>
-                    <TableHead rowSpan={2} className="sticky left-0 bg-muted z-20 border-r">S.L</TableHead>
+                    <TableHead rowSpan={2} className="sticky left-0 bg-muted z-20 border-r w-[50px]">S.L</TableHead>
                     <TableHead rowSpan={2} className="sticky left-[50px] bg-muted z-20 border-r min-w-[200px]">Tenant Name</TableHead>
                     <TableHead rowSpan={2}>Flat No.</TableHead>
                     <TableHead rowSpan={2}>Nationality</TableHead>
