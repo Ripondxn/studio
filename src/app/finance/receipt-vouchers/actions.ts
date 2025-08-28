@@ -10,10 +10,15 @@ import { receiptVoucherSchema, type ReceiptVoucher } from './schema';
 import { type ReceiptBook } from '@/app/finance/book-management/schema';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { addPayment } from '../payment/actions';
+import { type Contract } from '@/app/tenancy/contract/schema';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 
 const vouchersFilePath = path.join(process.cwd(), 'src/app/finance/receipt-vouchers/vouchers-data.json');
 const receiptBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/receipt-books-data.json');
 const usersFilePath = path.join(process.cwd(), 'src/app/admin/user-roles/users.json');
+const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+
 
 async function readData<T>(filePath: string, defaultValue: T[] = []): Promise<T[]> {
     try {
@@ -40,16 +45,19 @@ export async function getReceiptVouchers(): Promise<ReceiptVoucher[]> {
 export async function getReceiptVoucherLookups() {
     const books = await readData<ReceiptBook>(receiptBooksFilePath);
     const users = await readData<UserRole>(usersFilePath);
+    const allVouchers = await getReceiptVouchers();
+    const usedReceiptNos = new Set(allVouchers.map(v => v.receiptNo));
     
-    // In a real app, we would also filter out used receipt numbers here.
-    // For this example, we show all possible numbers.
     const availableReceipts: { value: string, label: string }[] = [];
     books.filter(b => b.status === 'Active').forEach(book => {
         for (let i = book.receiptStartNo; i <= book.receiptEndNo; i++) {
-            availableReceipts.push({
-                value: `${book.bookNo}-${i}`,
-                label: `Book: ${book.bookNo}, Receipt: ${i}`
-            });
+             const receiptNo = `${book.bookNo}-${i}`;
+             if (!usedReceiptNos.has(receiptNo)) {
+                availableReceipts.push({
+                    value: receiptNo,
+                    label: `Book: ${book.bookNo}, Receipt: ${i}`
+                });
+            }
         }
     });
 
@@ -76,7 +84,6 @@ export async function saveReceiptVoucherBatch(data: z.infer<typeof batchFormSche
         for (const voucherData of validation.data.vouchers) {
             const voucherExists = allVouchers.some(v => v.receiptNo === voucherData.receiptNo);
             if (voucherExists) {
-                // Optionally skip or return error for duplicates in a batch
                 console.warn(`Skipping duplicate receipt number: ${voucherData.receiptNo}`);
                 continue;
             }
@@ -103,9 +110,8 @@ export async function saveReceiptVoucherBatch(data: z.infer<typeof batchFormSche
             });
 
             if (!paymentResult.success) {
-                // Rollback or handle error. For this simplified fs-based system, we'll just log and continue.
                 console.error(`Failed to create financial transaction for receipt ${newVoucher.receiptNo}: ${paymentResult.error}`);
-                continue; // Skip adding this voucher if payment creation fails
+                continue;
             }
 
             newVouchers.push(newVoucher);
@@ -128,4 +134,27 @@ export async function saveReceiptVoucherBatch(data: z.infer<typeof batchFormSche
     }
 }
 
-
+export async function getDueAmountForParty(partyType: 'Tenant' | 'Customer', partyCode: string): Promise<number> {
+    if (partyType === 'Tenant') {
+        const contracts = await readData<Contract>(contractsFilePath);
+        const tenantContracts = contracts.filter(c => c.tenantCode === partyCode && (c.status === 'New' || c.status === 'Renew'));
+        let totalDue = 0;
+        tenantContracts.forEach(c => {
+            c.paymentSchedule.forEach(p => {
+                if (p.status === 'unpaid') {
+                    totalDue += p.amount;
+                }
+            })
+        });
+        return totalDue;
+    } else if (partyType === 'Customer') {
+        const invoices = await readData<Invoice>(invoicesFilePath);
+        const customerInvoices = invoices.filter(i => i.customerCode === partyCode && i.status !== 'Paid' && i.status !== 'Cancelled');
+        let totalDue = 0;
+        customerInvoices.forEach(i => {
+            totalDue += i.total - (i.amountPaid || 0);
+        });
+        return totalDue;
+    }
+    return 0;
+}

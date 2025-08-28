@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getReceiptVoucherLookups, saveReceiptVoucherBatch } from '../actions';
+import { getReceiptVoucherLookups, saveReceiptVoucherBatch, getDueAmountForParty } from '../actions';
 import { getLookups as getPartyLookups } from '@/app/finance/payment/actions';
 import { receiptVoucherSchema } from '../schema';
 import { Button } from '@/components/ui/button';
@@ -99,6 +99,12 @@ export default function AddReceiptVoucherPage() {
         });
     }
 
+    const handlePartySelect = async (index: number, partyCode: string, partyType: 'Tenant' | 'Customer') => {
+        form.setValue(`vouchers.${index}.partyName`, partyCode);
+        const dueAmount = await getDueAmountForParty(partyType, partyCode);
+        form.setValue(`vouchers.${index}.amount`, dueAmount);
+    }
+
     const onSubmit = async (data: BatchFormData) => {
         if (!currentUser) {
             toast({ variant: 'destructive', title: 'Error', description: 'Could not identify current user.' });
@@ -159,9 +165,9 @@ export default function AddReceiptVoucherPage() {
                                             <TableRow key={field.id}>
                                                  <TableCell><FormField name={`vouchers.${index}.receiptNo`} control={form.control} render={({ field }) => ( <Combobox options={lookups.receiptNumbers} value={field.value || ''} onSelect={field.onChange} placeholder="Select..."/>)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.date`} control={form.control} render={({ field }) => ( <Input type="date" {...field} />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.partyType`} control={form.control} render={({ field }) => ( <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.partyName`} control={form.control} render={({ field }) => (<Combobox options={form.watch(`vouchers.${index}.partyType`) === 'Tenant' ? lookups.tenants : lookups.customers} value={field.value || ''} onSelect={field.onChange} placeholder="Select Party" />)}/></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.amount`} control={form.control} render={({ field }) => ( <Input type="number" {...field} />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.partyType`} control={form.control} render={({ field }) => ( <Select onValueChange={(value) => { field.onChange(value); form.setValue(`vouchers.${index}.partyName`, ''); }} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.partyName`} control={form.control} render={({ field }) => (<Combobox options={form.watch(`vouchers.${index}.partyType`) === 'Tenant' ? lookups.tenants : lookups.customers} value={field.value || ''} onSelect={(value) => handlePartySelect(index, value, form.watch(`vouchers.${index}.partyType`))} placeholder="Select Party" />)}/></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.amount`} control={form.control} render={({ field }) => ( <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />)} /></TableCell>
                                                  <TableCell><FormField name={`vouchers.${index}.paymentMethod`} control={form.control} render={({ field }) => ( <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></TableCell>
                                                  <TableCell>
                                                     {form.watch(`vouchers.${index}.paymentMethod`) === 'Cheque' && (
