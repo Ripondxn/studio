@@ -112,6 +112,11 @@ export const columns = ({ onEdit }: { onEdit: (book: ReceiptBook) => void }): Co
             )
         }
     },
+     {
+        accessorKey: 'assignedTo',
+        header: 'Assigned To',
+        cell: ({row}) => row.original.assignedTo || <span className="text-muted-foreground">Unassigned</span>
+    },
     {
         accessorKey: 'status',
         header: 'Status',
