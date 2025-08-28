@@ -24,8 +24,13 @@ interface ImportReceiptsDialogProps {
   onDataImport: (data: any[]) => void;
 }
 
-const requiredHeaders = ['receiptNo', 'partyName', 'amount'];
+const requiredHeaders = ['receiptno', 'partyname', 'amount'];
 const displayHeaders = ['receiptNo', 'date', 'partyType', 'partyName', 'amount', 'paymentMethod', 'collectedBy', 'notes'];
+
+// Helper function to convert any string to camelCase
+const toCamelCase = (str: string) => {
+  return str.replace(/[^a-zA-Z0-9]+(.)?/g, (match, chr) => chr ? chr.toUpperCase() : '').replace(/^./, (match) => match.toLowerCase());
+};
 
 export function ImportReceiptsDialog({ onDataImport }: ImportReceiptsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,16 +55,25 @@ export function ImportReceiptsDialog({ onDataImport }: ImportReceiptsDialogProps
         const worksheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json(worksheet) as any[];
         
-        if (json.length > 0) {
-            const headers = Object.keys(json[0]).map(h => h.toLowerCase());
-            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h.toLowerCase()));
+        // Normalize keys of each object to be camelCase and handle case-insensitivity
+        const normalizedJson = json.map(row => {
+            const normalizedRow: {[key: string]: any} = {};
+            for (const key in row) {
+                normalizedRow[toCamelCase(key)] = row[key];
+            }
+            return normalizedRow;
+        });
+
+        if (normalizedJson.length > 0) {
+            const headers = Object.keys(normalizedJson[0]).map(h => h.toLowerCase());
+            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
             if (missingHeaders.length > 0) {
                 toast({ variant: 'destructive', title: 'Invalid File Format', description: `Missing required columns: ${missingHeaders.join(', ')}`});
                 return;
             }
         }
 
-        setParsedData(json);
+        setParsedData(normalizedJson);
       } catch (error) {
         toast({ variant: 'destructive', title: 'Error Parsing File', description: 'Please ensure the file is a valid Excel spreadsheet.'});
       }
@@ -76,6 +90,9 @@ export function ImportReceiptsDialog({ onDataImport }: ImportReceiptsDialogProps
     if(!open) {
         setParsedData([]);
         setFileName('');
+        if(fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     }
     setIsOpen(open);
   }
