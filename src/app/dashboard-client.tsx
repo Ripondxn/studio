@@ -10,14 +10,6 @@ import {
   CardTitle,
   CardFooter
 } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,7 +21,10 @@ import {
   Clock,
   ListTodo,
   Landmark,
-  Wallet
+  Wallet,
+  ArrowRight,
+  FileSignature,
+  Wrench
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -49,16 +44,72 @@ type DashboardClientProps = {
     initialBankAccounts: BankAccount[];
 };
 
-const roadmapItems = [
-  { feature: 'Core Modules (Properties, Units, Tenants)', status: 'Done', statusColor: 'bg-green-100 text-green-800' },
-  { feature: 'Financial Management (Accounts, Payments)', status: 'Done', statusColor: 'bg-green-100 text-green-800' },
-  { feature: 'Workflow & Approvals', status: 'Done', statusColor: 'bg-green-100 text-green-800' },
-  { feature: 'User & Access Control', status: 'Done', statusColor: 'bg-green-100 text-green-800' },
-  { feature: 'Reporting (PDF/Excel)', status: 'In Progress', statusColor: 'bg-yellow-100 text-yellow-800' },
-  { feature: 'Integrations (Payment Gateways)', status: 'In Progress', statusColor: 'bg-yellow-100 text-yellow-800' },
-  { feature: 'Advanced Analytics & AI Insights', status: 'Planned', statusColor: 'bg-blue-100 text-blue-800' },
-  { feature: 'Mobile App for Tenants & Landlords', status: 'Planned', statusColor: 'bg-blue-100 text-blue-800' },
+
+const workflowSteps = [
+    {
+        category: 'Setup & Leasing',
+        items: [
+            { title: 'Properties', href: '/property/properties/list', icon: <Home className="h-5 w-5" /> },
+            { title: 'Units', href: '/property/units/list', icon: <Building2 className="h-5 w-5" /> },
+            { title: 'Landlords', href: '/landlord', icon: <Users className="h-5 w-5" /> },
+            { title: 'Tenants', href: '/tenancy/tenants', icon: <Users className="h-5 w-5" /> },
+            { title: 'Lease Contracts', href: '/lease/contracts', icon: <FileSignature className="h-5 w-5" /> },
+            { title: 'Tenancy Contracts', href: '/tenancy/contracts', icon: <FileSignature className="h-5 w-5" /> },
+        ]
+    },
+    {
+        category: 'Financial Operations',
+        items: [
+            { title: 'Receive Payments', href: '/finance/payment', icon: <Wallet className="h-5 w-5" /> },
+            { title: 'Manage Cheques', href: '/finance/cheque-deposit', icon: <Landmark className="h-5 w-5" /> },
+            { title: 'Make Payments', href: '/finance/payment', icon: <Wallet className="h-5 w-5" /> },
+        ]
+    },
+    {
+        category: 'Maintenance',
+        items: [
+            { title: 'Issue Tickets', href: '/maintenance/ticket-issue', icon: <Wrench className="h-5 w-5" /> },
+            { title: 'Service Contracts', href: '/maintenance/contracts', icon: <FileText className="h-5 w-5" /> },
+        ]
+    }
 ];
+
+const WorkflowDiagram = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <Route className="h-5 w-5 text-blue-500" />
+                Operational Workflow
+            </CardTitle>
+            <CardDescription>
+                A visual guide to your property management process.
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            {workflowSteps.map((step, stepIndex) => (
+                <div key={step.category} className="space-y-3">
+                    <h3 className="font-semibold text-muted-foreground">{step.category}</h3>
+                    <div className="flex flex-wrap items-center gap-4">
+                        {step.items.map((item, itemIndex) => (
+                            <React.Fragment key={item.title}>
+                                <Button variant="outline" asChild className="h-16 flex-col gap-1 items-center justify-center p-2 text-center text-xs w-24">
+                                    <Link href={item.href}>
+                                        {item.icon}
+                                        <span>{item.title}</span>
+                                    </Link>
+                                </Button>
+                                {itemIndex < step.items.length - 1 && (
+                                    <ArrowRight className="h-5 w-5 text-muted-foreground hidden md:block" />
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                    {stepIndex < workflowSteps.length - 1 && <Separator className="my-6" />}
+                </div>
+            ))}
+        </CardContent>
+    </Card>
+);
 
 
 export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts }: DashboardClientProps) {
@@ -148,42 +199,7 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
            <div className="lg:col-span-2 space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Route className="h-5 w-5 text-blue-500" />
-                        Software Roadmap
-                    </CardTitle>
-                    <CardDescription>
-                        An overview of current and upcoming features.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Feature</TableHead>
-                                <TableHead className="text-right">Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {roadmapItems.map((item) => (
-                                <TableRow key={item.feature}>
-                                    <TableCell className="font-medium">{item.feature}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Badge variant="outline" className={cn(item.statusColor, 'border-transparent')}>
-                                             {item.status === 'Done' && <CheckCircle className="mr-2 h-4 w-4" />}
-                                             {item.status === 'In Progress' && <Clock className="mr-2 h-4 w-4" />}
-                                             {item.status === 'Planned' && <ListTodo className="mr-2 h-4 w-4" />}
-                                             {item.status}
-                                        </Badge>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+               <WorkflowDiagram />
            </div>
            <div className="space-y-6">
             <Card>
