@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -24,7 +25,7 @@ import { format } from 'date-fns';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { type ReceiptBook } from '../../book-management/schema';
-import { ImportReceiptsDialog } from './import-receipts-dialog';
+import { ImportReceiptsDialog } from '../import-receipts-dialog';
 import { useCurrency } from '@/context/currency-context';
 
 const batchFormSchema = z.object({
