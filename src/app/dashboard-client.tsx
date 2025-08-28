@@ -31,6 +31,8 @@ import {
   AlertTriangle,
   Hourglass,
   Banknote,
+  Receipt,
+  UserSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -54,29 +56,32 @@ type DashboardClientProps = {
 
 const workflowSteps = [
     {
-        category: 'Setup & Leasing',
+        category: 'Landlord Onboarding',
         items: [
+            { title: 'Landlord', href: '/landlord', icon: <Users className="h-5 w-5" /> },
             { title: 'Properties', href: '/property/properties/list', icon: <Home className="h-5 w-5" /> },
-            { title: 'Units', href: '/property/units/list', icon: <Building2 className="h-5 w-5" /> },
-            { title: 'Landlords', href: '/landlord', icon: <Users className="h-5 w-5" /> },
-            { title: 'Tenants', href: '/tenancy/tenants', icon: <Users className="h-5 w-5" /> },
             { title: 'Lease Contracts', href: '/lease/contracts', icon: <FileSignature className="h-5 w-5" /> },
+        ]
+    },
+    {
+        category: 'Tenant Management',
+        items: [
+            { title: 'Tenants', href: '/tenancy/tenants', icon: <Users className="h-5 w-5" /> },
             { title: 'Tenancy Contracts', href: '/tenancy/contracts', icon: <FileSignature className="h-5 w-5" /> },
         ]
     },
-    {
-        category: 'Financial Operations',
+     {
+        category: 'Customer Billing',
         items: [
-            { title: 'Receive Payments', href: '/finance/payment', icon: <Wallet className="h-5 w-5" /> },
-            { title: 'Manage Cheques', href: '/finance/cheque-deposit', icon: <Landmark className="h-5 w-5" /> },
-            { title: 'Make Payments', href: '/finance/payment', icon: <Wallet className="h-5 w-5" /> },
+            { title: 'Customers', href: '/tenancy/customer', icon: <Users className="h-5 w-5" /> },
+            { title: 'Invoices', href: '/tenancy/customer', icon: <Receipt className="h-5 w-5" /> },
         ]
     },
     {
-        category: 'Maintenance',
+        category: 'Vendor Management',
         items: [
-            { title: 'Issue Tickets', href: '/maintenance/ticket-issue', icon: <Wrench className="h-5 w-5" /> },
-            { title: 'Service Contracts', href: '/maintenance/contracts', icon: <FileText className="h-5 w-5" /> },
+            { title: 'Vendors / Suppliers', href: '/vendors', icon: <UserSquare className="h-5 w-5" /> },
+            { title: 'Bills', href: '/vendors', icon: <FileText className="h-5 w-5" /> },
         ]
     }
 ];
