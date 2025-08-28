@@ -103,6 +103,7 @@ const navLinks = [
             { href: '/finance/pdc-cheque', label: 'PDC Cheque' },
             { href: '/finance/payment', label: 'Payment' },
             { href: '/finance/due-payments', label: 'Due Payments' },
+            { href: '/finance/book-management', label: 'Book Management' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
