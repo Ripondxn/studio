@@ -98,10 +98,9 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
   const chequeType = watch('type');
   const partyType = watch('partyType');
   const selectedContractNo = watch('contractNo');
-  const selectedPartyName = watch('partyName');
+  const selectedPartyCode = watch('partyName');
   const selectedProperty = watch('property');
 
-  const contractOptions = partyType === 'Tenant' ? lookups.tenancyContracts : partyType === 'Landlord' ? lookups.leaseContracts : [];
   const partyOptions = {
       'Tenant': lookups.tenants,
       'Landlord': lookups.landlords,
@@ -109,6 +108,10 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
       'Vendor': lookups.vendors,
       'Agent': lookups.agents,
   }[partyType] || [];
+  
+  const selectedPartyName = partyOptions.find(p => p.value === selectedPartyCode)?.label;
+
+  const contractOptions = partyType === 'Tenant' ? lookups.tenancyContracts : partyType === 'Landlord' ? lookups.leaseContracts : [];
   
   const filteredContracts = contractOptions.filter(c => c.partyName === selectedPartyName);
   const filteredUnits = lookups.units.filter(u => u.propertyCode === selectedProperty);
@@ -265,7 +268,7 @@ export function AddChequeDialog({ onChequeAdded }: { onChequeAdded: () => void }
                                     value={field.value}
                                     onSelect={handleContractSelect}
                                     placeholder="Select Contract"
-                                    disabled={!selectedPartyName || contractOptions.length === 0}
+                                    disabled={!selectedPartyCode || contractOptions.length === 0}
                                 />
                             )}
                         />

@@ -284,11 +284,11 @@ export async function getLookups() {
     };
 
     return {
-        tenants: tenants.map(t => ({ value: t.tenantData.name, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
-        landlords: landlords.map(l => ({ value: l.landlordData.name, label: l.landlordData.name })),
-        vendors: vendors.map(v => ({ value: v.vendorData.name, label: v.vendorData.name })),
-        agents: agents.map(a => ({ value: a.name, label: a.name })),
-        customers: customers.map(c => ({ value: c.customerData.name, label: c.customerData.name })),
+        tenants: tenants.map(t => ({ value: t.tenantData.code, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
+        landlords: landlords.map(l => ({ value: l.landlordData.code, label: l.landlordData.name })),
+        vendors: vendors.map(v => ({ value: v.vendorData.code, label: v.vendorData.name })),
+        agents: agents.map(a => ({ value: a.code, label: a.name })),
+        customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
         tenancyContracts: tenancyContracts.map(c => ({ 
             value: c.contractNo, 
             label: c.contractNo, 

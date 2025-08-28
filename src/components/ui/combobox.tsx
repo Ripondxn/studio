@@ -32,8 +32,7 @@ export function Combobox({ options = [], value, onSelect, placeholder, disabled 
   const [open, setOpen] = React.useState(false)
 
   const selectedOption = options.find((option) => 
-    (option.value?.toLowerCase() === value?.toLowerCase()) || 
-    (option.label?.toLowerCase() === value?.toLowerCase())
+    (option.value?.toLowerCase() === value?.toLowerCase())
   );
   
   return (
