@@ -4,7 +4,7 @@
     "receiptStartNo": 1,
     "receiptEndNo": 50,
     "noOfLeafs": 50,
-    "leafsUsed": 3,
+    "leafsUsed": 0,
     "status": "Active",
     "id": "RB-1756358897041"
   },
@@ -13,7 +13,7 @@
     "receiptStartNo": 3251,
     "receiptEndNo": 3300,
     "noOfLeafs": 50,
-    "leafsUsed": 7,
+    "leafsUsed": 2,
     "status": "Active",
     "assignedTo": "Shakil",
     "id": "RB-1756363587713"

@@ -59,55 +59,34 @@ export async function getRentalPaymentData(): Promise<TenantPaymentData[]> {
 
     const tenantMap = new Map<string, {tenantData: Tenant}>(tenants.map(t => [t.tenantData.code, t]));
     
-    // Create a map of payments by tenant code for easier lookup
-    const paymentsByTenant = new Map<string, Payment[]>();
+    // Create a map of POSTED payments by reference number for efficient lookup
+    const postedPayments = new Map<string, Payment[]>();
     for (const payment of payments) {
-        if (payment.partyType === 'Tenant' && payment.partyName && payment.status !== 'Cancelled') {
-            if (!paymentsByTenant.has(payment.partyName)) {
-                paymentsByTenant.set(payment.partyName, []);
+        if (payment.currentStatus === 'POSTED' && payment.referenceNo) {
+            if (!postedPayments.has(payment.referenceNo)) {
+                postedPayments.set(payment.referenceNo, []);
             }
-            paymentsByTenant.get(payment.partyName)!.push(payment);
+            postedPayments.get(payment.referenceNo)!.push(payment);
         }
     }
 
     const paymentData = contracts.map(contract => {
         const tenantInfo = tenantMap.get(contract.tenantCode || '');
-        const tenantPayments = paymentsByTenant.get(contract.tenantCode || '') || [];
         
         const monthlyPayments = contract.paymentSchedule.map(installment => {
             const dueDate = parseISO(installment.dueDate);
             const monthKey = format(dueDate, 'MMM-yy');
             
             const installmentId = `${contract.contractNo}-${installment.installment}`;
+            const relatedPostedPayments = postedPayments.get(installmentId) || [];
             
-            // Find payments related to this installment
-            const relatedPayments = tenantPayments.filter(p => {
-                // Direct match by reference number (most reliable)
-                if (p.referenceNo === installmentId) return true;
-                
-                // Fallback: match by amount and due date for payments without a specific reference
-                if (!p.referenceNo && p.amount === installment.amount && isSameDay(parseISO(p.date), dueDate)) {
-                    return true;
-                }
-
-                // Another fallback for general payments made to the tenant
-                if(!p.referenceNo && p.property === contract.property && p.unitCode === contract.unitCode && p.amount === installment.amount) {
-                    return true;
-                }
-                
-                return false;
-            });
-            
-            const totalPaidForInstallment = relatedPayments.reduce((sum, p) => sum + p.amount, 0);
+            const totalPaidForInstallment = relatedPostedPayments.reduce((sum, p) => sum + p.amount, 0);
             
             let status: MonthlyPayment['status'] = 'Unpaid';
             if (totalPaidForInstallment >= installment.amount) {
                 status = 'Paid';
             } else if (totalPaidForInstallment > 0) {
                 status = 'Partial';
-            } else {
-                // Trust the status on the installment if no payments are found
-                status = installment.status === 'paid' ? 'Paid' : 'Unpaid';
             }
 
             return {

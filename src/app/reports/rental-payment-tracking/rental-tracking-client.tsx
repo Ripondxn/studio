@@ -105,48 +105,6 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
     setDateRange({});
     setPropertyFilter('');
   }
-
-  const togglePaymentStatus = async (contractNo: string, dueDate: string, currentStatus: MonthlyPayment['status']) => {
-    const cellId = `${contractNo}-${dueDate}`;
-    setUpdatingCells(prev => new Set(prev).add(cellId));
-
-    const statusCycle: MonthlyPayment['status'][] = ['Unpaid', 'Partial', 'Paid'];
-    const currentIndex = statusCycle.indexOf(currentStatus);
-    const newStatus = statusCycle[(currentIndex + 1) % statusCycle.length];
-
-    const result = await updatePaymentStatus(contractNo, dueDate, newStatus);
-
-    if (result.success) {
-        setPaymentData((prevData) =>
-          prevData.map((tenant) => {
-            if (tenant.contractNo === contractNo) {
-              return {
-                ...tenant,
-                payments: tenant.payments.map((payment) => {
-                  if (isEqual(parseISO(payment.date), parseISO(dueDate))) {
-                    return { ...payment, status: newStatus };
-                  }
-                  return payment;
-                }),
-              };
-            }
-            return tenant;
-          })
-        );
-    } else {
-        toast({
-            variant: 'destructive',
-            title: 'Update Failed',
-            description: result.error || 'Could not update payment status.'
-        });
-    }
-
-    setUpdatingCells(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(cellId);
-        return newSet;
-    });
-  };
   
   const monthTotals = useMemo(() => {
     const totals: {[key: string]: { expected: number, paid: number }} = {};
@@ -207,7 +165,7 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
         <div className="flex justify-between items-center">
             <div>
               <CardTitle>Rental Payment Status</CardTitle>
-              <CardDescription>Click a payment cell to cycle through Unpaid, Partial, and Paid statuses.</CardDescription>
+              <CardDescription>An overview of rental income status across all tenants.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
                 <Input
@@ -284,7 +242,7 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
             <TableHeader className="sticky top-0 bg-muted z-10">
                 <TableRow>
                     <TableHead rowSpan={2} className={cn("sticky left-0 bg-muted z-20 border-r shadow-md w-[40px]", cellPadding)}>S.L</TableHead>
-                    <TableHead rowSpan={2} className={cn("sticky left-[40px] bg-muted z-20 border-r min-w-[150px] shadow-md", cellPadding)}>Tenant Name</TableHead>
+                    <TableHead rowSpan={2} className={cn("sticky left-[40px] bg-muted z-20 border-r min-w-[150px] shadow-md whitespace-nowrap", cellPadding)}>Tenant Name</TableHead>
                     <TableHead rowSpan={2} className={cn("whitespace-nowrap", cellPadding)}>Flat No.</TableHead>
                     <TableHead rowSpan={2} className={cellPadding}>Nationality</TableHead>
                     <TableHead rowSpan={2} className={cellPadding}>Mobile No.</TableHead>
@@ -320,8 +278,6 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
                     
                     {displayedMonths.map((month) => {
                         const payment = tenant.payments.find((p) => p.month === month);
-                        const cellId = `${tenant.contractNo}-${payment?.date}`;
-                        const isUpdating = updatingCells.has(cellId);
                         const status = payment?.status || 'Unpaid';
                         const config = statusConfig[status];
                         const showData = status === 'Paid' || status === 'Partial';
@@ -329,16 +285,14 @@ export function RentalTrackingClient({ initialData, properties }: RentalTracking
                         return (
                            <React.Fragment key={month}>
                             <TableCell 
-                                className={cn("cursor-pointer", cellPadding, config.color)}
-                                onClick={() => payment && togglePaymentStatus(tenant.contractNo, payment.date, payment.status)}
+                                className={cn("text-center", cellPadding, config.color)}
                             >
-                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment && showData ? format(new Date(payment.date), 'dd.MM') : <>&nbsp;</>)}
+                                {payment && showData ? format(new Date(payment.date), 'dd.MM') : <>&nbsp;</>}
                             </TableCell>
                             <TableCell
-                                className={cn("cursor-pointer text-right", cellPadding, config.color)}
-                                onClick={() => payment && togglePaymentStatus(tenant.contractNo, payment.date, payment.status)}
+                                className={cn("text-right", cellPadding, config.color)}
                             >
-                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin"/> : (payment && showData ? formatCurrency(payment.amount) : <>&nbsp;</>)}
+                                {payment && showData ? formatCurrency(payment.amount) : <>&nbsp;</>}
                             </TableCell>
                            </React.Fragment>
                         );
