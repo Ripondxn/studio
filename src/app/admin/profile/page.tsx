@@ -94,7 +94,7 @@ export default function UserProfilePage() {
                 <CardContent className="space-y-6">
                     <div className="flex items-center gap-6">
                         <Avatar className="h-24 w-24">
-                            <AvatarImage src="https://placehold.co/100x100.png" alt="User" data-ai-hint="user avatar" />
+                            <AvatarImage src="" alt="User" />
                             <AvatarFallback>{profile.firstName.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="space-y-1">
