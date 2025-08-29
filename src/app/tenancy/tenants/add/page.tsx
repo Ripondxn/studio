@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -49,16 +50,20 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { saveTenantData, findTenantData, deleteTenantData, cancelSubscription } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InvoiceList } from '../invoice/invoice-list';
-import { getInvoicesForTenant } from '../invoice/actions';
-import { type Invoice } from '../invoice/schema';
-import { PaymentReceiptList } from '../payment-receipt-list';
+import { InvoiceList } from '@/app/tenancy/customer/invoice/invoice-list';
+import { getInvoicesForCustomer as getInvoicesForTenant } from '@/app/tenancy/customer/invoice/actions';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list';
 import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { type Contract } from '../../contract/schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Room } from '@/app/property/rooms/schema';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { MoveTenantDialog } from './move-tenant-dialog';
+import { type UserRole } from '@/app/admin/user-roles/schema';
+
 
 type Attachment = {
   id: number;
