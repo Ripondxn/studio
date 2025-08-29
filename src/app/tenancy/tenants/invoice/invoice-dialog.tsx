@@ -27,9 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
 import { saveInvoice, getNextSubscriptionInvoiceNumber } from './actions';
 import { type Invoice } from './schema';
 import { invoiceSchema } from './schema';
@@ -38,10 +37,6 @@ import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
 import { type Tenant } from '../../schema';
-import { type Product } from '@/app/products/schema';
-import { getProducts } from '@/app/products/actions';
-import { Combobox } from '@/components/ui/combobox';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
@@ -214,12 +209,12 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             </div>
              <div className="flex items-center space-x-2 mb-4">
                 <Switch 
-                    id="auto-invoice-no-switch"
+                    id="auto-invoice-no-switch-subscription"
                     checked={isAutoInvoiceNo}
                     onCheckedChange={setIsAutoInvoiceNo}
                     disabled={!!invoice}
                 />
-                <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
+                <Label htmlFor="auto-invoice-no-switch-subscription">Auto-generate Invoice No</Label>
             </div>
             
             <Table>
