@@ -44,28 +44,29 @@ export async function getUnits() {
     const allTenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
-    
-    // Units fully rented by a single contract
-    const unitLevelContracts = new Set(activeContracts.filter(c => c.unitCode && !c.roomCode).map(c => c.unitCode));
-
-    // Tenants with active subscriptions for a full unit
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
-    const subscribedUnitCodes = new Set(
+
+    // Units fully rented by a single contract
+    const occupiedUnitCodesByContract = new Set(activeContracts.filter(c => c.unitCode && !c.roomCode).map(c => c.unitCode));
+
+    // Units fully rented by a single subscription
+    const occupiedUnitCodesBySubscription = new Set(
         activeSubscriptionTenants
             .filter(t => t.tenantData.unitCode && !t.tenantData.roomCode)
             .map(t => t.tenantData.unitCode)
     );
 
-    // Consolidate all occupied rooms (from both contracts and subscriptions)
+    // Combine all rooms occupied by either a contract or a subscription
     const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
-    const subscribedRoomCodes = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
-    const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...subscribedRoomCodes]);
+    const occupiedRoomCodesFromSubscriptions = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
+    const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...occupiedRoomCodesFromSubscriptions]);
+
 
     return allUnits.map(unit => {
         let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
 
         // Case 1: The entire unit is rented under one contract or subscription. It's fully Occupied.
-        if (unitLevelContracts.has(unit.unitCode) || subscribedUnitCodes.has(unit.unitCode)) {
+        if (occupiedUnitCodesByContract.has(unit.unitCode) || occupiedUnitCodesBySubscription.has(unit.unitCode)) {
             occupancyStatus = 'Occupied';
         } else {
             // Case 2: The unit is not rented as a whole, so check its rooms.
