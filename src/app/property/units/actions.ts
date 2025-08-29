@@ -50,7 +50,11 @@ export async function getUnits() {
 
     // Tenants with active subscriptions for a full unit
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
-    const subscribedUnitCodes = new Set(activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).map(t => t.tenantData.unitCode));
+    const subscribedUnitCodes = new Set(
+        activeSubscriptionTenants
+            .filter(t => t.tenantData.unitCode && !t.tenantData.roomCode)
+            .map(t => t.tenantData.unitCode)
+    );
 
     // Consolidate all occupied rooms (from both contracts and subscriptions)
     const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
