@@ -66,6 +66,7 @@ export async function getAllTenants() {
                 attachments: l.attachments || [],
                 contractId: contract?.id || null,
                 contractNo: contract?.contractNo || null,
+                isSubscriptionActive: l.tenantData.isSubscriptionActive || false,
             }
         });
 }
@@ -228,4 +229,26 @@ export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
     const allRooms: Room[] = await readData(roomsFilePath);
      return allRooms
         .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode)
+        .map(r => ({ value: r.roomCode, label: r.roomCode }));
+}
+
+export async function getTenantForProperty(propertyCode: string, unitCode: string, roomCode?: string) {
+    try {
+        const contracts: Contract[] = await fs.readFile(contractsFilePath, 'utf-8').then(JSON.parse);
         
+        const activeContract = contracts.find(c =>
+            c.property === propertyCode &&
+            c.unitCode === unitCode &&
+            (roomCode ? c.roomCode === roomCode : true) && // Match room if provided
+            (c.status === 'New' || c.status === 'Renew')
+        );
+
+        if (activeContract) {
+            return { success: true, tenantName: activeContract.tenantName };
+        }
+        return { success: false, error: 'No active tenant found for this location.' };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
+}
