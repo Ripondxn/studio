@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveInvoice, getNextSubscriptionInvoiceNumber } from '@/app/tenancy/customer/invoice/actions';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
-import { invoiceSchema } from '@/app/tenancy/customer/invoice/form-schema';
+import { invoiceSchema } from '@/app/tenancy/customer/invoice/schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';

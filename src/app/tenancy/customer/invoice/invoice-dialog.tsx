@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
 import { type Invoice } from './schema';
-import { invoiceSchema } from './form-schema';
+import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
 import { Switch } from '@/components/ui/switch';
