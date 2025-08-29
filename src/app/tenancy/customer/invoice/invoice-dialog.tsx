@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -32,12 +33,12 @@ import { saveInvoice, getNextInvoiceNumber } from './actions';
 import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
-import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
-import { getProducts } from '@/app/products/actions';
+import { type Tenant } from '../../schema';
 import { type Product } from '@/app/products/schema';
+import { getProducts } from '@/app/products/actions';
+import { Combobox } from '@/components/ui/combobox';
 
 const formSchema = invoiceSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
@@ -46,25 +47,20 @@ interface InvoiceDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   invoice: z.infer<typeof invoiceSchema> | null;
-  customer: { code: string; name: string };
+  tenant?: Tenant;
+  customer?: { code: string; name: string };
   onSuccess: () => void;
   isViewMode?: boolean;
 }
 
-export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess, isViewMode = false }: InvoiceDialogProps) {
+export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, customer, onSuccess, isViewMode = false }: InvoiceDialogProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const [isPropertyInvoice, setIsPropertyInvoice] = useState(true);
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
-
-  const [lookups, setLookups] = useState<{
-    properties: {value: string, label: string}[],
-    units: {value: string, label: string}[],
-    rooms: {value: string, label: string}[],
-    products: Product[]
-  }>({ properties: [], units: [], rooms: [], products: [] });
+  const [products, setProducts] = useState<Product[]>([]);
 
   const {
     register,
@@ -90,34 +86,10 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const watchedUnit = watch('unitCode');
 
   useEffect(() => {
-    getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
-     getProducts().then(data => setLookups(prev => ({...prev, products: data})));
-  }, []);
-
-  useEffect(() => {
-    const fetchUnits = async () => {
-        if (watchedProperty) {
-            const units = await getUnitsForProperty(watchedProperty);
-            setLookups(prev => ({...prev, units}));
-        } else {
-            setLookups(prev => ({...prev, units: []}));
-        }
+    if (isOpen) {
+      getProducts().then(setProducts);
     }
-    fetchUnits();
-  }, [watchedProperty]);
-
-  useEffect(() => {
-    const fetchSubUnits = async () => {
-        if (watchedProperty && watchedUnit) {
-            const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
-            setLookups(prev => ({...prev, rooms}));
-        } else {
-            setLookups(prev => ({...prev, rooms: []}));
-        }
-    }
-    fetchSubUnits();
-  }, [watchedProperty, watchedUnit]);
-
+  }, [isOpen]);
 
   useEffect(() => {
     if (!watchedItems) return;
@@ -150,32 +122,50 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
         setValue('roomCode', '');
     }
   }, [isPropertyInvoice, setValue]);
+  
+  const currentParty = tenant || customer;
 
   useEffect(() => {
     const initializeForm = async () => {
+        if (!currentParty) return;
+
         if (invoice) {
             setIsPropertyInvoice(!!invoice.property);
-            setIsAutoInvoiceNo(false); // When editing, number is always manual
+            setIsAutoInvoiceNo(false);
             reset(invoice);
         } else {
             const newInvoiceNo = await getNextInvoiceNumber();
-            setIsPropertyInvoice(true);
+            setIsPropertyInvoice(!!(tenant?.property));
             setIsAutoInvoiceNo(true);
+
+            let subscriptionDescription = '';
+            let subscriptionAmount = 0;
+            if(tenant?.isSubscriptionActive) {
+              subscriptionDescription = tenant.subscriptionStatus ? `${tenant.subscriptionStatus} Subscription` : '';
+              subscriptionAmount = tenant.subscriptionAmount || 0;
+            }
+
             reset({
                 invoiceNo: newInvoiceNo,
-                customerCode: customer.code,
-                customerName: customer.name,
-                property: '',
-                unitCode: '',
-                roomCode: '',
+                customerCode: currentParty.code,
+                customerName: currentParty.name,
+                property: tenant?.property || '',
+                unitCode: tenant?.unitCode || '',
+                roomCode: tenant?.roomCode || '',
                 invoiceDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
-                items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
-                subTotal: 0,
+                items: subscriptionAmount > 0 ? [{ 
+                    id: `item-${Date.now()}`, 
+                    description: subscriptionDescription, 
+                    quantity: 1, 
+                    unitPrice: subscriptionAmount, 
+                    total: subscriptionAmount 
+                }] : [],
+                subTotal: subscriptionAmount,
                 tax: 0,
                 taxType: 'exclusive',
                 taxRate: 0,
-                total: 0,
+                total: subscriptionAmount,
                 notes: '',
                 status: 'Draft',
             });
@@ -184,11 +174,15 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     if (isOpen) {
       initializeForm();
     }
-  }, [isOpen, invoice, reset, customer]);
+  }, [isOpen, invoice, reset, currentParty, tenant]);
 
   const onSubmit = async (data: InvoiceFormData) => {
+    if(!currentUser) {
+        toast({variant: 'destructive', title: 'Error', description: 'Could not identify current user.'});
+        return;
+    }
     setIsSaving(true);
-    const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo });
+    const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();
@@ -205,16 +199,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
         const printWindow = window.open('', '', 'height=800,width=800');
         if (printWindow) {
             printWindow.document.write('<html><head><title>Print Invoice</title>');
-            // A simple stylesheet for printing
-            printWindow.document.write(`
-                <style>
-                    body { font-family: sans-serif; }
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid #ddd; padding: 8px; }
-                    th { background-color: #f2f2f2; }
-                    .no-print { display: none; }
-                </style>
-            `);
+            printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; } th { background-color: #f2f2f2; } .no-print { display: none; }</style>');
             printWindow.document.write('</head><body>');
             printWindow.document.write(printContent.innerHTML);
             printWindow.document.write('</body></html>');
@@ -225,7 +210,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   }
   
   const handleItemSelect = (index: number, value: string, label?: string) => {
-    const product = lookups.products.find(p => p.itemCode.toLowerCase() === value.toLowerCase() || p.itemName.toLowerCase() === value.toLowerCase());
+    const product = products.find(p => p.itemCode.toLowerCase() === value.toLowerCase() || p.itemName.toLowerCase() === value.toLowerCase());
     if(product) {
         setValue(`items.${index}.description`, product.itemName);
         setValue(`items.${index}.unitPrice`, product.salePrice);
@@ -233,6 +218,10 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
         setValue(`items.${index}.description`, label || value);
     }
   }
+  
+  const currentUserString = typeof window !== 'undefined' ? sessionStorage.getItem('userProfile') : null;
+  const currentUser = currentUserString ? JSON.parse(currentUserString) : null;
+
 
   if (isViewMode && invoice) {
     return (
@@ -262,14 +251,14 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
             <DialogDescription>
-              {invoice ? `Editing invoice ${invoice.invoiceNo}` : `Creating a new invoice for ${customer.name}`}
+              {invoice ? `Editing invoice ${invoice.invoiceNo}` : `Creating a new invoice for ${currentParty?.name}`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="max-h-[60vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
               <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
-              <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
+              <div><Label>Customer/Tenant</Label><Input value={currentParty?.name} disabled/></div>
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
             </div>
@@ -278,79 +267,11 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                     id="auto-invoice-no-switch"
                     checked={isAutoInvoiceNo}
                     onCheckedChange={setIsAutoInvoiceNo}
-                    disabled={!!invoice} // Disable toggle when editing
+                    disabled={!!invoice}
                 />
                 <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
             </div>
-
-            <div className="flex items-center space-x-2 mb-4">
-                <Switch 
-                    id="property-invoice-switch" 
-                    checked={isPropertyInvoice} 
-                    onCheckedChange={setIsPropertyInvoice}
-                />
-                <Label htmlFor="property-invoice-switch">Property-Related Invoice</Label>
-            </div>
-
-            {isPropertyInvoice && (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4 p-4 border rounded-md bg-muted/50">
-                  <div>
-                      <Label>Property</Label>
-                      <Controller
-                          name="property"
-                          control={control}
-                          render={({ field }) => (
-                              <Combobox
-                                  options={lookups.properties}
-                                  value={field.value || ''}
-                                  onSelect={(value) => {
-                                      field.onChange(value);
-                                      setValue('unitCode', '');
-                                      setValue('roomCode', '');
-                                  }}
-                                  placeholder="Select Property"
-                              />
-                          )}
-                      />
-                  </div>
-                  <div>
-                      <Label>Unit</Label>
-                      <Controller
-                          name="unitCode"
-                          control={control}
-                          render={({ field }) => (
-                              <Combobox
-                                  options={lookups.units}
-                                  value={field.value || ''}
-                                  onSelect={(value) => {
-                                      field.onChange(value);
-                                      setValue('roomCode', '');
-                                  }}
-                                  placeholder="Select Unit"
-                                  disabled={!watchedProperty}
-                              />
-                          )}
-                      />
-                  </div>
-                  <div>
-                      <Label>Room</Label>
-                      <Controller
-                          name="roomCode"
-                          control={control}
-                          render={({ field }) => (
-                              <Combobox
-                                  options={lookups.rooms}
-                                  value={field.value || ''}
-                                  onSelect={(value) => field.onChange(value)}
-                                  placeholder="Select Room"
-                                  disabled={!watchedUnit || lookups.rooms.length === 0}
-                              />
-                          )}
-                      />
-                  </div>
-              </div>
-            )}
-
+            
             <Table>
               <TableHeader>
                   <TableRow>
@@ -366,7 +287,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                       <TableRow key={field.id}>
                           <TableCell>
                             <Combobox
-                                options={lookups.products.map(p => ({value: p.itemCode, label: p.itemName}))}
+                                options={products.map(p => ({value: p.itemCode, label: p.itemName}))}
                                 value={watchedItems?.[index]?.description || ''}
                                 onSelect={(value, label) => handleItemSelect(index, value, label)}
                                 placeholder="Select or type item..."

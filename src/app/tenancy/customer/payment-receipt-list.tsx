@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -40,6 +41,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCurrency } from '@/context/currency-context';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 
 interface PaymentReceiptListProps {
     customerCode: string;
@@ -56,6 +58,8 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
     const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
     const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
     const [invoicesForPrinting, setInvoicesForPrinting] = useState<Invoice[]>([]);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const { toast } = useToast();
     const { formatCurrency } = useCurrency();
     const printRef = useRef<HTMLDivElement>(null);
@@ -78,6 +82,27 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
     useEffect(() => {
         fetchPaymentData();
     }, [fetchPaymentData]);
+    
+    const handleRecordPayment = () => {
+        setPaymentDefaultValues({
+            type: 'Receipt',
+            partyType: 'Customer',
+            partyName: customerCode,
+            status: 'Received',
+        });
+        setIsPaymentDialogOpen(true);
+    }
+    
+    const handleRecordRefund = () => {
+        setPaymentDefaultValues({
+            type: 'Payment',
+            partyType: 'Customer',
+            partyName: customerCode,
+            status: 'Paid',
+            remarks: 'Customer Refund'
+        });
+        setIsPaymentDialogOpen(true);
+    }
 
     const handleDelete = async () => {
         if (!selectedPaymentId) return;
@@ -86,7 +111,7 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
         if (result.success) {
             toast({ title: 'Payment Deleted' });
             fetchPaymentData();
-            onRefresh(); // To refresh parent components like invoice list
+            onRefresh();
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error });
         }
@@ -98,7 +123,6 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
         const selected = invoices.filter(inv => selectedInvoiceIds.includes(inv.id));
         setInvoicesForPrinting(selected);
         
-        // Use a timeout to allow state to update before printing
         setTimeout(() => {
             const printContent = printRef.current;
             if (printContent) {
@@ -121,7 +145,7 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
     }
 
     return (
-        <Card>
+        <>
             <AlertDialog open={!!selectedPaymentId} onOpenChange={(open) => !open && setSelectedPaymentId(null)}>
                 <AlertDialogContent>
                 <AlertDialogHeader>
@@ -194,74 +218,102 @@ export function PaymentReceiptList({ customerCode, customerName, onRefresh }: Pa
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <CardHeader>
-                 <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>Payment Receipts</CardTitle>
-                        <CardDescription>A history of all payments received from {customerName}.</CardDescription>
+            <AddPaymentDialog
+                isOpen={isPaymentDialogOpen}
+                setIsOpen={setIsPaymentDialogOpen}
+                defaultValues={paymentDefaultValues}
+                customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled' && (i.remainingBalance || 0) > 0)}
+                onPaymentAdded={() => {
+                    fetchPaymentData();
+                    onRefresh();
+                }}
+            />
+            <Card>
+                <CardHeader>
+                     <div className="flex justify-between items-center">
+                        <div>
+                            <CardTitle>Payment History</CardTitle>
+                            <CardDescription>A history of all payments from {customerName}.</CardDescription>
+                        </div>
+                         <div className="flex gap-2">
+                           <Button variant="outline" size="sm" onClick={handleRecordPayment}>
+                                <Plus className="mr-2 h-4 w-4"/> Record Payment
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={handleRecordRefund}>
+                                <Minus className="mr-2 h-4 w-4"/> Record Refund
+                            </Button>
+                             <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)}><Printer className="mr-2 h-4 w-4"/> Print Statement</Button>
+                        </div>
                     </div>
-                     <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)}><Printer className="mr-2 h-4 w-4"/> Print Statement</Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-                 {isLoading ? (
-                     <div className="flex justify-center items-center h-40">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                ) : (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Reference</TableHead>
-                                <TableHead>Method</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {payments.length === 0 ? (
+                </CardHeader>
+                <CardContent>
+                     {isLoading ? (
+                         <div className="flex justify-center items-center h-40">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : (
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">No payment receipts found.</TableCell>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead>Reference</TableHead>
+                                    <TableHead>Method</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
-                            ) : (
-                                payments.map(payment => (
-                                    <TableRow key={payment.id}>
-                                        <TableCell>{format(new Date(payment.date), 'PP')}</TableCell>
-                                        <TableCell>{payment.referenceNo}</TableCell>
-                                        <TableCell><Badge variant="outline">{payment.paymentMethod}</Badge></TableCell>
-                                        <TableCell className="text-right font-medium text-green-600">{formatCurrency(payment.amount)}</TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem onSelect={() => toast({title: "Coming Soon", description: "Edit functionality will be available in a future update."})}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Edit
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive" onSelect={() => setSelectedPaymentId(payment.id!)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                            </TableHeader>
+                            <TableBody>
+                                {payments.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="h-24 text-center">No payment history found.</TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                )}
-            </CardContent>
-             <div className="hidden">
-                <PrintablePaymentHistory 
-                    ref={printRef} 
-                    payments={payments} 
-                    invoices={invoicesForPrinting}
-                    customerName={customerName} 
-                />
-            </div>
-        </Card>
+                                ) : (
+                                    payments.map(payment => (
+                                        <TableRow key={payment.id}>
+                                            <TableCell>{format(new Date(payment.date), 'PP')}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={payment.type === 'Receipt' ? 'secondary' : 'outline'} className={cn(payment.type === 'Receipt' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800', 'border-transparent')}>
+                                                    {payment.type === 'Receipt' ? 'Receipt' : 'Refund'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>{payment.referenceNo}</TableCell>
+                                            <TableCell><Badge variant="outline">{payment.paymentMethod}</Badge></TableCell>
+                                            <TableCell className={cn("text-right font-medium", payment.type === 'Receipt' ? 'text-green-600' : 'text-red-600')}>
+                                                {payment.type === 'Receipt' ? '+' : '-'}
+                                                {formatCurrency(payment.amount)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent>
+                                                        <DropdownMenuItem onSelect={() => toast({title: "Coming Soon", description: "Edit functionality will be available in a future update."})}>
+                                                            <Edit className="mr-2 h-4 w-4" /> Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-destructive" onSelect={() => setSelectedPaymentId(payment.id!)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+                 <div className="hidden">
+                    <PrintablePaymentHistory 
+                        ref={printRef} 
+                        payments={payments} 
+                        invoices={invoicesForPrinting}
+                        customerName={customerName} 
+                    />
+                </div>
+            </Card>
+        </>
     )
 }

@@ -109,7 +109,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                         <CardDescription>Manage subscription invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
-                         {tenant.subscriptionStatus && (
+                         {tenant.isSubscriptionActive && (
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="destructive" size="sm" disabled={isCancellingSub}>
