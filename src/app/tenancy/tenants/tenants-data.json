@@ -40,7 +40,7 @@
       "property": "",
       "unitCode": "",
       "roomCode": "",
-      "isSubscriptionActive": false,
+      "isSubscriptionActive": true,
       "subscriptionAmount": 0
     },
     "attachments": []

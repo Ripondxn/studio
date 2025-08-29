@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams }from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -48,7 +48,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit, cancelSubscription } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit } from '../actions';
 import { getTenantForProperty } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
@@ -60,7 +60,7 @@ import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Combobox } from '@/components/ui/combobox';
 import { Separator } from '@/components/ui/separator';
-import { MoveTenantDialog } from '../add/move-tenant-dialog';
+import { MoveTenantDialog } from './move-tenant-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
 import { getLatestContractForTenant } from '../../contract/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -126,8 +126,6 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const watchedProperty = form.watch('property');
-  const watchedUnit = form.watch('unitCode');
   const tenantCode = form.watch('code');
   const tenantName = form.watch('name');
   
@@ -211,33 +209,7 @@ export default function TenantPage() {
     }
   }, [searchParams, handleFindClick]);
 
-  useEffect(() => {
-    if (!watchedProperty) {
-      setLookups(prev => ({ ...prev, units: [], rooms: [] }));
-      return;
-    }
-    const fetchUnits = async () => {
-      setIsLoadingUnits(true);
-      const unitsData = await getUnitsForProperty(watchedProperty);
-      setLookups(prev => ({ ...prev, units: unitsData, rooms: [] }));
-      setIsLoadingUnits(false);
-    };
-    fetchUnits();
-  }, [watchedProperty]);
 
-  useEffect(() => {
-    if (!watchedProperty || !watchedUnit) {
-      setLookups(prev => ({ ...prev, rooms: [] }));
-      return;
-    }
-    const fetchRooms = async () => {
-      setIsLoadingRooms(true);
-      const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
-      setLookups(prev => ({ ...prev, rooms: roomsData }));
-      setIsLoadingRooms(false);
-    };
-    fetchRooms();
-  }, [watchedProperty, watchedUnit]);
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
@@ -303,6 +275,7 @@ export default function TenantPage() {
           description: `Tenant "${data.name}" saved successfully.`,
         });
         setIsEditing(false);
+        setIsSubscriptionEditing(false);
         if (isNewRecord) {
             router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
@@ -330,6 +303,7 @@ export default function TenantPage() {
         form.reset();
         setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
+        setIsSubscriptionEditing(false);
      }
   }
 
@@ -535,13 +509,6 @@ export default function TenantPage() {
                             )}
                         />
                     </div>
-                     <Separator className="my-6" />
-                     <CardTitle>Rented Property</CardTitle>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => { form.setValue('property', value); form.setValue('unitCode', ''); form.setValue('roomCode','');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={(value) => {form.setValue('unitCode', value); form.setValue('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty || isLoadingUnits} /><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={(value) => form.setValue('roomCode', value)} placeholder="Select room" disabled={!isEditing || !watchedUnit || isLoadingRooms} /><FormMessage /></FormItem>)} />
-                     </div>
                     </CardContent>
                 </Card>
             </div>
