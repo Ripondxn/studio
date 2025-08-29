@@ -127,6 +127,7 @@ export default function TenantPage() {
   const tenantCode = form.watch('code');
   const watchedProperty = form.watch('property');
   const watchedUnit = form.watch('unitCode');
+  const watchedIsSubActive = form.watch('isSubscriptionActive');
   
   const fetchInvoices = useCallback(async (tenantCode: string) => {
     if (!tenantCode) return;
@@ -336,8 +337,6 @@ export default function TenantPage() {
   
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${form.watch('name')}`;
 
-  const watchedIsSubActive = form.watch('isSubscriptionActive');
-
   return (
     <div className="container mx-auto p-4 bg-background">
      <Form {...form}>
@@ -401,8 +400,7 @@ export default function TenantPage() {
       <Tabs defaultValue="info">
         <TabsList>
             <TabsTrigger value="info">Tenant Information</TabsTrigger>
-            <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
-            <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
+            <TabsTrigger value="subscription">Subscription & Invoices</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="info">
@@ -516,34 +514,9 @@ export default function TenantPage() {
                      </div>
                     </CardContent>
                 </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Broker / Agent Reference</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField control={form.control} name="brokerName" render={({ field }) => (<FormItem><Label>Broker Name</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={form.control} name="brokerCommission" render={({ field }) => (<FormItem><Label>Commission Amount</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!isEditing} /></FormControl><FormMessage /></FormItem>)} />
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
         </TabsContent>
-        <TabsContent value="security-deposit">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Security Deposit</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <FormField control={form.control} name="securityDepositAmount" render={({ field }) => (<FormItem><Label>Deposit Amount</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} disabled={!isEditing}/></FormControl><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="securityDepositStatus" render={({ field }) => (<FormItem><Label>Payment Status</Label><Select onValueChange={field.onChange} value={field.value} disabled={!isEditing}><FormControl><SelectTrigger><SelectValue placeholder="Select status"/></SelectTrigger></FormControl><SelectContent><SelectItem value="paid">Paid</SelectItem><SelectItem value="unpaid">Unpaid</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
-                    </div>
-                </CardContent>
-            </Card>
-        </TabsContent>
-         <TabsContent value="subscription">
+        <TabsContent value="subscription">
             <Card>
                 <CardHeader>
                     <CardTitle>Subscription Management</CardTitle>
@@ -576,7 +549,7 @@ export default function TenantPage() {
                 </CardContent>
             </Card>
 
-            <InvoiceList
+            <InvoiceList 
                 tenant={form.getValues()}
                 invoices={invoices}
                 isLoading={isLoadingInvoices}
