@@ -5,7 +5,7 @@ import path from 'path';
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Invoice } from '@/app/tenancy/tenants/invoice/schema';
-import { getNextInvoiceNumber, saveInvoice } from '@/app/tenancy/tenants/invoice/actions';
+import { saveInvoice } from '@/app/tenancy/tenants/invoice/actions';
 
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/invoice/invoices-data.json');

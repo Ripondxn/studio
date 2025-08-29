@@ -1,34 +1,5 @@
 [
   {
-    "invoiceNo": "INV-1755853051213",
-    "customerCode": "C001",
-    "customerName": "General Customer",
-    "property": "",
-    "unitCode": "",
-    "roomCode": "",
-    "partitionCode": "",
-    "invoiceDate": "2025-08-22",
-    "dueDate": "2025-08-22",
-    "items": [
-      {
-        "id": "item-1755853051213",
-        "description": "monthly rent",
-        "quantity": 1,
-        "unitPrice": 1200,
-        "total": 0
-      }
-    ],
-    "subTotal": 1200,
-    "taxType": "inclusive",
-    "taxRate": 0,
-    "tax": 0,
-    "total": 1200,
-    "notes": "",
-    "status": "Sent",
-    "id": "INV-1755853030320",
-    "amountPaid": 0
-  },
-  {
     "invoiceNo": "INV-1755853051214",
     "customerCode": "C002",
     "customerName": "Md Ripon Ahmed",
