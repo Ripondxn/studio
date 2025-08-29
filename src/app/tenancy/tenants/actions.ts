@@ -123,7 +123,10 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean, isAu
             }
             allTenants[index] = {
                 ...allTenants[index],
-                tenantData: dataToSave.tenantData,
+                tenantData: {
+                  ...allTenants[index].tenantData,
+                  ...dataToSave.tenantData,
+                },
                 attachments: dataToSave.attachments,
                 id: allTenants[index].id
             };
