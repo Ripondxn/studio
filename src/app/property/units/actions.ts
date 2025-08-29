@@ -46,17 +46,18 @@ export async function getUnits() {
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
 
-    // Units fully rented by a single contract
+    // Units fully rented by a single contract (no room specified)
     const occupiedUnitCodesByContract = new Set(activeContracts.filter(c => c.unitCode && !c.roomCode).map(c => c.unitCode));
-
-    // Units fully rented by a single subscription
+    // Units fully rented by a single subscription (no room specified)
     const occupiedUnitCodesBySubscription = new Set(
         activeSubscriptionTenants
             .filter(t => t.tenantData.unitCode && !t.tenantData.roomCode)
             .map(t => t.tenantData.unitCode)
     );
+    const fullyOccupiedUnitCodes = new Set([...occupiedUnitCodesByContract, ...occupiedUnitCodesBySubscription]);
 
-    // Combine all rooms occupied by either a contract or a subscription
+
+    // All individual rooms occupied by either a contract or a subscription
     const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
     const occupiedRoomCodesFromSubscriptions = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
     const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...occupiedRoomCodesFromSubscriptions]);
@@ -65,8 +66,8 @@ export async function getUnits() {
     return allUnits.map(unit => {
         let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
 
-        // Case 1: The entire unit is rented under one contract or subscription. It's fully Occupied.
-        if (occupiedUnitCodesByContract.has(unit.unitCode) || occupiedUnitCodesBySubscription.has(unit.unitCode)) {
+        // Case 1: The entire unit is rented under one agreement. It's fully Occupied.
+        if (fullyOccupiedUnitCodes.has(unit.unitCode)) {
             occupancyStatus = 'Occupied';
         } else {
             // Case 2: The unit is not rented as a whole, so check its rooms.
