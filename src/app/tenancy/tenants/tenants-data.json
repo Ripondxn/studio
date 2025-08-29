@@ -1088,7 +1088,7 @@
       "brokerCommission": 0,
       "property": "LT-C38",
       "unitCode": "F101",
-      "roomCode": "Room-1/A",
+      "roomCode": "",
       "isSubscriptionActive": true,
       "subscriptionStatus": "Yearly",
       "subscriptionAmount": 25000
