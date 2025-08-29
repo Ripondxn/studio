@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -48,18 +47,16 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, cancelSubscription, getTenantLookups, getUnitsForProperty, getRoomsForUnit } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InvoiceList } from '@/app/tenancy/customer/invoice/invoice-list';
+import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
 import { getInvoicesForCustomer as getInvoicesForTenant } from '@/app/tenancy/customer/invoice/actions';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list';
 import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { type UserRole } from '@/app/admin/user-roles/schema';
 import { Combobox } from '@/components/ui/combobox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
 type Attachment = {
@@ -84,11 +81,6 @@ const initialTenantData: Tenant = {
     brokerEmail: '',
     brokerCommission: 0,
     contractNo: '',
-    securityDepositAmount: 0,
-    securityDepositStatus: 'unpaid',
-    securityDepositReturnDate: '',
-    securityDepositReturnedAmount: 0,
-    securityDepositRemarks: '',
     property: '',
     unitCode: '',
     roomCode: '',
@@ -107,7 +99,6 @@ export default function TenantPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isFinding, setIsFinding] = useState(false);
   const [isAutoCode, setIsAutoCode] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
@@ -118,6 +109,9 @@ export default function TenantPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [] });
+
+  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
+
 
   const form = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
@@ -148,7 +142,6 @@ export default function TenantPage() {
   }, [attachments]);
 
   const handleFindClick = useCallback(async (code: string) => {
-    setIsFinding(true);
     try {
       const result = await findTenantData(code);
       if (result.success && result.data) {
@@ -180,11 +173,9 @@ export default function TenantPage() {
         title: 'Error',
         description: (error as Error).message || 'Failed to find tenant data.',
       });
-    } finally {
-      setIsFinding(false);
     }
   }, [form, toast, fetchInvoices]);
-  
+
   useEffect(() => {
     const tenantCodeParam = searchParams.get('code');
     getTenantLookups().then(data => setLookups(prev => ({...prev, ...data})));
@@ -282,6 +273,7 @@ export default function TenantPage() {
           description: `Tenant "${data.name}" saved successfully.`,
         });
         setIsEditing(false);
+        setIsSubscriptionEditing(false); // Also exit subscription edit mode on main save
         if (isNewRecord) {
             router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
@@ -309,6 +301,7 @@ export default function TenantPage() {
         form.reset();
         setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
+        setIsSubscriptionEditing(false);
      }
   }
 
@@ -348,7 +341,7 @@ export default function TenantPage() {
             <div className="flex items-center gap-2">
                 {!isEditing && (
                 <Button type="button" onClick={handleEditClick}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                    <Pencil className="mr-2 h-4 w-4" /> Edit Tenant
                 </Button>
                 )}
                 {isEditing && (
@@ -400,7 +393,7 @@ export default function TenantPage() {
       <Tabs defaultValue="info">
         <TabsList>
             <TabsTrigger value="info">Tenant Information</TabsTrigger>
-            <TabsTrigger value="subscription">Subscription & Invoices</TabsTrigger>
+            <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription &amp; Invoices</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="info">
@@ -517,44 +510,14 @@ export default function TenantPage() {
             </div>
         </TabsContent>
         <TabsContent value="subscription">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Subscription Management</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="flex items-center space-x-2">
-                        <FormField
-                        control={form.control}
-                        name="isSubscriptionActive"
-                        render={({ field }) => (
-                            <FormItem className="flex items-center space-x-2">
-                                <FormControl>
-                                    <Switch
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                        disabled={!isEditing}
-                                    />
-                                </FormControl>
-                                <Label htmlFor="isSubscriptionActive" className="!mt-0">
-                                    Enable Subscription
-                                </Label>
-                            </FormItem>
-                        )}
-                        />
-                    </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField control={form.control} name="subscriptionStatus" render={({ field }) => (<FormItem><Label>Subscription Type</Label><Select onValueChange={field.onChange} value={field.value} disabled={!isEditing || !watchedIsSubActive}><FormControl><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yearly">Yearly</SelectItem><SelectItem value="Monthly">Monthly</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="subscriptionAmount" render={({ field }) => (<FormItem><Label>Subscription Amount</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} disabled={!isEditing || !watchedIsSubActive}/></FormControl><FormMessage /></FormItem>)} />
-                     </div>
-                </CardContent>
-            </Card>
-
-            <InvoiceList 
+             <InvoiceList 
                 tenant={form.getValues()}
                 invoices={invoices}
                 isLoading={isLoadingInvoices}
                 onRefresh={() => fetchInvoices(form.getValues('code'))}
-            />
+                isSubscriptionEditing={isSubscriptionEditing}
+                setIsSubscriptionEditing={setIsSubscriptionEditing}
+             />
         </TabsContent>
          <TabsContent value="attachments">
             <Card>

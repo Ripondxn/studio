@@ -1,15 +1,14 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, DollarSign } from 'lucide-react';
+import { Plus, Loader2, DollarSign, Edit, Save, X, RotateCw } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
-import { InvoiceDialog as GeneralInvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
+import { GeneralInvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -20,15 +19,22 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 interface InvoiceListProps {
     tenant: Tenant;
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
+    isSubscriptionEditing: boolean;
+    setIsSubscriptionEditing: (isEditing: boolean) => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing }: InvoiceListProps) {
     const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
     const [isGeneralInvoiceDialogOpen, setIsGeneralInvoiceDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -106,42 +112,38 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
         setIsCancellingSub(false);
     };
 
+    const handleSubscriptionSave = () => {
+        // This is a placeholder. The main form's onSave will handle the actual saving.
+        // This function's role is just to toggle the editing state.
+        setIsSubscriptionEditing(false);
+    }
 
     return (
         <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Subscription & Invoices</CardTitle>
+                        <CardTitle>Subscription &amp; Invoices</CardTitle>
                         <CardDescription>Manage subscription and invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
-                         {tenant.isSubscriptionActive && (
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm" disabled={isCancellingSub}>
-                                        {isCancellingSub && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        Cancel Subscription
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>This will remove the tenant's subscription status and amount. This action cannot be undone.</AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleCancelSubscription}>Continue</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
+                         {isSubscriptionEditing ? (
+                            <>
+                                <Button size="sm" onClick={handleSubscriptionSave}>
+                                    <Save className="mr-2 h-4 w-4" /> Apply Changes
+                                </Button>
+                                 <Button size="sm" variant="ghost" onClick={() => setIsSubscriptionEditing(false)}>
+                                    <X className="mr-2 h-4 w-4" /> Cancel
+                                </Button>
+                            </>
+                         ) : (
+                             <Button size="sm" variant="outline" onClick={() => setIsSubscriptionEditing(true)}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit Subscription
+                            </Button>
                          )}
-                        <Button onClick={() => handleRecordPayment()}>
-                            <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
-                        </Button>
-                        <Button variant="outline" onClick={handleCreateClick}>
+                        <Button onClick={handleCreateClick}>
                             <Plus className="mr-2 h-4 w-4" /> 
-                            {tenant.isSubscriptionActive ? 'Create Subscription Invoice' : 'Create Invoice'}
+                            {tenant.isSubscriptionActive ? 'New Subscription Invoice' : 'Create Invoice'}
                         </Button>
                     </div>
                 </div>
@@ -161,13 +163,69 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                 </div>
             </CardHeader>
             <CardContent>
-                {isLoading ? (
-                     <div className="flex justify-center items-center h-40">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                ) : (
-                    <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPayment })} data={invoices} />
-                )}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Subscription Management</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex items-center space-x-2">
+                           <Switch
+                            id="isSubscriptionActive"
+                            checked={tenant.isSubscriptionActive}
+                            disabled={!isSubscriptionEditing}
+                            />
+                            <Label htmlFor="isSubscriptionActive" className="!mt-0">
+                                Enable Subscription
+                            </Label>
+                             {tenant.isSubscriptionActive && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="sm" disabled={isCancellingSub || isSubscriptionEditing}>
+                                            {isCancellingSub && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Cancel Subscription
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>This will remove the tenant's subscription status and amount. This action cannot be undone.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleCancelSubscription}>Continue</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                               <Label>Subscription Type</Label>
+                               <Select value={tenant.subscriptionStatus} disabled={!isSubscriptionEditing || !tenant.isSubscriptionActive}>
+                                <SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Yearly">Yearly</SelectItem>
+                                    <SelectItem value="Monthly">Monthly</SelectItem>
+                                </SelectContent>
+                               </Select>
+                            </div>
+                            <div>
+                               <Label>Subscription Amount</Label>
+                               <Input type="number" value={tenant.subscriptionAmount} disabled={!isSubscriptionEditing || !tenant.isSubscriptionActive}/>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="mt-6">
+                    {isLoading ? (
+                        <div className="flex justify-center items-center h-40">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : (
+                        <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPayment })} data={invoices} />
+                    )}
+                </div>
                 
                 <SubscriptionInvoiceDialog
                     isOpen={isInvoiceDialogOpen}
