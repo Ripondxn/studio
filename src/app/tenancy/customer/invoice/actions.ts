@@ -119,8 +119,8 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
         }
 
         await writeInvoices(allInvoices);
-        revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
         revalidatePath(`/tenancy/customer/add?code=${data.customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
         revalidatePath('/property/units/vacant');
         revalidatePath('/property/properties');
         return { success: true, data: savedInvoice };
