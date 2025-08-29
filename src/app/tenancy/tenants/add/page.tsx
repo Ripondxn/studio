@@ -55,6 +55,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -65,6 +66,8 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { MoveTenantDialog } from './move-tenant-dialog';
+import type { UserRole } from '@/app/admin/user-roles/schema';
+import { Combobox } from '@/components/ui/combobox';
 
 type Attachment = {
   id: number;
@@ -74,6 +77,14 @@ type Attachment = {
   remarks: string;
   isLink: boolean;
 };
+
+type Lookups = {
+    properties: {value: string, label: string}[];
+    units: {value: string, label: string}[];
+    rooms: {value: string, label: string}[];
+    tenants: any[];
+}
+
 
 const initialTenantData = {
     code: '',
@@ -93,6 +104,11 @@ const initialTenantData = {
     securityDepositReturnDate: '',
     securityDepositReturnedAmount: 0,
     securityDepositRemarks: '',
+    property: '',
+    unitCode: '',
+    roomCode: '',
+    subscriptionStatus: undefined,
+    subscriptionAmount: 0,
 };
 
 export default function TenantPage() {
@@ -115,6 +131,10 @@ export default function TenantPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [], tenants: [] });
+
+  const watchedProperty = tenantData.property;
+  const watchedUnit = tenantData.unitCode;
 
   useEffect(() => {
     return () => {
@@ -172,6 +192,9 @@ export default function TenantPage() {
   }, [tenantData.code, toast]);
 
   useEffect(() => {
+    getContractLookups().then(data => {
+        setLookups(prev => ({...prev, properties: data.properties, tenants: data.tenants}));
+    });
     const tenantCode = searchParams.get('code');
     if (tenantCode) {
       setIsNewRecord(false);
@@ -182,6 +205,27 @@ export default function TenantPage() {
         handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
+  
+  useEffect(() => {
+    const fetchUnits = async () => {
+        if (watchedProperty) {
+            const unitsData = await getUnitsForProperty(watchedProperty);
+            setLookups(prev => ({...prev, units: unitsData, rooms: []}));
+        }
+    }
+    fetchUnits();
+  }, [watchedProperty]);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+        if (watchedProperty && watchedUnit) {
+            const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
+            setLookups(prev => ({...prev, rooms: roomsData}));
+        }
+    }
+    fetchRooms();
+  }, [watchedProperty, watchedUnit]);
+
 
   const handleInputChange = (field: keyof typeof tenantData, value: string | number) => {
     setTenantData(prev => ({ ...prev, [field]: value }));
@@ -351,6 +395,35 @@ export default function TenantPage() {
                 </Button>
               </>
             )}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isNewRecord || isEditing}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    tenant "{tenantData.name}".
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button variant="outline" onClick={() => router.push('/tenancy/tenants')}>
                 <X className="mr-2 h-4 w-4" /> Close
             </Button>
@@ -379,7 +452,7 @@ export default function TenantPage() {
                                     <Label htmlFor="code">Code</Label>
                                     <Input id="code" value={tenantData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={isAutoCode || !isEditing} />
                                 </div>
-                                <Button variant="outline" size="icon" onClick={() => router.push('/tenancy/tenants/add')} disabled={isFinding || !isNewRecord}>
+                                <Button type="button" variant="outline" size="icon" onClick={() => router.push('/tenancy/tenants/add')} disabled={isFinding || !isNewRecord}>
                                     <Plus className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -427,6 +500,38 @@ export default function TenantPage() {
                                 ) : (
                                 <Input id="contractNo" value={tenantData.contractNo} onChange={(e) => handleInputChange('contractNo', e.target.value)} disabled={!isEditing} />
                                 )}
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t">
+                            <div>
+                                <Label>Property</Label>
+                                 <Combobox options={lookups.properties} value={tenantData.property || ''} onSelect={(value) => { handleInputChange('property', value); handleInputChange('unitCode', ''); handleInputChange('roomCode','');}} placeholder="Select property" disabled={!isEditing} />
+                            </div>
+                             <div>
+                                <Label>Unit</Label>
+                                 <Combobox options={lookups.units} value={tenantData.unitCode || ''} onSelect={(value) => { handleInputChange('unitCode', value); handleInputChange('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty} />
+                            </div>
+                             <div>
+                                <Label>Room</Label>
+                                 <Combobox options={lookups.rooms} value={tenantData.roomCode || ''} onSelect={(value) => handleInputChange('roomCode', value)} placeholder="Select room" disabled={!isEditing || !watchedUnit} />
+                            </div>
+                        </div>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                            <div>
+                                <Label>Subscription Status</Label>
+                                <Select value={tenantData.subscriptionStatus} onValueChange={(value) => handleInputChange('subscriptionStatus', value)} disabled={!isEditing}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Subscription Status"/>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Yearly">Yearly</SelectItem>
+                                        <SelectItem value="Monthly">Monthly</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                             <div>
+                                <Label>Subscription Amount</Label>
+                                <Input type="number" placeholder="0.00" value={tenantData.subscriptionAmount || ''} onChange={(e) => handleInputChange('subscriptionAmount', parseFloat(e.target.value))} disabled={!isEditing}/>
                             </div>
                         </div>
                         </CardContent>
@@ -721,39 +826,7 @@ export default function TenantPage() {
                 </Card>
             </TabsContent>
         </Tabs>
-      
-
-       <div className="mt-6 flex justify-end">
-         <AlertDialog>
-            <AlertDialogTrigger asChild>
-            <Button
-                type="button"
-                variant="destructive"
-                disabled={isNewRecord || isEditing}
-            >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
-            </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                tenant "{tenantData.name}".
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive hover:bg-destructive/90"
-                >
-                Delete
-                </AlertDialogAction>
-            </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-       </div>
     </div>
   );
 }
+

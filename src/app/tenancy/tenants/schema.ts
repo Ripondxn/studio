@@ -25,6 +25,11 @@ export const tenantSchema = z.object({
   brokerMobile: z.string().optional(),
   brokerEmail: z.string().email().optional().or(z.literal('')),
   brokerCommission: z.number().optional(),
+  property: z.string().optional(),
+  unitCode: z.string().optional(),
+  roomCode: z.string().optional(),
+  subscriptionStatus: z.enum(['Yearly', 'Monthly']).optional(),
+  subscriptionAmount: z.number().optional(),
 });
 
 export type Tenant = z.infer<typeof tenantSchema>;
