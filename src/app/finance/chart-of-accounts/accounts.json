@@ -49,7 +49,7 @@
     "name": "Inventory",
     "type": "Asset",
     "status": "Active",
-    "balance": 8400,
+    "balance": 0,
     "isGroup": false,
     "parentCode": "1100"
   },
@@ -283,7 +283,7 @@
     "name": "Maintenance & Repairs",
     "type": "Expense",
     "status": "Active",
-    "balance": -1400,
+    "balance": 0,
     "isGroup": false,
     "parentCode": "5100"
   },
@@ -342,3 +342,4 @@
     "parentCode": "5200"
   }
 ]
+    
