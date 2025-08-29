@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -53,12 +53,17 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
 
-  const form = useForm<InvoiceFormData>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+  } = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
   });
-
-  const { register, control, handleSubmit, reset, watch, setValue } = form;
-
+  
   const { fields } = useFieldArray({
     control,
     name: "items",
@@ -246,7 +251,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             </DialogClose>
             <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                Save Invoice
+                Save Subs Invoice
             </Button>
           </DialogFooter>
         </form>
