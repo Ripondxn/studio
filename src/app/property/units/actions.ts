@@ -46,23 +46,33 @@ export async function getUnits() {
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
 
-    // 1. Get all spaces occupied by a contract
-    const occupiedUnitCodesByContract = new Set(activeContracts.filter(c => c.unitCode && !c.roomCode).map(c => c.unitCode));
-    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+    // 1. Consolidate all occupied spaces from both sources
+    const fullyOccupiedUnitCodes = new Set<string>();
+    const occupiedRoomCodes = new Set<string>();
+
+    // From contracts
+    for (const contract of activeContracts) {
+        if (contract.unitCode && !contract.roomCode) {
+            fullyOccupiedUnitCodes.add(contract.unitCode);
+        } else if (contract.roomCode) {
+            occupiedRoomCodes.add(contract.roomCode);
+        }
+    }
+
+    // From subscriptions
+    for (const tenant of activeSubscriptionTenants) {
+        if (tenant.tenantData.unitCode && !tenant.tenantData.roomCode) {
+            fullyOccupiedUnitCodes.add(tenant.tenantData.unitCode);
+        } else if (tenant.tenantData.roomCode) {
+            occupiedRoomCodes.add(tenant.tenantData.roomCode);
+        }
+    }
     
-    // 2. Get all spaces occupied by a subscription
-    const occupiedUnitCodesBySubscription = new Set(activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).map(t => t.tenantData.unitCode));
-    const occupiedRoomCodesFromSubscriptions = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
-
-    // 3. Consolidate all occupied spaces
-    const fullyOccupiedUnitCodes = new Set([...occupiedUnitCodesByContract, ...occupiedUnitCodesBySubscription]);
-    const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...occupiedRoomCodesFromSubscriptions]);
-
-
+    // 2. Determine status for each unit based on the consolidated data
     return allUnits.map(unit => {
         let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
 
-        // Case 1: The entire unit is rented under one agreement. It's fully Occupied.
+        // Case 1: The entire unit is rented under one agreement.
         if (fullyOccupiedUnitCodes.has(unit.unitCode)) {
             occupancyStatus = 'Occupied';
         } else {
@@ -71,7 +81,7 @@ export async function getUnits() {
             
             if (roomsInUnit.length > 0) {
                 // It's a parent unit with rooms. Check how many are occupied.
-                const occupiedRoomsCount = roomsInUnit.filter(r => allOccupiedRoomCodes.has(r.roomCode)).length;
+                const occupiedRoomsCount = roomsInUnit.filter(r => occupiedRoomCodes.has(r.roomCode)).length;
 
                 if (occupiedRoomsCount === 0) {
                     occupancyStatus = 'Vacant';
@@ -81,7 +91,7 @@ export async function getUnits() {
                     occupancyStatus = 'Occupied';
                 }
             } else {
-                // Case 3: It's a standalone unit with no rooms and no active contract/subscription. It's Vacant.
+                // Case 3: It's a standalone unit with no rooms and no active contract/subscription.
                 occupancyStatus = 'Vacant';
             }
         }
@@ -93,7 +103,7 @@ export async function getUnits() {
     });
 }
 
-const addUnitFormSchema = unitSchema.omit({ id: true, occupancyStatus: true, floor: true, annualRent: true });
+const addUnitFormSchema = unitSchema.omit({ id: true, occupancyStatus: true, unitName: true, annualRent: true });
 
 export async function addUnit(data: z.infer<typeof addUnitFormSchema>) {
     const validation = addUnitFormSchema.safeParse(data);
