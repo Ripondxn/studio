@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -126,32 +127,6 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
             allInvoices.push(newInvoice);
             savedInvoice = newInvoice;
             
-             // Create a corresponding financial transaction for the new invoice receivable.
-            const paymentResult = await addPayment({
-                type: 'Receipt',
-                date: newInvoice.invoiceDate,
-                partyType: newInvoice.customerCode.startsWith('T') ? 'Tenant' : 'Customer',
-                partyName: newInvoice.customerCode,
-                amount: newInvoice.total,
-                paymentMethod: 'Other', // 'Other' for invoice creation
-                referenceType: 'Invoice',
-                referenceNo: newInvoice.invoiceNo,
-                description: `Invoice ${newInvoice.invoiceNo} generated for ${newInvoice.customerName}`,
-                status: 'Received', // Final status after posting
-                createdByUser: createdBy,
-                property: newInvoice.property,
-                unitCode: newInvoice.unitCode,
-                roomCode: newInvoice.roomCode,
-                invoiceAllocations: [{ invoiceId: newInvoice.id, amount: newInvoice.total }],
-            });
-
-            if (!paymentResult.success) {
-                // If payment creation fails, we should ideally roll back the invoice creation.
-                // For this file-based system, we'll just return the error.
-                 return { success: false, error: `Failed to create financial transaction: ${paymentResult.error}` };
-            }
-
-
         } else {
             const index = allInvoices.findIndex(inv => inv.id === data.id);
             if (index === -1) {

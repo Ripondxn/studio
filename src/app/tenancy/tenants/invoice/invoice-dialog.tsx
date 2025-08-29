@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -29,9 +30,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice, getNextSubscriptionInvoiceNumber } from '@/app/tenancy/customer/invoice/actions';
-import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
-import { invoiceSchema } from '@/app/tenancy/customer/invoice/schema';
+import { saveInvoice, getNextSubscriptionInvoiceNumber } from './actions';
+import { type Invoice } from './schema';
+import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
@@ -59,12 +60,6 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const printRef = useRef<HTMLDivElement>(null);
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [lookups, setLookups] = useState<{
-    properties: {value: string, label: string}[];
-    units: {value: string, label: string}[];
-    rooms: {value: string, label: string}[];
-  }>({ properties: [], units: [], rooms: [] });
 
   const {
     register,
@@ -84,61 +79,13 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   });
 
   const watchedItems = watch('items');
-  const watchedTaxRate = watch('taxRate');
-  const watchedTaxType = watch('taxType');
-  const watchedProperty = watch('property');
-  const watchedUnit = watch('unitCode');
-
-  useEffect(() => {
-    if (isOpen) {
-      getProducts().then(setProducts);
-      getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
-    }
-  }, [isOpen]);
-  
-  useEffect(() => {
-    const fetchUnits = async () => {
-        if (watchedProperty) {
-            const unitsData = await getUnitsForProperty(watchedProperty);
-            setLookups(prev => ({...prev, units: unitsData, rooms: []}));
-        }
-    }
-    fetchUnits();
-  }, [watchedProperty]);
-
-  useEffect(() => {
-    const fetchRooms = async () => {
-        if(watchedProperty && watchedUnit) {
-            const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
-            setLookups(prev => ({...prev, rooms: roomsData}));
-        }
-    }
-    fetchRooms();
-  }, [watchedProperty, watchedUnit]);
 
   useEffect(() => {
     if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const taxRate = watchedTaxRate || 0;
-    
-    let taxAmount = 0;
-    let totalAmount = subTotal;
-    let finalSubTotal = subTotal;
-
-    if (watchedTaxType === 'exclusive') {
-        taxAmount = subTotal * (taxRate / 100);
-        totalAmount = subTotal + taxAmount;
-    } else { // inclusive
-        taxAmount = subTotal - (subTotal / (1 + (taxRate / 100)));
-        finalSubTotal = subTotal - taxAmount;
-        totalAmount = subTotal;
-    }
-
-    setValue('subTotal', finalSubTotal);
-    setValue('tax', taxAmount);
-    setValue('total', totalAmount);
-
-  }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
+    setValue('subTotal', subTotal);
+    setValue('total', subTotal);
+  }, [watchedItems, setValue]);
   
 
   useEffect(() => {
@@ -155,7 +102,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             let subscriptionDescription = '';
             let subscriptionAmount = 0;
             if(tenant?.isSubscriptionActive) {
-              subscriptionDescription = tenant.subscriptionStatus ? `${tenant.subscriptionStatus} Subscription` : '';
+              subscriptionDescription = tenant.subscriptionStatus ? `${tenant.subscriptionStatus} Subscription` : 'Subscription';
               subscriptionAmount = tenant.subscriptionAmount || 0;
             }
 
@@ -226,16 +173,6 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     }
   }
   
-  const handleItemSelect = (index: number, value: string, label?: string) => {
-    const product = products.find(p => p.itemCode.toLowerCase() === value.toLowerCase() || p.itemName.toLowerCase() === value.toLowerCase());
-    if(product) {
-        setValue(`items.${index}.description`, product.itemName);
-        setValue(`items.${index}.unitPrice`, product.salePrice);
-    } else {
-        setValue(`items.${index}.description`, label || value);
-    }
-  }
-
   if (isViewMode && invoice) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -259,7 +196,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Subscription Invoice' : 'Create New Subscription Invoice'}</DialogTitle>
@@ -268,7 +205,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[70vh] overflow-y-auto p-1">
+          <div className="max-h-[60vh] overflow-y-auto p-1 space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
               <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
               <div><Label>Tenant</Label><Input value={tenant.name} disabled/></div>
@@ -285,21 +222,6 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                 <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="space-y-2">
-                    <Label>Property</Label>
-                    <Controller name="property" control={control} render={({field}) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={value => {field.onChange(value); setValue('unitCode',''); setValue('roomCode','');}} placeholder="Select Property"/>)}/>
-                </div>
-                <div className="space-y-2">
-                    <Label>Unit</Label>
-                    <Controller name="unitCode" control={control} render={({field}) => (<Combobox options={lookups.units} value={field.value || ''} onSelect={value => {field.onChange(value); setValue('roomCode','');}} placeholder="Select Unit" disabled={!watchedProperty}/>)}/>
-                </div>
-                 <div className="space-y-2">
-                    <Label>Room</Label>
-                    <Controller name="roomCode" control={control} render={({field}) => (<Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select Room" disabled={!watchedUnit}/>)}/>
-                </div>
-            </div>
-            
             <Table>
               <TableHeader>
                   <TableRow>
@@ -307,93 +229,28 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead className="text-right">Total</TableHead>
-                      <TableHead></TableHead>
                   </TableRow>
               </TableHeader>
               <TableBody>
                   {fields.map((field, index) => (
                       <TableRow key={field.id}>
-                          <TableCell>
-                            <Input {...register(`items.${index}.description`)} disabled />
-                          </TableCell>
-                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} /></TableCell>
+                          <TableCell><Input {...register(`items.${index}.description`)} disabled /></TableCell>
+                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} disabled /></TableCell>
                           <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} disabled /></TableCell>
                           <TableCell className="text-right">
                             {formatCurrency((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                           </TableCell>
-                          <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
                       </TableRow>
                   ))}
               </TableBody>
             </Table>
-            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
-              <Plus className="mr-2 h-4 w-4" /> Add Item
-            </Button>
-
-              <div className="flex justify-end mt-4">
-                  <div className="w-full max-w-sm space-y-2">
-                      <div className="flex justify-between items-center">
-                          <Label>Subtotal</Label>
-                          <span className="font-medium">{formatCurrency(watch('subTotal') || 0)}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                          <Label>Tax</Label>
-                          <div className="flex items-center gap-2">
-                              <Controller
-                                  name="taxType"
-                                  control={control}
-                                  render={({ field }) => (
-                                      <Select onValueChange={field.onChange} value={field.value}>
-                                          <SelectTrigger className="w-[120px] h-8">
-                                              <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                              <SelectItem value="exclusive">Exclusive</SelectItem>
-                                              <SelectItem value="inclusive">Inclusive</SelectItem>
-                                          </SelectContent>
-                                      </Select>
-                                  )}
-                              />
-                              <div className="flex items-center gap-1">
-                                  <Input type="number" className="w-[70px] h-8 text-right" {...register('taxRate', { valueAsNumber: true })} />
-                                  <span className="text-sm font-medium">%</span>
-                              </div>
-                          </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                          <Label>Tax Amount</Label>
-                          <span className="font-medium">{formatCurrency(watch('tax') || 0)}</span>
-                      </div>
-                      <div className="flex justify-between border-t pt-2 mt-2">
-                          <Label className="text-lg font-bold">Total</Label>
-                          <span className="font-bold text-lg">{formatCurrency(watch('total') || 0)}</span>
-                      </div>
-                  </div>
-              </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <div>
-                  <Label>Notes</Label>
-                  <Textarea {...register('notes')} />
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Controller
-                    name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="Draft">Draft</SelectItem>
-                              <SelectItem value="Sent">Sent</SelectItem>
-                              <SelectItem value="Paid">Paid</SelectItem>
-                              <SelectItem value="Overdue">Overdue</SelectItem>
-                              <SelectItem value="Cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                      </Select>
-                    )}
-                  />
+            <div className="flex justify-end mt-4">
+                <div className="w-full max-w-xs space-y-2">
+                    <div className="flex justify-between border-t pt-2 mt-2">
+                        <Label className="text-lg font-bold">Total</Label>
+                        <span className="font-bold text-lg">{formatCurrency(watch('total') || 0)}</span>
+                    </div>
                 </div>
             </div>
           </div>
