@@ -1090,8 +1090,8 @@
       "unitCode": "F101",
       "roomCode": "Room-1/A",
       "isSubscriptionActive": true,
-      "subscriptionStatus": "Monthly",
-      "subscriptionAmount": 1200
+      "subscriptionStatus": "Yearly",
+      "subscriptionAmount": 25000
     },
     "attachments": []
   }

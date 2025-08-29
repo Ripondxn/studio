@@ -5,6 +5,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
   CardContent,
@@ -46,13 +48,15 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveCustomerData, findCustomerData, deleteCustomerData } from '../actions';
+import { saveCustomerData, findCustomerData, deleteCustomerData, getPaymentsForCustomer } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '../invoice/actions';
 import { type Invoice } from '../invoice/schema';
 import { PaymentReceiptList } from '../payment-receipt-list';
 import { Switch } from '@/components/ui/switch';
+import { customerSchema, type Customer } from '../schema';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 
 type Attachment = {
@@ -64,7 +68,7 @@ type Attachment = {
   isLink: boolean;
 };
 
-const initialCustomerData = {
+const initialCustomerData: Customer = {
     code: '',
     name: '',
     mobile: '',
@@ -82,14 +86,18 @@ export default function CustomerAddPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [customerData, setCustomerData] = useState(initialCustomerData);
-  const [initialData, setInitialData] = useState(initialCustomerData);
-  
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  
+  const form = useForm<Customer>({
+    resolver: zodResolver(customerSchema),
+    defaultValues: initialCustomerData,
+  });
+
+  const customerCode = form.watch('code');
+  const customerName = form.watch('name');
   
   const fetchInvoices = useCallback(async (customerCode: string) => {
     if (!customerCode) return;
@@ -110,7 +118,7 @@ export default function CustomerAddPage() {
   }, [attachments]);
 
   const handleFindClick = useCallback(async (code: string) => {
-    const codeToFind = code || customerData.code;
+    const codeToFind = code || form.getValues('code');
     if (!codeToFind) {
       toast({
         variant: 'destructive',
@@ -123,15 +131,16 @@ export default function CustomerAddPage() {
     try {
       const result = await findCustomerData(codeToFind);
       if (result.success && result.data) {
-        setAllData(result.data);
+        const fullCustomerData = { ...initialCustomerData, ...(result.data.customerData || {}) };
+        form.reset(fullCustomerData);
+        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
+        
         if (codeToFind !== 'new') {
-            setInitialAllData(result.data);
             setIsNewRecord(false);
             setIsEditing(false);
             setIsAutoCode(false);
             fetchInvoices(result.data.customerData.code);
         } else {
-            setInitialAllData({ customerData: { ...initialCustomerData, code: result.data.customerData.code } });
             setIsNewRecord(true);
             setIsEditing(true);
             setIsAutoCode(true);
@@ -153,23 +162,17 @@ export default function CustomerAddPage() {
     } finally {
       setIsFinding(false);
     }
-  }, [customerData.code, fetchInvoices, toast]);
+  }, [form, toast, fetchInvoices]);
 
   useEffect(() => {
-    const customerCode = searchParams.get('code');
-    if (customerCode) {
-      setIsNewRecord(false);
-      handleFindClick(customerCode);
+    const customerCodeParam = searchParams.get('code');
+    if (customerCodeParam) {
+      handleFindClick(customerCodeParam);
     } else {
-        setIsNewRecord(true);
-        setIsEditing(true); 
-        handleFindClick('new');
+      handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
 
-  const handleInputChange = (field: keyof typeof customerData, value: string | number) => {
-    setCustomerData(prev => ({ ...prev, [field]: value }));
-  };
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
@@ -210,36 +213,15 @@ export default function CustomerAddPage() {
     setAttachments(prev => prev.filter(item => item.id !== id));
   };
 
-  const setAllData = (data: any) => {
-    const fullCustomerData = { ...initialCustomerData, ...(data.customerData || {}) };
-    setCustomerData(fullCustomerData);
-    setAttachments(data.attachments ? data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
-  }
-
-  const setInitialAllData = (data: any) => {
-    const fullCustomerData = { ...initialCustomerData, ...(data.customerData || {}) };
-    setInitialData(JSON.parse(JSON.stringify(fullCustomerData)));
-    setInitialAttachments(JSON.parse(JSON.stringify(data.attachments ? data.attachments.map((a: any) => ({...a, file: null})) : [])));
-  }
-
   const handleEditClick = () => {
-    setInitialAllData({ customerData, attachments });
     setIsEditing(true);
   }
 
-  const handleSaveClick = async () => {
-    if (!customerData.code || !customerData.name) {
-         toast({
-            variant: "destructive",
-            title: "Validation Error",
-            description: "Customer Code and Name are required fields.",
-        });
-        return;
-    }
+  const onSave = async (data: Customer) => {
     setIsSaving(true);
     try {
       const dataToSave = {
-        customerData,
+        customerData: data,
         attachments: attachments.map(a => ({ 
             id: a.id, 
             name: a.name, 
@@ -253,13 +235,13 @@ export default function CustomerAddPage() {
       if (result.success && result.data) {
         toast({
           title: "Success",
-          description: `Customer "${customerData.name}" saved successfully.`,
+          description: `Customer "${data.name}" saved successfully.`,
         });
         setIsEditing(false);
         if (isNewRecord) {
             router.push(`/tenancy/customer/add?code=${result.data.code}`);
         } else {
-            setInitialAllData(dataToSave);
+            form.reset(data);
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -275,24 +257,26 @@ export default function CustomerAddPage() {
     }
   }
 
+
   const handleCancelClick = () => {
      if (isNewRecord) {
         router.push('/tenancy/customer');
      } else {
-        setCustomerData(initialData);
-        setAttachments(initialAttachments);
+        form.reset();
+        setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
      }
   }
 
   const handleDelete = async () => {
-    if (!customerData.code) return;
+    const code = form.getValues('code');
+    if (!code) return;
     try {
-      const result = await deleteCustomerData(customerData.code);
+      const result = await deleteCustomerData(code);
       if (result.success) {
         toast({
           title: 'Deleted',
-          description: `Customer "${customerData.name}" has been deleted.`,
+          description: `Customer "${form.getValues('name')}" has been deleted.`,
         });
         router.push('/tenancy/customer');
       } else {
@@ -307,65 +291,68 @@ export default function CustomerAddPage() {
     }
   };
   
-  const pageTitle = isNewRecord ? 'Add New Customer' : `Edit Customer: ${initialData.name}`;
+  const pageTitle = isNewRecord ? 'Add New Customer' : `Edit Customer: ${form.watch('name')}`;
 
   return (
     <div className="container mx-auto p-4 bg-background">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-primary font-headline">
-          {pageTitle}
-        </h1>
-        <div className="flex items-center gap-2">
-            {!isEditing && (
-              <Button type="button" onClick={handleEditClick}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Button>
-            )}
-            {isEditing && (
-              <>
-                <Button onClick={handleSaveClick} disabled={isSaving}>
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  {isSaving ? 'Saving...' : 'Save'}
+     <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSave)}>
+        <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-primary font-headline">
+            {pageTitle}
+            </h1>
+            <div className="flex items-center gap-2">
+                {!isEditing && (
+                <Button type="button" onClick={handleEditClick}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
-                <Button type="button" variant="ghost" onClick={handleCancelClick}>
-                  <X className="mr-2 h-4 w-4" /> Cancel
-                </Button>
-              </>
-            )}
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                <Button
-                    type="button"
-                    variant="destructive"
-                    disabled={isNewRecord || isEditing}
-                >
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete Customer
-                </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the
-                    customer "{customerData.name}".
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                    onClick={handleDelete}
-                    className="bg-destructive hover:bg-destructive/90"
+                )}
+                {isEditing && (
+                <>
+                    <Button type="submit" disabled={isSaving}>
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Save
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={handleCancelClick}>
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
+                </>
+                )}
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={isNewRecord || isEditing}
                     >
-                    Delete
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-            <Button type="button" variant="outline" onClick={() => router.push('/tenancy/customer')}>
-                <X className="mr-2 h-4 w-4" /> Close
-            </Button>
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Customer
+                    </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the
+                        customer "{form.getValues('name')}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive hover:bg-destructive/90"
+                        >
+                        Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                <Button type="button" variant="outline" onClick={() => router.push('/tenancy/customer')}>
+                    <X className="mr-2 h-4 w-4" /> Close
+                </Button>
+            </div>
         </div>
-      </div>
+      
       <Tabs defaultValue="info">
         <TabsList>
             <TabsTrigger value="info">Customer Information</TabsTrigger>
@@ -381,56 +368,93 @@ export default function CustomerAddPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="flex items-end gap-2">
-                        <div className="flex-grow">
-                            <Label htmlFor="code">Code</Label>
-                            <Input id="code" value={customerData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={isAutoCode || !isNewRecord || !isEditing} />
-                        </div>
-                         <div className="flex items-center space-x-2 pt-6">
-                            <Switch
-                                id="auto-code-switch"
-                                checked={isAutoCode}
-                                onCheckedChange={setIsAutoCode}
-                                disabled={!isNewRecord || !isEditing}
-                            />
-                            <Label htmlFor="auto-code-switch">Auto</Label>
-                        </div>
-                    </div>
-                    <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" value={customerData.name} onChange={(e) => handleInputChange('name', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                    <Label htmlFor="mobile">Mobile No</Label>
-                    <Input id="mobile" value={customerData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={customerData.email} onChange={(e) => handleInputChange('email', e.target.value)} disabled={!isEditing} />
-                    </div>
-                    <div className="md:col-span-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input id="address" value={customerData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="code"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="code">Code</Label>
+                           <div className="flex items-end gap-2">
+                                <FormControl>
+                                    <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
+                                </FormControl>
+                                 <div className="flex items-center space-x-2 pt-6">
+                                    <Switch
+                                        id="auto-code-switch"
+                                        checked={isAutoCode}
+                                        onCheckedChange={setIsAutoCode}
+                                        disabled={!isNewRecord || !isEditing}
+                                    />
+                                    <Label htmlFor="auto-code-switch">Auto</Label>
+                                </div>
+                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                           <Label htmlFor="name">Name</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="mobile"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="mobile">Mobile No</Label>
+                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label htmlFor="email">Email</Label>
+                           <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                           <Label htmlFor="address">Address</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </div>
                 </CardContent>
             </Card>
         </TabsContent>
         <TabsContent value="invoices">
             <InvoiceList 
-                customerCode={customerData.code} 
-                customerName={customerData.name} 
+                customerCode={customerCode} 
+                customerName={customerName} 
                 invoices={invoices}
                 isLoading={isLoadingInvoices}
-                onRefresh={() => fetchInvoices(customerData.code)}
+                onRefresh={() => fetchInvoices(customerCode)}
             />
         </TabsContent>
         <TabsContent value="payment-receipts">
            <PaymentReceiptList
-                customerCode={customerData.code} 
-                customerName={customerData.name} 
+                customerCode={customerCode} 
+                customerName={customerName} 
                 onRefresh={() => {
-                  fetchInvoices(customerData.code);
+                  fetchInvoices(customerCode);
                 }}
             />
         </TabsContent>
@@ -513,8 +537,8 @@ export default function CustomerAddPage() {
             </Card>
         </TabsContent>
       </Tabs>
+      </form>
+    </Form>
     </div>
   );
 }
-
-

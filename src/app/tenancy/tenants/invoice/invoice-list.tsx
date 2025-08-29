@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { InvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
@@ -107,8 +106,8 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Subscription Invoices</CardTitle>
-                        <CardDescription>Manage subscription invoices for {tenant.name}.</CardDescription>
+                        <CardTitle>Subscription & Invoices</CardTitle>
+                        <CardDescription>Manage subscription and invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                          {tenant.isSubscriptionActive && (
