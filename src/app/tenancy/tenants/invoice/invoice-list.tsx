@@ -162,7 +162,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         <CardDescription>Manage subscription and invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
-                        <Button onClick={handleCreateClick}>
+                        <Button onClick={() => handleRecordPayment()}>
+                            <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
+                        </Button>
+                        <Button variant="outline" onClick={handleCreateClick}>
                             <Plus className="mr-2 h-4 w-4" /> 
                             {tenant.isSubscriptionActive ? 'New Subscription Invoice' : 'Create Invoice'}
                         </Button>
