@@ -39,7 +39,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { addMonths, format as formatDate } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
-import { useCurrency } from '@/context/currency-context';
 import { PrintableMaintenanceContract } from '../printable-maintenance-contract';
 
 type LookupData = {
@@ -78,7 +77,6 @@ export default function MaintenanceContractPage() {
   const [currentContractId, setCurrentContractId] = useState<string | null>(null);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
   const [lookups, setLookups] = useState<LookupData>({ vendors: [], properties: [] });
-  const { formatCurrency } = useCurrency();
   const printRef = useRef<HTMLDivElement>(null);
 
 
@@ -294,7 +292,7 @@ export default function MaintenanceContractPage() {
             printWindow.document.write('<html><head><title>Print Maintenance Contract</title>');
             printWindow.document.write('<style>@page { size: A4; margin: 1.5cm; } body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }</style>');
             printWindow.document.write('</head><body class="bg-white">');
-            printWindow.document.write(printContent);
+            printWindow.document.write(printContent.innerHTML);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             setTimeout(() => printWindow.print(), 500);
@@ -396,7 +394,7 @@ export default function MaintenanceContractPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
                 <Label htmlFor="contractNo">Contract No</Label>
-                 <Input id="contractNo" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={isAutoContractNo || !isEditing}/>
+                 <Input id="contractNo" value={contract.contractNo || ''} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={isAutoContractNo || !isEditing}/>
             </div>
              <div className="flex items-end space-x-2 pb-1">
                 <Switch
@@ -409,11 +407,11 @@ export default function MaintenanceContractPage() {
             </div>
             <div>
               <Label htmlFor="contract-date">Date</Label>
-              <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
+              <Input id="contract-date" type="date" value={contract.contractDate || ''} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!isEditing}/>
             </div>
              <div>
               <Label htmlFor="status">Status</Label>
-                 <Select value={contract.status} onValueChange={(value: 'Active' | 'Expired' | 'Cancelled') => handleInputChange('status', value)} disabled={!isEditing}>
+                 <Select value={contract.status || 'Active'} onValueChange={(value: 'Active' | 'Expired' | 'Cancelled') => handleInputChange('status', value)} disabled={!isEditing}>
                     <SelectTrigger id="status">
                         <SelectValue/>
                     </SelectTrigger>
@@ -430,7 +428,7 @@ export default function MaintenanceContractPage() {
                 <Label htmlFor="vendorCode">Vendor</Label>
                  <Combobox
                     options={lookups.vendors}
-                    value={contract.vendorCode}
+                    value={contract.vendorCode || ''}
                     onSelect={(value) => handleInputChange('vendorCode', value)}
                     placeholder="Select Vendor"
                     disabled={!isEditing}
@@ -440,7 +438,7 @@ export default function MaintenanceContractPage() {
                 <Label htmlFor="propertyCode">Property</Label>
                  <Combobox
                     options={lookups.properties}
-                    value={contract.propertyCode}
+                    value={contract.propertyCode || ''}
                     onSelect={(value) => handleInputChange('propertyCode', value)}
                     placeholder="Select Property"
                     disabled={!isEditing}
@@ -448,19 +446,19 @@ export default function MaintenanceContractPage() {
             </div>
              <div>
                 <Label htmlFor="serviceType">Service Type</Label>
-                <Input id="serviceType" value={contract.serviceType} onChange={e => handleInputChange('serviceType', e.target.value)} disabled={!isEditing} placeholder="e.g. Chiller Maintenance"/>
+                <Input id="serviceType" value={contract.serviceType || ''} onChange={e => handleInputChange('serviceType', e.target.value)} disabled={!isEditing} placeholder="e.g. Chiller Maintenance"/>
             </div>
              <div>
               <Label htmlFor="start-date">Start Date</Label>
-              <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
+              <Input id="start-date" type="date" value={contract.startDate || ''} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!isEditing}/>
             </div>
              <div>
               <Label htmlFor="end-date">End Date</Label>
-              <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
+              <Input id="end-date" type="date" value={contract.endDate || ''} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!isEditing}/>
             </div>
              <div>
                 <Label htmlFor="totalValue">Total Contract Value</Label>
-                <Input id="totalValue" type="number" placeholder="0.00" value={contract.totalValue} onChange={e => handleNumberInputChange('totalValue', e.target.value)} disabled={!isEditing}/>
+                <Input id="totalValue" type="number" placeholder="0.00" value={contract.totalValue || ''} onChange={e => handleNumberInputChange('totalValue', e.target.value)} disabled={!isEditing}/>
             </div>
           </div>
           <Separator />
@@ -482,10 +480,10 @@ export default function MaintenanceContractPage() {
                 </div>
                  <div>
                     <Label htmlFor="number-of-payments">Number of Payments</Label>
-                    <Input id="number-of-payments" type="number" value={contract.numberOfPayments || 1} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!isEditing} />
+                    <Input id="number-of-payments" type="number" value={contract.numberOfPayments || ''} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!isEditing} />
                 </div>
                 <div className="flex items-end">
-                    <Button onClick={handleGenerateSchedule} disabled={!isEditing} className="w-full">
+                    <Button type="button" onClick={handleGenerateSchedule} disabled={!isEditing} className="w-full">
                         <RefreshCw className="mr-2 h-4 w-4"/>
                         Generate Schedule
                     </Button>
@@ -507,10 +505,10 @@ export default function MaintenanceContractPage() {
               <TableRow key={index}>
                 <TableCell>{item.installment}</TableCell>
                 <TableCell>
-                  <Input type="date" value={item.dueDate} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!isEditing}/>
+                  <Input type="date" value={item.dueDate || ''} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!isEditing}/>
                 </TableCell>
                 <TableCell>
-                  <Input type="number" placeholder="Amount" value={item.amount} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!isEditing}/>
+                  <Input type="number" placeholder="Amount" value={item.amount || ''} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!isEditing}/>
                 </TableCell>
                 <TableCell>
                   <Select value={item.status} onValueChange={(value: 'paid' | 'unpaid') => handleScheduleChange(index, 'status', value)} disabled={!isEditing}>
@@ -524,7 +522,7 @@ export default function MaintenanceContractPage() {
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeInstallment(index)} disabled={!isEditing}>
+                  <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeInstallment(index)} disabled={!isEditing}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
@@ -532,7 +530,7 @@ export default function MaintenanceContractPage() {
               ))}
             </TableBody>
           </Table>
-          <Button variant="outline" size="sm" onClick={addInstallment} disabled={!isEditing}>
+          <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addInstallment} disabled={!isEditing}>
             <Plus className="mr-2 h-4 w-4" /> Add Installment
           </Button>
             <Separator />
@@ -548,3 +546,4 @@ export default function MaintenanceContractPage() {
     </div>
   );
 }
+
