@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -8,9 +9,11 @@ import { revalidatePath } from 'next/cache';
 import { roomSchema, type Room } from './schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Contract } from '@/app/tenancy/contract/schema';
+import { type Tenant } from '@/app/tenancy/tenants/schema';
 
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 
 
 async function readRooms(): Promise<Room[]> {
@@ -31,20 +34,37 @@ async function writeRooms(data: Room[]) {
     await fs.writeFile(roomsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+async function readData<T>(filePath: string): Promise<any[]> {
+    try {
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            return [];
+        }
+        throw error;
+    }
+}
+
 export async function getRooms() {
     const allRooms = await readRooms();
     const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
     const allContracts: Contract[] = JSON.parse(contractsData);
+    const allTenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
 
-    const occupiedRoomCodes = new Set(
-        allContracts
-            .filter(c => (c.status === 'New' || c.status === 'Renew') && c.roomCode)
-            .map(c => c.roomCode)
+    const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
+    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+
+    const subscribedRoomCodes = new Set(
+      allTenants
+        .filter(t => t.tenantData.isSubscriptionActive && t.tenantData.roomCode)
+        .map(t => t.tenantData.roomCode)
     );
 
     return allRooms.map(room => ({
         ...room,
-        occupancyStatus: occupiedRoomCodes.has(room.roomCode) ? 'Occupied' : 'Vacant',
+        occupancyStatus: occupiedRoomCodesFromContracts.has(room.roomCode) || subscribedRoomCodes.has(room.roomCode) ? 'Occupied' : 'Vacant',
     }));
 }
 

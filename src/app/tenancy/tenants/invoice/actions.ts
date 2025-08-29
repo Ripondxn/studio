@@ -9,7 +9,18 @@ import { type Invoice } from './schema';
 import { subscriptionInvoiceSchema } from './schema';
 import { addPayment } from '@/app/finance/payment/actions';
 
-const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+// This re-exports the functions from the centralized customer invoice actions.
+// This ensures that all invoice logic is in one place, reducing complexity and bugs.
+// "use server" is not needed here as this file just exports.
+export {
+    getInvoicesForCustomer,
+    getNextGeneralInvoiceNumber,
+    saveInvoice,
+    deleteInvoice,
+    updateInvoiceStatus,
+    applyPaymentToInvoices
+} from '@/app/tenancy/customer/invoice/actions';
+
 
 async function readInvoices(): Promise<Invoice[]> {
     try {
@@ -28,6 +39,8 @@ async function readInvoices(): Promise<Invoice[]> {
 async function writeInvoices(data: Invoice[]) {
     await fs.writeFile(invoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
+
+const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
 
 export async function getNextSubscriptionInvoiceNumber() {

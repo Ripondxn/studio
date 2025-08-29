@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -8,13 +9,15 @@ import { revalidatePath } from 'next/cache';
 import { unitSchema, type Unit } from './schema';
 import { type Contract } from '@/app/tenancy/contract/schema';
 import { type Room } from '../rooms/schema';
+import { type Tenant } from '@/app/tenancy/tenants/schema';
 
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
+const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 
 
-async function readData(filePath: string): Promise<any[]> {
+async function readData<T>(filePath: string): Promise<any[]> {
     try {
         await fs.access(filePath);
         const data = await fs.readFile(filePath, 'utf-8');
@@ -38,25 +41,32 @@ export async function getUnits() {
     const allUnits = await readUnits();
     const allContracts: Contract[] = await readData(contractsFilePath);
     const allRooms: Room[] = await readData(roomsFilePath);
+    const allTenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
+    // Units/rooms occupied by contract
     const unitLevelContracts = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
-    const roomLevelContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+    const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+
+    // Units/rooms occupied by active subscription
+    const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
+    const subscribedUnitCodes = new Set(activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).map(t => t.tenantData.unitCode));
+    const subscribedRoomCodes = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
 
     return allUnits.map(unit => {
         let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
 
-        // Case 1: The entire unit is rented under one contract. It's fully Occupied.
-        if (unitLevelContracts.has(unit.unitCode)) {
+        // Case 1: The entire unit is rented under one contract or subscription. It's fully Occupied.
+        if (unitLevelContracts.has(unit.unitCode) || subscribedUnitCodes.has(unit.unitCode)) {
             occupancyStatus = 'Occupied';
         } else {
             // Case 2: The unit is not rented as a whole, so check its rooms.
             const roomsInUnit = allRooms.filter(r => r.propertyCode === unit.propertyCode && r.unitCode === unit.unitCode);
             
             if (roomsInUnit.length > 0) {
-                // It's a parent unit with rooms. Check how many are occupied.
-                const occupiedRoomsCount = roomsInUnit.filter(r => roomLevelContracts.has(r.roomCode)).length;
+                // It's a parent unit with rooms. Check how many are occupied by either contract or subscription.
+                const occupiedRoomsCount = roomsInUnit.filter(r => occupiedRoomCodes.has(r.roomCode) || subscribedRoomCodes.has(r.roomCode)).length;
 
                 if (occupiedRoomsCount === 0) {
                     occupancyStatus = 'Vacant';
@@ -66,7 +76,7 @@ export async function getUnits() {
                     occupancyStatus = 'Occupied';
                 }
             } else {
-                // Case 3: It's a standalone unit with no rooms and no active contract. It's Vacant.
+                // Case 3: It's a standalone unit with no rooms and no active contract/subscription. It's Vacant.
                 occupancyStatus = 'Vacant';
             }
         }
