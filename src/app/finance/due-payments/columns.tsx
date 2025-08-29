@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, ArrowDown, ArrowUp, User, Building, MoreHorizontal, Pencil, LinkIcon } from 'lucide-react';
+import { ArrowUpDown, ArrowDown, ArrowUp, User, Building, MoreHorizontal, Pencil, LinkIcon, Trash2 } from 'lucide-react';
 import { format, isBefore, startOfToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,9 @@ import { type Payment } from '@/app/finance/payment/schema';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
 import { useToast } from '@/hooks/use-toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { deleteDuePaymentInstallment } from './actions';
 
 
 const statusConfig: { [key in DuePayment['status']]: { label: string, className: string }} = {
@@ -25,10 +27,12 @@ const statusConfig: { [key in DuePayment['status']]: { label: string, className:
     'Paid': { label: 'Paid', className: 'bg-green-500/20 text-green-700' },
 }
 
-const ActionsCell = ({ row }: { row: { original: DuePayment } }) => {
+const ActionsCell = ({ row, onRefresh }: { row: { original: DuePayment }, onRefresh: () => void }) => {
     const router = useRouter();
     const { toast } = useToast();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const duePayment = row.original;
 
     const defaultValues: Partial<Omit<Payment, 'id'>> = {
@@ -55,20 +59,47 @@ const ActionsCell = ({ row }: { row: { original: DuePayment } }) => {
         });
     }
 
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        const result = await deleteDuePaymentInstallment(duePayment.id);
+        if (result.success) {
+            toast({ title: 'Success', description: 'Due payment installment has been deleted.' });
+            onRefresh();
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        }
+        setIsDeleting(false);
+        setIsDeleteDialogOpen(false);
+    };
+
     return (
         <>
             <AddPaymentDialog
-                isOpen={isDialogOpen}
-                setIsOpen={setIsDialogOpen}
-                onPaymentAdded={() => router.refresh()}
+                isOpen={isPaymentDialogOpen}
+                setIsOpen={setIsPaymentDialogOpen}
                 defaultValues={defaultValues}
+                onPaymentAdded={onRefresh}
             />
+             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This will permanently delete this due payment installment from its contract. This action cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setIsDialogOpen(true)} disabled={duePayment.status === 'Paid'}>
+                    <DropdownMenuItem onClick={() => setIsPaymentDialogOpen(true)} disabled={duePayment.status === 'Paid'}>
                         Record Payment
                     </DropdownMenuItem>
                     {duePayment.type === 'Receivable' && (
@@ -76,13 +107,17 @@ const ActionsCell = ({ row }: { row: { original: DuePayment } }) => {
                             <LinkIcon className="mr-2 h-4 w-4" /> Get Payment Link
                         </DropdownMenuItem>
                     )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => setIsDeleteDialogOpen(true)} className="text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Entry
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </>
     )
 }
 
-export const columns: ColumnDef<DuePayment>[] = [
+export const columns = (onRefresh: () => void): ColumnDef<DuePayment>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -169,6 +204,6 @@ export const columns: ColumnDef<DuePayment>[] = [
    {
     id: 'actions',
     header: 'Action',
-    cell: ActionsCell,
+    cell: ({ row }) => <ActionsCell row={row} onRefresh={onRefresh} />,
   },
 ];

@@ -8,6 +8,7 @@ import { type LeaseContract } from '@/app/lease/contract/schema';
 import { type Payment } from '@/app/finance/payment/schema';
 import { type DuePayment } from './schema';
 import { parseISO, isBefore, startOfToday, isAfter, differenceInDays } from 'date-fns';
+import { revalidatePath } from 'next/cache';
 
 const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
@@ -131,4 +132,42 @@ export async function getSummary(duePayments: DuePayment[]) {
     }
 
     return summary;
+}
+
+export async function deleteDuePaymentInstallment(installmentId: string) {
+    try {
+        const [contractNo, installmentNo] = installmentId.split('-');
+        
+        const leaseContracts: LeaseContract[] = await readData(leaseContractsFilePath);
+        const tenancyContracts: TenancyContract[] = await readData(tenancyContractsFilePath);
+
+        let contractFound = false;
+        
+        const leaseIndex = leaseContracts.findIndex(c => c.contractNo === contractNo);
+        if (leaseIndex > -1) {
+            leaseContracts[leaseIndex].paymentSchedule = leaseContracts[leaseIndex].paymentSchedule.filter(
+                inst => inst.installment.toString() !== installmentNo
+            );
+            await fs.writeFile(leaseContractsFilePath, JSON.stringify(leaseContracts, null, 2), 'utf-8');
+            contractFound = true;
+        }
+
+        const tenancyIndex = tenancyContracts.findIndex(c => c.contractNo === contractNo);
+        if (tenancyIndex > -1) {
+            tenancyContracts[tenancyIndex].paymentSchedule = tenancyContracts[tenancyIndex].paymentSchedule.filter(
+                inst => inst.installment.toString() !== installmentNo
+            );
+            await fs.writeFile(tenancyContractsFilePath, JSON.stringify(tenancyContracts, null, 2), 'utf-8');
+            contractFound = true;
+        }
+
+        if (!contractFound) {
+            return { success: false, error: 'Could not find the source contract for this due payment.' };
+        }
+
+        revalidatePath('/finance/due-payments');
+        return { success: true };
+    } catch(error) {
+        return { success: false, error: 'Failed to delete due payment entry.' };
+    }
 }

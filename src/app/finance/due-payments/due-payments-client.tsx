@@ -96,7 +96,7 @@ export function DuePaymentsClient({ initialPayments, initialSummary }: { initial
         </Card>
       </div>
 
-      <DataTable columns={columns} data={payments} />
+      <DataTable columns={columns(refreshData)} data={payments} />
     </div>
   );
 }
