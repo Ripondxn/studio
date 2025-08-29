@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Route, Receipt } from 'lucide-react';
-import { saveWorkflowSettings, type WorkflowSettings } from './actions';
+import { Loader2, Save, Route, Receipt, PlayCircle } from 'lucide-react';
+import { saveWorkflowSettings, type WorkflowSettings, runInvoiceGeneration } from './actions';
 
 export function WorkflowSettingsClient({ initialSettings }: { initialSettings: WorkflowSettings }) {
     const { toast } = useToast();
     const [settings, setSettings] = useState<WorkflowSettings>(initialSettings);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSimulating, setIsSimulating] = useState(false);
 
     const handleSettingsSave = async () => {
         setIsSaving(true);
@@ -31,6 +32,24 @@ export function WorkflowSettingsClient({ initialSettings }: { initialSettings: W
             });
         }
         setIsSaving(false);
+    }
+    
+    const handleRunSimulation = async () => {
+        setIsSimulating(true);
+        const result = await runInvoiceGeneration();
+        if (result.success) {
+            toast({
+                title: 'Simulation Complete',
+                description: result.message,
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Simulation Error',
+                description: result.error,
+            });
+        }
+        setIsSimulating(false);
     }
     
     return (
@@ -87,6 +106,12 @@ export function WorkflowSettingsClient({ initialSettings }: { initialSettings: W
                             />
                         </div>
                     </CardContent>
+                    <CardFooter className="justify-end">
+                        <Button variant="outline" onClick={handleRunSimulation} disabled={isSimulating}>
+                            {isSimulating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+                             Run Simulation
+                        </Button>
+                    </CardFooter>
                 </Card>
 
                 <div className="flex justify-end">

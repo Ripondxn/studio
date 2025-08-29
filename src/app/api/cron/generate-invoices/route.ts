@@ -23,11 +23,11 @@ async function readData<T>(filePath: string): Promise<T[]> {
     }
 }
 
-export async function GET(request: Request) {
+export async function generateInvoices() {
   try {
     const workflowSettings = await getWorkflowSettings();
     if (!workflowSettings.automaticInvoiceGenerationEnabled) {
-      return NextResponse.json({ success: true, message: 'Automatic invoice generation is disabled by the administrator.' });
+      return { success: true, message: 'Automatic invoice generation is disabled. No invoices were created.' };
     }
     
     const tenants = await readData<{tenantData: Tenant}>(tenantsFilePath);
@@ -78,10 +78,20 @@ export async function GET(request: Request) {
         }
     }
     
-    return NextResponse.json({ success: true, message: `Cron job completed. ${invoicesCreatedCount} new invoices created.` });
+    return { success: true, message: `Cron job completed. ${invoicesCreatedCount} new invoices created.` };
 
   } catch (error) {
     console.error('Cron job for invoice generation failed:', error);
-    return NextResponse.json({ success: false, error: 'Failed to generate invoices.' }, { status: 500 });
+    throw new Error('Failed to generate invoices.');
   }
+}
+
+
+export async function GET(request: Request) {
+    try {
+        const result = await generateInvoices();
+        return NextResponse.json(result);
+    } catch(e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
 }
