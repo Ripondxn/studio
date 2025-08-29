@@ -48,7 +48,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit, cancelSubscription } from '../actions';
 import { getTenantForProperty } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
@@ -62,7 +62,8 @@ import { Combobox } from '@/components/ui/combobox';
 import { Separator } from '@/components/ui/separator';
 import { MoveTenantDialog } from '../add/move-tenant-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
-import { getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+import { getLatestContractForTenant } from '../../contract/actions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 type Attachment = {
@@ -118,7 +119,6 @@ export default function TenantPage() {
   const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [], tenants: [] });
   const [isLoadingUnits, setIsLoadingUnits] = useState(false);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
-
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
 
   const form = useForm<Tenant>({
@@ -128,6 +128,8 @@ export default function TenantPage() {
 
   const watchedProperty = form.watch('property');
   const watchedUnit = form.watch('unitCode');
+  const tenantCode = form.watch('code');
+  const tenantName = form.watch('name');
   
   const fetchInvoices = useCallback(async (tenantCode: string) => {
     if (!tenantCode) return;
@@ -301,7 +303,6 @@ export default function TenantPage() {
           description: `Tenant "${data.name}" saved successfully.`,
         });
         setIsEditing(false);
-        setIsSubscriptionEditing(false);
         if (isNewRecord) {
             router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
@@ -329,7 +330,6 @@ export default function TenantPage() {
         form.reset();
         setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
-        setIsSubscriptionEditing(false);
      }
   }
 
@@ -528,7 +528,7 @@ export default function TenantPage() {
                             name="contractNo"
                             render={({ field }) => (
                             <FormItem>
-                                <Label htmlFor="contractNo">Contract No</Label>
+                                <Label htmlFor="contractNo">Associated Contract No</Label>
                                 <FormControl><Input {...field} disabled /></FormControl>
                                 <FormMessage />
                             </FormItem>
