@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, FileText, Repeat } from 'lucide-react';
+import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, FileText, Repeat, FilePlus2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -219,6 +219,25 @@ export const columns: ColumnDef<Tenant>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => <ActionsCell row={row} />,
+    header: 'Action',
+    cell: ({ row }) => {
+        const tenant = row.original;
+        if(tenant.isSubscriptionActive) {
+             return (
+                <Button asChild variant="outline" size="sm">
+                    <Link href={`/tenancy/tenants/add?code=${tenant.code}&tab=subscription`}>
+                        <FilePlus2 className="mr-2 h-4 w-4" /> + Invoice
+                    </Link>
+                </Button>
+            );
+        }
+        return (
+            <Button asChild variant="outline" size="sm">
+                <Link href={`/tenancy/contract?tenantCode=${tenant.code}`}>
+                     <FilePlus2 className="mr-2 h-4 w-4" /> + Contract
+                </Link>
+            </Button>
+        )
+    },
   },
 ];
