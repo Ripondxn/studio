@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -238,28 +237,28 @@ export const columns: ColumnDef<Tenant>[] = [
       const router = useRouter();
       const tenant = row.original;
 
-      if(tenant.isSubscriptionActive) {
-           return (
-              <SubscriptionInvoiceDialog
-                isOpen={isOpen}
-                setIsOpen={setIsOpen}
-                invoice={null}
-                tenant={tenant}
-                onSuccess={() => router.push(`/tenancy/tenants/add?code=${tenant.code}&tab=subscription`)}
-              >
-                  <Button variant="outline" size="sm">
-                    <FilePlus2 className="mr-2 h-4 w-4" /> + Subs Invoice
-                  </Button>
-              </SubscriptionInvoiceDialog>
-          );
+      if (tenant.isSubscriptionActive) {
+        return (
+          <SubscriptionInvoiceDialog
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            invoice={null}
+            tenant={tenant}
+            onSuccess={() => router.push(`/tenancy/tenants/add?code=${tenant.code}&tab=subscription`)}
+          >
+             <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
+                <FilePlus2 className="mr-2 h-4 w-4" /> + Subs Invoice
+              </Button>
+          </SubscriptionInvoiceDialog>
+        );
       }
       return (
-          <Button asChild variant="outline" size="sm">
-              <Link href={`/tenancy/contract?tenantCode=${tenant.code}`}>
-                   <FilePlus2 className="mr-2 h-4 w-4" /> + Contract
-              </Link>
-          </Button>
-      )
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/tenancy/contract?tenantCode=${tenant.code}`}>
+            <FilePlus2 className="mr-2 h-4 w-4" /> + Contract
+          </Link>
+        </Button>
+      );
     },
   },
   {
