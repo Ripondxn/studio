@@ -1,20 +1,16 @@
 [
   {
     "unitCode": "F101",
-    "unitName": "",
     "propertyCode": "LT-C38",
     "unitType": "1BHK",
-    "annualRent": 23000,
     "unitStatus": "Active",
-    "id": "UNIT-1756501167984"
+    "id": "UNIT-1756501792081"
   },
   {
     "unitCode": "F102",
-    "unitName": "",
     "propertyCode": "LT-C38",
     "unitType": "1BHK",
-    "annualRent": 25000,
     "unitStatus": "Active",
-    "id": "UNIT-1756501206449"
+    "id": "UNIT-1756501824961"
   }
 ]

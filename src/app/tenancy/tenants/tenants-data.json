@@ -14,11 +14,12 @@
       "brokerMobile": "",
       "brokerEmail": "",
       "brokerCommission": 0,
-      "property": "",
-      "unitCode": "",
-      "roomCode": "",
-      "isSubscriptionActive": false,
-      "subscriptionAmount": 0
+      "property": "LT-C38",
+      "unitCode": "F101",
+      "roomCode": "Room-1/A",
+      "isSubscriptionActive": true,
+      "subscriptionAmount": 900,
+      "subscriptionStatus": "Monthly"
     },
     "attachments": []
   },

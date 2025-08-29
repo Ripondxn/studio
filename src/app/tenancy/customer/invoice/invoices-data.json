@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "invoiceNo": "INV-0001",
+    "customerCode": "T0001",
+    "customerName": "MD RIPON AHMED",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "invoiceDate": "2025-08-30",
+    "dueDate": "2025-08-30",
+    "items": [
+      {
+        "id": "item-1756502001751",
+        "description": "Monthly Subscription",
+        "quantity": 1,
+        "unitPrice": 900,
+        "total": 900
+      }
+    ],
+    "subTotal": 900,
+    "taxType": "exclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 900,
+    "status": "Draft",
+    "notes": "",
+    "id": "INV-1756502002764",
+    "amountPaid": 0
+  }
+]

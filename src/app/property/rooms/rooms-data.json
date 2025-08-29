@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "roomCode": "Room-1/A",
+    "propertyCode": "LT-C38",
+    "unitCode": "F101",
+    "roomType": "Standard",
+    "id": "ROOM-1756501843133"
+  },
+  {
+    "roomCode": "Room-1/B",
+    "propertyCode": "LT-C38",
+    "unitCode": "F101",
+    "roomType": "Standard",
+    "id": "ROOM-1756501861628"
+  }
+]

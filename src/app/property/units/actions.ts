@@ -46,7 +46,7 @@ export async function getUnits() {
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
 
-    // 1. Get all spaces (units or rooms) occupied by a contract
+    // 1. Get all spaces occupied by a contract
     const occupiedUnitCodesByContract = new Set(activeContracts.filter(c => c.unitCode && !c.roomCode).map(c => c.unitCode));
     const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
     
@@ -93,7 +93,7 @@ export async function getUnits() {
     });
 }
 
-const addUnitFormSchema = unitSchema.omit({ id: true, occupancyStatus: true });
+const addUnitFormSchema = unitSchema.omit({ id: true, occupancyStatus: true, floor: true, annualRent: true });
 
 export async function addUnit(data: z.infer<typeof addUnitFormSchema>) {
     const validation = addUnitFormSchema.safeParse(data);
@@ -111,6 +111,8 @@ export async function addUnit(data: z.infer<typeof addUnitFormSchema>) {
         const newUnit: Unit = {
             ...validation.data,
             id: `UNIT-${Date.now()}`,
+            floor: '',
+            annualRent: 0,
         };
 
         allUnits.push(newUnit);
