@@ -131,6 +131,37 @@ const ActionsCell = ({ row }: { row: { original: Tenant } }) => {
   );
 };
 
+const CreateDocumentCell = ({ row }: { row: { original: Tenant } }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const router = useRouter();
+    const tenant = row.original;
+
+    if (tenant.isSubscriptionActive) {
+        return (
+            <>
+                <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
+                    <FilePlus2 className="mr-2 h-4 w-4" /> + Subs Invoice
+                </Button>
+                <SubscriptionInvoiceDialog
+                    isOpen={isOpen}
+                    setIsOpen={setIsOpen}
+                    invoice={null}
+                    tenant={tenant}
+                    onSuccess={() => router.push(`/tenancy/tenants/add?code=${tenant.code}&tab=subscription`)}
+                />
+            </>
+        );
+    }
+
+    return (
+        <Button asChild variant="outline" size="sm">
+            <Link href={`/tenancy/contract?tenantCode=${tenant.code}`}>
+                <FilePlus2 className="mr-2 h-4 w-4" /> + Contract
+            </Link>
+        </Button>
+    );
+};
+
 
 export const columns: ColumnDef<Tenant>[] = [
   {
@@ -232,34 +263,7 @@ export const columns: ColumnDef<Tenant>[] = [
   {
     id: 'createDocument',
     header: 'Create Document',
-    cell: function Cell({ row }) {
-      const [isOpen, setIsOpen] = useState(false);
-      const router = useRouter();
-      const tenant = row.original;
-
-      if (tenant.isSubscriptionActive) {
-        return (
-          <SubscriptionInvoiceDialog
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
-            invoice={null}
-            tenant={tenant}
-            onSuccess={() => router.push(`/tenancy/tenants/add?code=${tenant.code}&tab=subscription`)}
-          >
-             <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
-                <FilePlus2 className="mr-2 h-4 w-4" /> + Subs Invoice
-              </Button>
-          </SubscriptionInvoiceDialog>
-        );
-      }
-      return (
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/tenancy/contract?tenantCode=${tenant.code}`}>
-            <FilePlus2 className="mr-2 h-4 w-4" /> + Contract
-          </Link>
-        </Button>
-      );
-    },
+    cell: CreateDocumentCell,
   },
   {
     id: 'actions',
