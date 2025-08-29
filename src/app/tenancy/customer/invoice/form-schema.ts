@@ -1,3 +1,6 @@
+
+'use client';
+
 import { z } from 'zod';
 
 export const invoiceItemSchema = z.object({
@@ -10,7 +13,7 @@ export const invoiceItemSchema = z.object({
 });
 
 export const invoiceSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   invoiceNo: z.string().min(1, 'Invoice number is required.'),
   customerCode: z.string().min(1, 'Customer is required.'),
   customerName: z.string().min(1, 'Customer name is required.'),
@@ -30,6 +33,3 @@ export const invoiceSchema = z.object({
   status: z.enum(['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled']),
   notes: z.string().optional(),
 });
-
-export type Invoice = z.infer<typeof invoiceSchema>;
-export type InvoiceItem = z.infer<typeof invoiceItemSchema>;

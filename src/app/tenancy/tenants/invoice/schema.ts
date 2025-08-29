@@ -1,14 +1,7 @@
 
+'use server';
 
 import { z } from 'zod';
-
-export const invoiceItemSchema = z.object({
-  id: z.string(),
-  description: z.string().min(1, 'Description is required.'),
-  quantity: z.number().min(1, 'Quantity must be at least 1.'),
-  unitPrice: z.number().min(0, 'Unit price must be positive.'),
-  total: z.number(),
-});
 
 export const invoiceSchema = z.object({
   id: z.string(),
@@ -20,7 +13,14 @@ export const invoiceSchema = z.object({
   roomCode: z.string().optional(),
   invoiceDate: z.string().min(1, 'Invoice date is required.'),
   dueDate: z.string().min(1, 'Due date is required.'),
-  items: z.array(invoiceItemSchema).min(1, 'At least one item is required.'),
+  items: z.array(z.object({
+    id: z.string(),
+    description: z.string().min(1, 'Description is required.'),
+    quantity: z.number().min(1, 'Quantity must be at least 1.'),
+    unitPrice: z.number().min(0, 'Unit price must be positive.'),
+    total: z.number(),
+    expenseAccountId: z.string().optional(),
+  })).min(1, 'At least one item is required.'),
   subTotal: z.number(),
   taxType: z.enum(['exclusive', 'inclusive']).default('exclusive'),
   taxRate: z.number().optional().default(0),

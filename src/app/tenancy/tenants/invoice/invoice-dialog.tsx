@@ -30,7 +30,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveInvoice, getNextSubscriptionInvoiceNumber } from '@/app/tenancy/customer/invoice/actions';
-import { invoiceSchema } from '@/app/tenancy/customer/invoice/schema';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { formSchema } from '@/app/tenancy/customer/invoice/form-schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
@@ -40,7 +41,6 @@ import { type Product } from '@/app/products/schema';
 import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
 
-const formSchema = invoiceSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
 
 interface SubscriptionInvoiceDialogProps {
