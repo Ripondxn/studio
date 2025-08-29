@@ -9,13 +9,17 @@ import { generateInvoices } from '@/app/api/cron/generate-invoices/route';
 export type WorkflowSettings = {
     approvalProcessEnabled: boolean;
     automaticInvoiceGenerationEnabled: boolean;
+    invoiceGenerationDay: number;
+    monthsToGenerate: number;
 };
 
 const settingsFilePath = path.join(process.cwd(), 'src/app/admin/workflow-settings/settings.json');
 
 const defaultSettings: WorkflowSettings = {
-    approvalProcessEnabled: true, // Default to enabled for security
+    approvalProcessEnabled: true,
     automaticInvoiceGenerationEnabled: true,
+    invoiceGenerationDay: 1,
+    monthsToGenerate: 1,
 };
 
 export async function getWorkflowSettings(): Promise<WorkflowSettings> {
@@ -44,7 +48,7 @@ export async function saveWorkflowSettings(data: WorkflowSettings) {
 export async function runInvoiceGeneration() {
     try {
         // Directly call the logic from the cron route
-        const result = await generateInvoices();
+        const result = await generateInvoices(true); // Pass true to force run for simulation
         return { success: true, message: result.message };
     } catch (error) {
         console.error('Manual invoice generation failed:', error);

@@ -9,6 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, Route, Receipt, PlayCircle } from 'lucide-react';
 import { saveWorkflowSettings, type WorkflowSettings, runInvoiceGeneration } from './actions';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function WorkflowSettingsClient({ initialSettings }: { initialSettings: WorkflowSettings }) {
     const { toast } = useToast();
@@ -91,12 +93,12 @@ export function WorkflowSettingsClient({ initialSettings }: { initialSettings: W
                             Control the automatic generation of recurring subscription invoices.
                         </CardDescription>
                     </CardHeader>
-                     <CardContent className="space-y-4">
+                     <CardContent className="space-y-6">
                         <div className="flex items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
                                 <Label htmlFor="invoice-automation" className="text-base">Enable Automatic Invoicing</Label>
                                 <p className="text-sm text-muted-foreground">
-                                    When enabled, the system will automatically generate invoices for active subscriptions at the start of each month.
+                                    When enabled, the system will automatically generate invoices for active subscriptions.
                                 </p>
                             </div>
                             <Switch
@@ -104,6 +106,38 @@ export function WorkflowSettingsClient({ initialSettings }: { initialSettings: W
                                 checked={settings.automaticInvoiceGenerationEnabled}
                                 onCheckedChange={(checked) => setSettings(s => ({...s, automaticInvoiceGenerationEnabled: checked}))}
                             />
+                        </div>
+                        <div className={`grid grid-cols-2 gap-4 ${!settings.automaticInvoiceGenerationEnabled && 'opacity-50'}`}>
+                           <div className="space-y-2">
+                                <Label htmlFor="invoice-day">Day of Month to Generate</Label>
+                                <Input
+                                    id="invoice-day"
+                                    type="number"
+                                    min="1"
+                                    max="28"
+                                    value={settings.invoiceGenerationDay}
+                                    onChange={(e) => setSettings(s => ({...s, invoiceGenerationDay: parseInt(e.target.value) || 1}))}
+                                    disabled={!settings.automaticInvoiceGenerationEnabled}
+                                />
+                                <p className="text-xs text-muted-foreground">Enter a day from 1 to 28.</p>
+                           </div>
+                           <div className="space-y-2">
+                                <Label htmlFor="invoice-months">Generate for Next...</Label>
+                                <Select
+                                    value={String(settings.monthsToGenerate)}
+                                    onValueChange={(value) => setSettings(s => ({...s, monthsToGenerate: parseInt(value)}))}
+                                    disabled={!settings.automaticInvoiceGenerationEnabled}
+                                >
+                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="1">1 Month</SelectItem>
+                                        <SelectItem value="3">3 Months</SelectItem>
+                                        <SelectItem value="6">6 Months</SelectItem>
+                                        <SelectItem value="12">12 Months</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">How many future invoices to create.</p>
+                           </div>
                         </div>
                     </CardContent>
                     <CardFooter className="justify-end">
