@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -47,7 +48,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups } from '../actions';
 import { getTenantForProperty } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
@@ -61,7 +62,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Separator } from '@/components/ui/separator';
 import { MoveTenantDialog } from '../add/move-tenant-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+import { getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 
 
 type Attachment = {
