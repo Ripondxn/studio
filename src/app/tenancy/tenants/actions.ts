@@ -94,7 +94,6 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean, isAu
         if (isAutoCode) {
             tenantData.code = await getNextTenantCode();
         }
-
         const { code, name } = tenantData;
         const codeExists = allTenants.some((l: any) => l.tenantData.code === code);
         if (codeExists) {
@@ -229,3 +228,5 @@ export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
         .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode)
         .map(r => ({ value: r.roomCode, label: r.roomCode }));
 }
+
+    
