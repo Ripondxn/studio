@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, FileText, Repeat, FilePlus2 } from 'lucide-react';
 import Link from 'next/link';
@@ -32,6 +31,7 @@ import { deleteTenantData } from './actions';
 import { Tenant } from './schema';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/context/currency-context';
+import type { UserRole } from '@/app/admin/user-roles/schema';
 
 const ActionsCell = ({ row }: { row: { original: Tenant } }) => {
   const tenant = row.original;
@@ -39,6 +39,15 @@ const ActionsCell = ({ row }: { row: { original: Tenant } }) => {
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole['role'] | null>(null);
+
+  useEffect(() => {
+    const storedProfile = sessionStorage.getItem('userProfile');
+    if (storedProfile) {
+        setCurrentUserRole(JSON.parse(storedProfile).role);
+    }
+  }, []);
+
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -105,13 +114,15 @@ const ActionsCell = ({ row }: { row: { original: Tenant } }) => {
                 Edit
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onSelect={() => setIsDeleteDialogOpen(true)}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
+            {currentUserRole === 'Super Admin' && (
+                <DropdownMenuItem
+                className="text-destructive"
+                onSelect={() => setIsDeleteDialogOpen(true)}
+                >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+                </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
