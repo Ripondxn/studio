@@ -46,20 +46,16 @@ export async function getUnits() {
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
 
-    // Units fully rented by a single contract (no room specified)
+    // 1. Get all spaces (units or rooms) occupied by a contract
     const occupiedUnitCodesByContract = new Set(activeContracts.filter(c => c.unitCode && !c.roomCode).map(c => c.unitCode));
-    // Units fully rented by a single subscription (no room specified)
-    const occupiedUnitCodesBySubscription = new Set(
-        activeSubscriptionTenants
-            .filter(t => t.tenantData.unitCode && !t.tenantData.roomCode)
-            .map(t => t.tenantData.unitCode)
-    );
-    const fullyOccupiedUnitCodes = new Set([...occupiedUnitCodesByContract, ...occupiedUnitCodesBySubscription]);
-
-
-    // All individual rooms occupied by either a contract or a subscription
     const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+    
+    // 2. Get all spaces occupied by a subscription
+    const occupiedUnitCodesBySubscription = new Set(activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).map(t => t.tenantData.unitCode));
     const occupiedRoomCodesFromSubscriptions = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
+
+    // 3. Consolidate all occupied spaces
+    const fullyOccupiedUnitCodes = new Set([...occupiedUnitCodesByContract, ...occupiedUnitCodesBySubscription]);
     const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...occupiedRoomCodesFromSubscriptions]);
 
 
