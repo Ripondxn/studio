@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -7,7 +8,7 @@ import { revalidatePath } from 'next/cache';
 import { invoiceSchema, type Invoice } from './schema';
 import { addPayment } from '@/app/finance/payment/actions';
 
-const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/invoice/invoices-data.json');
+const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
 async function readInvoices(): Promise<Invoice[]> {
     try {
@@ -27,10 +28,10 @@ async function writeInvoices(data: Invoice[]) {
     await fs.writeFile(invoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-export async function getInvoicesForTenant(tenantCode: string) {
+export async function getInvoicesForCustomer(customerCode: string) {
     const allInvoices = await readInvoices();
     // Invoices for a tenant are those where the customerCode matches the tenantCode
-    const tenantInvoices = allInvoices.filter(inv => inv.customerCode === tenantCode);
+    const tenantInvoices = allInvoices.filter(inv => inv.customerCode === customerCode);
     return tenantInvoices.map(inv => ({
         ...inv,
         remainingBalance: inv.total - (inv.amountPaid || 0),
@@ -38,7 +39,7 @@ export async function getInvoicesForTenant(tenantCode: string) {
 }
 
 
-export async function getNextInvoiceNumber() {
+export async function getNextSubscriptionInvoiceNumber() {
     const allInvoices = await readInvoices();
     let maxNum = 0;
     allInvoices.forEach(i => {
@@ -51,6 +52,21 @@ export async function getNextInvoiceNumber() {
         }
     });
     return `SUB-INV-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
+export async function getNextGeneralInvoiceNumber() {
+    const allInvoices = await readInvoices();
+    let maxNum = 0;
+    allInvoices.forEach(i => {
+        const match = i.invoiceNo.match(/^INV-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `INV-${(maxNum + 1).toString().padStart(4, '0')}`;
 }
 
 
@@ -67,11 +83,13 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
         const isNew = !data.id;
         const validatedData = validation.data;
         let savedInvoice: Invoice;
+        const isSubscription = validatedData.items.some(item => item.description?.toLowerCase().includes('subscription'));
+
 
         if (isNew) {
             let newInvoiceNo = validatedData.invoiceNo;
             if (isAutoInvoiceNo || !newInvoiceNo) {
-                 newInvoiceNo = await getNextInvoiceNumber();
+                 newInvoiceNo = isSubscription ? await getNextSubscriptionInvoiceNumber() : await getNextGeneralInvoiceNumber();
             } else {
                 const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
                 if (invoiceExists) {
@@ -82,20 +100,19 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
             const newInvoice: Invoice = {
                 ...validatedData,
                 invoiceNo: newInvoiceNo,
-                id: `SUB-INV-${Date.now()}`,
+                id: `INV-${Date.now()}`,
                 amountPaid: 0,
             };
             allInvoices.push(newInvoice);
             savedInvoice = newInvoice;
 
-            // Create a corresponding payment receipt record for the workflow
             await addPayment({
                 type: 'Receipt',
                 date: newInvoice.invoiceDate,
-                partyType: 'Customer', // Invoices are for customers (who can also be tenants)
+                partyType: 'Customer',
                 partyName: newInvoice.customerCode,
                 amount: newInvoice.total,
-                paymentMethod: 'Other', // Default for generated invoices
+                paymentMethod: 'Other',
                 referenceType: 'Invoice',
                 referenceNo: newInvoice.invoiceNo,
                 description: `Invoice generated for ${newInvoice.customerName}`,
@@ -115,6 +132,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
 
         await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
+        revalidatePath(`/tenancy/customer/add?code=${data.customerCode}`);
         return { success: true, data: savedInvoice };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
@@ -131,6 +149,7 @@ export async function deleteInvoice(invoiceId: string) {
 
         const updatedInvoices = allInvoices.filter(inv => inv.id !== invoiceId);
         await writeInvoices(updatedInvoices);
+        revalidatePath(`/tenancy/customer/add?code=${invoiceToDelete.customerCode}`);
         revalidatePath(`/tenancy/tenants/add?code=${invoiceToDelete.customerCode}`);
         return { success: true };
     } catch (error) {
@@ -148,6 +167,7 @@ export async function updateInvoiceStatus(invoiceId: string, status: Invoice['st
         allInvoices[index].status = status;
         await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/customer/add?code=${allInvoices[index].customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${allInvoices[index].customerCode}`);
         return { success: true };
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
@@ -174,6 +194,7 @@ export async function applyPaymentToInvoices(invoicePayments: { invoiceId: strin
 
         await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/customer/add?code=${customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${customerCode}`);
         return { success: true };
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };

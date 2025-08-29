@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -29,7 +30,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice, getNextInvoiceNumber } from './actions';
+import { saveInvoice, getNextSubscriptionInvoiceNumber } from './actions';
 import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
@@ -43,7 +44,7 @@ import { Combobox } from '@/components/ui/combobox';
 const formSchema = invoiceSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
 
-interface InvoiceDialogProps {
+interface SubscriptionInvoiceDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   invoice: z.infer<typeof invoiceSchema> | null;
@@ -52,7 +53,7 @@ interface InvoiceDialogProps {
   isViewMode?: boolean;
 }
 
-export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, isViewMode = false }: InvoiceDialogProps) {
+export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, isViewMode = false }: SubscriptionInvoiceDialogProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
@@ -117,10 +118,10 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
         if (!tenant) return;
 
         if (invoice) {
-            setIsAutoInvoiceNo(false); // When editing, number is always manual
+            setIsAutoInvoiceNo(false);
             reset(invoice);
         } else {
-            const newInvoiceNo = await getNextInvoiceNumber();
+            const newInvoiceNo = await getNextSubscriptionInvoiceNumber();
             setIsAutoInvoiceNo(true);
 
             let subscriptionDescription = '';
@@ -251,11 +252,11 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
                     id="auto-invoice-no-switch"
                     checked={isAutoInvoiceNo}
                     onCheckedChange={setIsAutoInvoiceNo}
-                    disabled={!!invoice} // Disable toggle when editing
+                    disabled={!!invoice}
                 />
                 <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
             </div>
-
+            
             <Table>
               <TableHeader>
                   <TableRow>

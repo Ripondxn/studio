@@ -109,7 +109,7 @@ export default function CustomerAddPage() {
     };
   }, [attachments]);
 
-  const handleFindClick = useCallback(async (code?: string) => {
+  const handleFindClick = useCallback(async (code: string) => {
     const codeToFind = code || customerData.code;
     if (!codeToFind) {
       toast({
@@ -317,7 +317,7 @@ export default function CustomerAddPage() {
         </h1>
         <div className="flex items-center gap-2">
             {!isEditing && (
-              <Button onClick={handleEditClick}>
+              <Button type="button" onClick={handleEditClick}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
               </Button>
             )}
@@ -327,12 +327,41 @@ export default function CustomerAddPage() {
                   {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   {isSaving ? 'Saving...' : 'Save'}
                 </Button>
-                <Button variant="ghost" onClick={handleCancelClick}>
+                <Button type="button" variant="ghost" onClick={handleCancelClick}>
                   <X className="mr-2 h-4 w-4" /> Cancel
                 </Button>
               </>
             )}
-            <Button variant="outline" onClick={() => router.push('/tenancy/customer')}>
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={isNewRecord || isEditing}
+                >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete Customer
+                </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    customer "{customerData.name}".
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive hover:bg-destructive/90"
+                    >
+                    Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <Button type="button" variant="outline" onClick={() => router.push('/tenancy/customer')}>
                 <X className="mr-2 h-4 w-4" /> Close
             </Button>
         </div>
@@ -441,9 +470,9 @@ export default function CustomerAddPage() {
                                                     disabled={!isEditing}
                                                 />
                                             ) : (
-                                                <Input
-                                                    type="file"
-                                                    className="text-sm w-full"
+                                                <Input 
+                                                    type="file" 
+                                                    className="text-sm w-full" 
                                                     ref={(el) => (fileInputRefs.current[index] = el)}
                                                     onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
                                                     disabled={!isEditing}
@@ -484,40 +513,8 @@ export default function CustomerAddPage() {
             </Card>
         </TabsContent>
       </Tabs>
-
-
-       <div className="mt-6 flex justify-end">
-         <AlertDialog>
-            <AlertDialogTrigger asChild>
-            <Button
-                type="button"
-                variant="destructive"
-                disabled={isNewRecord || isEditing}
-            >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Customer
-            </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                customer "{customerData.name}".
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive hover:bg-destructive/90"
-                >
-                Delete
-                </AlertDialogAction>
-            </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-       </div>
     </div>
   );
 }
+
 

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -7,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { InvoiceDialog } from './invoice-dialog';
+import { InvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
+import { SubscriptionInvoiceDialog } from './invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -60,7 +62,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
         
         setPaymentDefaultValues({
             type: 'Receipt',
-            partyType: 'Customer', // Invoices are for tenants/customers
+            partyType: 'Tenant',
             partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
@@ -161,7 +163,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                     <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPayment })} data={invoices} />
                 )}
                 
-                <InvoiceDialog
+                <SubscriptionInvoiceDialog
                     isOpen={isInvoiceDialogOpen}
                     setIsOpen={setIsInvoiceDialogOpen}
                     invoice={selectedInvoice}

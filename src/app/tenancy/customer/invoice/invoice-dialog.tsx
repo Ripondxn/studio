@@ -29,13 +29,12 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice, getNextInvoiceNumber } from './actions';
+import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
 import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
-import { type Tenant } from '../../schema';
 import { type Product } from '@/app/products/schema';
 import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
@@ -47,17 +46,15 @@ interface InvoiceDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   invoice: z.infer<typeof invoiceSchema> | null;
-  tenant?: Tenant;
-  customer?: { code: string; name: string };
+  customer: { code: string; name: string };
   onSuccess: () => void;
   isViewMode?: boolean;
 }
 
-export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, customer, onSuccess, isViewMode = false }: InvoiceDialogProps) {
+export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess, isViewMode = false }: InvoiceDialogProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
-  const [isPropertyInvoice, setIsPropertyInvoice] = useState(true);
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
@@ -82,8 +79,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, customer, on
   const watchedItems = watch('items');
   const watchedTaxRate = watch('taxRate');
   const watchedTaxType = watch('taxType');
-  const watchedProperty = watch('property');
-  const watchedUnit = watch('unitCode');
 
   useEffect(() => {
     if (isOpen) {
@@ -116,56 +111,31 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, customer, on
   }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
   
   useEffect(() => {
-    if (!isPropertyInvoice) {
-        setValue('property', '');
-        setValue('unitCode', '');
-        setValue('roomCode', '');
-    }
-  }, [isPropertyInvoice, setValue]);
-  
-  const currentParty = tenant || customer;
-
-  useEffect(() => {
     const initializeForm = async () => {
-        if (!currentParty) return;
+        if (!customer) return;
 
         if (invoice) {
-            setIsPropertyInvoice(!!invoice.property);
             setIsAutoInvoiceNo(false);
             reset(invoice);
         } else {
-            const newInvoiceNo = await getNextInvoiceNumber();
-            setIsPropertyInvoice(!!(tenant?.property));
+            const newInvoiceNo = await getNextGeneralInvoiceNumber();
             setIsAutoInvoiceNo(true);
-
-            let subscriptionDescription = '';
-            let subscriptionAmount = 0;
-            if(tenant?.isSubscriptionActive) {
-              subscriptionDescription = tenant.subscriptionStatus ? `${tenant.subscriptionStatus} Subscription` : '';
-              subscriptionAmount = tenant.subscriptionAmount || 0;
-            }
 
             reset({
                 invoiceNo: newInvoiceNo,
-                customerCode: currentParty.code,
-                customerName: currentParty.name,
-                property: tenant?.property || '',
-                unitCode: tenant?.unitCode || '',
-                roomCode: tenant?.roomCode || '',
+                customerCode: customer.code,
+                customerName: customer.name,
+                property: '',
+                unitCode: '',
+                roomCode: '',
                 invoiceDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
-                items: subscriptionAmount > 0 ? [{ 
-                    id: `item-${Date.now()}`, 
-                    description: subscriptionDescription, 
-                    quantity: 1, 
-                    unitPrice: subscriptionAmount, 
-                    total: subscriptionAmount 
-                }] : [],
-                subTotal: subscriptionAmount,
+                items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
+                subTotal: 0,
                 tax: 0,
                 taxType: 'exclusive',
                 taxRate: 0,
-                total: subscriptionAmount,
+                total: 0,
                 notes: '',
                 status: 'Draft',
             });
@@ -174,13 +144,16 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, customer, on
     if (isOpen) {
       initializeForm();
     }
-  }, [isOpen, invoice, reset, currentParty, tenant]);
+  }, [isOpen, invoice, reset, customer]);
 
   const onSubmit = async (data: InvoiceFormData) => {
-    if(!currentUser) {
+    const userProfile = sessionStorage.getItem('userProfile');
+    if(!userProfile) {
         toast({variant: 'destructive', title: 'Error', description: 'Could not identify current user.'});
         return;
     }
+    const currentUser = JSON.parse(userProfile);
+
     setIsSaving(true);
     const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
     if(result.success) {
@@ -218,10 +191,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, customer, on
         setValue(`items.${index}.description`, label || value);
     }
   }
-  
-  const currentUserString = typeof window !== 'undefined' ? sessionStorage.getItem('userProfile') : null;
-  const currentUser = currentUserString ? JSON.parse(currentUserString) : null;
-
 
   if (isViewMode && invoice) {
     return (
@@ -251,14 +220,14 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, customer, on
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
             <DialogDescription>
-              {invoice ? `Editing invoice ${invoice.invoiceNo}` : `Creating a new invoice for ${currentParty?.name}`}
+              {invoice ? `Editing invoice ${invoice.invoiceNo}` : `Creating a new invoice for ${customer.name}`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="max-h-[60vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
               <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
-              <div><Label>Customer/Tenant</Label><Input value={currentParty?.name} disabled/></div>
+              <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
             </div>
