@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -42,10 +41,8 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
     resolver: zodResolver(unitFormSchema),
     defaultValues: {
         unitCode: '',
-        unitName: '',
         propertyCode: propertyCode,
         unitType: '',
-        annualRent: 0,
         unitStatus: 'Active',
     }
   });
@@ -54,10 +51,8 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
     if (isOpen) {
       reset({
         unitCode: '',
-        unitName: '',
         propertyCode: propertyCode,
         unitType: '',
-        annualRent: 0,
         unitStatus: 'Active',
       });
     }
@@ -106,10 +101,6 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
                     <Input id="unitCode" {...register('unitCode')} />
                     {errors.unitCode && <p className="text-destructive text-xs mt-1">{errors.unitCode.message}</p>}
                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="unitName">Unit Name (Optional)</Label>
-                    <Input id="unitName" {...register('unitName')} />
-                </div>
                 <div className="space-y-2">
                     <Label htmlFor="unitType">Unit Type</Label>
                      <Controller
@@ -132,11 +123,6 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
                         )}
                     />
                     {errors.unitType && <p className="text-destructive text-xs mt-1">{errors.unitType.message}</p>}
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="annualRent">Annual Rent</Label>
-                    <Input id="annualRent" type="number" {...register('annualRent', { valueAsNumber: true })} />
-                    {errors.annualRent && <p className="text-destructive text-xs mt-1">{errors.annualRent.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="unitStatus">Status</Label>
