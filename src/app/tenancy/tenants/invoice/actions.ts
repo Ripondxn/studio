@@ -29,12 +29,14 @@ async function writeInvoices(data: Invoice[]) {
 
 export async function getInvoicesForTenant(tenantCode: string) {
     const allInvoices = await readInvoices();
+    // Invoices for a tenant are those where the customerCode matches the tenantCode
     const tenantInvoices = allInvoices.filter(inv => inv.customerCode === tenantCode);
     return tenantInvoices.map(inv => ({
         ...inv,
         remainingBalance: inv.total - (inv.amountPaid || 0),
     }));
 }
+
 
 export async function getNextInvoiceNumber() {
     const allInvoices = await readInvoices();
@@ -84,14 +86,14 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
             };
             allInvoices.push(newInvoice);
 
-            // Also create a corresponding payment receipt record
+            // Create a corresponding payment receipt record for the workflow
             await addPayment({
                 type: 'Receipt',
                 date: newInvoice.invoiceDate,
-                partyType: 'Customer', // Tenants are billed as customers here
+                partyType: 'Customer', // Invoices are always for customers (who can also be tenants)
                 partyName: newInvoice.customerCode,
                 amount: newInvoice.total,
-                paymentMethod: 'Other', // Or determine based on context
+                paymentMethod: 'Other', // Default for generated invoices
                 referenceType: 'Invoice',
                 referenceNo: newInvoice.invoiceNo,
                 description: `Invoice generated for ${newInvoice.customerName}`,
