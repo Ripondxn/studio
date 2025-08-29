@@ -55,17 +55,19 @@ export async function getAllTenants() {
         }
     }
 
-    return tenants.map((l: any) => {
-        const tenantCode = l.tenantData.code;
-        const contract = contractsByTenantCode.get(tenantCode);
+    return tenants
+        .filter((l: any) => l.tenantData && l.tenantData.code) // Safeguard against missing data
+        .map((l: any) => {
+            const tenantCode = l.tenantData.code;
+            const contract = contractsByTenantCode.get(tenantCode);
 
-        return {
-            ...l.tenantData,
-            attachments: l.attachments || [],
-            contractId: contract?.id || null,
-            contractNo: contract?.contractNo || null,
-        }
-    });
+            return {
+                ...l.tenantData,
+                attachments: l.attachments || [],
+                contractId: contract?.id || null,
+                contractNo: contract?.contractNo || null,
+            }
+        });
 }
 
 async function getNextTenantCode() {
@@ -226,7 +228,4 @@ export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
     const allRooms: Room[] = await readData(roomsFilePath);
      return allRooms
         .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode)
-        .map(r => ({ value: r.roomCode, label: r.roomCode }));
-}
-
-    
+        

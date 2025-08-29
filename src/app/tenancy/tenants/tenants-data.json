@@ -1,14 +1,6 @@
 
 [
   {
-    "id": "T1719827401003",
-    "tenantData": {
-      "code": "T003",
-      "name": "MR. ABDUL SHAKOOR",
-      "email": "mr.abdul.shakoor@example.com"
-    }
-  },
-  {
     "id": "T1719827401004",
     "tenantData": {
       "code": "T004",
@@ -1089,5 +1081,3 @@
     "attachments": []
   }
 ]
-
-    
