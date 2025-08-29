@@ -58,6 +58,8 @@ import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Combobox } from '@/components/ui/combobox';
 import { Separator } from '@/components/ui/separator';
+import { MoveTenantDialog } from '../add/move-tenant-dialog';
+import type { UserRole } from '@/app/admin/user-roles/schema';
 
 type Attachment = {
   id: number;
@@ -188,6 +190,8 @@ export default function TenantPage() {
 
   useEffect(() => {
     const fetchUnits = async () => {
+        form.setValue('unitCode', '');
+        form.setValue('roomCode', '');
         setLookups(prev => ({...prev, units: [], rooms: []}));
         if(watchedProperty) {
             const unitsData = await getUnitsForProperty(watchedProperty);
@@ -195,10 +199,11 @@ export default function TenantPage() {
         }
     };
     fetchUnits();
-  }, [watchedProperty]);
+  }, [watchedProperty, form]);
 
    useEffect(() => {
     const fetchRooms = async () => {
+        form.setValue('roomCode', '');
         setLookups(prev => ({...prev, rooms: []}));
         if(watchedProperty && watchedUnit) {
             const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
@@ -206,7 +211,7 @@ export default function TenantPage() {
         }
     };
     fetchRooms();
-  }, [watchedProperty, watchedUnit]);
+  }, [watchedProperty, watchedUnit, form]);
 
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
@@ -415,32 +420,30 @@ export default function TenantPage() {
                                 <FormControl>
                                     <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
                                 </FormControl>
+                                <div className="flex items-center space-x-2 pt-6">
+                                    <Switch
+                                        id="auto-code-switch"
+                                        checked={isAutoCode}
+                                        onCheckedChange={setIsAutoCode}
+                                        disabled={!isNewRecord || !isEditing}
+                                    />
+                                    <Label htmlFor="auto-code-switch">Auto</Label>
+                                </div>
                             </div>
                             <FormMessage />
                             </FormItem>
                         )}
                         />
-                        <div className="md:col-start-2">
-                            <div className="flex items-center space-x-2 pt-6">
-                                <Switch
-                                    id="auto-code-switch"
-                                    checked={isAutoCode}
-                                    onCheckedChange={setIsAutoCode}
-                                    disabled={!isNewRecord || !isEditing}
-                                />
-                                <Label htmlFor="auto-code-switch">Auto-generate Code</Label>
-                            </div>
-                        </div>
-                        <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                            <Label htmlFor="name">Name</Label>
-                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                            <FormMessage />
+                         <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                                <Label htmlFor="name">Name</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
                             </FormItem>
-                        )}
+                            )}
                         />
                         <FormField
                         control={form.control}
@@ -499,11 +502,11 @@ export default function TenantPage() {
                         />
                     </div>
                      <Separator className="my-6" />
-                     <CardTitle>Rented Property</CardTitle>
+                     <CardTitle>Current Rented Property</CardTitle>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => {field.onChange(value); form.setValue('unitCode', ''); form.setValue('roomCode','');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={(value) => {field.onChange(value); form.setValue('roomCode','');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty} /><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!isEditing || !watchedUnit} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => {field.onChange(value); form.setValue('unitCode', ''); form.setValue('roomCode','');}} placeholder="Select property" disabled={!isEditing || !watchedIsSubActive} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={(value) => {field.onChange(value); form.setValue('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty || !watchedIsSubActive} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!isEditing || !watchedUnit || !watchedIsSubActive} /><FormMessage /></FormItem>)} />
                      </div>
                     </CardContent>
                 </Card>
@@ -517,6 +520,7 @@ export default function TenantPage() {
                 onRefresh={() => fetchInvoices(form.getValues('code'))}
                 isSubscriptionEditing={isSubscriptionEditing}
                 setIsSubscriptionEditing={setIsSubscriptionEditing}
+                formControl={form.control}
              />
         </TabsContent>
          <TabsContent value="attachments">
@@ -603,3 +607,4 @@ export default function TenantPage() {
     </div>
   );
 }
+

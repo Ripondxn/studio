@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -20,7 +19,7 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { FormField, type Control } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,9 +32,10 @@ interface InvoiceListProps {
     onRefresh: () => void;
     isSubscriptionEditing: boolean;
     setIsSubscriptionEditing: (isEditing: boolean) => void;
+    formControl: Control<Tenant>;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, formControl }: InvoiceListProps) {
     const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
     const [isGeneralInvoiceDialogOpen, setIsGeneralInvoiceDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -124,17 +124,14 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Subscription &amp; Invoices</CardTitle>
+                        <CardTitle>Subscription & Invoices</CardTitle>
                         <CardDescription>Manage subscription and invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                          {isSubscriptionEditing ? (
                             <>
-                                <Button size="sm" onClick={handleSubscriptionSave}>
-                                    <Save className="mr-2 h-4 w-4" /> Apply Changes
-                                </Button>
-                                 <Button size="sm" variant="ghost" onClick={() => setIsSubscriptionEditing(false)}>
-                                    <X className="mr-2 h-4 w-4" /> Cancel
+                                <Button size="sm" onClick={() => setIsSubscriptionEditing(false)}>
+                                    <X className="mr-2 h-4 w-4" /> Cancel Edit
                                 </Button>
                             </>
                          ) : (
@@ -170,14 +167,23 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center space-x-2">
-                           <Switch
-                            id="isSubscriptionActive"
-                            checked={tenant.isSubscriptionActive}
-                            disabled={!isSubscriptionEditing}
+                             <FormField
+                                control={formControl}
+                                name="isSubscriptionActive"
+                                render={({ field }) => (
+                                    <div className="flex items-center space-x-2">
+                                        <Switch
+                                            id="isSubscriptionActive"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                            disabled={!isSubscriptionEditing}
+                                        />
+                                        <Label htmlFor="isSubscriptionActive" className="!mt-0">
+                                            Enable Subscription
+                                        </Label>
+                                    </div>
+                                )}
                             />
-                            <Label htmlFor="isSubscriptionActive" className="!mt-0">
-                                Enable Subscription
-                            </Label>
                              {tenant.isSubscriptionActive && (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
@@ -200,20 +206,32 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                               <Label>Subscription Type</Label>
-                               <Select value={tenant.subscriptionStatus} disabled={!isSubscriptionEditing || !tenant.isSubscriptionActive}>
-                                <SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Yearly">Yearly</SelectItem>
-                                    <SelectItem value="Monthly">Monthly</SelectItem>
-                                </SelectContent>
-                               </Select>
-                            </div>
-                            <div>
-                               <Label>Subscription Amount</Label>
-                               <Input type="number" value={tenant.subscriptionAmount} disabled={!isSubscriptionEditing || !tenant.isSubscriptionActive}/>
-                            </div>
+                            <FormField
+                                control={formControl}
+                                name="subscriptionStatus"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Label>Subscription Type</Label>
+                                        <Select onValueChange={field.onChange} value={field.value} disabled={!isSubscriptionEditing || !tenant.isSubscriptionActive}>
+                                            <SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Yearly">Yearly</SelectItem>
+                                                <SelectItem value="Monthly">Monthly</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={formControl}
+                                name="subscriptionAmount"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Label>Subscription Amount</Label>
+                                        <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!isSubscriptionEditing || !tenant.isSubscriptionActive} />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
                     </CardContent>
                 </Card>
