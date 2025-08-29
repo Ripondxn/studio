@@ -314,15 +314,10 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                   {fields.map((field, index) => (
                       <TableRow key={field.id}>
                           <TableCell>
-                            <Combobox
-                                options={products.map(p => ({value: p.itemCode, label: p.itemName}))}
-                                value={watchedItems?.[index]?.description || ''}
-                                onSelect={(value, label) => handleItemSelect(index, value, label)}
-                                placeholder="Select or type item..."
-                             />
+                            <Input {...register(`items.${index}.description`)} disabled />
                           </TableCell>
                           <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} /></TableCell>
-                          <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
+                          <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} disabled /></TableCell>
                           <TableCell className="text-right">
                             {formatCurrency((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                           </TableCell>
