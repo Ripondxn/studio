@@ -1,1 +1,59 @@
-[]
+
+[
+  {
+    "invoiceNo": "SUB-INV-0001",
+    "customerCode": "T002",
+    "customerName": "MR. ABDUL KADER",
+    "property": "",
+    "unitCode": "",
+    "roomCode": "",
+    "invoiceDate": "2025-08-29",
+    "dueDate": "2025-08-29",
+    "items": [
+      {
+        "id": "item-1724949575119",
+        "description": "Monthly Subscription",
+        "quantity": 1,
+        "unitPrice": 500,
+        "total": 500
+      }
+    ],
+    "subTotal": 500,
+    "taxType": "exclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 500,
+    "status": "Draft",
+    "notes": "Automatically generated subscription invoice for August 2025.",
+    "id": "INV-1724949575119",
+    "amountPaid": 0
+  },
+  {
+    "invoiceNo": "SUB-INV-0002",
+    "customerCode": "T001",
+    "customerName": "Ripon",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "invoiceDate": "2025-08-29",
+    "dueDate": "2025-08-29",
+    "items": [
+      {
+        "id": "item-1724949575120",
+        "description": "Yearly Subscription",
+        "quantity": 1,
+        "unitPrice": 25000,
+        "total": 25000
+      }
+    ],
+    "subTotal": 25000,
+    "taxType": "exclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 25000,
+    "status": "Draft",
+    "notes": "Automatically generated subscription invoice for August 2025.",
+    "id": "INV-1724949575120",
+    "amountPaid": 0
+  }
+]
