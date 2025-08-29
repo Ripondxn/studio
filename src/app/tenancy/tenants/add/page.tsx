@@ -55,7 +55,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getRoomDetails, moveTenant, getLatestContractForTenant, getUnitDetails } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -68,6 +68,9 @@ import { Switch } from '@/components/ui/switch';
 import { MoveTenantDialog } from './move-tenant-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
 import { Combobox } from '@/components/ui/combobox';
+import { InvoiceList } from '../invoice/invoice-list';
+import { type Invoice } from '../invoice/schema';
+import { getInvoicesForTenant } from '../invoice/actions';
 
 type Attachment = {
   id: number;
@@ -132,9 +135,20 @@ export default function TenantPage() {
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [], tenants: [] });
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+
 
   const watchedProperty = tenantData.property;
   const watchedUnit = tenantData.unitCode;
+  
+  const fetchInvoices = useCallback(async (tenantCode: string) => {
+    if (!tenantCode) return;
+    setIsLoadingInvoices(true);
+    const data = await getInvoicesForTenant(tenantCode);
+    setInvoices(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
+    setIsLoadingInvoices(false);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -166,6 +180,7 @@ export default function TenantPage() {
             setIsNewRecord(false);
             setIsEditing(false);
             setIsAutoCode(false);
+            fetchInvoices(result.data.tenantData.code);
         } else {
             setInitialAllData({ tenantData: { ...initialTenantData, code: result.data.tenantData.code } });
             setIsNewRecord(true);
@@ -189,7 +204,7 @@ export default function TenantPage() {
     } finally {
       setIsFinding(false);
     }
-  }, [tenantData.code, toast]);
+  }, [tenantData.code, fetchInvoices, toast]);
 
   useEffect(() => {
     getContractLookups().then(data => {
@@ -286,7 +301,9 @@ export default function TenantPage() {
   }
 
   const handleEditClick = () => {
-    setInitialAllData({ tenantData, attachments });
+    setInitialAllData({
+      tenantData, attachments
+    });
     setIsEditing(true);
   }
 
@@ -435,6 +452,7 @@ export default function TenantPage() {
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
                 <TabsTrigger value="rental-details">Rental Details</TabsTrigger>
                 <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
+                <TabsTrigger value="subscription-invoice" disabled={isNewRecord}>Subscription Invoice</TabsTrigger>
                 <TabsTrigger value="pdc">PDC Schedule</TabsTrigger>
                 <TabsTrigger value="termination">Termination</TabsTrigger>
             </TabsList>
@@ -561,7 +579,7 @@ export default function TenantPage() {
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card>
+                         <Card>
                             <CardHeader>
                                 <CardTitle>Attachments</CardTitle>
                             </CardHeader>
@@ -708,7 +726,7 @@ export default function TenantPage() {
                     </CardContent>
                 </Card>
             </TabsContent>
-            <TabsContent value="security-deposit">
+             <TabsContent value="security-deposit">
                 <Card>
                     <CardHeader>
                         <CardTitle>Security Deposit</CardTitle>
@@ -755,6 +773,15 @@ export default function TenantPage() {
                         </Card>
                     </CardContent>
                 </Card>
+            </TabsContent>
+            <TabsContent value="subscription-invoice">
+                <InvoiceList
+                    customerCode={tenantData.code}
+                    customerName={tenantData.name}
+                    invoices={invoices}
+                    isLoading={isLoadingInvoices}
+                    onRefresh={() => fetchInvoices(tenantData.code)}
+                />
             </TabsContent>
             <TabsContent value="pdc">
                  <Card>
@@ -829,4 +856,3 @@ export default function TenantPage() {
     </div>
   );
 }
-

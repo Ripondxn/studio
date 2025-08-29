@@ -1,0 +1,111 @@
+
+
+'use client';
+
+import { type Invoice } from './schema';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format } from 'date-fns';
+import { Building2 } from 'lucide-react';
+import { useCurrency } from '@/context/currency-context';
+import { useCompanyProfile } from '@/context/company-profile-context';
+
+export function InvoiceView({ invoice }: { invoice: Invoice }) {
+    const { formatCurrency } = useCurrency();
+    const { profile } = useCompanyProfile();
+
+    return (
+        <div className="p-8 bg-white text-black max-w-4xl mx-auto my-4 border rounded-sm shadow-sm">
+            <header className="flex justify-between items-start pb-6 mb-6 border-b">
+                <div className="flex items-center gap-4">
+                     <div className="p-3 bg-primary/10 text-primary rounded-lg">
+                        {profile.logo ? <img src={profile.logo} alt="Company Logo" className="h-8 w-8 object-contain"/> : <Building2 className="h-8 w-8" />}
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">{profile.name}</h1>
+                        <p className="text-sm text-gray-500">{profile.address}</p>
+                        <p className="text-sm text-gray-500">{profile.email}</p>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <h2 className="text-4xl font-extrabold text-gray-700 uppercase tracking-wider">Invoice</h2>
+                    <p className="text-sm text-gray-500 mt-1"># {invoice.invoiceNo}</p>
+                </div>
+            </header>
+            
+            <section className="grid grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Bill To</h3>
+                    <p className="font-bold text-gray-800">{invoice.customerName}</p>
+                </div>
+                <div className="text-right">
+                     <div className="mb-2">
+                        <p className="text-sm font-semibold text-gray-500">Invoice Date:</p>
+                        <p className="font-medium text-gray-800">{format(new Date(invoice.invoiceDate), 'PP')}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm font-semibold text-gray-500">Due Date:</p>
+                        <p className="font-medium text-gray-800">{format(new Date(invoice.dueDate), 'PP')}</p>
+                    </div>
+                </div>
+            </section>
+
+            <Table>
+                <TableHeader>
+                    <TableRow className="bg-gray-50">
+                        <TableHead className="w-[50%]">Item Description</TableHead>
+                        <TableHead className="text-center">Qty</TableHead>
+                        <TableHead className="text-right">Unit Price</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {invoice.items.map(item => (
+                        <TableRow key={item.id}>
+                            <TableCell className="font-medium">{item.description}</TableCell>
+                            <TableCell className="text-center">{item.quantity}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.quantity * item.unitPrice)}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+            
+            <div className="flex justify-end mt-8">
+                <div className="w-full max-w-sm space-y-2 text-sm">
+                    <div className="flex justify-between">
+                        <span className="text-gray-600">Subtotal:</span>
+                        <span className="font-medium text-gray-800">{formatCurrency(invoice.subTotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-600">Tax ({invoice.tax > 0 && invoice.subTotal > 0 ? (invoice.tax/invoice.subTotal * 100).toFixed(0) : 0}%):</span>
+                        <span className="font-medium text-gray-800">{formatCurrency(invoice.tax)}</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-gray-600">Total:</span>
+                        <span className="font-medium text-gray-800">{formatCurrency(invoice.total)}</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-gray-600">Amount Paid:</span>
+                        <span className="font-medium text-gray-800">-{formatCurrency(invoice.amountPaid || 0)}</span>
+                    </div>
+                     <div className="flex justify-between border-t pt-2 mt-2">
+                        <span className="font-bold text-gray-800 text-base">Balance Due:</span>
+                        <span className="font-bold text-gray-800 text-base">{formatCurrency(invoice.remainingBalance || 0)}</span>
+                    </div>
+                </div>
+            </div>
+
+            {invoice.notes && (
+                <section className="mt-12">
+                    <h4 className="font-semibold text-gray-600 mb-2">Notes</h4>
+                    <p className="text-xs text-gray-500 italic">{invoice.notes}</p>
+                </section>
+            )}
+
+            <footer className="mt-16 pt-4 border-t text-center text-xs text-gray-500">
+                <p>Thank you for your business!</p>
+                 <p>Please make all payments to "{profile.name}".</p>
+            </footer>
+        </div>
+    )
+}
