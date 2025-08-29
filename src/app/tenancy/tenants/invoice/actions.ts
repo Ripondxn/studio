@@ -5,7 +5,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
-import { invoiceSchema, type Invoice } from './schema';
+import { invoiceSchema, type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { addPayment } from '@/app/finance/payment/actions';
 import { type Contract } from '../../contract/schema';
 
