@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -47,7 +48,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit, getTenantForProperty } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit } from '../actions';
+import { getTenantForProperty } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
@@ -112,6 +114,8 @@ export default function TenantPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [], tenants: [] });
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
 
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
 
@@ -122,9 +126,6 @@ export default function TenantPage() {
 
   const watchedProperty = form.watch('property');
   const watchedUnit = form.watch('unitCode');
-  
-  const propertyRef = useRef(watchedProperty);
-  const unitRef = useRef(watchedUnit);
   
   const fetchInvoices = useCallback(async (tenantCode: string) => {
     if (!tenantCode) return;
@@ -150,16 +151,21 @@ export default function TenantPage() {
       if (result.success && result.data) {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
         
-        form.reset(fullTenantData); // Reset the form with all data
+        form.reset(fullTenantData);
 
-        // Now, fetch dependent dropdown data
         if (fullTenantData.property) {
-            const unitsData = await getUnitsForProperty(fullTenantData.property);
-            setLookups(prev => ({...prev, units: unitsData}));
-            if (fullTenantData.unitCode) {
-                 const roomsData = await getRoomsForUnit(fullTenantData.property, fullTenantData.unitCode);
-                 setLookups(prev => ({...prev, rooms: roomsData}));
-            }
+            setIsLoadingUnits(true);
+            getUnitsForProperty(fullTenantData.property).then(unitsData => {
+                setLookups(prev => ({...prev, units: unitsData}));
+                setIsLoadingUnits(false);
+            });
+        }
+        if (fullTenantData.property && fullTenantData.unitCode) {
+            setIsLoadingRooms(true);
+            getRoomsForUnit(fullTenantData.property, fullTenantData.unitCode).then(roomsData => {
+                setLookups(prev => ({...prev, rooms: roomsData}));
+                setIsLoadingRooms(false);
+            });
         }
         
         setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
@@ -190,7 +196,7 @@ export default function TenantPage() {
       });
     }
   }, [form, toast, fetchInvoices]);
-
+  
   useEffect(() => {
     const tenantCodeParam = searchParams.get('code');
     getTenantLookups().then(data => setLookups(prev => ({...prev, ...data})));
@@ -200,37 +206,34 @@ export default function TenantPage() {
       handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
-  
+
   useEffect(() => {
+    if (!watchedProperty) {
+      setLookups(prev => ({ ...prev, units: [], rooms: [] }));
+      return;
+    }
     const fetchUnits = async () => {
-        if (propertyRef.current !== watchedProperty) {
-            form.setValue('unitCode', '');
-            form.setValue('roomCode', '');
-             setLookups(prev => ({...prev, units: [], rooms: []}));
-        }
-        if(watchedProperty) {
-            const unitsData = await getUnitsForProperty(watchedProperty);
-            setLookups(prev => ({...prev, units: unitsData}));
-        }
-        propertyRef.current = watchedProperty;
+      setIsLoadingUnits(true);
+      const unitsData = await getUnitsForProperty(watchedProperty);
+      setLookups(prev => ({ ...prev, units: unitsData, rooms: [] }));
+      setIsLoadingUnits(false);
     };
     fetchUnits();
-  }, [watchedProperty, form]);
+  }, [watchedProperty]);
 
-   useEffect(() => {
+  useEffect(() => {
+    if (!watchedProperty || !watchedUnit) {
+      setLookups(prev => ({ ...prev, rooms: [] }));
+      return;
+    }
     const fetchRooms = async () => {
-        if(unitRef.current !== watchedUnit) {
-            form.setValue('roomCode', '');
-        }
-        setLookups(prev => ({...prev, rooms: []}));
-        if(watchedProperty && watchedUnit) {
-            const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
-            setLookups(prev => ({...prev, rooms: roomsData}));
-        }
-        unitRef.current = watchedUnit;
+      setIsLoadingRooms(true);
+      const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
+      setLookups(prev => ({ ...prev, rooms: roomsData }));
+      setIsLoadingRooms(false);
     };
     fetchRooms();
-  }, [watchedProperty, watchedUnit, form]);
+  }, [watchedProperty, watchedUnit]);
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
@@ -438,7 +441,7 @@ export default function TenantPage() {
                                 <FormControl>
                                     <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
                                 </FormControl>
-                                 <div className="flex items-center space-x-2 pt-6">
+                                <div className="flex items-center space-x-2 pt-6">
                                     <Switch
                                         id="auto-code-switch"
                                         checked={isAutoCode}
@@ -522,9 +525,9 @@ export default function TenantPage() {
                      <Separator className="my-6" />
                      <CardTitle>Current Rented Property</CardTitle>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => field.onChange(value)} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={(value) => field.onChange(value)} placeholder="Select unit" disabled={!isEditing || !watchedProperty} /><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!isEditing || !watchedUnit} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { form.setValue('property', value); form.setValue('unitCode', ''); form.setValue('roomCode', '');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={value => {form.setValue('unitCode', value); form.setValue('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty || isLoadingUnits} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={(value) => form.setValue('roomCode', value)} placeholder="Select room" disabled={!isEditing || !watchedUnit || isLoadingRooms} /><FormMessage /></FormItem>)} />
                      </div>
                     </CardContent>
                 </Card>
