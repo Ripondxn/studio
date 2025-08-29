@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -48,8 +47,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit } from '../actions';
-import { getTenantForProperty } from '../../contract/actions';
+import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit, getTenantForProperty } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
@@ -117,17 +115,16 @@ export default function TenantPage() {
 
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
 
-
   const form = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
     defaultValues: initialTenantData,
   });
 
-  const tenantCode = form.watch('code');
   const watchedProperty = form.watch('property');
   const watchedUnit = form.watch('unitCode');
-  const watchedRoom = form.watch('roomCode');
-  const watchedIsSubActive = form.watch('isSubscriptionActive');
+  
+  const propertyRef = useRef(watchedProperty);
+  const unitRef = useRef(watchedUnit);
   
   const fetchInvoices = useCallback(async (tenantCode: string) => {
     if (!tenantCode) return;
@@ -152,7 +149,19 @@ export default function TenantPage() {
       const result = await findTenantData(code);
       if (result.success && result.data) {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
-        form.reset(fullTenantData);
+        
+        form.reset(fullTenantData); // Reset the form with all data
+
+        // Now, fetch dependent dropdown data
+        if (fullTenantData.property) {
+            const unitsData = await getUnitsForProperty(fullTenantData.property);
+            setLookups(prev => ({...prev, units: unitsData}));
+            if (fullTenantData.unitCode) {
+                 const roomsData = await getRoomsForUnit(fullTenantData.property, fullTenantData.unitCode);
+                 setLookups(prev => ({...prev, rooms: roomsData}));
+            }
+        }
+        
         setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
         
         if (code !== 'new') {
@@ -191,15 +200,14 @@ export default function TenantPage() {
       handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
-
-  const propertyRef = useRef(watchedProperty);
+  
   useEffect(() => {
     const fetchUnits = async () => {
-        if(propertyRef.current !== watchedProperty) {
+        if (propertyRef.current !== watchedProperty) {
             form.setValue('unitCode', '');
             form.setValue('roomCode', '');
+             setLookups(prev => ({...prev, units: [], rooms: []}));
         }
-        setLookups(prev => ({...prev, units: [], rooms: []}));
         if(watchedProperty) {
             const unitsData = await getUnitsForProperty(watchedProperty);
             setLookups(prev => ({...prev, units: unitsData}));
@@ -209,7 +217,6 @@ export default function TenantPage() {
     fetchUnits();
   }, [watchedProperty, form]);
 
-   const unitRef = useRef(watchedUnit);
    useEffect(() => {
     const fetchRooms = async () => {
         if(unitRef.current !== watchedUnit) {
@@ -224,22 +231,6 @@ export default function TenantPage() {
     };
     fetchRooms();
   }, [watchedProperty, watchedUnit, form]);
-  
-  const fetchAndSetTenantName = useCallback(async () => {
-    if (isNewRecord && watchedProperty && watchedUnit) {
-      const tenantResult = await getTenantForProperty(watchedProperty, watchedUnit, watchedRoom || undefined);
-      if (tenantResult.success && tenantResult.tenantName) {
-        form.setValue('name', tenantResult.tenantName);
-      } else {
-        form.setValue('name', '');
-      }
-    }
-  }, [isNewRecord, watchedProperty, watchedUnit, watchedRoom, form]);
-
-  useEffect(() => {
-    fetchAndSetTenantName();
-  }, [fetchAndSetTenantName]);
-
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
@@ -634,4 +625,3 @@ export default function TenantPage() {
     </div>
   );
 }
-
