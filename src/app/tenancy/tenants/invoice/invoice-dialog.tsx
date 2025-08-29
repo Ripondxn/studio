@@ -38,6 +38,7 @@ import { useCurrency } from '@/context/currency-context';
 import { type Tenant } from '../../schema';
 import { type Product } from '@/app/products/schema';
 import { getProducts } from '@/app/products/actions';
+import { Combobox } from '@/components/ui/combobox';
 
 const formSchema = invoiceSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
