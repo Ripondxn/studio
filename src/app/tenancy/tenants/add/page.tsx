@@ -25,15 +25,7 @@ import {
   Search,
   X,
   FileUp,
-  Link2,
-  Home,
-  FileText,
-  DollarSign,
-  Calendar,
-  BedDouble,
-  DoorOpen,
-  Move,
-  Printer
+  Link2
 } from 'lucide-react';
 import {
   Table,
@@ -56,24 +48,17 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveTenantData, findTenantData, deleteTenantData, cancelSubscription } from '../actions';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getRoomDetails, moveTenant, getLatestContractForTenant, getUnitDetails } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { type Contract, type PaymentInstallment } from '../../contract/schema';
-import { type Unit } from '@/app/property/units/schema';
-import { type Room } from '@/app/property/rooms/schema';
-import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { MoveTenantDialog } from './move-tenant-dialog';
-import type { UserRole } from '@/app/admin/user-roles/schema';
-import { Combobox } from '@/components/ui/combobox';
-import { InvoiceList } from '@/app/tenancy/customer/invoice/invoice-list';
-import { type Invoice } from '../customer/invoice/schema';
+import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForTenant } from '../invoice/actions';
+import { type Invoice } from '../invoice/schema';
+import { PaymentReceiptList } from '../payment-receipt-list';
+import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { type Contract } from '../../contract/schema';
+import { type Unit } from '@/app/property/units/schema';
+import { type Room } from '@/app/property/rooms/schema';
 
 type Attachment = {
   id: number;
@@ -83,14 +68,6 @@ type Attachment = {
   remarks: string;
   isLink: boolean;
 };
-
-type Lookups = {
-    properties: {value: string, label: string}[];
-    units: {value: string, label: string}[];
-    rooms: {value: string, label: string}[];
-    tenants: any[];
-}
-
 
 const initialTenantData: Tenant = {
     code: '',
@@ -123,19 +100,14 @@ export default function TenantPage() {
   const [isNewRecord, setIsNewRecord] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isFinding, setIsFinding] = useState(false);
+  const [isAutoCode, setIsAutoCode] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isAutoCode, setIsAutoCode] = useState(true);
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  
-  const [contractData, setContractData] = useState<Partial<Contract>>({});
-  const [unitData, setUnitData] = useState<Partial<Unit & { property?: any }>>({});
-  const [roomData, setRoomData] = useState<Partial<Room>>({});
-  
-  const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [], tenants: [] });
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   
@@ -144,9 +116,8 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const vendorCode = form.watch('code');
-  const vendorName = form.watch('name');
-
+  const tenantCode = form.watch('code');
+  
   const fetchInvoices = useCallback(async (tenantCode: string) => {
     if (!tenantCode) return;
     setIsLoadingInvoices(true);
@@ -173,16 +144,17 @@ export default function TenantPage() {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
         form.reset(fullTenantData);
         setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
-        setContractData(result.data.contractData || {});
-        setUnitData(result.data.unitData || {});
-        setRoomData(result.data.roomData || {});
-
+        
         if (code !== 'new') {
+            form.reset(fullTenantData);
+            setInitialAttachments(JSON.parse(JSON.stringify(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: null})) : [])));
             setIsNewRecord(false);
             setIsEditing(false);
             setIsAutoCode(false);
             fetchInvoices(result.data.tenantData.code);
         } else {
+            form.reset({ ...initialTenantData, code: result.data.tenantData.code });
+            setInitialAttachments([]);
             setIsNewRecord(true);
             setIsEditing(true);
             setIsAutoCode(true);
@@ -206,46 +178,16 @@ export default function TenantPage() {
     }
   }, [form, toast, fetchInvoices]);
 
-
   useEffect(() => {
-    getContractLookups().then(data => {
-        setLookups(prev => ({...prev, properties: data.properties, tenants: data.tenants}));
-    });
-    const tenantCode = searchParams.get('code');
-    if (tenantCode) {
-      setIsNewRecord(false);
-      handleFindClick(tenantCode);
+    const tenantCodeParam = searchParams.get('code');
+    if (tenantCodeParam) {
+      handleFindClick(tenantCodeParam);
     } else {
-        setIsNewRecord(true);
-        setIsEditing(true); 
-        handleFindClick('new');
+      handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
+
   
-  const watchedProperty = form.watch('property');
-  const watchedUnit = form.watch('unitCode');
-
-  useEffect(() => {
-    const fetchUnits = async () => {
-        if (watchedProperty) {
-            const unitsData = await getUnitsForProperty(watchedProperty);
-            setLookups(prev => ({...prev, units: unitsData, rooms: []}));
-        }
-    }
-    fetchUnits();
-  }, [watchedProperty]);
-
-  useEffect(() => {
-    const fetchRooms = async () => {
-        if (watchedProperty && watchedUnit) {
-            const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
-            setLookups(prev => ({...prev, rooms: roomsData}));
-        }
-    }
-    fetchRooms();
-  }, [watchedProperty, watchedUnit]);
-
-
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
         if (item.id === id) {
@@ -430,11 +372,8 @@ export default function TenantPage() {
             <Tabs defaultValue="info">
                 <TabsList>
                     <TabsTrigger value="info">Tenant Information</TabsTrigger>
-                    <TabsTrigger value="rental-details" disabled={isNewRecord}>Rental Details</TabsTrigger>
                     <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
                     <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
-                    <TabsTrigger value="pdc" disabled={isNewRecord}>PDC Schedule</TabsTrigger>
-                    <TabsTrigger value="termination" disabled={isNewRecord}>Termination</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info">
                     <div className="space-y-6">
@@ -537,29 +476,6 @@ export default function TenantPage() {
                                     </FormItem>
                                 )}
                                 />
-                                
-                                <FormField
-                                    control={form.control}
-                                    name="contractNo"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <Label htmlFor="contractNo">Tenancy Contract No</Label>
-                                            {contractData.id ? (
-                                            <Button asChild variant="link" className="p-0 h-auto font-normal block truncate">
-                                                <Link href={`/tenancy/contract?id=${contractData.id}`}>{field.value}</Link>
-                                            </Button>
-                                            ) : (
-                                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                                            )}
-                                        <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t">
-                                <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} {...field} onSelect={(value) => { field.onChange(value); form.setValue('unitCode', ''); form.setValue('roomCode','');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
-                                <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} {...field} onSelect={(value) => { field.onChange(value); form.setValue('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty} /><FormMessage /></FormItem>)} />
-                                <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room</Label><Combobox options={lookups.rooms} {...field} onSelect={field.onChange} placeholder="Select room" disabled={!isEditing || !watchedUnit} /><FormMessage /></FormItem>)} />
                             </div>
                             </CardContent>
                         </Card>
@@ -576,152 +492,8 @@ export default function TenantPage() {
                                      <FormField control={form.control} name="brokerCommission" render={({ field }) => (<FormItem><Label>Commission Amount</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!isEditing} /></FormControl><FormMessage /></FormItem>)} />
                                 </CardContent>
                             </Card>
-                             <Card>
-                                <CardHeader>
-                                    <CardTitle>Attachments</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                            <TableHead>Attachment Name</TableHead>
-                                            <TableHead>File / Link</TableHead>
-                                            <TableHead>Action</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {attachments.map((item, index) => (
-                                                <TableRow key={item.id}>
-                                                    <TableCell>
-                                                        <Input 
-                                                            value={item.name} 
-                                                            onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
-                                                            disabled={!isEditing} 
-                                                            placeholder="e.g. Passport Copy"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-2">
-                                                            {item.isLink ? (
-                                                                <Input
-                                                                    type="text"
-                                                                    placeholder="https://example.com"
-                                                                    value={typeof item.file === 'string' ? item.file : ''}
-                                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
-                                                                    disabled={!isEditing}
-                                                                />
-                                                            ) : (
-                                                                <Input 
-                                                                    type="file" 
-                                                                    className="text-sm w-full" 
-                                                                        ref={(el) => (fileInputRefs.current[index] = el)}
-                                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                                                    disabled={!isEditing}
-                                                                />
-                                                            )}
-                                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
-                                                                {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                                                            </Button>
-                                                        </div>
-                                                        {item.url && !item.isLink && (
-                                                            <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                                View Uploaded File
-                                                            </Link>
-                                                        )}
-                                                        {item.file && typeof item.file === 'string' && (
-                                                            item.isLink && item.file.startsWith('http') ? (
-                                                                <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                                    Open Link
-                                                                </Link>
-                                                            ) : (
-                                                                !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                                            )
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
-                                        <Plus className="mr-2 h-4 w-4"/> Add Attachment
-                                    </Button>
-                                </CardContent>
-                            </Card>
                         </div>
                     </div>
-                </TabsContent>
-                 <TabsContent value="rental-details">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>Rental Details</CardTitle>
-                                <CardDescription>Information about the contract and property occupied by the tenant.</CardDescription>
-                            </div>
-                            {contractData.id && !isEditing && (
-                                <MoveTenantDialog 
-                                    contractId={contractData.id}
-                                    currentLocation={{ property: contractData.property!, unit: contractData.unitCode!, room: contractData.roomCode }}
-                                />
-                            )}
-                        </CardHeader>
-                        <CardContent>
-                            {contractData.id && (unitData.property || roomData) ? (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <Card>
-                                        <CardHeader><CardTitle>Contract Information</CardTitle></CardHeader>
-                                        <CardContent className="space-y-2 text-sm">
-                                            <div className="flex justify-between"><span>Contract No:</span> <span className="font-medium">{contractData.contractNo}</span></div>
-                                            <div className="flex justify-between"><span>Start Date:</span> <span className="font-medium">{format(new Date(contractData.startDate!), 'PP')}</span></div>
-                                            <div className="flex justify-between"><span>End Date:</span> <span className="font-medium">{format(new Date(contractData.endDate!), 'PP')}</span></div>
-                                            <div className="flex justify-between"><span>Total Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(contractData.totalRent || 0)}</span></div>
-                                            <div className="flex justify-between items-center"><span>Status:</span> <Badge>{contractData.status}</Badge></div>
-                                            <Button asChild className="w-full mt-4">
-                                                <Link href={`/tenancy/contract?id=${contractData.id}`}>View Full Contract</Link>
-                                            </Button>
-                                        </CardContent>
-                                    </Card>
-                                    <Card>
-                                        <CardHeader><CardTitle>Property & Unit</CardTitle></CardHeader>
-                                        <CardContent className="space-y-2 text-sm">
-                                            <div className="flex justify-between"><span>Property:</span> <span className="font-medium">{unitData.property?.name}</span></div>
-                                            <div className="flex justify-between"><span>Unit Code:</span> <span className="font-medium">{unitData.unitCode}</span></div>
-                                            <div className="flex justify-between"><span>Unit Type:</span> <span className="font-medium">{unitData.unitType}</span></div>
-                                            <div className="flex justify-between"><span>Floor:</span> <span className="font-medium">{unitData.floor}</span></div>
-                                            <div className="flex justify-between"><span>Address:</span> <span className="font-medium text-right">{unitData.property?.address1}</span></div>
-                                            <Button asChild className="w-full mt-4">
-                                                <Link href={`/property/properties?code=${unitData.propertyCode}`}>View Full Property</Link>
-                                            </Button>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {roomData.id && (
-                                        <Card>
-                                            <CardHeader className="p-4"><CardTitle className="text-base">Room Details</CardTitle></CardHeader>
-                                            <CardContent className="space-y-2 text-sm p-4">
-                                                <div className="flex justify-between"><span>Room Code:</span> <span className="font-medium">{roomData.roomCode}</span></div>
-                                                <div className="flex justify-between"><span>Room Name:</span> <span className="font-medium">{roomData.roomName}</span></div>
-                                                <div className="flex justify-between"><span>Room Type:</span> <span className="font-medium">{roomData.roomType}</span></div>
-                                                <div className="flex justify-between"><span>Rent:</span> <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(roomData.rentAmount || 0)} / {roomData.rentFrequency}</span></div>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                </div>
-                            </div>
-                            ) : (
-                                <div className="text-center py-10 text-muted-foreground">
-                                    <Home className="mx-auto h-12 w-12" />
-                                    <p className="mt-4">No rental information linked to this tenant's contract.</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
                 </TabsContent>
                 <TabsContent value="security-deposit">
                     <Card>
@@ -751,7 +523,7 @@ export default function TenantPage() {
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="subscription">
+                 <TabsContent value="subscription">
                     <Card>
                         <CardHeader>
                             <CardTitle>Subscription Management</CardTitle>
@@ -791,72 +563,81 @@ export default function TenantPage() {
                         onRefresh={() => fetchInvoices(form.getValues('code'))}
                     />
                 </TabsContent>
-                <TabsContent value="pdc">
+                 <TabsContent value="attachments">
                     <Card>
                         <CardHeader>
-                            <CardTitle>PDC Payment Schedule</CardTitle>
-                            <CardDescription>
-                                This schedule is linked to Contract No: 
-                                <Button variant="link" className="p-1" asChild>
-                                    <Link href={`/tenancy/contract?id=${contractData.id}`}>{contractData.contractNo}</Link>
-                                </Button>
-                            </CardDescription>
+                            <CardTitle>Attachments</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Installment</TableHead>
-                                        <TableHead>Due Date</TableHead>
-                                        <TableHead className="text-right">Amount</TableHead>
-                                        <TableHead className="text-center">Status</TableHead>
+                                    <TableHead>Attachment Name</TableHead>
+                                    <TableHead>File / Link</TableHead>
+                                    <TableHead>Action</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {contractData.paymentSchedule && contractData.paymentSchedule.length > 0 ? (
-                                        contractData.paymentSchedule.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{item.installment}</TableCell>
-                                                <TableCell>{format(new Date(item.dueDate), 'PP')}</TableCell>
-                                                <TableCell className="text-right font-medium">
-                                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.amount)}
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge variant={item.status === 'paid' ? 'default' : 'secondary'} className={item.status === 'paid' ? 'bg-green-500/20 text-green-700 border-transparent' : ''}>
-                                                        {item.status}
-                                                    </Badge>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center">
-                                                No payment schedule found for the linked contract.
+                                    {attachments.map((item, index) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell>
+                                                <Input 
+                                                    value={item.name} 
+                                                    onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                                    disabled={!isEditing} 
+                                                    placeholder="e.g. Passport Copy"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    {item.isLink ? (
+                                                        <Input
+                                                            type="text"
+                                                            placeholder="https://example.com"
+                                                            value={typeof item.file === 'string' ? item.file : ''}
+                                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                            disabled={!isEditing}
+                                                        />
+                                                    ) : (
+                                                        <Input 
+                                                            type="file" 
+                                                            className="text-sm w-full" 
+                                                            ref={(el) => (fileInputRefs.current[index] = el)}
+                                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                            disabled={!isEditing}
+                                                        />
+                                                    )}
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                                        {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                                    </Button>
+                                                </div>
+                                                {item.url && !item.isLink && (
+                                                    <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                        View Uploaded File
+                                                    </Link>
+                                                )}
+                                                {item.file && typeof item.file === 'string' && (
+                                                    item.isLink && item.file.startsWith('http') ? (
+                                                        <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                            Open Link
+                                                        </Link>
+                                                    ) : (
+                                                        !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                                    )
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                             </TableCell>
                                         </TableRow>
-                                    )}
+                                    ))}
                                 </TableBody>
                             </Table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="termination">
-                    <Card>
-                        <CardHeader><CardTitle>Contract Termination</CardTitle></CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <Label>Termination Date</Label>
-                                <Input type="date" disabled={!isEditing}/>
-                            </div>
-                            <div>
-                                <Label>Reason for Termination</Label>
-                                <Textarea placeholder="e.g., Early exit, end of contract..." disabled={!isEditing}/>
-                            </div>
-                            <div>
-                                <Label>Final Settlement Amount</Label>
-                                <Input type="number" placeholder="0.00" disabled={!isEditing} />
-                            </div>
-                            <Button variant="destructive" disabled={!isEditing}>Terminate Contract</Button>
+                            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                                <Plus className="mr-2 h-4 w-4"/> Add Attachment
+                            </Button>
                         </CardContent>
                     </Card>
                 </TabsContent>
