@@ -147,7 +147,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
                  
                  const existingContractIndex = allContracts.findIndex(c => c.contractNo === implicitContract.contractNo);
                  if (existingContractIndex > -1) {
-                    allContracts[existingContractIndex] = { ...allContracts[existingContractIndex], ...implicitContract };
+                    allContracts[existingContractIndex] = { ...allContracts[existingContractIndex], ...implicitContract, id: allContracts[existingContractIndex].id };
                  } else {
                     allContracts.push({ ...implicitContract, id: `SUB-CON-${Date.now()}` });
                  }
