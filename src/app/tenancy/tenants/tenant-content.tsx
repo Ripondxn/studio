@@ -15,12 +15,13 @@ export function TenantContent({ tenants }: { tenants: Tenant[] }) {
   const [filter, setFilter] = React.useState('');
 
   const filteredTenants = React.useMemo(() => {
-    if (!filter) {
-      return tenants;
-    }
-    return tenants.filter(tenant =>
+    const filtered = tenants.filter(tenant =>
       tenant.name.toLowerCase().includes(filter.toLowerCase())
     );
+
+    // Sort by tenant code in ascending order for both grid and list views
+    return filtered.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' }));
+
   }, [tenants, filter]);
 
   return (
