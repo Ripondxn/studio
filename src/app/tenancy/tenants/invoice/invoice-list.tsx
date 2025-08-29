@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign } from 'lucide-react';
@@ -15,6 +16,9 @@ import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
 import { type Tenant } from '../../schema';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { cancelSubscription } from '../actions';
+import { useToast } from '@/hooks/use-toast';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -29,8 +33,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
+    const [isCancellingSub, setIsCancellingSub] = useState(false);
     const router = useRouter();
     const { formatCurrency } = useCurrency();
+    const { toast } = useToast();
     
     const handleCreateClick = () => {
         setSelectedInvoice(null);
@@ -81,6 +87,18 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
             return acc;
         }, { totalBilled: 0, totalPaid: 0 });
     }, [invoices]);
+    
+    const handleCancelSubscription = async () => {
+        setIsCancellingSub(true);
+        const result = await cancelSubscription(tenant.code);
+        if (result.success) {
+            toast({ title: "Subscription Cancelled", description: "The tenant's subscription has been removed."});
+            onRefresh();
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        }
+        setIsCancellingSub(false);
+    };
 
 
     return (
@@ -92,6 +110,26 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                         <CardDescription>Manage subscription invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
+                         {tenant.subscriptionStatus && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm" disabled={isCancellingSub}>
+                                        {isCancellingSub && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Cancel Subscription
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>This will remove the tenant's subscription status and amount. This action cannot be undone.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleCancelSubscription}>Continue</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                         )}
                         <Button onClick={() => handleRecordPayment()}>
                             <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                         </Button>
