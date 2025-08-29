@@ -14,7 +14,7 @@ export const tenantSchema = z.object({
   code: z.string().min(1, "Code is required."),
   name: z.string().min(1, "Name is required."),
   mobile: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().email().optional().or(z.literal('')),
   address: z.string().optional(),
   contractNo: z.string().optional(),
   contractId: z.string().nullable().optional(),
@@ -28,6 +28,7 @@ export const tenantSchema = z.object({
   property: z.string().optional(),
   unitCode: z.string().optional(),
   roomCode: z.string().optional(),
+  isSubscriptionActive: z.boolean().optional(),
   subscriptionStatus: z.enum(['Yearly', 'Monthly']).optional(),
   subscriptionAmount: z.number().optional(),
 });

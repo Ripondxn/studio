@@ -234,6 +234,7 @@ export async function cancelSubscription(tenantCode: string) {
             return { success: false, error: 'Tenant not found.' };
         }
 
+        allTenants[index].tenantData.isSubscriptionActive = false;
         allTenants[index].tenantData.subscriptionStatus = undefined;
         allTenants[index].tenantData.subscriptionAmount = 0;
         

@@ -6,6 +6,7 @@ import { Plus, History } from 'lucide-react';
 import { getAllTenants } from './actions';
 import { TenantContent } from './tenant-content';
 import { Tenant } from './schema';
+import { getMovementHistory } from '@/app/admin/contract-continuity/actions';
 
 export default async function TenantsPage() {
   const tenants: Tenant[] = await getAllTenants();
@@ -19,7 +20,7 @@ export default async function TenantsPage() {
         </div>
         <div className="flex items-center gap-2">
             <Button asChild variant="outline">
-                <Link href="/tenancy/movement-history">
+                <Link href="/admin/contract-continuity">
                     <History className="mr-2 h-4 w-4" /> Movement History
                 </Link>
             </Button>

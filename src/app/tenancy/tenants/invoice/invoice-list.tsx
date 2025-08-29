@@ -60,7 +60,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
         
         setPaymentDefaultValues({
             type: 'Receipt',
-            partyType: 'Tenant', // Invoices are for tenants/customers
+            partyType: 'Customer', // Invoices are for tenants/customers
             partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
@@ -132,7 +132,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                         <Button onClick={() => handleRecordPayment()}>
                             <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                         </Button>
-                        <Button variant="outline" onClick={handleCreateClick}>
+                        <Button variant="outline" onClick={handleCreateClick} disabled={!tenant.isSubscriptionActive}>
                             <Plus className="mr-2 h-4 w-4" /> Create Invoice
                         </Button>
                     </div>

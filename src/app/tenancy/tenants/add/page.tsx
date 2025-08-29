@@ -55,7 +55,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData, cancelSubscription } from '../actions';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getRoomDetails, moveTenant, getLatestContractForTenant, getUnitDetails } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -69,8 +69,8 @@ import { Switch } from '@/components/ui/switch';
 import { MoveTenantDialog } from './move-tenant-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
 import { Combobox } from '@/components/ui/combobox';
-import { InvoiceList } from '../invoice/invoice-list';
-import { type Invoice } from '../invoice/schema';
+import { InvoiceList } from '@/app/tenancy/customer/invoice/invoice-list';
+import { type Invoice } from '../customer/invoice/schema';
 import { getInvoicesForTenant } from '../invoice/actions';
 import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -113,6 +113,7 @@ const initialTenantData: Tenant = {
     property: '',
     unitCode: '',
     roomCode: '',
+    isSubscriptionActive: false,
     subscriptionStatus: undefined,
     subscriptionAmount: 0,
 };
@@ -143,7 +144,7 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const tenantCode = form.watch('code');
+  const vendorCode = form.watch('code');
   const vendorName = form.watch('name');
 
   const fetchInvoices = useCallback(async (tenantCode: string) => {
@@ -288,11 +289,11 @@ export default function TenantPage() {
     setIsEditing(true);
   }
 
-  const onSave = async (formData: Tenant) => {
+  const onSave = async (data: Tenant) => {
     setIsSaving(true);
     try {
       const dataToSave = {
-        tenantData: formData,
+        tenantData: data,
         attachments: attachments.map(a => ({ 
             id: a.id, 
             name: a.name, 
@@ -306,13 +307,13 @@ export default function TenantPage() {
       if (result.success && result.data) {
         toast({
           title: "Success",
-          description: `Tenant "${formData.name}" saved successfully.`,
+          description: `Tenant "${data.name}" saved successfully.`,
         });
         setIsEditing(false);
         if (isNewRecord) {
             router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
-            form.reset(formData);
+            form.reset(data);
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -363,6 +364,8 @@ export default function TenantPage() {
   };
   
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${form.watch('name')}`;
+
+  const watchedIsSubActive = form.watch('isSubscriptionActive');
 
   return (
     <Form {...form}>
@@ -429,7 +432,7 @@ export default function TenantPage() {
                     <TabsTrigger value="info">Tenant Information</TabsTrigger>
                     <TabsTrigger value="rental-details" disabled={isNewRecord}>Rental Details</TabsTrigger>
                     <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
-                    <TabsTrigger value="subscription-invoice" disabled={isNewRecord}>Subscription Invoice</TabsTrigger>
+                    <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
                     <TabsTrigger value="pdc" disabled={isNewRecord}>PDC Schedule</TabsTrigger>
                     <TabsTrigger value="termination" disabled={isNewRecord}>Termination</TabsTrigger>
                 </TabsList>
@@ -557,10 +560,6 @@ export default function TenantPage() {
                                 <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} {...field} onSelect={(value) => { field.onChange(value); form.setValue('unitCode', ''); form.setValue('roomCode','');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
                                 <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} {...field} onSelect={(value) => { field.onChange(value); form.setValue('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty} /><FormMessage /></FormItem>)} />
                                 <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room</Label><Combobox options={lookups.rooms} {...field} onSelect={field.onChange} placeholder="Select room" disabled={!isEditing || !watchedUnit} /><FormMessage /></FormItem>)} />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                                <FormField control={form.control} name="subscriptionStatus" render={({ field }) => (<FormItem><Label>Subscription Status</Label><Select onValueChange={field.onChange} value={field.value} disabled={!isEditing}><FormControl><SelectTrigger><SelectValue placeholder="Select Subscription Status"/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yearly">Yearly</SelectItem><SelectItem value="Monthly">Monthly</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
-                                <FormField control={form.control} name="subscriptionAmount" render={({ field }) => (<FormItem><Label>Subscription Amount</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} disabled={!isEditing}/></FormControl><FormMessage /></FormItem>)} />
                             </div>
                             </CardContent>
                         </Card>
@@ -752,7 +751,39 @@ export default function TenantPage() {
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="subscription-invoice">
+                <TabsContent value="subscription">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Subscription Management</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex items-center space-x-2">
+                                <FormField
+                                control={form.control}
+                                name="isSubscriptionActive"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center space-x-2">
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                                disabled={!isEditing}
+                                            />
+                                        </FormControl>
+                                        <Label htmlFor="isSubscriptionActive" className="!mt-0">
+                                            Enable Subscription
+                                        </Label>
+                                    </FormItem>
+                                )}
+                                />
+                            </div>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField control={form.control} name="subscriptionStatus" render={({ field }) => (<FormItem><Label>Subscription Type</Label><Select onValueChange={field.onChange} value={field.value} disabled={!isEditing || !watchedIsSubActive}><FormControl><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="Yearly">Yearly</SelectItem><SelectItem value="Monthly">Monthly</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
+                                <FormField control={form.control} name="subscriptionAmount" render={({ field }) => (<FormItem><Label>Subscription Amount</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} disabled={!isEditing || !watchedIsSubActive}/></FormControl><FormMessage /></FormItem>)} />
+                             </div>
+                        </CardContent>
+                    </Card>
+
                     <InvoiceList
                         tenant={form.getValues()}
                         invoices={invoices}
