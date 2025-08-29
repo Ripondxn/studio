@@ -11,7 +11,7 @@
     "paymentFrom": "Bank",
     "referenceType": "Receipt Book",
     "referenceNo": "Book: 002-3252",
-    "description": "Payment for Receipt Book: Book: 002, Receipt: 3252",
+    "description": "Payment received via Receipt Voucher #Book: 002-3252. Collected by Super Admin.",
     "status": "Cancelled",
     "createdByUser": "Super Admin",
     "invoiceAllocations": [],
