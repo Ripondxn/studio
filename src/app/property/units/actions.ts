@@ -46,7 +46,7 @@ export async function getUnits() {
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
     // Units fully rented by a single contract
-    const unitLevelContracts = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
+    const unitLevelContracts = new Set(activeContracts.filter(c => c.unitCode && !c.roomCode).map(c => c.unitCode));
 
     // Tenants with active subscriptions for a full unit
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
