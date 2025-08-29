@@ -1,4 +1,3 @@
-
 [
   {
     "id": "T1719827401001",
@@ -18,9 +17,9 @@
       "property": "LT-C38",
       "unitCode": "F101",
       "roomCode": "Room-1/B",
-      "isSubscriptionActive": false,
-      "subscriptionStatus": null,
-      "subscriptionAmount": 0
+      "isSubscriptionActive": true,
+      "subscriptionStatus": "Monthly",
+      "subscriptionAmount": 1300
     },
     "attachments": []
   },
