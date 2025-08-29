@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { Plus, Loader2, DollarSign, Edit, Save, X, RotateCw } from 'lucide-react
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
-import { GeneralInvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
+import { InvoiceDialog as GeneralInvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
