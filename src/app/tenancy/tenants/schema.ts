@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const attachmentSchema = z.object({
@@ -31,6 +32,7 @@ export const tenantSchema = z.object({
   isSubscriptionActive: z.boolean().optional(),
   subscriptionStatus: z.enum(['Yearly', 'Monthly']).optional(),
   subscriptionAmount: z.number().optional(),
+  dueBalance: z.number().optional(),
 });
 
 export type Tenant = z.infer<typeof tenantSchema>;

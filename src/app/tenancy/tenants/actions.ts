@@ -9,12 +9,15 @@ import { type Contract } from '../contract/schema';
 import { type Unit } from '@/app/property/units/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+
 
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
 const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
+const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
 
 async function readData(filePath: string) {
@@ -38,6 +41,11 @@ async function getContracts(): Promise<Contract[]> {
     return await readData(contractsFilePath);
 }
 
+async function getInvoices(): Promise<Invoice[]> {
+    return await readData(invoicesFilePath);
+}
+
+
 async function writeTenants(data: any) {
     await fs.writeFile(tenantsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
@@ -46,20 +54,41 @@ async function writeTenants(data: any) {
 export async function getAllTenants() {
     const tenants = await getTenants();
     const contracts = await getContracts();
+    const invoices = await getInvoices();
     
-    // Create a map of tenantCode to their contract.
+    // Create maps for efficient lookups
     const contractsByTenantCode = new Map<string, Contract>();
     for (const contract of contracts) {
         if(contract.tenantCode) {
-            contractsByTenantCode.set(contract.tenantCode, contract);
+             if (!contractsByTenantCode.has(contract.tenantCode) || new Date(contract.endDate) > new Date(contractsByTenantCode.get(contract.tenantCode)!.endDate)) {
+                contractsByTenantCode.set(contract.tenantCode, contract);
+            }
+        }
+    }
+
+    const invoiceBalanceByCustomer = new Map<string, number>();
+    for (const invoice of invoices) {
+        if (invoice.status !== 'Paid' && invoice.status !== 'Cancelled') {
+            const currentBalance = invoiceBalanceByCustomer.get(invoice.customerCode) || 0;
+            const remainingBalance = invoice.total - (invoice.amountPaid || 0);
+            invoiceBalanceByCustomer.set(invoice.customerCode, currentBalance + remainingBalance);
         }
     }
 
     return tenants
-        .filter((l: any) => l.tenantData && l.tenantData.code) // Safeguard against missing data
+        .filter((l: any) => l.tenantData && l.tenantData.code)
         .map((l: any) => {
             const tenantCode = l.tenantData.code;
             const contract = contractsByTenantCode.get(tenantCode);
+            let dueBalance = 0;
+
+            if (l.tenantData.isSubscriptionActive) {
+                dueBalance = invoiceBalanceByCustomer.get(tenantCode) || 0;
+            } else if (contract) {
+                dueBalance = contract.paymentSchedule
+                    .filter(p => p.status === 'unpaid')
+                    .reduce((sum, p) => sum + p.amount, 0);
+            }
 
             return {
                 ...l.tenantData,
@@ -67,6 +96,7 @@ export async function getAllTenants() {
                 contractId: contract?.id || null,
                 contractNo: contract?.contractNo || null,
                 isSubscriptionActive: l.tenantData.isSubscriptionActive || false,
+                dueBalance,
             }
         });
 }

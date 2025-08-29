@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -30,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { deleteTenantData } from './actions';
 import { Tenant } from './schema';
 import { Badge } from '@/components/ui/badge';
+import { useCurrency } from '@/context/currency-context';
 
 const ActionsCell = ({ row }: { row: { original: Tenant } }) => {
   const tenant = row.original;
@@ -178,6 +180,16 @@ export const columns: ColumnDef<Tenant>[] = [
             </Badge>
         )
     }
+  },
+  {
+    accessorKey: 'dueBalance',
+    header: () => <div className="text-right">Due Balance</div>,
+    cell: function Cell({ row }) {
+        const { formatCurrency } = useCurrency();
+        const amount = row.original.dueBalance || 0;
+        const color = amount > 0 ? 'text-destructive' : 'text-muted-foreground';
+        return <div className={`text-right font-medium ${color}`}>{formatCurrency(amount)}</div>;
+    },
   },
   {
     accessorKey: 'mobile',

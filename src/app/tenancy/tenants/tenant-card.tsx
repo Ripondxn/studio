@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -10,10 +11,11 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, FileText, User, Repeat } from 'lucide-react';
+import { Mail, Phone, FileText, User, Repeat, DollarSign } from 'lucide-react';
 import type { Tenant } from './schema';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { useCurrency } from '@/context/currency-context';
 
 interface TenantCardProps {
   tenant: Tenant;
@@ -21,6 +23,7 @@ interface TenantCardProps {
 
 export function TenantCard({ tenant }: TenantCardProps) {
   const tenancyType = tenant.isSubscriptionActive ? 'Subscription' : 'Contract';
+  const { formatCurrency } = useCurrency();
 
   return (
     <Card className="flex flex-col">
@@ -61,6 +64,11 @@ export function TenantCard({ tenant }: TenantCardProps) {
                 </Button>
             </div>
         )}
+         <div className="flex items-center text-sm pt-2">
+            <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">Due Balance:</span>
+            <span className="font-semibold text-destructive ml-auto">{formatCurrency(tenant.dueBalance || 0)}</span>
+        </div>
       </CardContent>
       <CardFooter>
         <Button asChild variant="outline" className="w-full">
