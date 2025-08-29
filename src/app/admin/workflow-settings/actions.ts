@@ -43,8 +43,9 @@ export async function saveWorkflowSettings(data: WorkflowSettings) {
 
 export async function runInvoiceGeneration() {
     try {
+        // Directly call the logic from the cron route
         const result = await generateInvoices();
-        return result;
+        return { success: true, message: result.message };
     } catch (error) {
         console.error('Manual invoice generation failed:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred' };

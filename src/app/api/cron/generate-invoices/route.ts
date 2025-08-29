@@ -37,7 +37,7 @@ export async function generateInvoices() {
     
     const now = new Date();
     const currentMonthKey = format(now, 'yyyy-MM');
-    let invoicesCreatedCount = 0;
+    const createdFor: string[] = [];
 
     for (const tenant of activeSubscriptions) {
         const tenantData = tenant.tenantData;
@@ -74,11 +74,15 @@ export async function generateInvoices() {
             };
 
             await saveInvoice({ ...newInvoiceData, isAutoInvoiceNo: true }, 'Cron Job');
-            invoicesCreatedCount++;
+            createdFor.push(tenantData.name);
         }
     }
     
-    return { success: true, message: `Cron job completed. ${invoicesCreatedCount} new invoices created.` };
+    const message = createdFor.length > 0 
+        ? `Created ${createdFor.length} new invoices for: ${createdFor.join(', ')}.`
+        : 'No new invoices needed at this time.';
+        
+    return { success: true, message };
 
   } catch (error) {
     console.error('Cron job for invoice generation failed:', error);
