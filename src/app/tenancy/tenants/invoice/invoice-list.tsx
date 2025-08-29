@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -61,7 +60,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
         
         setPaymentDefaultValues({
             type: 'Receipt',
-            partyType: 'Customer',
+            partyType: 'Tenant', // Invoices are for tenants/customers
             partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',

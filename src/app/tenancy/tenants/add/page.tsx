@@ -1,10 +1,11 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
   CardContent,
@@ -72,8 +73,6 @@ import { InvoiceList } from '../invoice/invoice-list';
 import { type Invoice } from '../invoice/schema';
 import { getInvoicesForTenant } from '../invoice/actions';
 import { type Tenant, tenantSchema } from '../schema';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 type Attachment = {
@@ -143,6 +142,9 @@ export default function TenantPage() {
     resolver: zodResolver(tenantSchema),
     defaultValues: initialTenantData,
   });
+
+  const tenantCode = form.watch('code');
+  const vendorName = form.watch('name');
 
   const fetchInvoices = useCallback(async (tenantCode: string) => {
     if (!tenantCode) return;
@@ -281,7 +283,6 @@ export default function TenantPage() {
     }
     setAttachments(prev => prev.filter(item => item.id !== id));
   };
-
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -451,15 +452,12 @@ export default function TenantPage() {
                                         <FormControl>
                                             <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
                                         </FormControl>
-                                        <Button type="button" variant="outline" size="icon" onClick={() => handleFindClick(field.value)} disabled={!isEditing || isNewRecord}>
-                                            {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                                        </Button>
                                     </div>
                                     <FormMessage />
                                     </FormItem>
                                 )}
                                 />
-                                <div>
+                                <div className="md:col-start-2">
                                     <div className="flex items-center space-x-2 pt-6">
                                         <Switch
                                             id="auto-code-switch"
