@@ -48,10 +48,10 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { getTenantForProperty } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
+import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list';
@@ -64,6 +64,7 @@ import { MoveTenantDialog } from './move-tenant-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
 import { getLatestContractForTenant } from '../../contract/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 
 
 type Attachment = {
@@ -116,9 +117,6 @@ export default function TenantPage() {
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
-  const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [], tenants: [] });
-  const [isLoadingUnits, setIsLoadingUnits] = useState(false);
-  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
 
   const form = useForm<Tenant>({
@@ -154,21 +152,6 @@ export default function TenantPage() {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
         
         form.reset(fullTenantData);
-
-        if (fullTenantData.property) {
-            setIsLoadingUnits(true);
-            getUnitsForProperty(fullTenantData.property).then(unitsData => {
-                setLookups(prev => ({...prev, units: unitsData}));
-                setIsLoadingUnits(false);
-            });
-        }
-        if (fullTenantData.property && fullTenantData.unitCode) {
-            setIsLoadingRooms(true);
-            getRoomsForUnit(fullTenantData.property, fullTenantData.unitCode).then(roomsData => {
-                setLookups(prev => ({...prev, rooms: roomsData}));
-                setIsLoadingRooms(false);
-            });
-        }
         
         setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
         
@@ -201,14 +184,12 @@ export default function TenantPage() {
 
   useEffect(() => {
     const tenantCodeParam = searchParams.get('code');
-    getTenantLookups().then(data => setLookups(prev => ({...prev, ...data})));
     if (tenantCodeParam) {
       handleFindClick(tenantCodeParam);
     } else {
       handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
-
 
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
@@ -412,12 +393,12 @@ export default function TenantPage() {
                         name="code"
                         render={({ field }) => (
                             <FormItem>
-                            <Label htmlFor="code">Code</Label>
-                            <div className="flex items-end gap-2">
+                           <Label htmlFor="code">Code</Label>
+                           <div className="flex items-end gap-2">
                                 <FormControl>
                                     <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
                                 </FormControl>
-                                <div className="flex items-center space-x-2 pt-6">
+                                 <div className="flex items-center space-x-2 pt-6">
                                     <Switch
                                         id="auto-code-switch"
                                         checked={isAutoCode}
@@ -426,11 +407,11 @@ export default function TenantPage() {
                                     />
                                     <Label htmlFor="auto-code-switch">Auto</Label>
                                 </div>
-                            </div>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
+                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                          <FormField
                             control={form.control}
                             name="name"
