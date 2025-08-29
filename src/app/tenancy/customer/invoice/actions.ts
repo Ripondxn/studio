@@ -31,6 +31,23 @@ async function writeInvoices(data: Invoice[]) {
     await fs.writeFile(invoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+async function writeContracts(data: Contract[]) {
+    await fs.writeFile(contractsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+async function readContracts(): Promise<Contract[]> {
+    try {
+        await fs.access(contractsFilePath);
+        const data = await fs.readFile(contractsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            await writeContracts([]);
+            return [];
+        }
+        throw error;
+    }
+}
 
 export async function getInvoicesForCustomer(customerCode: string) {
     const allInvoices = await readInvoices();
@@ -74,7 +91,7 @@ export async function getNextGeneralInvoiceNumber() {
 }
 
 
-export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
+export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
     const { isAutoInvoiceNo, ...invoiceData } = data;
     const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
 
@@ -87,11 +104,12 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
         const isNew = !data.id;
         const validatedData = validation.data;
         let savedInvoice: Invoice;
+        const isSubscription = validatedData.items.some(item => item.description?.toLowerCase().includes('subscription'));
+
 
         if (isNew) {
             let newInvoiceNo = validatedData.invoiceNo;
             if (isAutoInvoiceNo || !newInvoiceNo) {
-                const isSubscription = validatedData.items.some(item => item.description?.toLowerCase().includes('subscription'));
                  newInvoiceNo = isSubscription ? await getNextSubscriptionInvoiceNumber() : await getNextGeneralInvoiceNumber();
             } else {
                 const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
@@ -108,6 +126,32 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
             };
             allInvoices.push(newInvoice);
             savedInvoice = newInvoice;
+            
+             // Create a corresponding financial transaction for the new invoice receivable.
+            const paymentResult = await addPayment({
+                type: 'Receipt',
+                date: newInvoice.invoiceDate,
+                partyType: newInvoice.customerCode.startsWith('T') ? 'Tenant' : 'Customer',
+                partyName: newInvoice.customerCode,
+                amount: newInvoice.total,
+                paymentMethod: 'Other', // 'Other' for invoice creation
+                referenceType: 'Invoice',
+                referenceNo: newInvoice.invoiceNo,
+                description: `Invoice ${newInvoice.invoiceNo} generated for ${newInvoice.customerName}`,
+                status: 'Received', // Final status after posting
+                createdByUser: createdBy,
+                property: newInvoice.property,
+                unitCode: newInvoice.unitCode,
+                roomCode: newInvoice.roomCode,
+                invoiceAllocations: [{ invoiceId: newInvoice.id, amount: newInvoice.total }],
+            });
+
+            if (!paymentResult.success) {
+                // If payment creation fails, we should ideally roll back the invoice creation.
+                // For this file-based system, we'll just return the error.
+                 return { success: false, error: `Failed to create financial transaction: ${paymentResult.error}` };
+            }
+
 
         } else {
             const index = allInvoices.findIndex(inv => inv.id === data.id);

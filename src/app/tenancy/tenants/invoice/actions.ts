@@ -91,7 +91,7 @@ export async function getNextGeneralInvoiceNumber() {
 }
 
 
-export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
+export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
     const { isAutoInvoiceNo, ...invoiceData } = data;
     const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
 
@@ -126,49 +126,32 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
             };
             allInvoices.push(newInvoice);
             savedInvoice = newInvoice;
-
-            if (isSubscription) {
-                 const allContracts = await readContracts();
-                 const implicitContract: Omit<Contract, 'id'> = {
-                    contractNo: `SUB-${newInvoice.customerCode}`,
-                    contractDate: newInvoice.invoiceDate,
-                    property: newInvoice.property,
-                    unitCode: newInvoice.unitCode,
-                    roomCode: newInvoice.roomCode,
-                    tenantCode: newInvoice.customerCode,
-                    tenantName: newInvoice.customerName,
-                    startDate: newInvoice.invoiceDate,
-                    endDate: newInvoice.dueDate,
-                    totalRent: newInvoice.total,
-                    paymentMode: 'cash',
-                    status: 'Renew',
-                    paymentSchedule: [{ installment: 1, dueDate: newInvoice.dueDate, amount: newInvoice.total, status: 'unpaid' }]
-                 };
-                 
-                 const existingContractIndex = allContracts.findIndex(c => c.contractNo === implicitContract.contractNo);
-                 if (existingContractIndex > -1) {
-                    allContracts[existingContractIndex] = { ...allContracts[existingContractIndex], ...implicitContract };
-                 } else {
-                    allContracts.push({ ...implicitContract, id: `SUB-CON-${Date.now()}` });
-                 }
-                 await writeContracts(allContracts);
-            }
-
-            // This part handles the financial transaction and should remain
-            await addPayment({
+            
+             // Create a corresponding financial transaction for the new invoice receivable.
+            const paymentResult = await addPayment({
                 type: 'Receipt',
                 date: newInvoice.invoiceDate,
-                partyType: 'Customer',
+                partyType: 'Tenant', // Invoices in this context are for tenants
                 partyName: newInvoice.customerCode,
                 amount: newInvoice.total,
-                paymentMethod: 'Other',
+                paymentMethod: 'Other', // 'Other' for invoice creation
                 referenceType: 'Invoice',
                 referenceNo: newInvoice.invoiceNo,
-                description: `Invoice generated for ${newInvoice.customerName}`,
-                status: 'Received',
+                description: `Invoice ${newInvoice.invoiceNo} generated for ${newInvoice.customerName}`,
+                status: 'Received', // Final status after posting
                 createdByUser: createdBy,
+                property: newInvoice.property,
+                unitCode: newInvoice.unitCode,
+                roomCode: newInvoice.roomCode,
                 invoiceAllocations: [{ invoiceId: newInvoice.id, amount: newInvoice.total }],
             });
+
+            if (!paymentResult.success) {
+                // If payment creation fails, we should ideally roll back the invoice creation.
+                // For this file-based system, we'll just return the error.
+                 return { success: false, error: `Failed to create financial transaction: ${paymentResult.error}` };
+            }
+
 
         } else {
             const index = allInvoices.findIndex(inv => inv.id === data.id);
@@ -181,7 +164,6 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
 
         await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
-        revalidatePath(`/tenancy/customer/add?code=${data.customerCode}`);
         revalidatePath('/property/units/vacant');
         revalidatePath('/property/properties');
         return { success: true, data: savedInvoice };
@@ -200,7 +182,6 @@ export async function deleteInvoice(invoiceId: string) {
 
         const updatedInvoices = allInvoices.filter(inv => inv.id !== invoiceId);
         await writeInvoices(updatedInvoices);
-        revalidatePath(`/tenancy/customer/add?code=${invoiceToDelete.customerCode}`);
         revalidatePath(`/tenancy/tenants/add?code=${invoiceToDelete.customerCode}`);
         return { success: true };
     } catch (error) {
@@ -217,7 +198,6 @@ export async function updateInvoiceStatus(invoiceId: string, status: Invoice['st
         }
         allInvoices[index].status = status;
         await writeInvoices(allInvoices);
-        revalidatePath(`/tenancy/customer/add?code=${allInvoices[index].customerCode}`);
         revalidatePath(`/tenancy/tenants/add?code=${allInvoices[index].customerCode}`);
         return { success: true };
     } catch (error) {
@@ -244,7 +224,6 @@ export async function applyPaymentToInvoices(invoicePayments: { invoiceId: strin
         }
 
         await writeInvoices(allInvoices);
-        revalidatePath(`/tenancy/customer/add?code=${customerCode}`);
         revalidatePath(`/tenancy/tenants/add?code=${customerCode}`);
         return { success: true };
     } catch (error) {
