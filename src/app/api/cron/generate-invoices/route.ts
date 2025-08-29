@@ -4,11 +4,12 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
-import { type Invoice } from '@/app/tenancy/tenants/invoice/schema';
-import { saveInvoice } from '@/app/tenancy/tenants/invoice/actions';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { saveInvoice } from '@/app/tenancy/customer/invoice/actions';
+import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
-const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/invoice/invoices-data.json');
+const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
 async function readData<T>(filePath: string): Promise<T[]> {
     try {
@@ -24,6 +25,11 @@ async function readData<T>(filePath: string): Promise<T[]> {
 
 export async function GET(request: Request) {
   try {
+    const workflowSettings = await getWorkflowSettings();
+    if (!workflowSettings.automaticInvoiceGenerationEnabled) {
+      return NextResponse.json({ success: true, message: 'Automatic invoice generation is disabled by the administrator.' });
+    }
+    
     const tenants = await readData<{tenantData: Tenant}>(tenantsFilePath);
     const existingInvoices = await readData<Invoice>(invoicesFilePath);
 

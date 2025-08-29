@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Route } from 'lucide-react';
+import { Loader2, Save, Route, Receipt } from 'lucide-react';
 import { saveWorkflowSettings, type WorkflowSettings } from './actions';
 
 export function WorkflowSettingsClient({ initialSettings }: { initialSettings: WorkflowSettings }) {
@@ -63,13 +63,38 @@ export function WorkflowSettingsClient({ initialSettings }: { initialSettings: W
                             />
                         </div>
                     </CardContent>
-                     <CardFooter>
-                         <Button onClick={handleSettingsSave} disabled={isSaving}>
-                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                             Save Settings
-                        </Button>
-                    </CardFooter>
                 </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Subscription Invoice Automation</CardTitle>
+                        <CardDescription>
+                            Control the automatic generation of recurring subscription invoices.
+                        </CardDescription>
+                    </CardHeader>
+                     <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                                <Label htmlFor="invoice-automation" className="text-base">Enable Automatic Invoicing</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    When enabled, the system will automatically generate invoices for active subscriptions at the start of each month.
+                                </p>
+                            </div>
+                            <Switch
+                                id="invoice-automation"
+                                checked={settings.automaticInvoiceGenerationEnabled}
+                                onCheckedChange={(checked) => setSettings(s => ({...s, automaticInvoiceGenerationEnabled: checked}))}
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="flex justify-end">
+                    <Button onClick={handleSettingsSave} disabled={isSaving}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save All Settings
+                    </Button>
+                </div>
             </div>
         </div>
     );

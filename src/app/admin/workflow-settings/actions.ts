@@ -6,12 +6,14 @@ import path from 'path';
 
 export type WorkflowSettings = {
     approvalProcessEnabled: boolean;
+    automaticInvoiceGenerationEnabled: boolean;
 };
 
 const settingsFilePath = path.join(process.cwd(), 'src/app/admin/workflow-settings/settings.json');
 
 const defaultSettings: WorkflowSettings = {
-    approvalProcessEnabled: true // Default to enabled for security
+    approvalProcessEnabled: true, // Default to enabled for security
+    automaticInvoiceGenerationEnabled: true,
 };
 
 export async function getWorkflowSettings(): Promise<WorkflowSettings> {

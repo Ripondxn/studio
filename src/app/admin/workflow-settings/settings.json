@@ -1,3 +1,5 @@
+
 {
-  "approvalProcessEnabled": false
+  "approvalProcessEnabled": false,
+  "automaticInvoiceGenerationEnabled": true
 }
