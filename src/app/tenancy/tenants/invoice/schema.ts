@@ -3,3 +3,4 @@ import { invoiceSchema, invoiceItemSchema } from '@/app/tenancy/customer/invoice
 
 export type Invoice = z.infer<typeof invoiceSchema>;
 export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
+export { invoiceSchema };
