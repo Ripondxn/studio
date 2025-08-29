@@ -129,6 +129,11 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (invoice:
           cell: ({ row }) => format(new Date(row.original.dueDate), 'PP'),
       },
       {
+          accessorKey: 'property',
+          header: 'Property',
+          cell: ({row}) => row.original.property || <span className="text-muted-foreground">N/A</span>
+      },
+      {
           accessorKey: 'unitCode',
           header: 'Unit',
           cell: ({row}) => {
