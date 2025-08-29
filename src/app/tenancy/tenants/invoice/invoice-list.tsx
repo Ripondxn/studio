@@ -9,6 +9,7 @@ import { Plus, Loader2, DollarSign } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
+import { InvoiceDialog as GeneralInvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -29,6 +30,7 @@ interface InvoiceListProps {
 
 export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceListProps) {
     const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+    const [isGeneralInvoiceDialogOpen, setIsGeneralInvoiceDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -41,7 +43,11 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
-        setIsInvoiceDialogOpen(true);
+        if (tenant.isSubscriptionActive) {
+            setIsInvoiceDialogOpen(true);
+        } else {
+            setIsGeneralInvoiceDialogOpen(true);
+        }
     }
     
     const handleEditClick = (invoice: Invoice) => {
@@ -133,8 +139,9 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                         <Button onClick={() => handleRecordPayment()}>
                             <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                         </Button>
-                        <Button variant="outline" onClick={handleCreateClick} disabled={!tenant.isSubscriptionActive}>
-                            <Plus className="mr-2 h-4 w-4" /> Create Invoice
+                        <Button variant="outline" onClick={handleCreateClick}>
+                            <Plus className="mr-2 h-4 w-4" /> 
+                            {tenant.isSubscriptionActive ? 'Create Subscription Invoice' : 'Create Invoice'}
                         </Button>
                     </div>
                 </div>
@@ -167,6 +174,15 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                     setIsOpen={setIsInvoiceDialogOpen}
                     invoice={selectedInvoice}
                     tenant={tenant}
+                    onSuccess={handleSuccess}
+                    isViewMode={isViewMode}
+                />
+                
+                 <GeneralInvoiceDialog
+                    isOpen={isGeneralInvoiceDialogOpen}
+                    setIsOpen={setIsGeneralInvoiceDialogOpen}
+                    invoice={selectedInvoice}
+                    customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
                     isViewMode={isViewMode}
                 />
