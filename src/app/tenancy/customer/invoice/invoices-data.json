@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "invoiceNo": "SUB-INV-0001",
+    "customerCode": "T0002",
+    "customerName": "Tanvir Ahmed",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/A",
+    "invoiceDate": "2025-08-29",
+    "dueDate": "2025-08-29",
+    "items": [
+      {
+        "id": "item-1756495952182",
+        "description": "Monthly Subscription",
+        "quantity": 1,
+        "unitPrice": 1100,
+        "total": 1100
+      }
+    ],
+    "subTotal": 1100,
+    "tax": 0,
+    "taxType": "exclusive",
+    "taxRate": 0,
+    "total": 1100,
+    "amountPaid": 0,
+    "status": "Draft",
+    "notes": "",
+    "id": "INV-1756495954204"
+  }
+]

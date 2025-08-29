@@ -162,7 +162,7 @@ export const columns: ColumnDef<Tenant>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Code
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="mr-2 h-4 w-4" />
         </Button>
       );
     },
