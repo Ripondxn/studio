@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, Pencil, Trash2, MoreHorizontal, FileText, Repeat } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -29,6 +29,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { deleteTenantData } from './actions';
 import { Tenant } from './schema';
+import { Badge } from '@/components/ui/badge';
 
 const ActionsCell = ({ row }: { row: { original: Tenant } }) => {
   const tenant = row.original;
@@ -162,6 +163,21 @@ export const columns: ColumnDef<Tenant>[] = [
   {
     accessorKey: 'name',
     header: 'Name',
+  },
+   {
+    accessorKey: 'isSubscriptionActive',
+    header: 'Tenancy Type',
+    cell: ({ row }) => {
+        const isSubscription = row.getValue('isSubscriptionActive');
+        const type = isSubscription ? 'Subscription' : 'Contract';
+        const Icon = isSubscription ? Repeat : FileText;
+        return (
+            <Badge variant={isSubscription ? 'secondary' : 'outline'} className="whitespace-nowrap">
+                <Icon className="mr-1 h-3 w-3" />
+                {type} Based
+            </Badge>
+        )
+    }
   },
   {
     accessorKey: 'mobile',

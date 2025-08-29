@@ -10,15 +10,17 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, FileText, User } from 'lucide-react';
+import { Mail, Phone, FileText, User, Repeat } from 'lucide-react';
 import type { Tenant } from './schema';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 interface TenantCardProps {
   tenant: Tenant;
 }
 
 export function TenantCard({ tenant }: TenantCardProps) {
+  const tenancyType = tenant.isSubscriptionActive ? 'Subscription' : 'Contract';
 
   return (
     <Card className="flex flex-col">
@@ -32,6 +34,10 @@ export function TenantCard({ tenant }: TenantCardProps) {
               <CardDescription>{tenant.code}</CardDescription>
               <CardTitle className="text-lg">{tenant.name}</CardTitle>
           </div>
+          <Badge variant={tenancyType === 'Subscription' ? 'secondary' : 'outline'} className="whitespace-nowrap">
+            {tenancyType === 'Subscription' && <Repeat className="mr-1 h-3 w-3" />}
+            {tenancyType} Based
+          </Badge>
       </CardHeader>
       <CardContent className="space-y-3 flex-grow">
         {tenant.mobile && (

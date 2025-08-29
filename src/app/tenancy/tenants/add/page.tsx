@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -48,7 +47,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { getTenantForProperty } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
@@ -62,6 +61,8 @@ import { Combobox } from '@/components/ui/combobox';
 import { Separator } from '@/components/ui/separator';
 import { MoveTenantDialog } from '../add/move-tenant-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+
 
 type Attachment = {
   id: number;
@@ -521,12 +522,23 @@ export default function TenantPage() {
                             </FormItem>
                         )}
                         />
+                         <FormField
+                            control={form.control}
+                            name="contractNo"
+                            render={({ field }) => (
+                            <FormItem>
+                                <Label htmlFor="contractNo">Contract No</Label>
+                                <FormControl><Input {...field} disabled /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
                     </div>
                      <Separator className="my-6" />
                      <CardTitle>Rented Property</CardTitle>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { form.setValue('property', value); form.setValue('unitCode', ''); form.setValue('roomCode','');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
-                        <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={value => {form.setValue('unitCode', value); form.setValue('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty || isLoadingUnits} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => { form.setValue('property', value); form.setValue('unitCode', ''); form.setValue('roomCode','');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={(value) => {form.setValue('unitCode', value); form.setValue('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty || isLoadingUnits} /><FormMessage /></FormItem>)} />
                         <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={(value) => form.setValue('roomCode', value)} placeholder="Select room" disabled={!isEditing || !watchedUnit || isLoadingRooms} /><FormMessage /></FormItem>)} />
                      </div>
                     </CardContent>
