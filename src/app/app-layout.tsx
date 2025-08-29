@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -51,6 +50,7 @@ import {
   FileText as ReportIcon,
   AlertTriangle,
   KeyRound,
+  Eraser,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -164,6 +164,7 @@ const navLinks = [
             { href: '/admin/contract-continuity', label: 'Contract Continuity' },
             { href: '/admin/license', label: 'License Settings' },
             { href: '/admin/developer-credit', label: 'Developer Credit' },
+            { href: '/admin/reset-data', label: 'Reset Data' },
         ]
     },
 ];
