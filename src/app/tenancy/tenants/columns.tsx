@@ -229,8 +229,8 @@ export const columns: ColumnDef<Tenant>[] = [
     }
   },
   {
-    id: 'actions',
-    header: 'Action',
+    id: 'createDocument',
+    header: 'Create Document',
     cell: ({ row }) => {
         const tenant = row.original;
         if(tenant.isSubscriptionActive) {
@@ -250,5 +250,10 @@ export const columns: ColumnDef<Tenant>[] = [
             </Button>
         )
     },
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => <ActionsCell row={row} />,
   },
 ];
