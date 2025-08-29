@@ -3,11 +3,8 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { revalidatePath } from 'next/cache';
-import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { saveInvoice } from '@/app/tenancy/customer/invoice/actions';
-import { subscriptionInvoiceSchema } from './schema';
-import { z } from 'zod';
+import { type Invoice } from './schema';
 
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
