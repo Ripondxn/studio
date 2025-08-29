@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -28,19 +29,19 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Printer } from 'lucide-react';
 import { saveInvoice, getNextSubscriptionInvoiceNumber } from './actions';
-import { type Invoice, invoiceSchema } from './schema';
+import { type Invoice, subscriptionInvoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
 import { type Tenant } from '../../schema';
 
-type InvoiceFormData = z.infer<typeof invoiceSchema>;
+type InvoiceFormData = z.infer<typeof subscriptionInvoiceSchema>;
 
 interface SubscriptionInvoiceDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  invoice: z.infer<typeof invoiceSchema> | null;
+  invoice: z.infer<typeof subscriptionInvoiceSchema> | null;
   tenant: Tenant;
   onSuccess: () => void;
   isViewMode?: boolean;
@@ -61,7 +62,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     watch,
     setValue,
   } = useForm<InvoiceFormData>({
-    resolver: zodResolver(invoiceSchema),
+    resolver: zodResolver(subscriptionInvoiceSchema),
   });
   
   const { fields } = useFieldArray({
@@ -97,7 +98,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
               subscriptionAmount = tenant.subscriptionAmount || 0;
             }
 
-            reset({
+            const newInvoiceData = {
                 invoiceNo: newInvoiceNo,
                 customerCode: tenant.code,
                 customerName: tenant.name,
@@ -120,7 +121,8 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                 total: subscriptionAmount,
                 notes: '',
                 status: 'Draft',
-            });
+            };
+            reset(newInvoiceData);
         }
     };
     if (isOpen) {

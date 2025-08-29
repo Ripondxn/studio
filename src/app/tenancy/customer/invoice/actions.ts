@@ -9,6 +9,7 @@ import { invoiceSchema } from './schema';
 import { type Invoice } from './schema';
 import { addPayment } from '@/app/finance/payment/actions';
 import { type Contract } from '../../contract/schema';
+import { subscriptionInvoiceSchema } from '../../tenants/invoice/schema';
 
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
@@ -92,10 +93,14 @@ export async function getNextGeneralInvoiceNumber() {
 
 
 export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
-    const { isAutoInvoiceNo, ...invoiceData } = data;
-    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
+    const isSubscription = data.items.some(item => item.description?.toLowerCase().includes('subscription'));
+    
+    // Use the appropriate schema for validation
+    const validationSchema = isSubscription ? subscriptionInvoiceSchema : invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true});
+    const validation = validationSchema.safeParse(data);
 
     if (!validation.success) {
+        console.error("Invoice Validation Error:", validation.error.format());
         return { success: false, error: 'Invalid data format.' };
     }
 
@@ -104,8 +109,6 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
         const isNew = !data.id;
         const validatedData = validation.data;
         let savedInvoice: Invoice;
-        const isSubscription = validatedData.items.some(item => item.description?.toLowerCase().includes('subscription'));
-
 
         if (isNew) {
             let newInvoiceNo = validatedData.invoiceNo;
