@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -36,6 +35,9 @@ import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
+import { type Tenant } from '../../schema';
+import { type Product } from '@/app/products/schema';
+import { getProducts } from '@/app/products/actions';
 
 const formSchema = invoiceSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type InvoiceFormData = z.infer<typeof formSchema>;
@@ -44,7 +46,7 @@ interface InvoiceDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   invoice: z.infer<typeof invoiceSchema> | null;
-  tenant: { code: string; name: string };
+  tenant: Tenant;
   onSuccess: () => void;
   isViewMode?: boolean;
 }
@@ -55,6 +57,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
   const printRef = useRef<HTMLDivElement>(null);
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
+  const [products, setProducts] = useState<Product[]>([]);
 
   const {
     register,
@@ -76,6 +79,12 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
   const watchedItems = watch('items');
   const watchedTaxRate = watch('taxRate');
   const watchedTaxType = watch('taxType');
+
+  useEffect(() => {
+    if (isOpen) {
+      getProducts().then(setProducts);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!watchedItems) return;
@@ -110,18 +119,31 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
         } else {
             const newInvoiceNo = await getNextInvoiceNumber();
             setIsAutoInvoiceNo(true);
+
+            const subscriptionDescription = tenant.subscriptionStatus ? `${tenant.subscriptionStatus} Subscription` : '';
+            const subscriptionAmount = tenant.subscriptionAmount || 0;
+
             reset({
                 invoiceNo: newInvoiceNo,
                 customerCode: tenant.code,
                 customerName: tenant.name,
+                property: tenant.property || '',
+                unitCode: tenant.unitCode || '',
+                roomCode: tenant.roomCode || '',
                 invoiceDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
-                items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
-                subTotal: 0,
+                items: [{ 
+                    id: `item-${Date.now()}`, 
+                    description: subscriptionDescription, 
+                    quantity: 1, 
+                    unitPrice: subscriptionAmount, 
+                    total: subscriptionAmount 
+                }],
+                subTotal: subscriptionAmount,
                 tax: 0,
                 taxType: 'exclusive',
                 taxRate: 0,
-                total: 0,
+                total: subscriptionAmount,
                 notes: '',
                 status: 'Draft',
             });
@@ -158,6 +180,16 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
             printWindow.document.close();
             printWindow.print();
         }
+    }
+  }
+  
+  const handleItemSelect = (index: number, value: string, label?: string) => {
+    const product = products.find(p => p.itemCode.toLowerCase() === value.toLowerCase() || p.itemName.toLowerCase() === value.toLowerCase());
+    if(product) {
+        setValue(`items.${index}.description`, product.itemName);
+        setValue(`items.${index}.unitPrice`, product.salePrice);
+    } else {
+        setValue(`items.${index}.description`, label || value);
     }
   }
 
@@ -213,7 +245,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
             <Table>
               <TableHeader>
                   <TableRow>
-                      <TableHead className="w-2/5">Item Description</TableHead>
+                      <TableHead className="w-2/5">Item / Description</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead className="text-right">Total</TableHead>
@@ -224,7 +256,12 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
                   {fields.map((field, index) => (
                       <TableRow key={field.id}>
                           <TableCell>
-                            <Input {...register(`items.${index}.description`)} placeholder="e.g., Monthly Subscription"/>
+                            <Combobox
+                                options={products.map(p => ({value: p.itemCode, label: p.itemName}))}
+                                value={watchedItems?.[index]?.description || ''}
+                                onSelect={(value, label) => handleItemSelect(index, value, label)}
+                                placeholder="Select or type item..."
+                             />
                           </TableCell>
                           <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} /></TableCell>
                           <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
