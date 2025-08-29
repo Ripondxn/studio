@@ -217,7 +217,8 @@ export default function TenantPage() {
   }, [watchedProperty, watchedUnit, form]);
   
   const fetchAndSetTenantName = useCallback(async () => {
-    if (watchedProperty && watchedUnit) {
+    // Only auto-fill tenant name if it's a new record being created
+    if (isNewRecord && watchedProperty && watchedUnit) {
       const tenantResult = await getTenantForProperty(watchedProperty, watchedUnit, watchedRoom || undefined);
       if (tenantResult.success && tenantResult.tenantName) {
         form.setValue('name', tenantResult.tenantName);
@@ -225,7 +226,7 @@ export default function TenantPage() {
         form.setValue('name', ''); // Clear if no tenant found
       }
     }
-  }, [watchedProperty, watchedUnit, watchedRoom, form]);
+  }, [isNewRecord, watchedProperty, watchedUnit, watchedRoom, form]);
 
   useEffect(() => {
     fetchAndSetTenantName();
@@ -625,3 +626,4 @@ export default function TenantPage() {
     </div>
   );
 }
+
