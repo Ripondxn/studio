@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,6 +33,7 @@ import { Tenant } from './schema';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/context/currency-context';
 import type { UserRole } from '@/app/admin/user-roles/schema';
+import { SubscriptionInvoiceDialog } from './invoice/invoice-dialog';
 
 const ActionsCell = ({ row }: { row: { original: Tenant } }) => {
   const tenant = row.original;
@@ -231,24 +233,33 @@ export const columns: ColumnDef<Tenant>[] = [
   {
     id: 'createDocument',
     header: 'Create Document',
-    cell: ({ row }) => {
-        const tenant = row.original;
-        if(tenant.isSubscriptionActive) {
-             return (
-                <Button asChild variant="outline" size="sm">
-                    <Link href={`/tenancy/tenants/add?code=${tenant.code}&tab=subscription`}>
-                        <FilePlus2 className="mr-2 h-4 w-4" /> + Invoice
-                    </Link>
-                </Button>
-            );
-        }
-        return (
-            <Button asChild variant="outline" size="sm">
-                <Link href={`/tenancy/contract?tenantCode=${tenant.code}`}>
-                     <FilePlus2 className="mr-2 h-4 w-4" /> + Contract
-                </Link>
-            </Button>
-        )
+    cell: function Cell({ row }) {
+      const [isOpen, setIsOpen] = useState(false);
+      const router = useRouter();
+      const tenant = row.original;
+
+      if(tenant.isSubscriptionActive) {
+           return (
+              <SubscriptionInvoiceDialog
+                isOpen={isOpen}
+                setIsOpen={setIsOpen}
+                invoice={null}
+                tenant={tenant}
+                onSuccess={() => router.push(`/tenancy/tenants/add?code=${tenant.code}&tab=subscription`)}
+              >
+                  <Button variant="outline" size="sm">
+                    <FilePlus2 className="mr-2 h-4 w-4" /> + Subs Invoice
+                  </Button>
+              </SubscriptionInvoiceDialog>
+          );
+      }
+      return (
+          <Button asChild variant="outline" size="sm">
+              <Link href={`/tenancy/contract?tenantCode=${tenant.code}`}>
+                   <FilePlus2 className="mr-2 h-4 w-4" /> + Contract
+              </Link>
+          </Button>
+      )
     },
   },
   {
