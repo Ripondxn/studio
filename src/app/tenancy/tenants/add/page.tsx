@@ -60,6 +60,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 type Attachment = {
   id: number;
@@ -282,6 +283,8 @@ export default function TenantPage() {
         setIsEditing(false);
         if (isNewRecord) {
             router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
+        } else {
+            form.reset(data);
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -537,21 +540,6 @@ export default function TenantPage() {
                         <FormField control={form.control} name="securityDepositAmount" render={({ field }) => (<FormItem><Label>Deposit Amount</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} disabled={!isEditing}/></FormControl><FormMessage /></FormItem>)} />
                         <FormField control={form.control} name="securityDepositStatus" render={({ field }) => (<FormItem><Label>Payment Status</Label><Select onValueChange={field.onChange} value={field.value} disabled={!isEditing}><FormControl><SelectTrigger><SelectValue placeholder="Select status"/></SelectTrigger></FormControl><SelectContent><SelectItem value="paid">Paid</SelectItem><SelectItem value="unpaid">Unpaid</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
                     </div>
-                    <Card>
-                        <CardHeader><CardTitle>Return Details</CardTitle></CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className='p-4 border rounded-md bg-muted/50'>
-                                <p className='text-sm text-muted-foreground'>Original Deposit Amount</p>
-                                <p className='text-2xl font-bold text-primary'>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(form.getValues('securityDepositAmount') || 0)}</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField control={form.control} name="securityDepositReturnDate" render={({ field }) => (<FormItem><Label>Return Date</Label><FormControl><Input type="date" {...field} disabled={!isEditing}/></FormControl><FormMessage /></FormItem>)} />
-                                <FormField control={form.control} name="securityDepositReturnedAmount" render={({ field }) => (<FormItem><Label>Returned Amount</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} disabled={!isEditing}/></FormControl><FormMessage /></FormItem>)} />
-                            </div>
-                            <FormField control={form.control} name="securityDepositRemarks" render={({ field }) => (<FormItem><Label>Remarks</Label><FormControl><Textarea placeholder="Remarks on return (e.g., deductions for damages)" {...field} disabled={!isEditing}/></FormControl><FormMessage /></FormItem>)} />
-                            <Button disabled={!isEditing}>Process Return</Button>
-                        </CardContent>
-                    </Card>
                 </CardContent>
             </Card>
         </TabsContent>
