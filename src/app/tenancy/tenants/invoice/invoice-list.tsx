@@ -1,15 +1,16 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X } from 'lucide-react';
-import { columns } from './columns';
-import { DataTable } from './data-table';
+import { columns } from '@/app/tenancy/customer/invoice/columns';
+import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
 import { InvoiceDialog as GeneralInvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
-import { type Invoice } from './schema';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
@@ -93,13 +94,21 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(false);
-        setIsInvoiceDialogOpen(true);
+        if (invoice.invoiceNo.startsWith('SUB-INV')) {
+            setIsInvoiceDialogOpen(true);
+        } else {
+            setIsGeneralInvoiceDialogOpen(true);
+        }
     }
     
     const handleViewClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(true);
-        setIsInvoiceDialogOpen(true);
+         if (invoice.invoiceNo.startsWith('SUB-INV')) {
+            setIsInvoiceDialogOpen(true);
+        } else {
+            setIsGeneralInvoiceDialogOpen(true);
+        }
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
@@ -145,12 +154,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         }
         setIsCancellingSub(false);
     };
-
-    const handleSubscriptionSave = () => {
-        // This is a placeholder. The main form's onSave will handle the actual saving.
-        // This function's role is just to toggle the editing state.
-        setIsSubscriptionEditing(false);
-    }
 
     return (
         <Card>

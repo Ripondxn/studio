@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Printer } from 'lucide-react';
-import { saveInvoice, getNextSubscriptionInvoiceNumber } from './actions';
+import { saveSubscriptionInvoice, getNextSubscriptionInvoiceNumber } from './actions';
 import { type Invoice, subscriptionInvoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
@@ -41,7 +41,7 @@ type InvoiceFormData = z.infer<typeof subscriptionInvoiceSchema>;
 interface SubscriptionInvoiceDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  invoice: z.infer<typeof subscriptionInvoiceSchema> | null;
+  invoice: Invoice | null;
   tenant: Tenant;
   onSuccess: () => void;
   isViewMode?: boolean;
@@ -54,16 +54,18 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
 
+  const form = useForm<InvoiceFormData>({
+    resolver: zodResolver(subscriptionInvoiceSchema),
+  });
+  
   const {
-    register,
     control,
+    register,
     handleSubmit,
     reset,
     watch,
     setValue,
-  } = useForm<InvoiceFormData>({
-    resolver: zodResolver(subscriptionInvoiceSchema),
-  });
+  } = form;
   
   const { fields } = useFieldArray({
     control,
@@ -76,7 +78,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     setValue('subTotal', subTotal);
-    setValue('total', subTotal);
+    setValue('total', subTotal); // For subscription invoices, total is same as subtotal
   }, [watchedItems, setValue]);
   
 
@@ -116,11 +118,11 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                 }] : [],
                 subTotal: subscriptionAmount,
                 tax: 0,
-                taxType: 'exclusive',
+                taxType: 'exclusive' as 'exclusive' | 'inclusive',
                 taxRate: 0,
                 total: subscriptionAmount,
                 notes: '',
-                status: 'Draft',
+                status: 'Draft' as 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Cancelled',
             };
             reset(newInvoiceData);
         }
@@ -139,7 +141,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     const currentUser = JSON.parse(userProfile);
 
     setIsSaving(true);
-    const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
+    const result = await saveSubscriptionInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();
