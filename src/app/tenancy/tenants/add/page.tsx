@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -71,6 +70,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { InvoiceList } from '../invoice/invoice-list';
 import { type Invoice } from '../invoice/schema';
 import { getInvoicesForTenant } from '../invoice/actions';
+import { type Tenant } from '../schema';
 
 type Attachment = {
   id: number;
@@ -89,7 +89,7 @@ type Lookups = {
 }
 
 
-const initialTenantData = {
+const initialTenantData: Tenant = {
     code: '',
     name: '',
     mobile: '',
@@ -122,11 +122,11 @@ export default function TenantPage() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isAutoCode, setIsAutoCode] = useState(true);
   
   const [tenantData, setTenantData] = useState(initialTenantData);
   const [initialData, setInitialData] = useState(initialTenantData);
-  const [isAutoCode, setIsAutoCode] = useState(true);
-
+  
   const [contractData, setContractData] = useState<Partial<Contract>>({});
   const [unitData, setUnitData] = useState<Partial<Unit & { property?: any }>>({});
   const [roomData, setRoomData] = useState<Partial<Room>>({});
@@ -242,7 +242,7 @@ export default function TenantPage() {
   }, [watchedProperty, watchedUnit]);
 
 
-  const handleInputChange = (field: keyof typeof tenantData, value: string | number) => {
+  const handleInputChange = (field: keyof typeof tenantData, value: string | number | undefined) => {
     setTenantData(prev => ({ ...prev, [field]: value }));
   };
   
@@ -391,70 +391,70 @@ export default function TenantPage() {
 
   return (
     <div className="container mx-auto p-4 bg-background">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-primary font-headline">
-          {pageTitle}
-        </h1>
-        <div className="flex items-center gap-2">
-            {!isEditing && (
-              <Button onClick={handleEditClick}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Button>
-            )}
-            {isEditing && (
-              <>
-                <Button onClick={handleSaveClick} disabled={isSaving}>
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  {isSaving ? 'Saving...' : 'Save'}
+        <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-primary font-headline">
+            {pageTitle}
+            </h1>
+            <div className="flex items-center gap-2">
+                {!isEditing && (
+                <Button type="button" onClick={handleEditClick}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
-                <Button variant="ghost" onClick={handleCancelClick}>
-                  <X className="mr-2 h-4 w-4" /> Cancel
+                )}
+                {isEditing && (
+                <>
+                    <Button onClick={handleSaveClick} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    {isSaving ? 'Saving...' : 'Save'}
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={handleCancelClick}>
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
+                </>
+                )}
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={isNewRecord || isEditing}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
+                    </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the
+                        tenant "{tenantData.name}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive hover:bg-destructive/90"
+                        >
+                        Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
+                    <X className="mr-2 h-4 w-4" /> Close
                 </Button>
-              </>
-            )}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  disabled={isNewRecord || isEditing}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the
-                    tenant "{tenantData.name}".
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    className="bg-destructive hover:bg-destructive/90"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Button variant="outline" onClick={() => router.push('/tenancy/tenants')}>
-                <X className="mr-2 h-4 w-4" /> Close
-            </Button>
+            </div>
         </div>
-      </div>
 
         <Tabs defaultValue="info">
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
-                <TabsTrigger value="rental-details">Rental Details</TabsTrigger>
+                <TabsTrigger value="rental-details" disabled={isNewRecord}>Rental Details</TabsTrigger>
                 <TabsTrigger value="security-deposit">Security Deposit</TabsTrigger>
                 <TabsTrigger value="subscription-invoice" disabled={isNewRecord}>Subscription Invoice</TabsTrigger>
-                <TabsTrigger value="pdc">PDC Schedule</TabsTrigger>
-                <TabsTrigger value="termination">Termination</TabsTrigger>
+                <TabsTrigger value="pdc" disabled={isNewRecord}>PDC Schedule</TabsTrigger>
+                <TabsTrigger value="termination" disabled={isNewRecord}>Termination</TabsTrigger>
             </TabsList>
             <TabsContent value="info">
                 <div className="space-y-6">
@@ -465,13 +465,13 @@ export default function TenantPage() {
                         </CardHeader>
                         <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="flex items-end gap-2">
+                             <div className="flex items-end gap-2">
                                 <div className="flex-grow">
                                     <Label htmlFor="code">Code</Label>
                                     <Input id="code" value={tenantData.code} onChange={(e) => handleInputChange('code', e.target.value)} disabled={isAutoCode || !isEditing} />
                                 </div>
-                                <Button type="button" variant="outline" size="icon" onClick={() => router.push('/tenancy/tenants/add')} disabled={isFinding || !isNewRecord}>
-                                    <Plus className="h-4 w-4" />
+                                 <Button type="button" variant="outline" size="icon" onClick={() => handleFindClick()} disabled={!isEditing}>
+                                    {isFinding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                                 </Button>
                             </div>
                             <div>
@@ -579,7 +579,7 @@ export default function TenantPage() {
                                 </div>
                             </CardContent>
                         </Card>
-                         <Card>
+                        <Card>
                             <CardHeader>
                                 <CardTitle>Attachments</CardTitle>
                             </CardHeader>
@@ -614,10 +614,10 @@ export default function TenantPage() {
                                                                 disabled={!isEditing}
                                                             />
                                                         ) : (
-                                                            <Input
-                                                                type="file"
-                                                                className="text-sm w-full"
-                                                                ref={(el) => (fileInputRefs.current[index] = el)}
+                                                            <Input 
+                                                                type="file" 
+                                                                className="text-sm w-full" 
+                                                                    ref={(el) => (fileInputRefs.current[index] = el)}
                                                                 onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
                                                                 disabled={!isEditing}
                                                             />
@@ -774,10 +774,9 @@ export default function TenantPage() {
                     </CardContent>
                 </Card>
             </TabsContent>
-            <TabsContent value="subscription-invoice">
+             <TabsContent value="subscription-invoice">
                 <InvoiceList
-                    customerCode={tenantData.code}
-                    customerName={tenantData.name}
+                    tenant={tenantData}
                     invoices={invoices}
                     isLoading={isLoadingInvoices}
                     onRefresh={() => fetchInvoices(tenantData.code)}
@@ -853,6 +852,8 @@ export default function TenantPage() {
                 </Card>
             </TabsContent>
         </Tabs>
+      </form>
+    </Form>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -15,16 +14,16 @@ import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
+import { type Tenant } from '../../schema';
 
 interface InvoiceListProps {
-    customerCode: string;
-    customerName: string;
+    tenant: Tenant;
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
 }
 
-export function InvoiceList({ customerCode, customerName, invoices, isLoading, onRefresh }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceListProps) {
     const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
@@ -57,7 +56,7 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
         setPaymentDefaultValues({
             type: 'Receipt',
             partyType: 'Customer',
-            partyName: customerCode,
+            partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
             amount: invoice ? (invoice.remainingBalance || 0) : 0,
@@ -90,7 +89,7 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Subscription Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {customerName}.</CardDescription>
+                        <CardDescription>Manage subscription invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -129,7 +128,7 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
                     isOpen={isInvoiceDialogOpen}
                     setIsOpen={setIsInvoiceDialogOpen}
                     invoice={selectedInvoice}
-                    tenant={{ code: customerCode, name: customerName }}
+                    tenant={tenant}
                     onSuccess={handleSuccess}
                     isViewMode={isViewMode}
                 />

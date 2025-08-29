@@ -5,6 +5,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { invoiceSchema, type Invoice } from './schema';
+import { addPayment } from '@/app/finance/payment/actions';
 
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/invoice/invoices-data.json');
 
@@ -51,7 +52,7 @@ export async function getNextInvoiceNumber() {
 }
 
 
-export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string, isAutoInvoiceNo?: boolean }) {
+export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
     const { isAutoInvoiceNo, ...invoiceData } = data;
     const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
 
@@ -82,6 +83,23 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
                 amountPaid: 0,
             };
             allInvoices.push(newInvoice);
+
+            // Also create a corresponding payment receipt record
+            await addPayment({
+                type: 'Receipt',
+                date: newInvoice.invoiceDate,
+                partyType: 'Customer', // Tenants are billed as customers here
+                partyName: newInvoice.customerCode,
+                amount: newInvoice.total,
+                paymentMethod: 'Other', // Or determine based on context
+                referenceType: 'Invoice',
+                referenceNo: newInvoice.invoiceNo,
+                description: `Invoice generated for ${newInvoice.customerName}`,
+                status: 'Received',
+                createdByUser: createdBy,
+                invoiceAllocations: [{ invoiceId: newInvoice.id, amount: newInvoice.total }],
+            });
+
         } else {
             const index = allInvoices.findIndex(inv => inv.id === data.id);
             if (index === -1) {
@@ -112,47 +130,5 @@ export async function deleteInvoice(invoiceId: string) {
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
-    }
-}
-
-export async function updateInvoiceStatus(invoiceId: string, status: Invoice['status']) {
-    try {
-        const allInvoices = await readInvoices();
-        const index = allInvoices.findIndex(inv => inv.id === invoiceId);
-        if (index === -1) {
-            return { success: false, error: 'Invoice not found to update status.' };
-        }
-        allInvoices[index].status = status;
-        await writeInvoices(allInvoices);
-        revalidatePath(`/tenancy/tenants/add?code=${allInvoices[index].customerCode}`);
-        return { success: true };
-    } catch (error) {
-         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
-    }
-}
-
-export async function applyPaymentToInvoices(invoicePayments: { invoiceId: string; amount: number }[], customerCode: string) {
-    try {
-        const allInvoices = await readInvoices();
-
-        for (const payment of invoicePayments) {
-            const index = allInvoices.findIndex(inv => inv.id === payment.invoiceId);
-            if (index !== -1) {
-                allInvoices[index].amountPaid = (allInvoices[index].amountPaid || 0) + payment.amount;
-                const remainingBalance = allInvoices[index].total - allInvoices[index].amountPaid;
-                
-                if (remainingBalance <= 0.001) { // Use a small epsilon for float comparison
-                    allInvoices[index].status = 'Paid';
-                } else if (allInvoices[index].status === 'Draft' || allInvoices[index].status === 'Overdue') {
-                    allInvoices[index].status = 'Sent';
-                }
-            }
-        }
-
-        await writeInvoices(allInvoices);
-        revalidatePath(`/tenancy/tenants/add?code=${customerCode}`);
-        return { success: true };
-    } catch (error) {
-         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
