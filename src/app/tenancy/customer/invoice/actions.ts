@@ -154,22 +154,6 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
                  await writeContracts(allContracts);
             }
 
-            // This part handles the financial transaction and should remain
-            await addPayment({
-                type: 'Receipt',
-                date: newInvoice.invoiceDate,
-                partyType: 'Customer',
-                partyName: newInvoice.customerCode,
-                amount: newInvoice.total,
-                paymentMethod: 'Other',
-                referenceType: 'Invoice',
-                referenceNo: newInvoice.invoiceNo,
-                description: `Invoice generated for ${newInvoice.customerName}`,
-                status: 'Received',
-                createdByUser: createdBy,
-                invoiceAllocations: [{ invoiceId: newInvoice.id, amount: newInvoice.total }],
-            });
-
         } else {
             const index = allInvoices.findIndex(inv => inv.id === data.id);
             if (index === -1) {
