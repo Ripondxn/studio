@@ -45,14 +45,17 @@ export async function getUnits() {
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     
-    // Units/rooms occupied by contract
+    // Units fully rented by a single contract
     const unitLevelContracts = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
-    const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
 
-    // Units/rooms occupied by active subscription
+    // Tenants with active subscriptions for a full unit
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
     const subscribedUnitCodes = new Set(activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).map(t => t.tenantData.unitCode));
+
+    // Consolidate all occupied rooms (from both contracts and subscriptions)
+    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
     const subscribedRoomCodes = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
+    const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...subscribedRoomCodes]);
 
     return allUnits.map(unit => {
         let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' = 'Vacant';
@@ -65,8 +68,8 @@ export async function getUnits() {
             const roomsInUnit = allRooms.filter(r => r.propertyCode === unit.propertyCode && r.unitCode === unit.unitCode);
             
             if (roomsInUnit.length > 0) {
-                // It's a parent unit with rooms. Check how many are occupied by either contract or subscription.
-                const occupiedRoomsCount = roomsInUnit.filter(r => occupiedRoomCodes.has(r.roomCode) || subscribedRoomCodes.has(r.roomCode)).length;
+                // It's a parent unit with rooms. Check how many are occupied.
+                const occupiedRoomsCount = roomsInUnit.filter(r => allOccupiedRoomCodes.has(r.roomCode)).length;
 
                 if (occupiedRoomsCount === 0) {
                     occupancyStatus = 'Vacant';

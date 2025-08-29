@@ -16,24 +16,6 @@ const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/con
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 
 
-async function readRooms(): Promise<Room[]> {
-    try {
-        await fs.access(roomsFilePath);
-        const data = await fs.readFile(roomsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await writeRooms([]);
-            return [];
-        }
-        throw error;
-    }
-}
-
-async function writeRooms(data: Room[]) {
-    await fs.writeFile(roomsFilePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
 async function readData<T>(filePath: string): Promise<any[]> {
     try {
         await fs.access(filePath);
@@ -47,6 +29,14 @@ async function readData<T>(filePath: string): Promise<any[]> {
     }
 }
 
+async function readRooms(): Promise<Room[]> {
+    return await readData(roomsFilePath);
+}
+
+async function writeRooms(data: Room[]) {
+    await fs.writeFile(roomsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
 export async function getRooms() {
     const allRooms = await readRooms();
     const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
@@ -55,16 +45,18 @@ export async function getRooms() {
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
     const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
-
+    
     const subscribedRoomCodes = new Set(
       allTenants
         .filter(t => t.tenantData.isSubscriptionActive && t.tenantData.roomCode)
         .map(t => t.tenantData.roomCode)
     );
+    
+    const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...subscribedRoomCodes]);
 
     return allRooms.map(room => ({
         ...room,
-        occupancyStatus: occupiedRoomCodesFromContracts.has(room.roomCode) || subscribedRoomCodes.has(room.roomCode) ? 'Occupied' : 'Vacant',
+        occupancyStatus: allOccupiedRoomCodes.has(room.roomCode) ? 'Occupied' : 'Vacant',
     }));
 }
 
