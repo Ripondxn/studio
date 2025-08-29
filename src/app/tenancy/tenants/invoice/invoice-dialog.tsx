@@ -114,6 +114,8 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
 
   useEffect(() => {
     const initializeForm = async () => {
+        if (!tenant) return;
+
         if (invoice) {
             setIsAutoInvoiceNo(false); // When editing, number is always manual
             reset(invoice);
@@ -121,8 +123,12 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
             const newInvoiceNo = await getNextInvoiceNumber();
             setIsAutoInvoiceNo(true);
 
-            const subscriptionDescription = tenant.subscriptionStatus ? `${tenant.subscriptionStatus} Subscription` : '';
-            const subscriptionAmount = tenant.subscriptionAmount || 0;
+            let subscriptionDescription = '';
+            let subscriptionAmount = 0;
+            if(tenant?.isSubscriptionActive) {
+              subscriptionDescription = tenant.subscriptionStatus ? `${tenant.subscriptionStatus} Subscription` : '';
+              subscriptionAmount = tenant.subscriptionAmount || 0;
+            }
 
             reset({
                 invoiceNo: newInvoiceNo,
@@ -133,13 +139,13 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
                 roomCode: tenant.roomCode || '',
                 invoiceDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
-                items: [{ 
+                items: subscriptionAmount > 0 ? [{ 
                     id: `item-${Date.now()}`, 
                     description: subscriptionDescription, 
                     quantity: 1, 
                     unitPrice: subscriptionAmount, 
                     total: subscriptionAmount 
-                }],
+                }] : [],
                 subTotal: subscriptionAmount,
                 tax: 0,
                 taxType: 'exclusive',
@@ -156,8 +162,15 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, i
   }, [isOpen, invoice, reset, tenant]);
 
   const onSubmit = async (data: InvoiceFormData) => {
+    const userProfile = sessionStorage.getItem('userProfile');
+    if(!userProfile) {
+        toast({variant: 'destructive', title: 'Error', description: 'Could not identify current user.'});
+        return;
+    }
+    const currentUser = JSON.parse(userProfile);
+
     setIsSaving(true);
-    const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo });
+    const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();

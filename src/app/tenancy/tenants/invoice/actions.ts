@@ -66,6 +66,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
         const allInvoices = await readInvoices();
         const isNew = !data.id;
         const validatedData = validation.data;
+        let savedInvoice: Invoice;
 
         if (isNew) {
             let newInvoiceNo = validatedData.invoiceNo;
@@ -85,12 +86,13 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
                 amountPaid: 0,
             };
             allInvoices.push(newInvoice);
+            savedInvoice = newInvoice;
 
             // Create a corresponding payment receipt record for the workflow
             await addPayment({
                 type: 'Receipt',
                 date: newInvoice.invoiceDate,
-                partyType: 'Customer', // Invoices are always for customers (who can also be tenants)
+                partyType: 'Customer', // Invoices are for customers (who can also be tenants)
                 partyName: newInvoice.customerCode,
                 amount: newInvoice.total,
                 paymentMethod: 'Other', // Default for generated invoices
@@ -108,11 +110,12 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
                 return { success: false, error: 'Invoice not found.' };
             }
             allInvoices[index] = { ...allInvoices[index], ...validatedData };
+            savedInvoice = allInvoices[index];
         }
 
         await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
-        return { success: true };
+        return { success: true, data: savedInvoice };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
@@ -132,5 +135,47 @@ export async function deleteInvoice(invoiceId: string) {
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function updateInvoiceStatus(invoiceId: string, status: Invoice['status']) {
+    try {
+        const allInvoices = await readInvoices();
+        const index = allInvoices.findIndex(inv => inv.id === invoiceId);
+        if (index === -1) {
+            return { success: false, error: 'Invoice not found to update status.' };
+        }
+        allInvoices[index].status = status;
+        await writeInvoices(allInvoices);
+        revalidatePath(`/tenancy/customer/add?code=${allInvoices[index].customerCode}`);
+        return { success: true };
+    } catch (error) {
+         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function applyPaymentToInvoices(invoicePayments: { invoiceId: string; amount: number }[], customerCode: string) {
+    try {
+        const allInvoices = await readInvoices();
+
+        for (const payment of invoicePayments) {
+            const index = allInvoices.findIndex(inv => inv.id === payment.invoiceId);
+            if (index !== -1) {
+                allInvoices[index].amountPaid = (allInvoices[index].amountPaid || 0) + payment.amount;
+                const remainingBalance = allInvoices[index].total - allInvoices[index].amountPaid;
+                
+                if (remainingBalance <= 0.001) { // Use a small epsilon for float comparison
+                    allInvoices[index].status = 'Paid';
+                } else if (allInvoices[index].status === 'Draft' || allInvoices[index].status === 'Overdue') {
+                    allInvoices[index].status = 'Sent'; // Or 'Partially Paid' if you add that status
+                }
+            }
+        }
+
+        await writeInvoices(allInvoices);
+        revalidatePath(`/tenancy/customer/add?code=${customerCode}`);
+        return { success: true };
+    } catch (error) {
+         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
