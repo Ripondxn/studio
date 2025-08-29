@@ -7,8 +7,10 @@ import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { invoiceSchema, type Invoice } from './schema';
 import { addPayment } from '@/app/finance/payment/actions';
+import { type Contract } from '../../contract/schema';
 
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 
 async function readInvoices(): Promise<Invoice[]> {
     try {
@@ -26,6 +28,24 @@ async function readInvoices(): Promise<Invoice[]> {
 
 async function writeInvoices(data: Invoice[]) {
     await fs.writeFile(invoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+async function writeContracts(data: Contract[]) {
+    await fs.writeFile(contractsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+async function readContracts(): Promise<Contract[]> {
+    try {
+        await fs.access(contractsFilePath);
+        const data = await fs.readFile(contractsFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            await writeContracts([]);
+            return [];
+        }
+        throw error;
+    }
 }
 
 export async function getInvoicesForCustomer(customerCode: string) {
@@ -106,6 +126,34 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
             allInvoices.push(newInvoice);
             savedInvoice = newInvoice;
 
+            if (isSubscription) {
+                 const allContracts = await readContracts();
+                 const implicitContract: Omit<Contract, 'id'> = {
+                    contractNo: `SUB-${newInvoice.customerCode}`,
+                    contractDate: newInvoice.invoiceDate,
+                    property: newInvoice.property,
+                    unitCode: newInvoice.unitCode,
+                    roomCode: newInvoice.roomCode,
+                    tenantCode: newInvoice.customerCode,
+                    tenantName: newInvoice.customerName,
+                    startDate: newInvoice.invoiceDate,
+                    endDate: newInvoice.dueDate,
+                    totalRent: newInvoice.total,
+                    paymentMode: 'cash',
+                    status: 'Renew',
+                    paymentSchedule: [{ installment: 1, dueDate: newInvoice.dueDate, amount: newInvoice.total, status: 'unpaid' }]
+                 };
+                 
+                 const existingContractIndex = allContracts.findIndex(c => c.contractNo === implicitContract.contractNo);
+                 if (existingContractIndex > -1) {
+                    allContracts[existingContractIndex] = { ...allContracts[existingContractIndex], ...implicitContract };
+                 } else {
+                    allContracts.push({ ...implicitContract, id: `SUB-CON-${Date.now()}` });
+                 }
+                 await writeContracts(allContracts);
+            }
+
+            // This part handles the financial transaction and should remain
             await addPayment({
                 type: 'Receipt',
                 date: newInvoice.invoiceDate,
@@ -133,6 +181,8 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
         await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
         revalidatePath(`/tenancy/customer/add?code=${data.customerCode}`);
+        revalidatePath('/property/units/vacant');
+        revalidatePath('/property/properties');
         return { success: true, data: savedInvoice };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
