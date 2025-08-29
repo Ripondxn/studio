@@ -40,6 +40,8 @@ import { type Tenant } from '../../schema';
 import { type Product } from '@/app/products/schema';
 import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
@@ -59,6 +61,11 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
+  const [lookups, setLookups] = useState<{
+    properties: {value: string, label: string}[];
+    units: {value: string, label: string}[];
+    rooms: {value: string, label: string}[];
+  }>({ properties: [], units: [], rooms: [] });
 
   const {
     register,
@@ -80,12 +87,35 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const watchedItems = watch('items');
   const watchedTaxRate = watch('taxRate');
   const watchedTaxType = watch('taxType');
+  const watchedProperty = watch('property');
+  const watchedUnit = watch('unitCode');
 
   useEffect(() => {
     if (isOpen) {
       getProducts().then(setProducts);
+      getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
     }
   }, [isOpen]);
+  
+  useEffect(() => {
+    const fetchUnits = async () => {
+        if (watchedProperty) {
+            const unitsData = await getUnitsForProperty(watchedProperty);
+            setLookups(prev => ({...prev, units: unitsData, rooms: []}));
+        }
+    }
+    fetchUnits();
+  }, [watchedProperty]);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+        if(watchedProperty && watchedUnit) {
+            const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
+            setLookups(prev => ({...prev, rooms: roomsData}));
+        }
+    }
+    fetchRooms();
+  }, [watchedProperty, watchedUnit]);
 
   useEffect(() => {
     if (!watchedItems) return;
@@ -230,7 +260,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Subscription Invoice' : 'Create New Subscription Invoice'}</DialogTitle>
@@ -239,7 +269,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[60vh] overflow-y-auto p-1">
+          <div className="max-h-[70vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
               <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
               <div><Label>Tenant</Label><Input value={tenant.name} disabled/></div>
@@ -254,6 +284,21 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                     disabled={!!invoice}
                 />
                 <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="space-y-2">
+                    <Label>Property</Label>
+                    <Controller name="property" control={control} render={({field}) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={value => {field.onChange(value); setValue('unitCode',''); setValue('roomCode','');}} placeholder="Select Property"/>)}/>
+                </div>
+                <div className="space-y-2">
+                    <Label>Unit</Label>
+                    <Controller name="unitCode" control={control} render={({field}) => (<Combobox options={lookups.units} value={field.value || ''} onSelect={value => {field.onChange(value); setValue('roomCode','');}} placeholder="Select Unit" disabled={!watchedProperty}/>)}/>
+                </div>
+                 <div className="space-y-2">
+                    <Label>Room</Label>
+                    <Controller name="roomCode" control={control} render={({field}) => (<Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select Room" disabled={!watchedUnit}/>)}/>
+                </div>
             </div>
             
             <Table>
