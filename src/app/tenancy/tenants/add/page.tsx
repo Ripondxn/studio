@@ -196,7 +196,7 @@ export default function TenantPage() {
       });
     }
   }, [form, toast, fetchInvoices]);
-  
+
   useEffect(() => {
     const tenantCodeParam = searchParams.get('code');
     getTenantLookups().then(data => setLookups(prev => ({...prev, ...data})));
@@ -381,7 +381,7 @@ export default function TenantPage() {
                     </Button>
                 </>
                 )}
-                 <AlertDialog>
+                <AlertDialog>
                     <AlertDialogTrigger asChild>
                     <Button
                         type="button"
@@ -523,9 +523,9 @@ export default function TenantPage() {
                         />
                     </div>
                      <Separator className="my-6" />
-                     <CardTitle>Current Rented Property</CardTitle>
+                     <CardTitle>Rented Property</CardTitle>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { form.setValue('property', value); form.setValue('unitCode', ''); form.setValue('roomCode', '');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { form.setValue('property', value); form.setValue('unitCode', ''); form.setValue('roomCode','');}} placeholder="Select property" disabled={!isEditing} /><FormMessage /></FormItem>)} />
                         <FormField control={form.control} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={value => {form.setValue('unitCode', value); form.setValue('roomCode', '');}} placeholder="Select unit" disabled={!isEditing || !watchedProperty || isLoadingUnits} /><FormMessage /></FormItem>)} />
                         <FormField control={form.control} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={(value) => form.setValue('roomCode', value)} placeholder="Select room" disabled={!isEditing || !watchedUnit || isLoadingRooms} /><FormMessage /></FormItem>)} />
                      </div>
@@ -544,7 +544,7 @@ export default function TenantPage() {
                 formControl={form.control}
              />
         </TabsContent>
-         <TabsContent value="attachments">
+        <TabsContent value="attachments">
             <Card>
                 <CardHeader>
                     <CardTitle>Attachments</CardTitle>
