@@ -2,30 +2,30 @@
 [
   {
     "invoiceNo": "SUB-INV-0001",
-    "customerCode": "T002",
+    "customerCode": "T001",
     "customerName": "MR. ABDUL KADER",
-    "property": "",
-    "unitCode": "",
-    "roomCode": "",
+    "property": "LT-C38",
+    "unitCode": "F101",
+    "roomCode": "Room-1/B",
     "invoiceDate": "2025-08-29",
     "dueDate": "2025-08-29",
     "items": [
       {
-        "id": "item-1724949575119",
+        "id": "item-1724949575120",
         "description": "Monthly Subscription",
         "quantity": 1,
-        "unitPrice": 500,
-        "total": 500
+        "unitPrice": 1400,
+        "total": 1400
       }
     ],
-    "subTotal": 500,
+    "subTotal": 1400,
     "taxType": "exclusive",
     "taxRate": 0,
     "tax": 0,
-    "total": 500,
+    "total": 1400,
     "status": "Draft",
     "notes": "Automatically generated subscription invoice for August 2025.",
-    "id": "INV-1724949575119",
+    "id": "SUB-INV-1756444775121",
     "amountPaid": 0
   },
   {
