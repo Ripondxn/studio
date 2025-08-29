@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -30,10 +29,10 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice, getNextSubscriptionInvoiceNumber } from './actions';
-import { invoiceSchema } from './schema';
+import { saveInvoice, getNextSubscriptionInvoiceNumber } from '@/app/tenancy/customer/invoice/actions';
+import { invoiceSchema } from '@/app/tenancy/customer/invoice/schema';
 import { format } from 'date-fns';
-import { InvoiceView } from './invoice-view';
+import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
 import { type Tenant } from '../../schema';
