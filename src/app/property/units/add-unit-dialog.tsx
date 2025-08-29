@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -42,7 +43,6 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
     defaultValues: {
         unitCode: '',
         unitName: '',
-        floor: '',
         propertyCode: propertyCode,
         unitType: '',
         annualRent: 0,
@@ -55,7 +55,6 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
       reset({
         unitCode: '',
         unitName: '',
-        floor: '',
         propertyCode: propertyCode,
         unitType: '',
         annualRent: 0,
@@ -110,10 +109,6 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
                  <div className="space-y-2">
                     <Label htmlFor="unitName">Unit Name (Optional)</Label>
                     <Input id="unitName" {...register('unitName')} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="floor">Floor</Label>
-                    <Input id="floor" {...register('floor')} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="unitType">Unit Type</Label>

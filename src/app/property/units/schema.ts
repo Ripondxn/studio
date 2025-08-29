@@ -8,9 +8,10 @@ export const unitSchema = z.object({
   unitName: z.string().optional(),
   propertyCode: z.string().min(1, "Property code is required."),
   unitType: z.string().min(1, "Unit type is required."),
-  annualRent: z.number().min(0, "Annual rent must be 0 or more."),
+  annualRent: z.number().min(0, "Annual rent must be a positive number."),
   unitStatus: z.enum(['Active', 'Inactive']),
   occupancyStatus: z.enum(['Vacant', 'Occupied', 'Partially Occupied']).optional(),
 });
 
 export type Unit = z.infer<typeof unitSchema>;
+
