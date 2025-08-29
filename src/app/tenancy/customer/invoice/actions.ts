@@ -1,10 +1,12 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { invoiceSchema, type Invoice } from './schema';
+import { addPayment } from '@/app/finance/payment/actions';
 
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
@@ -28,14 +30,31 @@ async function writeInvoices(data: Invoice[]) {
 
 export async function getInvoicesForCustomer(customerCode: string) {
     const allInvoices = await readInvoices();
-    const customerInvoices = allInvoices.filter(inv => inv.customerCode === customerCode);
-    return customerInvoices.map(inv => ({
+    // Invoices for a tenant are those where the customerCode matches the tenantCode
+    const tenantInvoices = allInvoices.filter(inv => inv.customerCode === customerCode);
+    return tenantInvoices.map(inv => ({
         ...inv,
         remainingBalance: inv.total - (inv.amountPaid || 0),
     }));
 }
 
-export async function getNextInvoiceNumber() {
+
+export async function getNextSubscriptionInvoiceNumber() {
+    const allInvoices = await readInvoices();
+    let maxNum = 0;
+    allInvoices.forEach(i => {
+        const match = i.invoiceNo.match(/^SUB-INV-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    return `SUB-INV-${(maxNum + 1).toString().padStart(4, '0')}`;
+}
+
+export async function getNextGeneralInvoiceNumber() {
     const allInvoices = await readInvoices();
     let maxNum = 0;
     allInvoices.forEach(i => {
@@ -51,7 +70,7 @@ export async function getNextInvoiceNumber() {
 }
 
 
-export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string, isAutoInvoiceNo?: boolean }) {
+export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
     const { isAutoInvoiceNo, ...invoiceData } = data;
     const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
 
@@ -63,11 +82,14 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
         const allInvoices = await readInvoices();
         const isNew = !data.id;
         const validatedData = validation.data;
+        let savedInvoice: Invoice;
+        const isSubscription = validatedData.items.some(item => item.description?.toLowerCase().includes('subscription'));
+
 
         if (isNew) {
             let newInvoiceNo = validatedData.invoiceNo;
             if (isAutoInvoiceNo || !newInvoiceNo) {
-                 newInvoiceNo = await getNextInvoiceNumber();
+                 newInvoiceNo = isSubscription ? await getNextSubscriptionInvoiceNumber() : await getNextGeneralInvoiceNumber();
             } else {
                 const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
                 if (invoiceExists) {
@@ -82,17 +104,36 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid'> & { i
                 amountPaid: 0,
             };
             allInvoices.push(newInvoice);
+            savedInvoice = newInvoice;
+
+            await addPayment({
+                type: 'Receipt',
+                date: newInvoice.invoiceDate,
+                partyType: 'Customer',
+                partyName: newInvoice.customerCode,
+                amount: newInvoice.total,
+                paymentMethod: 'Other',
+                referenceType: 'Invoice',
+                referenceNo: newInvoice.invoiceNo,
+                description: `Invoice generated for ${newInvoice.customerName}`,
+                status: 'Received',
+                createdByUser: createdBy,
+                invoiceAllocations: [{ invoiceId: newInvoice.id, amount: newInvoice.total }],
+            });
+
         } else {
             const index = allInvoices.findIndex(inv => inv.id === data.id);
             if (index === -1) {
                 return { success: false, error: 'Invoice not found.' };
             }
             allInvoices[index] = { ...allInvoices[index], ...validatedData };
+            savedInvoice = allInvoices[index];
         }
 
         await writeInvoices(allInvoices);
+        revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
         revalidatePath(`/tenancy/customer/add?code=${data.customerCode}`);
-        return { success: true };
+        return { success: true, data: savedInvoice };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
@@ -109,6 +150,7 @@ export async function deleteInvoice(invoiceId: string) {
         const updatedInvoices = allInvoices.filter(inv => inv.id !== invoiceId);
         await writeInvoices(updatedInvoices);
         revalidatePath(`/tenancy/customer/add?code=${invoiceToDelete.customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${invoiceToDelete.customerCode}`);
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
@@ -125,6 +167,7 @@ export async function updateInvoiceStatus(invoiceId: string, status: Invoice['st
         allInvoices[index].status = status;
         await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/customer/add?code=${allInvoices[index].customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${allInvoices[index].customerCode}`);
         return { success: true };
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
@@ -151,6 +194,7 @@ export async function applyPaymentToInvoices(invoicePayments: { invoiceId: strin
 
         await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/customer/add?code=${customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${customerCode}`);
         return { success: true };
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
