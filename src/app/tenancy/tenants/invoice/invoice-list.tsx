@@ -4,7 +4,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, DollarSign, Edit, Save, X, RotateCw } from 'lucide-react';
+import { Plus, Loader2, DollarSign, Edit, Save, X } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
@@ -19,7 +19,7 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { FormField, type Control } from '@/components/ui/form';
+import { FormField, FormItem, type Control } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -171,7 +171,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 control={formControl}
                                 name="isSubscriptionActive"
                                 render={({ field }) => (
-                                    <div className="flex items-center space-x-2">
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
                                         <Switch
                                             id="isSubscriptionActive"
                                             checked={field.value}
@@ -181,7 +181,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <Label htmlFor="isSubscriptionActive" className="!mt-0">
                                             Enable Subscription
                                         </Label>
-                                    </div>
+                                    </FormItem>
                                 )}
                             />
                              {tenant.isSubscriptionActive && (
