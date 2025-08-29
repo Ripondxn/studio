@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -47,7 +48,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit, getTenantForProperty } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData, getTenantLookups, getUnitsForProperty, getRoomsForUnit } from '../actions';
+import { getTenantForProperty } from '../../contract/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '@/app/tenancy/tenants/invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';

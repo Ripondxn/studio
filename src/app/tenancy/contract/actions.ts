@@ -1,3 +1,4 @@
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -69,7 +70,8 @@ async function createChequesFromContract(contract: Contract) {
                 bankName: installment.bankName || '',
                 status: 'In Hand',
                 type: 'Incoming',
-                partyName: contract.tenantName,
+                partyType: 'Tenant',
+                partyName: contract.tenantCode,
                 property: contract.property,
                 unitCode: contract.unitCode,
                 roomCode: contract.roomCode,
@@ -361,6 +363,27 @@ export async function getRoomDetails(roomCode: string) {
     return { success: true, data: room };
 }
 
+export async function getTenantForProperty(propertyCode: string, unitCode: string, roomCode?: string) {
+    try {
+        const contracts: Contract[] = await fs.readFile(contractsFilePath, 'utf-8').then(JSON.parse);
+        
+        const activeContract = contracts.find(c =>
+            c.property === propertyCode &&
+            c.unitCode === unitCode &&
+            (roomCode ? c.roomCode === roomCode : true) && // Match room if provided
+            (c.status === 'New' || c.status === 'Renew')
+        );
+
+        if (activeContract) {
+            return { success: true, tenantName: activeContract.tenantName };
+        }
+        return { success: false, error: 'No active tenant found for this location.' };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
+}
+
 const moveTenantSchema = z.object({
     contractId: z.string(),
     newPropertyCode: z.string(),
@@ -433,5 +456,3 @@ export async function getLatestContractForTenant(tenantCode: string): Promise<{ 
         return { success: false, error: (error as Error).message };
     }
 }
-
-    
