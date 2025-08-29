@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
 import { type Invoice } from './schema';
-import { formSchema } from './form-schema';
+import { invoiceSchema } from './form-schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
 import { Switch } from '@/components/ui/switch';
@@ -40,7 +40,7 @@ import { type Product } from '@/app/products/schema';
 import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
 
-type InvoiceFormData = z.infer<typeof formSchema>;
+type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 interface InvoiceDialogProps {
   isOpen: boolean;
@@ -68,7 +68,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     setValue,
     formState: { errors },
   } = useForm<InvoiceFormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(invoiceSchema),
   });
   
   const { fields, append, remove } = useFieldArray({
