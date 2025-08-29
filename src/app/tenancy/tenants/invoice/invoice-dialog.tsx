@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -28,8 +28,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Printer } from 'lucide-react';
 import { saveInvoice, getNextSubscriptionInvoiceNumber } from './actions';
-import { type Invoice } from './schema';
-import { invoiceSchema } from './schema';
+import { type Invoice, invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
@@ -59,6 +58,11 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   });
 
   const { register, control, handleSubmit, reset, watch, setValue } = form;
+
+  const { fields } = useFieldArray({
+    control,
+    name: "items",
+  });
 
   const watchedItems = watch('items');
 
