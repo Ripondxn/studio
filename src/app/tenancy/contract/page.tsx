@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -309,6 +308,7 @@ export default function TenancyContractPage() {
 
   const handleScheduleChange = (index: number, field: keyof PaymentInstallment, value: string | number) => {
     const currentSchedule = [...contract.paymentSchedule];
+    const totalRent = contract.totalRent;
 
     if (field === 'amount') {
         const newAmount = Number(value);
@@ -322,7 +322,7 @@ export default function TenancyContractPage() {
             .filter((_, i) => newEditedIndexes.has(i))
             .reduce((sum, item) => sum + item.amount, 0);
         
-        const remainingRent = contract.totalRent - totalManuallySetAmount;
+        const remainingRent = totalRent - totalManuallySetAmount;
         const uneditedInstallments = currentSchedule.filter((_, i) => !newEditedIndexes.has(i));
 
         if (uneditedInstallments.length > 0) {
@@ -335,7 +335,7 @@ export default function TenancyContractPage() {
             });
 
             const totalRecalculated = currentSchedule.reduce((sum, item) => sum + item.amount, 0);
-            const finalDifference = contract.totalRent - totalRecalculated;
+            const finalDifference = totalRent - totalRecalculated;
 
             if (finalDifference !== 0) {
                 const lastUneditedIndex = currentSchedule.map((item,i) => ({...item, originalIndex: i}))
@@ -878,3 +878,5 @@ export default function TenancyContractPage() {
     </div>
   );
 }
+
+    
