@@ -1,9 +1,8 @@
 
-
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useState, useEffect, useRef } from 'react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -18,7 +17,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -56,22 +54,11 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<InvoiceFormData>({
+  const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
   });
-  
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "items",
-  });
+
+  const { register, control, handleSubmit, reset, watch, setValue } = form;
 
   const watchedItems = watch('items');
 
@@ -249,7 +236,6 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                 </div>
             </div>
           </div>
-
           <DialogFooter className="mt-6 pt-4 border-t">
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>

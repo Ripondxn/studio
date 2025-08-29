@@ -59,18 +59,12 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<InvoiceFormData>({
+  const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
   });
   
+  const { control, register, handleSubmit, reset, watch, setValue } = form;
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
@@ -343,7 +337,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                 </div>
             </div>
           </div>
-
           <DialogFooter className="mt-6 pt-4 border-t">
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>
