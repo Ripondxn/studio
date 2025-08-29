@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -55,15 +56,6 @@ export function RoomCard({ room }: RoomCardProps) {
             <span className="text-muted-foreground flex items-center gap-2"><Home className="h-4 w-4" /> Unit Code</span>
             <span className="font-medium">{room.unitCode}</span>
           </div>
-          {room.rentAmount && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-2"><Tag className="h-4 w-4" /> Rent</span>
-              <span className="font-semibold font-mono text-base">
-                 {formatCurrency(room.rentAmount)}
-                <span className="text-xs text-muted-foreground font-sans normal-case">/{room.rentFrequency?.slice(0,2)}</span>
-              </span>
-            </div>
-          )}
         </CardContent>
         <CardFooter className="flex gap-2 mt-auto">
            {room.occupancyStatus === 'Vacant' ? (

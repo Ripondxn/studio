@@ -28,7 +28,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const roomFormSchema = roomSchema.omit({ propertyCode: true });
 
-export function EditRoomDialog({ room, isOpen, setIsOpen, onRoomUpdated }: { room: Room, isOpen: boolean, setIsOpen: (open: boolean) => void, onRoomUpdated?: () => void }) {
+interface EditRoomDialogProps {
+  room: Room,
+  isOpen: boolean,
+  setIsOpen: (open: boolean) => void,
+  onRoomUpdated?: () => void;
+}
+
+export function EditRoomDialog({ room, isOpen, setIsOpen, onRoomUpdated }: EditRoomDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -137,32 +144,6 @@ export function EditRoomDialog({ room, isOpen, setIsOpen, onRoomUpdated }: { roo
                         )}
                     />
                     {errors.roomType && <p className="text-destructive text-xs mt-1">{errors.roomType.message}</p>}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="rentAmount">Rent Amount</Label>
-                        <Input id="rentAmount" type="number" {...register('rentAmount', { valueAsNumber: true })} />
-                        {errors.rentAmount && <p className="text-destructive text-xs mt-1">{errors.rentAmount.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="rentFrequency">Rent Frequency</Label>
-                        <Controller
-                            name="rentFrequency"
-                            control={control}
-                            render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select frequency" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Monthly">Monthly</SelectItem>
-                                        <SelectItem value="Yearly">Yearly</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
-                         {errors.rentFrequency && <p className="text-destructive text-xs mt-1">{errors.rentFrequency.message}</p>}
-                    </div>
                 </div>
             </div>
             <DialogFooter>
