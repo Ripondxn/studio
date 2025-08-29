@@ -20,14 +20,15 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { FormField, FormItem, type Control } from '@/components/ui/form';
+import { FormField, FormItem, type Control, FormMessage } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
-import { getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+import { getUnitsForProperty, getRoomsForUnit, getContractLookups } from '../../contract/actions';
 import { useForm, useFormContext } from 'react-hook-form';
+import { Separator } from '@/components/ui/separator';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -55,6 +56,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     
     const watchedProperty = watch('property');
     const watchedUnit = watch('unitCode');
+
+    useEffect(() => {
+        getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
+    }, []);
 
     useEffect(() => {
         const fetchUnits = async () => {
@@ -157,17 +162,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         <CardDescription>Manage subscription and invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
-                         {isSubscriptionEditing ? (
-                            <>
-                                <Button size="sm" onClick={() => setIsSubscriptionEditing(false)}>
-                                    <X className="mr-2 h-4 w-4" /> Cancel Edit
-                                </Button>
-                            </>
-                         ) : (
-                             <Button size="sm" variant="outline" onClick={() => setIsSubscriptionEditing(true)}>
-                                <Edit className="mr-2 h-4 w-4" /> Edit Subscription
-                            </Button>
-                         )}
                         <Button onClick={handleCreateClick}>
                             <Plus className="mr-2 h-4 w-4" /> 
                             {tenant.isSubscriptionActive ? 'New Subscription Invoice' : 'Create Invoice'}
@@ -192,7 +186,20 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
             <CardContent>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Subscription & Property</CardTitle>
+                        <div className="flex justify-between items-center">
+                            <CardTitle>Subscription Management</CardTitle>
+                             {!isSubscriptionEditing ? (
+                                <Button size="sm" variant="outline" onClick={() => setIsSubscriptionEditing(true)}>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit Subscription
+                                </Button>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <Button size="sm" onClick={() => setIsSubscriptionEditing(false)}>
+                                        <X className="mr-2 h-4 w-4" /> Cancel
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center space-x-2">
@@ -208,7 +215,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                             disabled={!isSubscriptionEditing}
                                         />
                                         <Label htmlFor="isSubscriptionActive" className="!mt-0">
-                                            Enable Subscription
+                                            Enable Subscription-Based Tenancy
                                         </Label>
                                     </FormItem>
                                 )}
@@ -266,8 +273,8 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                          <CardTitle>Rented Property</CardTitle>
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <FormField control={formControl} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode','');}} placeholder="Select property" disabled={!isSubscriptionEditing} /><FormMessage /></FormItem>)} />
-                            <FormField control={formControl} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={(value) => {setValue('unitCode', value); setValue('roomCode', '');}} placeholder="Select unit" disabled={!isSubscriptionEditing || !watchedProperty || isLoadingUnits} /><FormMessage /></FormItem>)} />
-                            <FormField control={formControl} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={(value) => setValue('roomCode', value)} placeholder="Select room" disabled={!isSubscriptionEditing || !watchedUnit || isLoadingRooms} /><FormMessage /></FormItem>)} />
+                            <FormField control={formControl} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={(value) => {setValue('unitCode', value); setValue('roomCode', '');}} placeholder="Select unit" disabled={!isSubscriptionEditing || !watchedProperty} /><FormMessage /></FormItem>)} />
+                            <FormField control={formControl} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={(value) => setValue('roomCode', value)} placeholder="Select room" disabled={!isSubscriptionEditing || !watchedUnit} /><FormMessage /></FormItem>)} />
                         </div>
                     </CardContent>
                 </Card>
