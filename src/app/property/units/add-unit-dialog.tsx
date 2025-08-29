@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -18,28 +17,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { unitSchema, type Unit } from './schema';
-import { addUnit, getUnitLookups } from './actions';
-import { Combobox } from '@/components/ui/combobox';
+import { addUnit } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type UnitFormData = Omit<Unit, 'id'>;
-const unitFormSchema = unitSchema.omit({ id: true });
+type UnitFormData = Omit<Unit, 'id' | 'occupancyStatus'>;
+const unitFormSchema = unitSchema.omit({ id: true, occupancyStatus: true });
 
 export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: string, onUnitAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<{ properties: { value: string, label: string }[] }>({ properties: [] });
-
-  useEffect(() => {
-      if(isOpen) {
-          getUnitLookups(propertyCode).then(setLookups);
-      }
-  }, [isOpen, propertyCode]);
 
   const {
     register,
@@ -52,12 +42,27 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
     defaultValues: {
         unitCode: '',
         unitName: '',
+        floor: '',
         propertyCode: propertyCode,
         unitType: '',
         annualRent: 0,
         unitStatus: 'Active',
     }
   });
+
+   useEffect(() => {
+    if (isOpen) {
+      reset({
+        unitCode: '',
+        unitName: '',
+        floor: '',
+        propertyCode: propertyCode,
+        unitType: '',
+        annualRent: 0,
+        unitStatus: 'Active',
+      });
+    }
+  }, [isOpen, reset, propertyCode]);
 
   const onSubmit = async (data: UnitFormData) => {
     setIsSaving(true);
@@ -102,6 +107,14 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
                     <Input id="unitCode" {...register('unitCode')} />
                     {errors.unitCode && <p className="text-destructive text-xs mt-1">{errors.unitCode.message}</p>}
                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="unitName">Unit Name (Optional)</Label>
+                    <Input id="unitName" {...register('unitName')} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="floor">Floor</Label>
+                    <Input id="floor" {...register('floor')} />
+                </div>
                 <div className="space-y-2">
                     <Label htmlFor="unitType">Unit Type</Label>
                      <Controller
@@ -113,9 +126,12 @@ export function AddUnitDialog({ propertyCode, onUnitAdded }: { propertyCode: str
                                     <SelectValue placeholder="Select a unit type" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="Studio">Studio</SelectItem>
                                     <SelectItem value="1BHK">1BHK</SelectItem>
                                     <SelectItem value="2BHK">2BHK</SelectItem>
                                     <SelectItem value="3BHK">3BHK</SelectItem>
+                                    <SelectItem value="Office">Office</SelectItem>
+                                    <SelectItem value="Shop">Shop</SelectItem>
                                 </SelectContent>
                             </Select>
                         )}
