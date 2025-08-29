@@ -38,18 +38,6 @@ async function getContracts(): Promise<Contract[]> {
     return await readData(contractsFilePath);
 }
 
-async function getUnits(): Promise<Unit[]> {
-    return await readData(unitsFilePath);
-}
-
-async function getProperties() {
-    return await readData(propertiesFilePath);
-}
-
-async function getRooms(): Promise<Room[]> {
-    return await readData(roomsFilePath);
-}
-
 async function writeTenants(data: any) {
     await fs.writeFile(tenantsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
@@ -135,7 +123,8 @@ export async function saveTenantData(dataToSave: any, isNewRecord: boolean, isAu
             }
             allTenants[index] = {
                 ...allTenants[index],
-                ...dataToSave,
+                tenantData: dataToSave.tenantData,
+                attachments: dataToSave.attachments,
                 id: allTenants[index].id
             };
             savedTenant = allTenants[index];
@@ -166,38 +155,7 @@ export async function findTenantData(tenantCode: string) {
     const tenant = allTenants.find((l: any) => l.tenantData.code === tenantCode);
 
     if (tenant) {
-       const allContracts = await getContracts();
-       let contractData: Partial<Contract> = {};
-       let unitData: Partial<Unit & { property?: any }> = {};
-       let roomData: Partial<Room> = {};
-
-       const relatedContract = allContracts.find(c => c.tenantCode === tenantCode);
-       
-       if(relatedContract) {
-            contractData = relatedContract;
-            tenant.tenantData.contractNo = relatedContract.contractNo;
-
-            if (relatedContract.unitCode) {
-                const allUnits = await getUnits();
-                const relatedUnit = allUnits.find(u => u.unitCode === relatedContract.unitCode);
-                
-                if (relatedUnit) {
-                    const allProperties = await getProperties();
-                    const relatedProperty = allProperties.find(p => (p.propertyData || p).code === relatedUnit.propertyCode);
-                    
-                    unitData = {
-                        ...relatedUnit,
-                        property: relatedProperty ? (relatedProperty.propertyData || relatedProperty) : null
-                    };
-
-                    const allRooms = await getRooms();
-                    const relatedRoom = allRooms.find(r => r.unitCode === relatedUnit.unitCode && r.propertyCode === relatedUnit.propertyCode);
-                    if(relatedRoom) roomData = relatedRoom;
-                }
-            }
-       }
-
-       return { success: true, data: {...tenant, contractData, unitData, roomData } };
+       return { success: true, data: tenant };
     } else {
        return { success: false, error: "Not Found" };
     }
@@ -245,4 +203,26 @@ export async function cancelSubscription(tenantCode: string) {
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
+}
+
+export async function getTenantLookups() {
+    const properties = await readData(propertiesFilePath);
+    
+    return {
+        properties: properties.map((p: any) => ({ value: (p.propertyData || p).code, label: (p.propertyData || p).name })),
+    }
+}
+
+export async function getUnitsForProperty(propertyCode: string) {
+    const allUnits: Unit[] = await readData(unitsFilePath);
+    return allUnits
+        .filter(u => u.propertyCode === propertyCode)
+        .map(u => ({ value: u.unitCode, label: u.unitCode }));
+}
+
+export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
+    const allRooms: Room[] = await readData(roomsFilePath);
+     return allRooms
+        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode)
+        .map(r => ({ value: r.roomCode, label: r.roomCode }));
 }

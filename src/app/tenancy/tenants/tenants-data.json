@@ -1032,14 +1032,6 @@
     }
   },
   {
-    "id": "T1719827401137",
-    "tenantData": {
-      "code": "T137",
-      "name": "MR. ABDIRAHMAN AHMED",
-      "email": "mr.abdirahman.ahmed2@example.com"
-    }
-  },
-  {
     "id": "T1719827401138",
     "tenantData": {
       "code": "T138",
@@ -1097,8 +1089,9 @@
       "property": "LT-C38",
       "unitCode": "F101",
       "roomCode": "Room-1/A",
-      "isSubscriptionActive": false,
-      "subscriptionAmount": 0
+      "isSubscriptionActive": true,
+      "subscriptionStatus": "Monthly",
+      "subscriptionAmount": 1200
     },
     "attachments": []
   }
