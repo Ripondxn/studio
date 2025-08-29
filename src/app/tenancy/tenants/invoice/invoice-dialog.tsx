@@ -42,7 +42,6 @@ import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 
-
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 interface SubscriptionInvoiceDialogProps {

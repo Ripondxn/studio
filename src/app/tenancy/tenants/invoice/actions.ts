@@ -131,7 +131,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
             const paymentResult = await addPayment({
                 type: 'Receipt',
                 date: newInvoice.invoiceDate,
-                partyType: 'Tenant', // Invoices in this context are for tenants
+                partyType: newInvoice.customerCode.startsWith('T') ? 'Tenant' : 'Customer',
                 partyName: newInvoice.customerCode,
                 amount: newInvoice.total,
                 paymentMethod: 'Other', // 'Other' for invoice creation
@@ -230,3 +230,4 @@ export async function applyPaymentToInvoices(invoicePayments: { invoiceId: strin
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
