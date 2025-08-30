@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { type Bill } from './schema';
@@ -34,6 +35,7 @@ export function BillView({ bill }: { bill: Bill }) {
                 <div>
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">From</h3>
                     <p className="font-bold text-gray-800">{bill.vendorName}</p>
+                    {bill.vatRegNo && <p className="text-xs text-gray-500 mt-1">TRN: {bill.vatRegNo}</p>}
                 </div>
                 <div className="text-right">
                      <div className="mb-2">
