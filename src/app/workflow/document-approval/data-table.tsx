@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -70,38 +69,38 @@ export function DataTable<TData, TValue>({
                       colSpan={columns.length}
                       className="h-24 text-center"
                     >
-                    <div className="flex justify-center items-center">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                  </TableCell>
+                  <div className="flex justify-center items-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No documents found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No documents found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
           </Table>
         </ScrollArea>
       </div>
@@ -123,3 +122,6 @@ export function DataTable<TData, TValue>({
           Next
         </Button>
       </div>
+    </div>
+  )
+}
