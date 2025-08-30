@@ -68,7 +68,7 @@ export async function createBillFromDocument(data: any, isAutoBillNo: boolean, c
             vendorName: vendor.vendorData.name,
             billDate: data.date,
             dueDate: data.dueDate || data.date,
-            status: 'Paid',
+            status: 'Paid' as const,
         };
         
         const billResult = await saveBill(billData, true, isAutoBillNo); 
@@ -121,8 +121,7 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
             ...data,
             isAutoInvoiceNo: true,
             status: 'Paid' as const,
-            // Assign a default expense account for direct posting
-            expenseAccountId: '4110', // Rental Income
+            expenseAccountId: data.expenseAccountId || '4110', 
         };
 
         const result = await saveInvoice(invoiceData, currentUser.name);
