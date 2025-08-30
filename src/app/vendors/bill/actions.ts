@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache';
 import { billSchema, type Bill } from './schema';
 import { getLookups as getPaymentLookups } from '@/app/finance/payment/actions';
 import { getContractLookups } from '@/app/tenancy/contract/actions';
-import { getExpenseAccounts } from '@/app/lookups/actions';
+import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
 import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
 import { getProducts } from '@/app/products/actions';
 import { format } from 'date-fns';
