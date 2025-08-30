@@ -51,7 +51,8 @@ import {
   AlertTriangle,
   KeyRound,
   Eraser,
-  ScanLine
+  ScanLine,
+  FileCheck2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -146,8 +147,11 @@ const navLinks = [
     },
     {
         label: 'Workflow',
-        href: '/workflow',
         icon: <LineChart />,
+        subItems: [
+            { href: '/workflow', label: 'Financial Approvals' },
+            { href: '/workflow/document-approval', label: 'Document Approvals' },
+        ]
     },
     { 
         label: 'Settings', 

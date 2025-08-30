@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -143,6 +142,7 @@ const roleIcons: { [key in Role]: React.ReactNode } = {
   'Super Admin': <UserCheck className="h-5 w-5" />,
   'Property Manager': <User className="h-5 w-5" />,
   Accountant: <User className="h-5 w-5" />,
+  Developer: <User className="h-5 w-5" />,
 };
 
 const ApprovalHistoryDialog = ({ history, transactionId }: { history: ApprovalHistory[], transactionId: string }) => {
@@ -444,7 +444,7 @@ export default function WorkflowPage() {
 
   const getActionButtons = (transaction: Payment) => {
     if (!currentUser) return null;
-    const canSubmitRoles: Role[] = ['User', 'Property Manager', 'Accountant', 'Admin', 'Super Admin'];
+    const canSubmitRoles: Role[] = ['User', 'Property Manager', 'Accountant', 'Admin', 'Super Admin', 'Developer'];
 
     if (canSubmitRoles.includes(currentUser.role) && (transaction.currentStatus === 'DRAFT' || transaction.currentStatus === 'REJECTED')) {
       return (
@@ -574,7 +574,7 @@ export default function WorkflowPage() {
             <div className="flex justify-between items-start">
                 <div>
                     <CardTitle className="font-headline text-2xl">
-                        Document Approval Controller
+                        Financial Approval Workflow
                     </CardTitle>
                     <CardDescription>
                         Manage and track financial transactions through the approval
