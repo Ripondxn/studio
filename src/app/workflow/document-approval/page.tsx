@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { type Role, type Status } from './types';
+import { type Role, type Status } from '../types';
 import type { DocumentForApproval } from './schema';
 import { getDocumentsForApproval } from './actions';
 import { columns } from './columns';
