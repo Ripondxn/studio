@@ -97,13 +97,15 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
     setIsSaving(true);
     let result;
 
+    const itemsWithIds = data.items.map(item => ({ ...item, id: `item-${Date.now()}-${Math.random()}`}));
+
     if (data.documentType === 'Bill') {
         const billData = {
             vendorCode: data.partyCode,
             vendorName: lookups.vendors.find(v => v.value === data.partyCode)?.label || data.partyCode,
             billDate: data.date,
             dueDate: data.dueDate,
-            items: data.items.map(item => ({ ...item, id: `item-${Date.now()}`})),
+            items: itemsWithIds,
             subTotal: data.subTotal,
             tax: data.tax,
             total: data.total,
@@ -118,7 +120,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
              customerName: (lookups.customers.find(c => c.value === data.partyCode)?.label || lookups.tenants.find(t => t.value === data.partyCode)?.label) || data.partyCode,
              invoiceDate: data.date,
              dueDate: data.dueDate,
-             items: data.items.map(item => ({ ...item, id: `item-${Date.now()}`})),
+             items: itemsWithIds,
              subTotal: data.subTotal,
              tax: data.tax,
              total: data.total,
