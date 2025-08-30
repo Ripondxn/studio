@@ -88,6 +88,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
     const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(dataWithDueDate);
 
     if (!validation.success) {
+        console.error("Bill Validation Error:", validation.error.format());
         return { success: false, error: 'Invalid data format.' };
     }
 
