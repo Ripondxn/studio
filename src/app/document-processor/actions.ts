@@ -12,7 +12,6 @@ import { type UserRole } from '../admin/user-roles/schema';
 import { addPayment } from '../finance/payment/actions';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { applyFinancialImpact } from '../workflow/actions';
 
 
 export async function extractDataFromDocument(input: ProcessDocumentInput) {
@@ -69,7 +68,6 @@ export async function createBillFromDocument(data: any, isAutoBillNo: boolean, c
             billDate: data.date,
             dueDate: data.dueDate || data.date,
             status: 'Paid' as const,
-            maintenanceTicketId: data.maintenanceTicketId
         };
         
         const billResult = await saveBill(billData, true, isAutoBillNo); 
@@ -92,6 +90,9 @@ export async function createBillFromDocument(data: any, isAutoBillNo: boolean, c
             billAllocations: [{ billId: savedBill.id, amount: savedBill.total }],
             createdByUser: currentUser.name,
             currentStatus: 'POSTED' as const,
+            property: savedBill.property,
+            unitCode: savedBill.unitCode,
+            roomCode: savedBill.roomCode,
              approvalHistory: [{
                 action: 'Created & Auto-Posted via Document Processor',
                 actorId: currentUser.email,
@@ -107,8 +108,6 @@ export async function createBillFromDocument(data: any, isAutoBillNo: boolean, c
              throw new Error(paymentResult.error || 'Bill was saved, but failed to create the financial transaction.');
         }
         
-        // No need to call applyFinancialImpact here, as addPayment handles it for 'POSTED' status
-        
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message };
@@ -121,7 +120,6 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
             ...data,
             isAutoInvoiceNo: true,
             status: 'Paid' as const,
-            expenseAccountId: data.expenseAccountId || '4110', 
         };
 
         const result = await saveInvoice(invoiceData, currentUser.name);
@@ -131,7 +129,6 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
         
         const savedInvoice = result.data;
 
-        // Now, create and post the associated payment record
         const paymentRecord = {
             type: 'Receipt' as const,
             date: savedInvoice.invoiceDate,
@@ -146,6 +143,10 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
             invoiceAllocations: [{ invoiceId: savedInvoice.id, amount: savedInvoice.total }],
             createdByUser: currentUser.name,
             currentStatus: 'POSTED' as const,
+            property: savedInvoice.property,
+            unitCode: savedInvoice.unitCode,
+            roomCode: savedInvoice.roomCode,
+            expenseAccountId: data.expenseAccountId,
             approvalHistory: [{
                 action: 'Created & Auto-Posted via Document Processor',
                 actorId: currentUser.email,
@@ -159,8 +160,6 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
         if(!paymentResult.success || !paymentResult.data) {
              throw new Error(paymentResult.error || 'Invoice was saved, but failed to create the financial transaction.');
         }
-        
-        // No need to call applyFinancialImpact here, as addPayment handles it for 'POSTED' status
 
         return { success: true };
     } catch (error) {
@@ -172,6 +171,8 @@ export async function createReceiptFromDocument(data: any, currentUser: {name: s
     try {
          const paymentRecord = {
             ...data,
+            type: 'Receipt',
+            status: 'Received',
             currentStatus: 'POSTED' as const,
              approvalHistory: [{
                 action: 'Created & Auto-Posted via Document Processor',
@@ -187,9 +188,6 @@ export async function createReceiptFromDocument(data: any, currentUser: {name: s
             throw new Error(result.error);
         }
         
-        // No need to call applyFinancialImpact here. 
-        // The addPayment function already handles financial impact for transactions with 'POSTED' status.
-
         return { success: true };
     } catch (error) {
          return { success: false, error: (error as Error).message };

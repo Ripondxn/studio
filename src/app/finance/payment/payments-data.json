@@ -4,9 +4,9 @@
     "date": "2025-08-30",
     "partyType": "Customer",
     "partyName": "C002",
-    "amount": 120,
+    "amount": 200,
     "paymentMethod": "Cash",
-    "paymentFrom": "Bank",
+    "paymentFrom": "Petty Cash",
     "referenceType": "",
     "referenceNo": "",
     "description": "",
@@ -14,16 +14,60 @@
     "createdByUser": "Super Admin",
     "invoiceAllocations": [],
     "billAllocations": [],
-    "id": "PAY-1756547992265",
+    "id": "PAY-1756548328835",
     "currentStatus": "POSTED",
     "approvalHistory": [
       {
-        "action": "Created Transaction",
+        "action": "Created & Posted",
         "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-08-30T09:59:52.265Z",
-        "comments": "Initial status set to POSTED"
+        "timestamp": "2025-08-30T10:05:28.835Z",
+        "comments": "Directly recorded transaction."
       }
     ]
+  },
+  {
+    "type": "Receipt",
+    "date": "2024-08-27",
+    "partyType": "Customer",
+    "partyName": "C001",
+    "amount": 26.25,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "description": "Payment for uploaded receipt. Processed from uploaded document.",
+    "status": "Received",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created & Posted",
+        "actorId": "System",
+        "actorRole": "User",
+        "timestamp": "2025-08-30T10:06:31.517Z",
+        "comments": "Directly recorded transaction."
+      }
+    ],
+    "id": "PAY-1756548391517"
+  },
+  {
+    "type": "Receipt",
+    "date": "2024-10-21",
+    "partyType": "Vendor",
+    "partyName": "V001",
+    "amount": 10,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "description": "Payment for uploaded receipt. Processed from uploaded document.",
+    "status": "Received",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created & Posted",
+        "actorId": "System",
+        "actorRole": "User",
+        "timestamp": "2025-08-30T10:10:22.888Z",
+        "comments": "Directly recorded transaction."
+      }
+    ],
+    "id": "PAY-1756548622888"
   }
 ]

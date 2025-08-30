@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -16,7 +17,6 @@ import { type Partition } from '@/app/property/partitions/schema';
 import { type ReceiptBook } from '@/app/finance/book-management/schema';
 import { type Product } from '@/app/products/schema';
 import { type MaintenanceTicket } from '@/app/maintenance/ticket-issue/schema';
-import { type Account } from '@/app/finance/chart-of-accounts/schema';
 
 
 async function readData<T>(filePath: string, defaultValue: T[] = []): Promise<T[]> {
@@ -31,13 +31,6 @@ async function readData<T>(filePath: string, defaultValue: T[] = []): Promise<T[
         }
         throw error;
     }
-}
-
-export async function getExpenseAccounts(): Promise<{ value: string; label: string }[]> {
-    const accounts: Account[] = await readData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
-    return accounts
-        .filter(acc => acc.type === 'Expense' && !acc.isGroup)
-        .map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})` }));
 }
 
 export async function getLookups() {

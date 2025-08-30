@@ -28,3 +28,10 @@ export async function getExpenseAccounts(): Promise<{ value: string; label: stri
         .filter(acc => acc.type === 'Expense' && !acc.isGroup)
         .map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})` }));
 }
+
+export async function getRevenueAccounts(): Promise<{ value: string; label: string }[]> {
+    const accounts: Account[] = await readData(accountsFilePath);
+    return accounts
+        .filter(acc => acc.type === 'Revenue' && !acc.isGroup)
+        .map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})` }));
+}

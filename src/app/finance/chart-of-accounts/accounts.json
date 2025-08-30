@@ -112,7 +112,7 @@
     "name": "Accounts Payable",
     "type": "Liability",
     "status": "Active",
-    "balance": 0,
+    "balance": -10,
     "isGroup": false,
     "parentCode": "2100"
   },
@@ -211,7 +211,7 @@
     "name": "Rental Income",
     "type": "Revenue",
     "status": "Active",
-    "balance": 120,
+    "balance": 236.25,
     "isGroup": false,
     "parentCode": "4100"
   },
