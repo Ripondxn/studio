@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -40,6 +39,12 @@ interface InvoiceListProps {
     formControl: Control<Tenant>;
 }
 
+type Lookups = {
+    properties: {value: string, label: string}[];
+    units: {value: string, label: string, propertyCode: string}[];
+    rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[];
+}
+
 export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, formControl }: InvoiceListProps) {
     const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
     const [isGeneralInvoiceDialogOpen, setIsGeneralInvoiceDialogOpen] = useState(false);
@@ -51,11 +56,42 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const router = useRouter();
     const { formatCurrency } = useCurrency();
     const { toast } = useToast();
-    const { watch } = useFormContext<Tenant>();
+    const { watch, setValue } = useFormContext<Tenant>();
     
+    const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [] });
+
+    useEffect(() => {
+        getContractLookups().then(data => {
+            setLookups(prev => ({...prev, properties: data.properties}));
+        });
+    }, []);
+
     const watchedProperty = watch('property');
     const watchedUnit = watch('unitCode');
+    
+    const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
+    const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
 
+    useEffect(() => {
+        const fetchUnits = async () => {
+            if(watchedProperty) {
+                const unitsData = await getUnitsForProperty(watchedProperty);
+                setLookups(prev => ({...prev, units: unitsData, rooms: []}));
+            }
+        }
+        fetchUnits();
+    }, [watchedProperty]);
+
+    useEffect(() => {
+        const fetchRooms = async () => {
+            if(watchedProperty && watchedUnit) {
+                const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
+                setLookups(prev => ({...prev, rooms: roomsData}));
+            }
+        }
+        fetchRooms();
+    }, [watchedProperty, watchedUnit]);
+    
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
@@ -248,9 +284,39 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         <Separator />
                          <CardTitle>Rented Property</CardTitle>
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <FormField control={formControl} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Input value={field.value || ''} disabled /><FormMessage /></FormItem>)} />
-                            <FormField control={formControl} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Input value={field.value || ''} disabled /><FormMessage /></FormItem>)} />
-                            <FormField control={formControl} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Input value={field.value || ''} disabled /><FormMessage /></FormItem>)} />
+                            <FormField
+                                control={formControl}
+                                name="property"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <Label>Property</Label>
+                                     <Combobox options={lookups.properties || []} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property" disabled={!isSubscriptionEditing}/>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={formControl}
+                                name="unitCode"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <Label>Unit</Label>
+                                     <Combobox options={filteredUnits} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!isSubscriptionEditing || !watchedProperty}/>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={formControl}
+                                name="roomCode"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <Label>Room (Optional)</Label>
+                                    <Combobox options={filteredRooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!isSubscriptionEditing || !watchedUnit}/>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
                         </div>
                     </CardContent>
                 </Card>
