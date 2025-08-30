@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -29,7 +28,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice, getNextGeneralInvoiceNumber, getContractLookups } from './actions';
+import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
 import { type Invoice } from './schema';
 import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
@@ -39,7 +38,7 @@ import { useCurrency } from '@/context/currency-context';
 import { type Product } from '@/app/products/schema';
 import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
-import { getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
