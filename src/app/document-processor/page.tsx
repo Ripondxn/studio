@@ -33,6 +33,19 @@ export default function DocumentProcessorPage() {
         setCurrentUser(JSON.parse(storedProfile));
     }
   }, []);
+  
+  const processFile = useCallback(async (fileDataUri: string) => {
+    setIsLoading(true);
+    setProcessedData(null);
+    setError(null);
+    const result = await extractDataFromDocument({ documentDataUri: fileDataUri });
+    if (result.success && result.data) {
+        setProcessedData(result.data);
+    } else {
+        setError(result.error || 'Failed to extract data from the document.');
+    }
+    setIsLoading(false);
+  }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -48,20 +61,7 @@ export default function DocumentProcessorPage() {
       };
       reader.readAsDataURL(selectedFile);
     }
-  }, []);
-
-  const processFile = async (fileDataUri: string) => {
-    setIsLoading(true);
-    setProcessedData(null);
-    setError(null);
-    const result = await extractDataFromDocument({ documentDataUri: fileDataUri });
-    if (result.success && result.data) {
-        setProcessedData(result.data);
-    } else {
-        setError(result.error || 'Failed to extract data from the document.');
-    }
-    setIsLoading(false);
-  }
+  }, [processFile]);
 
   const handleReset = () => {
       setFile(null);
