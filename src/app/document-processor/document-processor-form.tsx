@@ -224,8 +224,8 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
                 {fields.map((field, index) => (
                     <div key={field.id} className="flex gap-2 items-center">
                         <Input placeholder="Description" {...register(`items.${index}.description`)} className="flex-grow"/>
-                        <Input type="number" placeholder="Qty" {...register(`items.${index}.quantity`, { valueAsNumber: true })} className="w-20"/>
-                        <Input type="number" placeholder="Price" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} className="w-24"/>
+                        <Input type="number" step="any" placeholder="Qty" {...register(`items.${index}.quantity`, { valueAsNumber: true })} className="w-20"/>
+                        <Input type="number" step="any" placeholder="Price" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} className="w-24"/>
                         <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
                     </div>
                 ))}
@@ -234,12 +234,12 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
                 </Button>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Subtotal</Label><Input type="number" {...register('subTotal', {valueAsNumber: true})} /></div>
-              <div><Label>Tax</Label><Input type="number" {...register('tax', {valueAsNumber: true})} /></div>
+              <div><Label>Subtotal</Label><Input type="number" step="any" {...register('subTotal', {valueAsNumber: true})} /></div>
+              <div><Label>Tax</Label><Input type="number" step="any" {...register('tax', {valueAsNumber: true})} /></div>
             </div>
             <div>
                 <Label>Total Amount</Label>
-                <Input type="number" {...register('total', {valueAsNumber: true})} />
+                <Input type="number" step="any" {...register('total', {valueAsNumber: true})} />
             </div>
              <div>
                 <Label>Notes</Label>
