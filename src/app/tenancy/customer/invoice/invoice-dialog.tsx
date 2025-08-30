@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -29,10 +30,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice } from './actions';
+import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
 import { getLookups } from '@/app/lookups/actions';
-import { type Invoice } from './schema';
-import { invoiceSchema } from './schema';
+import { type Invoice, invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from './invoice-view';
 import { Switch } from '@/components/ui/switch';
@@ -212,7 +212,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
             </div>
-             <div className="space-y-2 mb-4">
+            <div className="space-y-2 mb-4">
                 <Label>VAT / Tax Registration No.</Label>
                 <Input {...register('vatRegNo')} />
             </div>

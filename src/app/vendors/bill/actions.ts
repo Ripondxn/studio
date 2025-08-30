@@ -74,7 +74,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
             if (index === -1) {
                 return { success: false, error: 'Bill not found.' };
             }
-            allBills[index] = { ...allBills[index], ...validatedData };
+            allBills[index] = { ...allBills[index], ...validatedData, items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`})) };
             savedBill = allBills[index];
         } else { // Create new
             let newBillNo = validatedData.billNo;
@@ -91,6 +91,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
                 billNo: newBillNo,
                 id: `BILL-${Date.now()}`,
                 amountPaid: 0,
+                 items: validatedData.items.map(item => ({...item, id: `item-${Date.now()}-${Math.random()}`}))
             };
             allBills.push(newBill);
             savedBill = newBill;

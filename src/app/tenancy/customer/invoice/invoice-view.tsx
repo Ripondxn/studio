@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { type Invoice } from './schema';
@@ -35,7 +36,7 @@ export function InvoiceView({ invoice }: { invoice: Invoice }) {
                 <div>
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Bill To</h3>
                     <p className="font-bold text-gray-800">{invoice.customerName}</p>
-                    {/* Add more customer details if needed */}
+                    {invoice.vatRegNo && <p className="text-xs text-gray-500 mt-1">TRN: {invoice.vatRegNo}</p>}
                 </div>
                 <div className="text-right">
                      <div className="mb-2">

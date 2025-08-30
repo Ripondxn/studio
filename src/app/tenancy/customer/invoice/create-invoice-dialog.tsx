@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -196,11 +197,11 @@ export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: 
             </div>
              <div className="flex items-center space-x-2 mb-4">
                 <Switch 
-                    id="auto-invoice-no-switch-create"
+                    id="auto-invoice-no-switch"
                     checked={isAutoInvoiceNo}
                     onCheckedChange={setIsAutoInvoiceNo}
                 />
-                <Label htmlFor="auto-invoice-no-switch-create">Auto-generate Invoice No</Label>
+                <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
             </div>
              <div className="space-y-2 mb-4">
                 <Label>VAT / Tax Registration No.</Label>

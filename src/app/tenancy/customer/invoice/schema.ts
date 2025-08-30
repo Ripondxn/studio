@@ -36,4 +36,3 @@ export const invoiceSchema = z.object({
 
 export type Invoice = z.infer<typeof invoiceSchema>;
 export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
-
