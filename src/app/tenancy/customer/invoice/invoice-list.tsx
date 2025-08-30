@@ -4,17 +4,30 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, DollarSign } from 'lucide-react';
-import { columns } from './columns';
-import { DataTable } from './data-table';
+import { Plus, Loader2, DollarSign, Edit, Save, X } from 'lucide-react';
+import { columns } from '@/app/tenancy/customer/invoice/columns';
+import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
 import { InvoiceDialog } from './invoice-dialog';
-import { CreateInvoiceDialog } from './create-invoice-dialog'; // Import the new dialog
+import { CreateInvoiceDialog } from './create-invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
+import { type Tenant } from '../../tenants/schema';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { cancelSubscription } from '../../tenants/actions';
+import { useToast } from '@/hooks/use-toast';
+import { FormField, FormItem, type Control, FormMessage } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Combobox } from '@/components/ui/combobox';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+import { useFormContext } from 'react-hook-form';
+import { Separator } from '@/components/ui/separator';
 
 interface InvoiceListProps {
     customerCode: string;
@@ -35,6 +48,8 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
     const { formatCurrency } = useCurrency();
     
     const handleCreateClick = () => {
+        setSelectedInvoice(null);
+        setIsViewMode(false);
         setIsCreateInvoiceOpen(true);
     }
     

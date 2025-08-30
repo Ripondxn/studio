@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -28,15 +27,11 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Printer } from 'lucide-react';
-import { saveInvoice, getNextSubscriptionInvoiceNumber } from '@/app/tenancy/customer/invoice/actions';
-import { getLookups } from '@/app/lookups/actions';
+import { saveInvoice } from '@/app/tenancy/customer/invoice/actions';
 import { type Invoice, subscriptionInvoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
-import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
-import { type Product } from '@/app/products/schema';
-import { Combobox } from '@/components/ui/combobox';
 
 type InvoiceFormData = z.infer<typeof subscriptionInvoiceSchema>;
 
@@ -53,10 +48,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
-  const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string}[]; rooms: {value: string, label: string}[] }>({ properties: [], units: [], rooms: [] });
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(subscriptionInvoiceSchema),
@@ -82,54 +74,14 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     setValue('subTotal', subTotal);
-    setValue('total', subTotal); // For subscription invoices, total is same as subtotal
+    setValue('total', subTotal);
   }, [watchedItems, setValue]);
   
 
   useEffect(() => {
-    const initializeForm = async () => {
-        if (!tenant) return;
-
-        if (invoice) {
-            setIsAutoInvoiceNo(false);
-            reset(invoice);
-        } else {
-            const newInvoiceNo = await getNextSubscriptionInvoiceNumber();
-            setIsAutoInvoiceNo(true);
-
-            let subscriptionDescription = '';
-            let subscriptionAmount = 0;
-            if(tenant?.isSubscriptionActive) {
-              subscriptionDescription = tenant.subscriptionStatus ? `${tenant.subscriptionStatus} Subscription` : 'Subscription';
-              subscriptionAmount = tenant.subscriptionAmount || 0;
-            }
-
-            const newInvoiceData = {
-                invoiceNo: newInvoiceNo,
-                customerCode: tenant.code,
-                customerName: tenant.name,
-                property: tenant.property || '',
-                unitCode: tenant.unitCode || '',
-                roomCode: tenant.roomCode || '',
-                invoiceDate: format(new Date(), 'yyyy-MM-dd'),
-                dueDate: format(new Date(), 'yyyy-MM-dd'),
-                items: subscriptionAmount > 0 ? [{ 
-                    id: `item-${Date.now()}`, 
-                    description: subscriptionDescription, 
-                    quantity: 1, 
-                    unitPrice: subscriptionAmount, 
-                    total: subscriptionAmount 
-                }] : [],
-                subTotal: subscriptionAmount,
-                tax: 0,
-                taxType: 'exclusive' as 'exclusive' | 'inclusive',
-                taxRate: 0,
-                total: subscriptionAmount,
-                notes: '',
-                status: 'Draft' as 'Draft' | 'Sent' | 'Paid' | 'Overdue' | 'Cancelled',
-            };
-            reset(newInvoiceData);
-        }
+    const initializeForm = () => {
+        if (!tenant || !invoice) return;
+        reset(invoice);
     };
     if (isOpen) {
       initializeForm();
@@ -145,7 +97,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     const currentUser = JSON.parse(userProfile);
 
     setIsSaving(true);
-    const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
+    const result = await saveInvoice({ ...data, id: invoice?.id }, currentUser.name);
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();
@@ -198,27 +150,18 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
       <DialogContent className="sm:max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>{invoice ? 'Edit Subscription Invoice' : 'Create New Subscription Invoice'}</DialogTitle>
+            <DialogTitle>Edit Subscription Invoice</DialogTitle>
             <DialogDescription>
-              {invoice ? `Editing invoice ${invoice.invoiceNo}` : `Creating a new invoice for ${tenant.name}`}
+              Editing invoice {invoice?.invoiceNo} for {tenant.name}
             </DialogDescription>
           </DialogHeader>
 
           <div className="max-h-[60vh] overflow-y-auto p-1 space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
+              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled /></div>
               <div><Label>Tenant</Label><Input value={tenant.name} disabled/></div>
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
-            </div>
-             <div className="flex items-center space-x-2 mb-4">
-                <Switch 
-                    id="auto-invoice-no-switch-subscription"
-                    checked={isAutoInvoiceNo}
-                    onCheckedChange={setIsAutoInvoiceNo}
-                    disabled={!!invoice}
-                />
-                <Label htmlFor="auto-invoice-no-switch-subscription">Auto-generate Invoice No</Label>
             </div>
             
             <Table>
@@ -233,9 +176,9 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
               <TableBody>
                   {fields.map((field, index) => (
                       <TableRow key={field.id}>
-                          <TableCell><Input {...register(`items.${index}.description`)} disabled /></TableCell>
-                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} disabled /></TableCell>
-                          <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} disabled /></TableCell>
+                          <TableCell><Input {...register(`items.${index}.description`)} /></TableCell>
+                          <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} /></TableCell>
+                          <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
                           <TableCell className="text-right">
                             {formatCurrency((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                           </TableCell>
@@ -259,7 +202,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             </DialogClose>
             <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                Save Subs Invoice
+                Save Changes
             </Button>
           </DialogFooter>
         </form>
@@ -267,4 +210,3 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     </Dialog>
   );
 }
-
