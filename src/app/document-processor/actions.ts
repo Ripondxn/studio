@@ -71,7 +71,7 @@ export async function createBillFromDocument(data: any, currentUser: UserRole) {
             status: 'Paid',
         };
         
-        const billResult = await saveBill(billData, true, false, true); // Pass true to auto-create bill no
+        const billResult = await saveBill(billData, true, false); 
         if (!billResult.success || !billResult.data) {
             throw new Error(billResult.error || 'Failed to save bill from document.');
         }
@@ -83,14 +83,14 @@ export async function createBillFromDocument(data: any, currentUser: UserRole) {
             partyType: 'Vendor' as const,
             partyName: savedBill.vendorCode,
             amount: savedBill.total,
-            paymentMethod: 'Bank Transfer' as const, // Or a suitable default
-            paymentFrom: 'Bank' as const, // Default
+            paymentMethod: 'Bank Transfer' as const, 
+            paymentFrom: 'Bank' as const, 
             referenceNo: savedBill.billNo,
             description: `Payment for Bill #${savedBill.billNo} from processed document.`,
             status: 'Paid' as const,
             billAllocations: [{ billId: savedBill.id, amount: savedBill.total }],
             createdByUser: currentUser.name,
-            currentStatus: 'POSTED' as const, // Directly post
+            currentStatus: 'POSTED' as const,
              approvalHistory: [{
                 action: 'Created & Auto-Posted via Document Processor',
                 actorId: currentUser.email,
@@ -106,7 +106,7 @@ export async function createBillFromDocument(data: any, currentUser: UserRole) {
              throw new Error(paymentResult.error || 'Bill was saved, but failed to create the financial transaction.');
         }
         
-        // Since we are bypassing the normal workflow, we need to apply financial impact here.
+        // Apply financial impact since we are bypassing the normal workflow
         await applyFinancialImpact(paymentResult.data);
 
         return { success: true };
@@ -134,7 +134,7 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
         const paymentRecord = {
             type: 'Receipt' as const,
             date: savedInvoice.invoiceDate,
-            partyType: 'Customer' as const, // Assuming tenants are also customers
+            partyType: 'Customer' as const, 
             partyName: savedInvoice.customerCode,
             amount: savedInvoice.total,
             paymentMethod: 'Bank Transfer' as const,
@@ -159,7 +159,7 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
              throw new Error(paymentResult.error || 'Invoice was saved, but failed to create the financial transaction.');
         }
         
-        // Since we are bypassing the normal workflow, we need to apply financial impact here.
+        // Apply financial impact since we are bypassing the normal workflow
         await applyFinancialImpact(paymentResult.data);
 
         return { success: true };
@@ -187,7 +187,7 @@ export async function createReceiptFromDocument(data: any, currentUser: {name: s
             throw new Error(result.error);
         }
         
-        // Since we are bypassing the normal workflow, we need to apply financial impact here.
+        // Apply financial impact since we are bypassing the normal workflow
         await applyFinancialImpact(result.data);
 
         return { success: true };
