@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams }from 'next/navigation';
 import {
   Card,
@@ -40,6 +40,8 @@ import { addMonths, format as formatDate } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 import { PrintableMaintenanceContract } from '@/app/maintenance/contracts/printable-maintenance-contract';
+import { getContractLookups as getMaintenanceLookups } from '@/app/maintenance/contracts/actions';
+
 
 type LookupData = {
     landlords: {value: string, label: string}[];
@@ -83,6 +85,7 @@ export default function LeaseContractPage() {
   const [initialContract, setInitialContract] = useState<LeaseContract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
   const [lookups, setLookups] = useState<LookupData>({ landlords: [], properties: [], tenancyContracts: [] });
+  const [maintenanceLookups, setMaintenanceLookups] = useState<{vendors: {value: string, label: string}[], properties: {value: string, label: string}[]}>({vendors: [], properties: []})
   const printRef = useRef<HTMLDivElement>(null);
 
 
@@ -90,6 +93,9 @@ export default function LeaseContractPage() {
     getLookups().then(data => {
         setLookups(data);
     });
+    getMaintenanceLookups().then(data => {
+        setMaintenanceLookups(data);
+    })
 
     const contractId = searchParams.get('id');
     if (contractId) {
@@ -601,7 +607,7 @@ export default function LeaseContractPage() {
         </CardContent>
       </Card>
       <div className="hidden">
-        <PrintableMaintenanceContract ref={printRef} contract={contract} lookups={lookups} />
+        <PrintableMaintenanceContract ref={printRef} contract={contract as any} lookups={maintenanceLookups} />
       </div>
     </div>
   );
