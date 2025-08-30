@@ -1,4 +1,6 @@
 
+'use client';
+
 import { z } from 'zod';
 
 export const billItemSchema = z.object({
@@ -21,6 +23,7 @@ export const billSchema = z.object({
   maintenanceTicketId: z.string().optional(),
   billDate: z.string().min(1, 'Bill date is required.'),
   dueDate: z.string().min(1, 'Due date is required.'),
+  vatRegNo: z.string().optional(),
   items: z.array(billItemSchema).min(1, 'At least one item is required.'),
   subTotal: z.number(),
   taxType: z.enum(['exclusive', 'inclusive']).default('exclusive'),
@@ -35,3 +38,4 @@ export const billSchema = z.object({
 
 export type Bill = z.infer<typeof billSchema>;
 export type BillItem = z.infer<typeof billItemSchema>;
+

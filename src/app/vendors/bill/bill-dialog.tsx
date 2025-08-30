@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -145,6 +146,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                 roomCode: '',
                 billDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
+                vatRegNo: '',
                 items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
                 subTotal: 0,
                 tax: 0,
@@ -247,6 +249,10 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                     disabled={!!bill} // Disable toggle when editing
                 />
                 <Label htmlFor="auto-bill-no-switch">Auto-generate Bill No</Label>
+            </div>
+             <div className="space-y-2 mb-4">
+                <Label>VAT / Tax Registration No.</Label>
+                <Input {...register('vatRegNo')} />
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -451,7 +457,6 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                 </div>
             </div>
           </div>
-
           <DialogFooter className="mt-6 pt-4 border-t">
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>

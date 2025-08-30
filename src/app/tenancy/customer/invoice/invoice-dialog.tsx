@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -29,6 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 import { type Invoice } from './schema';
 import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
@@ -38,7 +40,6 @@ import { useCurrency } from '@/context/currency-context';
 import { type Product } from '@/app/products/schema';
 import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
@@ -142,6 +143,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                 roomCode: '',
                 invoiceDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
+                vatRegNo: '',
                 items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
                 subTotal: 0,
                 tax: 0,
@@ -251,6 +253,10 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                     disabled={!!invoice}
                 />
                 <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
+            </div>
+             <div className="space-y-2 mb-4">
+                <Label>VAT / Tax Registration No.</Label>
+                <Input {...register('vatRegNo')} />
             </div>
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                  <div>

@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export const invoiceItemSchema = z.object({
@@ -20,6 +21,7 @@ export const invoiceSchema = z.object({
   roomCode: z.string().optional(),
   invoiceDate: z.string().min(1, 'Invoice date is required.'),
   dueDate: z.string().min(1, 'Due date is required.'),
+  vatRegNo: z.string().optional(),
   items: z.array(invoiceItemSchema).min(1, 'At least one item is required.'),
   subTotal: z.number(),
   taxType: z.enum(['exclusive', 'inclusive']).default('exclusive'),
@@ -34,3 +36,4 @@ export const invoiceSchema = z.object({
 
 export type Invoice = z.infer<typeof invoiceSchema>;
 export type InvoiceItem = z.infer<typeof invoiceItemSchema>;
+
