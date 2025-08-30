@@ -78,7 +78,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
         date: processedData.date || today,
         dueDate: processedData.dueDate || today,
         vatRegNo: processedData.vatRegNo,
-        items: processedData.items,
+        items: processedData.items.map(item => ({...item, total: item.quantity * item.unitPrice})),
         subTotal: processedData.subTotal,
         tax: processedData.tax,
         total: processedData.total,
