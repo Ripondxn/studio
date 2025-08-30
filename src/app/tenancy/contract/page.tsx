@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams }from 'next/navigation';
 import {
   Card,
@@ -35,13 +36,22 @@ import { useToast } from '@/hooks/use-toast';
 import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getRoomDetails, moveTenant, getLatestContractForTenant } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { addDays, addMonths, format as formatDate, differenceInDays, differenceInMonths, isValid } from 'date-fns';
+import { addMonths, format as formatDate, differenceInDays, differenceInMonths, isValid } from 'date-fns';
 import { Combobox } from '@/components/ui/combobox';
 import { type Tenant } from '../tenants/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { MoveTenantDialog } from '../tenants/add/move-tenant-dialog';
 import type { UserRole } from '@/app/admin/user-roles/schema';
+import { PrintableMaintenanceContract } from '@/app/maintenance/contracts/printable-maintenance-contract';
+import { getContractLookups as getMaintenanceLookups } from '@/app/maintenance/contracts/actions';
+
+
+type LookupData = {
+    landlords: {value: string, label: string}[];
+    properties: {value: string, label: string}[];
+    tenancyContracts: { value: string, label: string, landlordCode?: string, property?: string }[];
+}
 
 const initialContractState: Contract = {
     id: '',
@@ -72,13 +82,6 @@ const initialContractState: Contract = {
     tawtheeqRegistrationDate: '',
 };
 
-type LookupData = {
-    properties: {value: string, label: string}[];
-    units: {value: string, label: string}[];
-    rooms: {value: string, label: string}[];
-    tenants: (Tenant & {value: string, label: string})[];
-}
-
 export default function TenancyContractPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -92,9 +95,11 @@ export default function TenancyContractPage() {
   const [contract, setContract] = useState<Contract>(initialContractState);
   const [initialContract, setInitialContract] = useState<Contract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
-  const [lookups, setLookups] = useState<LookupData>({ properties: [], units: [], rooms: [], tenants: [] });
+  const [lookups, setLookups] = useState<LookupData & { units: {value: string, label: string}[], rooms: {value: string, label: string}[] }>({ landlords: [], properties: [], tenancyContracts: [], units: [], rooms: [] });
+  const [maintenanceLookups, setMaintenanceLookups] = useState<{vendors: {value: string, label: string}[], properties: {value: string, label: string}[]}>({vendors: [], properties: []})
   const [tenancyPeriod, setTenancyPeriod] = useState<{days: number, period: string} | null>(null);
   const [currentUser, setCurrentUser] = useState<{name: string, role: UserRole['role']} | null>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
 
   const fetchContractData = useCallback(async (contractId: string) => {
@@ -211,6 +216,9 @@ export default function TenancyContractPage() {
     const initialize = async () => {
         const lookupsData = await getContractLookups();
         setLookups(prev => ({...prev, ...lookupsData}));
+        getMaintenanceLookups().then(data => {
+            setMaintenanceLookups(data);
+        })
 
         const contractId = searchParams.get('id');
 
@@ -251,21 +259,24 @@ export default function TenancyContractPage() {
   
     useEffect(() => {
         const { startDate, endDate } = contract;
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (isValid(start) && isValid(end) && end >= start) {
+                const days = differenceInDays(end, start) + 1;
+                const months = differenceInMonths(end, start);
+                const years = Math.floor(months / 12);
+                const remainingMonths = months % 12;
 
-        if (isValid(start) && isValid(end) && end >= start) {
-            const days = differenceInDays(end, start) + 1;
-            const months = differenceInMonths(end, start);
-            const years = Math.floor(months / 12);
-            const remainingMonths = months % 12;
+                let periodString = '';
+                if (years > 0) periodString += `${years} Year(s) `;
+                if (remainingMonths > 0) periodString += `${remainingMonths} Month(s)`;
+                if (!periodString) periodString = `${days} Day(s)`;
 
-            let periodString = '';
-            if (years > 0) periodString += `${years} Year(s) `;
-            if (remainingMonths > 0) periodString += `${remainingMonths} Month(s)`;
-            if (!periodString) periodString = `${days} Day(s)`;
-
-            setTenancyPeriod({ days, period: periodString.trim() });
+                setTenancyPeriod({ days, period: periodString.trim() });
+            } else {
+                setTenancyPeriod(null);
+            }
         } else {
             setTenancyPeriod(null);
         }
@@ -582,11 +593,11 @@ export default function TenancyContractPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="contract-no">Tenancy Contract No</Label>
-                                    <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={isAutoContractNo || !canEdit}/>
+                                    <Input id="contract-no" placeholder="TC-2024-001" value={contract.contractNo || ''} onChange={e => handleInputChange('contractNo', e.target.value)} disabled={isAutoContractNo || !canEdit}/>
                                 </div>
                                 <div>
                                     <Label htmlFor="contract-date">Date</Label>
-                                    <Input id="contract-date" type="date" value={contract.contractDate} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!canEdit}/>
+                                    <Input id="contract-date" type="date" value={contract.contractDate || ''} onChange={e => handleInputChange('contractDate', e.target.value)} disabled={!canEdit}/>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -613,7 +624,7 @@ export default function TenancyContractPage() {
                                     <Label htmlFor="unit-code">Unit Code</Label>
                                     <Combobox
                                         options={lookups.units}
-                                        value={contract.unitCode}
+                                        value={contract.unitCode || ''}
                                         onSelect={handleUnitSelect}
                                         placeholder="Select a Unit"
                                         disabled={!canEdit || !contract.property}
@@ -633,29 +644,22 @@ export default function TenancyContractPage() {
                            <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="start-date">Start Date</Label>
-                                    <Input id="start-date" type="date" value={contract.startDate} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!canEdit}/>
+                                    <Input id="start-date" type="date" value={contract.startDate || ''} onChange={e => handleInputChange('startDate', e.target.value)} disabled={!canEdit}/>
                                 </div>
                                 <div className="relative">
                                     <Label htmlFor="end-date">End Date</Label>
-                                    <Input id="end-date" type="date" value={contract.endDate} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!canEdit}/>
+                                    <Input id="end-date" type="date" value={contract.endDate || ''} onChange={e => handleInputChange('endDate', e.target.value)} disabled={!canEdit}/>
                                     {tenancyPeriod && <p className="text-xs text-muted-foreground absolute bottom-[-18px] right-1">({tenancyPeriod.days} Days)</p>}
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label>Tenancy Period</Label>
-                                    <Select value={tenancyPeriod?.period} disabled>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Calculated from dates" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {tenancyPeriod?.period && <SelectItem value={tenancyPeriod.period}>{tenancyPeriod.period}</SelectItem>}
-                                        </SelectContent>
-                                    </Select>
+                                    <Input value={tenancyPeriod?.period || 'Calculated from dates'} disabled />
                                 </div>
                                 <div>
                                     <Label htmlFor="rent-amount">Total Rent</Label>
-                                    <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!canEdit}/>
+                                    <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent || ''} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!canEdit}/>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -697,7 +701,7 @@ export default function TenancyContractPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
                                     <Label htmlFor="tawtheeq-status">Status</Label>
-                                    <Select value={contract.tawtheeqStatus} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!canEdit}>
+                                    <Select value={contract.tawtheeqStatus || ''} onValueChange={(value: 'Not Registered' | 'Under Process' | 'Registered') => handleInputChange('tawtheeqStatus', value)} disabled={!canEdit}>
                                         <SelectTrigger id="tawtheeq-status"><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="Not Registered">Not Registered</SelectItem>
@@ -781,7 +785,7 @@ export default function TenancyContractPage() {
                             <Input id="number-of-payments" type="number" value={contract.numberOfPayments || 1} onChange={e => handleNumberInputChange('numberOfPayments', e.target.value)} disabled={!canEdit} />
                         </div>
                         <div className="flex items-end">
-                            <Button onClick={handleGenerateSchedule} disabled={!canEdit} className="w-full">
+                            <Button type="button" onClick={handleGenerateSchedule} disabled={!canEdit} className="w-full">
                                 <RefreshCw className="mr-2 h-4 w-4"/>
                                 Generate Schedule
                             </Button>
@@ -804,7 +808,7 @@ export default function TenancyContractPage() {
                     <TableRow key={index}>
                         <TableCell>{item.installment}</TableCell>
                         <TableCell>
-                        <Input type="date" value={item.dueDate} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!canEdit}/>
+                        <Input type="date" value={item.dueDate || ''} onChange={(e) => handleScheduleChange(index, 'dueDate', e.target.value)} disabled={!canEdit}/>
                         </TableCell>
                         <TableCell>
                         <Input placeholder="Bank Name" value={item.bankName || ''} onChange={(e) => handleScheduleChange(index, 'bankName', e.target.value)} disabled={!canEdit}/>
@@ -813,7 +817,7 @@ export default function TenancyContractPage() {
                         <Input placeholder="Cheque number" value={item.chequeNo || ''} onChange={(e) => handleScheduleChange(index, 'chequeNo', e.target.value)} disabled={!canEdit}/>
                         </TableCell>
                         <TableCell>
-                        <Input type="number" placeholder="Amount" value={item.amount} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!canEdit}/>
+                        <Input type="number" placeholder="Amount" value={item.amount || ''} onChange={(e) => handleScheduleChange(index, 'amount', Number(e.target.value))} disabled={!canEdit}/>
                         </TableCell>
                         <TableCell>
                         <Select value={item.status} onValueChange={(value: 'paid' | 'unpaid') => handleScheduleChange(index, 'status', value)} disabled={!canEdit}>
@@ -827,7 +831,7 @@ export default function TenancyContractPage() {
                         </Select>
                         </TableCell>
                         <TableCell>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeInstallment(index)} disabled={!canEdit}>
+                        <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeInstallment(index)} disabled={!canEdit}>
                             <Trash2 className="h-4 w-4" />
                         </Button>
                         </TableCell>
@@ -835,7 +839,7 @@ export default function TenancyContractPage() {
                     ))}
                     </TableBody>
                 </Table>
-                <Button variant="outline" size="sm" className="mt-4" onClick={addInstallment} disabled={!canEdit}>
+                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addInstallment} disabled={!canEdit}>
                     <Plus className="mr-2 h-4 w-4" /> Add Installment
                 </Button>
 
@@ -878,5 +882,3 @@ export default function TenancyContractPage() {
     </div>
   );
 }
-
-    
