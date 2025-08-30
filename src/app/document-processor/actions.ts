@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { processDocument, type ProcessDocumentInput } from '@/ai/flows/process-document-flow';
@@ -98,3 +99,4 @@ export async function createReceiptFromDocument(data: any, currentUser: {name: s
          return { success: false, error: (error as Error).message };
     }
 }
+

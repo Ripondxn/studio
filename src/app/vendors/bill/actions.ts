@@ -6,9 +6,6 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { billSchema, type Bill } from './schema';
-import { type Payment } from '@/app/finance/payment/schema';
-import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
-import { applyFinancialImpact } from '@/app/workflow/actions';
 import { getLookups as getPaymentLookups } from '@/app/finance/payment/actions';
 import { getContractLookups } from '@/app/tenancy/contract/actions';
 import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
@@ -16,7 +13,6 @@ import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
 import { getProducts } from '@/app/products/actions';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
-const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 
 async function readBills(): Promise<Bill[]> {
     try {
@@ -91,9 +87,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
     try {
         const allBills = await readBills();
         const validatedData = validation.data;
-        const workflowSettings = await getWorkflowSettings();
-        const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
-        const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
+        let savedBill: Bill;
 
         if (data.id) { // Update existing
             const index = allBills.findIndex(bill => bill.id === data.id);
@@ -101,6 +95,7 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
                 return { success: false, error: 'Bill not found.' };
             }
             allBills[index] = { ...allBills[index], ...validatedData };
+            savedBill = allBills[index];
         } else { // Create new
             let newBillNo = validatedData.billNo;
             if (isAutoBillNo || !newBillNo) {
@@ -111,43 +106,20 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
                     return { success: false, error: `A bill with number "${newBillNo}" already exists.`};
                 }
             }
-            const newBillId = `BILL-${Date.now()}`;
             const newBill: Bill = {
                 ...validatedData,
                 billNo: newBillNo,
-                id: newBillId,
+                id: `BILL-${Date.now()}`,
                 amountPaid: 0,
             };
             allBills.push(newBill);
-             const newPayment: Omit<Payment, 'id'> = {
-                type: 'Payment',
-                date: validatedData.billDate,
-                partyType: 'Vendor',
-                partyName: validatedData.vendorCode,
-                amount: validatedData.total,
-                paymentMethod: 'Bank Transfer', 
-                paymentFrom: 'Bank',
-                referenceNo: validatedData.billNo,
-                property: validatedData.property,
-                unitCode: validatedData.unitCode,
-                roomCode: validatedData.roomCode,
-                description: `Payment for Bill #${validatedData.billNo}`,
-                status: 'Paid',
-                currentStatus: initialStatus,
-                billAllocations: [{ billId: newBillId, amount: validatedData.total }]
-            };
-            
-            if(initialStatus === 'POSTED') await applyFinancialImpact(newPayment as Payment);
-
-            allPayments.push({...newPayment, id: `PAY-${Date.now()}`});
+            savedBill = newBill;
         }
         
         await writeBills(allBills);
-        await fs.writeFile(paymentsFilePath, JSON.stringify(allPayments, null, 2), 'utf-8');
 
         revalidatePath(`/vendors/add?code=${data.vendorCode}`);
-        revalidatePath('/workflow');
-        return { success: true };
+        return { success: true, data: savedBill };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }

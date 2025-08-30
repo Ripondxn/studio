@@ -31,7 +31,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveBill, getNextBillNumber, getBillLookups } from './actions';
-import { billSchema, type Bill } from './schema';
+import { addPayment } from '@/app/finance/payment/actions';
+import { type Bill, billSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
 import { Combobox } from '@/components/ui/combobox';
@@ -165,16 +166,40 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
 
   const onSubmit = async (data: BillFormData) => {
     setIsSaving(true);
-    const result = await saveBill({ ...data, id: bill?.id, isAutoBillNo });
-    if(result.success) {
-        toast({ title: 'Success', description: 'Bill saved successfully.'});
-        onSuccess();
-        setIsOpen(false);
+    const billResult = await saveBill({ ...data, id: bill?.id, isAutoBillNo });
+    
+    if (billResult.success && billResult.data) {
+        const savedBill = billResult.data;
+        // Now, create the financial payment record.
+        const paymentResult = await addPayment({
+            type: 'Payment',
+            date: savedBill.billDate,
+            partyType: 'Vendor',
+            partyName: savedBill.vendorCode,
+            amount: savedBill.total,
+            paymentMethod: 'Bank Transfer', // Default or choose based on context
+            paymentFrom: 'Bank', // Default
+            referenceNo: savedBill.billNo,
+            property: savedBill.property,
+            unitCode: savedBill.unitCode,
+            roomCode: savedBill.roomCode,
+            description: `Payment for Bill #${savedBill.billNo}`,
+            status: 'Paid', // Assuming direct payment, could be 'Unpaid'
+            billAllocations: [{ billId: savedBill.id, amount: savedBill.total }]
+        });
+        
+        if (paymentResult.success) {
+            toast({ title: 'Success', description: 'Bill and associated payment created successfully.' });
+            onSuccess();
+            setIsOpen(false);
+        } else {
+             toast({ variant: 'destructive', title: 'Payment Error', description: paymentResult.error || 'Failed to create financial transaction for the bill.' });
+        }
     } else {
-        toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to save bill.'});
+        toast({ variant: 'destructive', title: 'Error', description: billResult.error || 'Failed to save bill.' });
     }
     setIsSaving(false);
-  }
+}
 
   const handlePrint = () => {
     const printContent = printRef.current;
