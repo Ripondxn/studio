@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -106,7 +105,7 @@ const ActionsCell = ({ row, onEdit }: { row: { original: Payment }, onEdit: (pay
         }
         setIsDeleting(false);
         setIsDeleteDialogOpen(false);
-    }
+    };
     
     const canDelete = (): boolean => {
         if (currentUserRole === 'Super Admin') return true;
@@ -223,6 +222,21 @@ export const columns = ({ onEdit }: { onEdit: (payment: Payment) => void }): Col
             </div>
         )
     }
+  },
+   {
+    accessorKey: 'property',
+    header: 'Property',
+    cell: ({ row }) => row.original.property || <span className="text-muted-foreground">N/A</span>,
+  },
+  {
+    accessorKey: 'unitCode',
+    header: 'Unit',
+    cell: ({ row }) => row.original.unitCode || <span className="text-muted-foreground">N/A</span>,
+  },
+  {
+    accessorKey: 'roomCode',
+    header: 'Room',
+    cell: ({ row }) => row.original.roomCode || <span className="text-muted-foreground">N/A</span>,
   },
   {
     accessorKey: 'amount',

@@ -69,5 +69,31 @@
       }
     ],
     "id": "PAY-1756548622888"
+  },
+  {
+    "type": "Receipt",
+    "date": "2024-10-21",
+    "partyType": "Customer",
+    "partyName": "C002",
+    "amount": 10,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "expenseAccountId": "4130",
+    "property": "LT-C38",
+    "unitCode": "",
+    "roomCode": "",
+    "description": "Payment for uploaded receipt. Processed from uploaded document.",
+    "status": "Received",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created & Posted",
+        "actorId": "System",
+        "actorRole": "User",
+        "timestamp": "2025-08-30T10:27:32.922Z",
+        "comments": "Directly recorded transaction."
+      }
+    ],
+    "id": "PAY-1756549652922"
   }
 ]
