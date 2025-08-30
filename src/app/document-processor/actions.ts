@@ -12,6 +12,8 @@ import { type UserRole } from '../admin/user-roles/schema';
 import { addPayment } from '../finance/payment/actions';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { applyFinancialImpact } from '../workflow/actions';
+
 
 export async function extractDataFromDocument(input: ProcessDocumentInput) {
   try {
@@ -66,34 +68,46 @@ export async function createBillFromDocument(data: any, currentUser: UserRole) {
             vendorName: vendor.vendorData.name,
             billDate: data.date,
             dueDate: data.dueDate || data.date,
-            status: 'Draft',
+            status: 'Paid',
         };
         
-        const billResult = await saveBill(billData, true, false);
+        const billResult = await saveBill(billData, true, false, true); // Pass true to auto-create bill no
         if (!billResult.success || !billResult.data) {
             throw new Error(billResult.error || 'Failed to save bill from document.');
         }
 
-        // Now, create the associated payment record
         const savedBill = billResult.data;
-        const paymentResult = await addPayment({
-            type: 'Payment',
+        const paymentRecord = {
+            type: 'Payment' as const,
             date: savedBill.billDate,
-            partyType: 'Vendor',
+            partyType: 'Vendor' as const,
             partyName: savedBill.vendorCode,
             amount: savedBill.total,
-            paymentMethod: 'Bank Transfer', // Or a suitable default
-            paymentFrom: 'Bank', // Default
+            paymentMethod: 'Bank Transfer' as const, // Or a suitable default
+            paymentFrom: 'Bank' as const, // Default
             referenceNo: savedBill.billNo,
             description: `Payment for Bill #${savedBill.billNo} from processed document.`,
-            status: 'Paid',
+            status: 'Paid' as const,
             billAllocations: [{ billId: savedBill.id, amount: savedBill.total }],
             createdByUser: currentUser.name,
-        });
+            currentStatus: 'POSTED' as const, // Directly post
+             approvalHistory: [{
+                action: 'Created & Auto-Posted via Document Processor',
+                actorId: currentUser.email,
+                actorRole: currentUser.role,
+                timestamp: new Date().toISOString(),
+                comments: `Automatically created and posted from an uploaded document.`
+            }]
+        };
+
+        const paymentResult = await addPayment(paymentRecord);
         
-        if(!paymentResult.success) {
+        if(!paymentResult.success || !paymentResult.data) {
              throw new Error(paymentResult.error || 'Bill was saved, but failed to create the financial transaction.');
         }
+        
+        // Since we are bypassing the normal workflow, we need to apply financial impact here.
+        await applyFinancialImpact(paymentResult.data);
 
         return { success: true };
     } catch (error) {
@@ -101,27 +115,83 @@ export async function createBillFromDocument(data: any, currentUser: UserRole) {
     }
 }
 
-export async function createInvoiceFromDocument(data: any, currentUser: {name: string}) {
+export async function createInvoiceFromDocument(data: any, currentUser: {name: string, email: string, role: UserRole['role']}) {
      try {
-        const result = await saveInvoice(data, currentUser.name);
-        if (!result.success) {
-            throw new Error(result.error);
+        const invoiceData = {
+            ...data,
+            isAutoInvoiceNo: true,
+            status: 'Paid' as const,
+        };
+
+        const result = await saveInvoice(invoiceData, currentUser.name);
+        if (!result.success || !result.data) {
+            throw new Error(result.error || 'Failed to save invoice from document.');
         }
+        
+        const savedInvoice = result.data;
+
+        // Now, create and post the associated payment record
+        const paymentRecord = {
+            type: 'Receipt' as const,
+            date: savedInvoice.invoiceDate,
+            partyType: 'Customer' as const, // Assuming tenants are also customers
+            partyName: savedInvoice.customerCode,
+            amount: savedInvoice.total,
+            paymentMethod: 'Bank Transfer' as const,
+            paymentFrom: 'Bank' as const,
+            referenceNo: savedInvoice.invoiceNo,
+            description: `Payment for Invoice #${savedInvoice.invoiceNo} from processed document.`,
+            status: 'Received' as const,
+            invoiceAllocations: [{ invoiceId: savedInvoice.id, amount: savedInvoice.total }],
+            createdByUser: currentUser.name,
+            currentStatus: 'POSTED' as const,
+            approvalHistory: [{
+                action: 'Created & Auto-Posted via Document Processor',
+                actorId: currentUser.email,
+                actorRole: currentUser.role,
+                timestamp: new Date().toISOString(),
+                comments: `Automatically created and posted from an uploaded document.`
+            }]
+        };
+        
+        const paymentResult = await addPayment(paymentRecord);
+        if(!paymentResult.success || !paymentResult.data) {
+             throw new Error(paymentResult.error || 'Invoice was saved, but failed to create the financial transaction.');
+        }
+        
+        // Since we are bypassing the normal workflow, we need to apply financial impact here.
+        await applyFinancialImpact(paymentResult.data);
+
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message };
     }
 }
 
-export async function createReceiptFromDocument(data: any, currentUser: {name: string}) {
+export async function createReceiptFromDocument(data: any, currentUser: {name: string, email: string, role: UserRole['role']}) {
     try {
-        const result = await addPayment(data);
-         if (!result.success) {
+         const paymentRecord = {
+            ...data,
+            currentStatus: 'POSTED' as const,
+             approvalHistory: [{
+                action: 'Created & Auto-Posted via Document Processor',
+                actorId: currentUser.email,
+                actorRole: currentUser.role,
+                timestamp: new Date().toISOString(),
+                comments: `Automatically created and posted from an uploaded document.`
+            }]
+        };
+
+        const result = await addPayment(paymentRecord);
+         if (!result.success || !result.data) {
             throw new Error(result.error);
         }
+        
+        // Since we are bypassing the normal workflow, we need to apply financial impact here.
+        await applyFinancialImpact(result.data);
+
         return { success: true };
     } catch (error) {
          return { success: false, error: (error as Error).message };
     }
 }
-

@@ -31,7 +31,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveBill, getNextBillNumber, getBillLookups } from './actions';
-import { addPayment } from '@/app/finance/payment/actions';
 import { type Bill, billSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
@@ -166,36 +165,13 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
 
   const onSubmit = async (data: BillFormData) => {
     setIsSaving(true);
-    const billResult = await saveBill({ ...data, id: bill?.id, isAutoBillNo });
-    
-    if (billResult.success && billResult.data) {
-        const savedBill = billResult.data;
-        const paymentResult = await addPayment({
-            type: 'Payment',
-            date: savedBill.billDate,
-            partyType: 'Vendor',
-            partyName: savedBill.vendorCode,
-            amount: savedBill.total,
-            paymentMethod: 'Bank Transfer', 
-            paymentFrom: 'Bank',
-            referenceNo: savedBill.billNo,
-            property: savedBill.property,
-            unitCode: savedBill.unitCode,
-            roomCode: savedBill.roomCode,
-            description: `Payment for Bill #${savedBill.billNo}`,
-            status: 'Paid',
-            billAllocations: [{ billId: savedBill.id, amount: savedBill.total }]
-        });
-        
-        if (paymentResult.success) {
-            toast({ title: 'Success', description: 'Bill and associated payment created successfully.' });
-            onSuccess();
-            setIsOpen(false);
-        } else {
-             toast({ variant: 'destructive', title: 'Payment Error', description: paymentResult.error || 'Bill was saved, but failed to create the financial transaction.' });
-        }
+    const result = await saveBill({ ...data, id: bill?.id, isAutoBillNo });
+    if(result.success) {
+        toast({ title: 'Success', description: 'Bill saved successfully.'});
+        onSuccess();
+        setIsOpen(false);
     } else {
-        toast({ variant: 'destructive', title: 'Error', description: billResult.error || 'Failed to save bill.' });
+        toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to save bill.'});
     }
     setIsSaving(false);
 }

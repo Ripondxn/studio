@@ -148,4 +148,3 @@ export async function deleteBill(billId: string) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
-
