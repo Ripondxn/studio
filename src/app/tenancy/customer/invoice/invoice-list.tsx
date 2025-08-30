@@ -8,6 +8,7 @@ import { Plus, Loader2, DollarSign } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { InvoiceDialog } from './invoice-dialog';
+import { CreateInvoiceDialog } from './create-invoice-dialog'; // Import the new dialog
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -24,7 +25,8 @@ interface InvoiceListProps {
 }
 
 export function InvoiceList({ customerCode, customerName, invoices, isLoading, onRefresh }: InvoiceListProps) {
-    const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+    const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+    const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -33,21 +35,19 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
     const { formatCurrency } = useCurrency();
     
     const handleCreateClick = () => {
-        setSelectedInvoice(null);
-        setIsViewMode(false);
-        setIsInvoiceDialogOpen(true);
+        setIsCreateInvoiceOpen(true);
     }
     
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(false);
-        setIsInvoiceDialogOpen(true);
+        setIsEditInvoiceOpen(true);
     }
     
     const handleViewClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(true);
-        setIsInvoiceDialogOpen(true);
+        setIsEditInvoiceOpen(true);
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
@@ -124,9 +124,16 @@ export function InvoiceList({ customerCode, customerName, invoices, isLoading, o
                     <DataTable columns={columns({ onEdit: handleEditClick, onView: handleViewClick, onRecordPayment: handleRecordPayment })} data={invoices} />
                 )}
                 
+                <CreateInvoiceDialog
+                    isOpen={isCreateInvoiceOpen}
+                    setIsOpen={setIsCreateInvoiceOpen}
+                    customer={{ code: customerCode, name: customerName }}
+                    onSuccess={handleSuccess}
+                />
+
                 <InvoiceDialog
-                    isOpen={isInvoiceDialogOpen}
-                    setIsOpen={setIsInvoiceDialogOpen}
+                    isOpen={isEditInvoiceOpen}
+                    setIsOpen={setIsEditInvoiceOpen}
                     invoice={selectedInvoice}
                     customer={{ code: customerCode, name: customerName }}
                     onSuccess={handleSuccess}

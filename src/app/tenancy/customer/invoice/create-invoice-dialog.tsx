@@ -28,13 +28,11 @@ import {
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice } from './actions';
+import { Plus, Trash2, Loader2, X } from 'lucide-react';
+import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
 import { getLookups } from '@/app/lookups/actions';
-import { type Invoice } from './schema';
-import { invoiceSchema } from './schema';
+import { type Invoice, invoiceSchema } from './schema';
 import { format } from 'date-fns';
-import { InvoiceView } from './invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
 import { type Product } from '@/app/products/schema';
@@ -42,19 +40,16 @@ import { Combobox } from '@/components/ui/combobox';
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
-interface InvoiceDialogProps {
+interface CreateInvoiceDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  invoice: z.infer<typeof invoiceSchema> | null;
   customer: { code: string; name: string };
   onSuccess: () => void;
-  isViewMode?: boolean;
 }
 
-export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess, isViewMode = false }: InvoiceDialogProps) {
+export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: CreateInvoiceDialogProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
@@ -90,7 +85,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   useEffect(() => {
     if (!watchedItems) return;
     
-    // First update the total for each item
     watchedItems.forEach((item, index) => {
         const total = item.quantity * item.unitPrice;
         if (item.total !== total) {
@@ -108,7 +102,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     if (watchedTaxType === 'exclusive') {
         taxAmount = subTotal * (taxRate / 100);
         totalAmount = subTotal + taxAmount;
-    } else { // inclusive
+    } else { 
         taxAmount = subTotal - (subTotal / (1 + (taxRate / 100)));
         finalSubTotal = subTotal - taxAmount;
         totalAmount = subTotal;
@@ -121,11 +115,36 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
   
   useEffect(() => {
-    if (isOpen && invoice) {
-      setIsAutoInvoiceNo(false);
-      reset(invoice);
+    const initializeForm = async () => {
+        if (!customer) return;
+
+        const newInvoiceNo = await getNextGeneralInvoiceNumber();
+        setIsAutoInvoiceNo(true);
+
+        reset({
+            invoiceNo: newInvoiceNo,
+            customerCode: customer.code,
+            customerName: customer.name,
+            property: '',
+            unitCode: '',
+            roomCode: '',
+            invoiceDate: format(new Date(), 'yyyy-MM-dd'),
+            dueDate: format(new Date(), 'yyyy-MM-dd'),
+            vatRegNo: '',
+            items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
+            subTotal: 0,
+            tax: 0,
+            taxType: 'exclusive',
+            taxRate: 0,
+            total: 0,
+            notes: '',
+            status: 'Draft',
+        });
+    };
+    if (isOpen) {
+      initializeForm();
     }
-  }, [isOpen, invoice, reset]);
+  }, [isOpen, reset, customer]);
 
   const onSubmit = async (data: InvoiceFormData) => {
     const userProfile = sessionStorage.getItem('userProfile');
@@ -136,7 +155,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     const currentUser = JSON.parse(userProfile);
 
     setIsSaving(true);
-    const result = await saveInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
+    const result = await saveInvoice({ ...data, isAutoInvoiceNo }, currentUser.name);
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();
@@ -145,22 +164,6 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
         toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to save invoice.'});
     }
     setIsSaving(false);
-  }
-
-  const handlePrint = () => {
-    const printContent = printRef.current;
-    if (printContent) {
-        const printWindow = window.open('', '', 'height=800,width=800');
-        if (printWindow) {
-            printWindow.document.write('<html><head><title>Print Invoice</title>');
-            printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; } th { background-color: #f2f2f2; } .no-print { display: none; }</style>');
-            printWindow.document.write('</head><body>');
-            printWindow.document.write(printContent.innerHTML);
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.print();
-        }
-    }
   }
   
   const handleItemSelect = (index: number, value: string, label?: string) => {
@@ -173,44 +176,31 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     }
   }
 
-  if (isViewMode && invoice) {
-    return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="sm:max-w-4xl">
-                 <DialogHeader>
-                    <DialogTitle>View Invoice: {invoice.invoiceNo}</DialogTitle>
-                </DialogHeader>
-                <div className="max-h-[70vh] overflow-y-auto" ref={printRef}>
-                    <InvoiceView invoice={invoice} />
-                </div>
-                <DialogFooter>
-                    <Button type="button" variant="outline" onClick={handlePrint}>
-                        <Printer className="mr-2 h-4 w-4" /> Print
-                    </Button>
-                    <DialogClose asChild><Button type="button">Close</Button></DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-4xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Edit Invoice</DialogTitle>
+            <DialogTitle>Create New Invoice</DialogTitle>
             <DialogDescription>
-              Editing invoice {invoice?.invoiceNo} for {customer.name}
+              Creating a new invoice for {customer.name}
             </DialogDescription>
           </DialogHeader>
 
           <div className="max-h-[70vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled /></div>
+              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
               <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
+            </div>
+             <div className="flex items-center space-x-2 mb-4">
+                <Switch 
+                    id="auto-invoice-no-switch-create"
+                    checked={isAutoInvoiceNo}
+                    onCheckedChange={setIsAutoInvoiceNo}
+                />
+                <Label htmlFor="auto-invoice-no-switch-create">Auto-generate Invoice No</Label>
             </div>
              <div className="space-y-2 mb-4">
                 <Label>VAT / Tax Registration No.</Label>
