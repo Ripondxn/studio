@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -18,7 +19,6 @@ import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema'
 import { type LeaseContract } from '@/app/lease/contract/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { type Bill } from '@/app/vendors/bill/schema';
-import { applyPaymentToBills } from '@/app/vendors/bill/actions';
 import { type Cheque } from '../cheque-deposit/schema';
 import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 import { applyFinancialImpact } from '@/app/workflow/actions';
@@ -87,11 +87,45 @@ async function readInvoices(): Promise<Invoice[]> {
 async function writeInvoices(data: Invoice[]) {
     await fs.writeFile(invoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
+
+async function readBills(): Promise<Bill[]> {
+    return await readData(billsFilePath);
+}
+async function writeBills(data: Bill[]) {
+    await fs.writeFile(billsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
 async function readCheques(): Promise<Cheque[]> {
     return await readData(chequesFilePath);
 }
 async function writeCheques(data: Cheque[]) {
     await writeData(chequesFilePath, data);
+}
+
+export async function applyPaymentToBills(billPayments: { billId: string; amount: number }[], vendorCode: string) {
+    try {
+        const allBills = await readBills();
+
+        for (const payment of billPayments) {
+            const index = allBills.findIndex(b => b.id === payment.billId);
+            if (index !== -1) {
+                allBills[index].amountPaid = (allBills[index].amountPaid || 0) + payment.amount;
+                const remainingBalance = allBills[index].total - allBills[index].amountPaid;
+                
+                if (remainingBalance <= 0.001) {
+                    allBills[index].status = 'Paid';
+                } else if (allBills[index].status === 'Draft' || allBills[index].status === 'Overdue') {
+                    allBills[index].status = 'Sent';
+                }
+            }
+        }
+
+        await writeBills(allBills);
+        revalidatePath(`/vendors/add?code=${vendorCode}`);
+        return { success: true };
+    } catch (error) {
+         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
 }
 
 

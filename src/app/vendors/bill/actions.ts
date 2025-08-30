@@ -169,29 +169,3 @@ export async function deleteBill(billId: string) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
-
-export async function applyPaymentToBills(billPayments: { billId: string; amount: number }[], vendorCode: string) {
-    try {
-        const allBills = await readBills();
-
-        for (const payment of billPayments) {
-            const index = allBills.findIndex(b => b.id === payment.billId);
-            if (index !== -1) {
-                allBills[index].amountPaid = (allBills[index].amountPaid || 0) + payment.amount;
-                const remainingBalance = allBills[index].total - allBills[index].amountPaid;
-                
-                if (remainingBalance <= 0.001) {
-                    allBills[index].status = 'Paid';
-                } else if (allBills[index].status === 'Draft' || allBills[index].status === 'Overdue') {
-                    allBills[index].status = 'Sent';
-                }
-            }
-        }
-
-        await writeBills(allBills);
-        revalidatePath(`/vendors/add?code=${vendorCode}`);
-        return { success: true };
-    } catch (error) {
-         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
-    }
-}

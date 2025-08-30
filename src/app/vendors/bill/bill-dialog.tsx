@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -30,13 +31,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveBill, getNextBillNumber, getBillLookups } from './actions';
-import { billSchema } from './schema';
+import { billSchema, type Bill } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
 import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
-import { getProducts } from '@/app/products/actions';
 import { type Product } from '@/app/products/schema';
 
 const formSchema = billSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
