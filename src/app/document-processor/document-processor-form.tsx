@@ -47,6 +47,8 @@ const formSchema = z.object({
   })),
   subTotal: z.number(),
   tax: z.number(),
+  taxType: z.enum(['exclusive', 'inclusive']).optional().default('exclusive'),
+  taxRate: z.number().optional().default(0),
   total: z.number(),
   notes: z.string().optional(),
 });
@@ -81,6 +83,8 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
         tax: processedData.tax,
         total: processedData.total,
         notes: `Processed from uploaded document.`,
+        taxType: 'exclusive',
+        taxRate: 0,
     })
   }, [processedData, reset]);
 
@@ -107,7 +111,9 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
             dueDate: data.dueDate,
             items: itemsWithIds,
             subTotal: data.subTotal,
-            tax: data.tax,
+            tax: data.tax || 0,
+            taxType: data.taxType,
+            taxRate: data.taxRate,
             total: data.total,
             notes: data.notes,
             status: 'Draft'
@@ -122,7 +128,9 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
              dueDate: data.dueDate,
              items: itemsWithIds,
              subTotal: data.subTotal,
-             tax: data.tax,
+             tax: data.tax || 0,
+             taxType: data.taxType,
+             taxRate: data.taxRate,
              total: data.total,
              notes: data.notes,
              status: 'Draft'
