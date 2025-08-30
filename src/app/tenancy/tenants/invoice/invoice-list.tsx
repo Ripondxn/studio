@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { Plus, Loader2, DollarSign, Edit, Save, X } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
-import { InvoiceDialog as GeneralInvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
+import { InvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -28,6 +27,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { useFormContext } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -259,7 +259,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 name="subscriptionStatus"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <Label>Subscription Type</Label>
+                                        <FormLabel>Subscription Type</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value} disabled={!isSubscriptionEditing || !watch('isSubscriptionActive')}>
                                             <SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger>
                                             <SelectContent>
@@ -275,7 +275,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 name="subscriptionAmount"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <Label>Subscription Amount</Label>
+                                        <FormLabel>Subscription Amount</FormLabel>
                                         <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!isSubscriptionEditing || !watch('isSubscriptionActive')} />
                                     </FormItem>
                                 )}
@@ -289,7 +289,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 name="property"
                                 render={({ field }) => (
                                 <FormItem>
-                                    <Label>Property</Label>
+                                    <FormLabel>Property</FormLabel>
                                      <Combobox options={lookups.properties || []} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property" disabled={!isSubscriptionEditing}/>
                                     <FormMessage />
                                 </FormItem>
@@ -300,7 +300,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 name="unitCode"
                                 render={({ field }) => (
                                 <FormItem>
-                                    <Label>Unit</Label>
+                                    <FormLabel>Unit</FormLabel>
                                      <Combobox options={filteredUnits} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!isSubscriptionEditing || !watchedProperty}/>
                                     <FormMessage />
                                 </FormItem>
@@ -311,7 +311,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 name="roomCode"
                                 render={({ field }) => (
                                 <FormItem>
-                                    <Label>Room (Optional)</Label>
+                                    <FormLabel>Room (Optional)</FormLabel>
                                     <Combobox options={filteredRooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!isSubscriptionEditing || !watchedUnit}/>
                                     <FormMessage />
                                 </FormItem>
