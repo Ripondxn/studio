@@ -1,6 +1,4 @@
 
-'use client';
-
 import { z } from 'zod';
 
 export const billItemSchema = z.object({
@@ -38,4 +36,3 @@ export const billSchema = z.object({
 
 export type Bill = z.infer<typeof billSchema>;
 export type BillItem = z.infer<typeof billItemSchema>;
-
