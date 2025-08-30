@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { MoreHorizontal, CheckCircle, Clock, XCircle, File, Eye, MessageSquare, PlusCircle, History } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, Clock, XCircle, File, Eye, MessageSquare, PlusCircle, History, User, Shield, UserCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -153,13 +153,13 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
                     <ViewHistoryDialog history={doc.approvalHistory} documentId={doc.id} />
                 </Dialog>
                 
-                <ActionDialog
+                {currentAction && <ActionDialog
                     isOpen={isActionOpen}
                     setIsOpen={setIsActionOpen}
-                    actionType={currentAction!}
+                    actionType={currentAction}
                     onConfirm={handleAction}
                     isProcessing={isProcessing}
-                />
+                />}
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
