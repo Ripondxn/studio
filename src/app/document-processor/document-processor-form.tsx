@@ -74,6 +74,8 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
     name: "items"
   });
 
+  const watchedItems = watch('items');
+
   useEffect(() => {
     getProductsForSelect().then(data => setProducts(data as any));
   }, []);
