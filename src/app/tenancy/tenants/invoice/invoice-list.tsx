@@ -48,7 +48,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const [isCancellingSub, setIsCancellingSub] = useState(false);
-    const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string}[]; rooms: {value: string, label: string}[]; }>({ properties: [], units: [], rooms: [] });
+    const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string}[]; rooms: {value: string, label: string}[] }>({ properties: [], units: [], rooms: [] });
     const router = useRouter();
     const { formatCurrency } = useCurrency();
     const { toast } = useToast();
@@ -84,11 +84,8 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
-        if (tenant.isSubscriptionActive) {
-            setIsInvoiceDialogOpen(true);
-        } else {
-            setIsGeneralInvoiceDialogOpen(true);
-        }
+        // Always open the general invoice dialog for new invoices from this screen
+        setIsGeneralInvoiceDialogOpen(true);
     }
     
     const handleEditClick = (invoice: Invoice) => {
@@ -168,8 +165,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                         </Button>
                         <Button variant="outline" onClick={handleCreateClick}>
-                            <Plus className="mr-2 h-4 w-4" /> 
-                            {tenant.isSubscriptionActive ? 'New Subscription Invoice' : 'Create Invoice'}
+                            <Plus className="mr-2 h-4 w-4" /> Create Invoice
                         </Button>
                     </div>
                 </div>
