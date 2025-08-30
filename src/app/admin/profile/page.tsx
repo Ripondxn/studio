@@ -7,29 +7,56 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { UserCog, Loader2 } from 'lucide-react';
+import { UserCog, Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserProfile, loadUserProfile } from './actions';
+import { useForm } from 'react-hook-form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-type ProfileData = {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-}
+
+const profileFormSchema = z.object({
+    firstName: z.string().min(1, 'First name is required.'),
+    lastName: z.string().min(1, 'Last name is required.'),
+    email: z.string().email(),
+    phone: z.string().optional(),
+    avatar: z.string().nullable().optional(),
+    currentPassword: z.string().optional(),
+    newPassword: z.string().optional(),
+});
+
+type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function UserProfilePage() {
     const { toast } = useToast();
-    const [profile, setProfile] = useState<ProfileData | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+    const form = useForm<ProfileFormData>({
+        resolver: zodResolver(profileFormSchema),
+        defaultValues: {
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            avatar: null,
+            currentPassword: '',
+            newPassword: ''
+        }
+    });
+
+    const {
+        formState: { isSubmitting, isDirty },
+    } = form;
 
     useEffect(() => {
         const fetchProfile = async () => {
             setIsLoading(true);
             const result = await loadUserProfile();
             if (result.success && result.data) {
-                setProfile(result.data);
+                form.reset(result.data);
+                setAvatarPreview(result.data.avatar || null);
             } else {
                  toast({
                     variant: 'destructive',
@@ -40,20 +67,37 @@ export default function UserProfilePage() {
             setIsLoading(false);
         };
         fetchProfile();
-    }, [toast]);
+    }, [toast, form]);
     
-    const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setIsSaving(true);
+    const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result as string;
+                setAvatarPreview(result);
+                form.setValue('avatar', result, { shouldDirty: true });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
-        const formData = new FormData(event.currentTarget);
-        const result = await updateUserProfile(formData);
+
+    const onSubmit = async (data: ProfileFormData) => {
+        // In a real app, you would add password verification logic here
+        if (data.newPassword && !data.currentPassword) {
+            form.setError('currentPassword', { type: 'manual', message: 'Current password is required to set a new one.' });
+            return;
+        }
+
+        const result = await updateUserProfile(data);
 
         if (result.success) {
             toast({
                 title: 'Profile Updated',
                 description: 'Your profile has been saved successfully.',
             });
+            form.reset(data); // To reset the dirty state
         } else {
             toast({
                 variant: 'destructive',
@@ -61,11 +105,9 @@ export default function UserProfilePage() {
                 description: result.error,
             });
         }
-
-        setIsSaving(false);
     };
 
-    if (isLoading || !profile) {
+    if (isLoading) {
         return (
             <div className="container mx-auto py-10 flex justify-center items-center">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -73,6 +115,7 @@ export default function UserProfilePage() {
         )
     }
 
+  const profile = form.watch();
 
   return (
     <div className="container mx-auto py-10">
@@ -85,7 +128,8 @@ export default function UserProfilePage() {
             </div>
         </div>
 
-        <form onSubmit={handleSave}>
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
             <Card>
                 <CardHeader>
                     <CardTitle>Profile Details</CardTitle>
@@ -94,35 +138,39 @@ export default function UserProfilePage() {
                 <CardContent className="space-y-6">
                     <div className="flex items-center gap-6">
                         <Avatar className="h-24 w-24">
-                            <AvatarImage src="" alt="User" />
-                            <AvatarFallback>{profile.firstName.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={avatarPreview || undefined} alt="User" />
+                            <AvatarFallback>{profile.firstName?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="space-y-1">
                             <h3 className="text-xl font-semibold">{profile.firstName} {profile.lastName}</h3>
                             <p className="text-muted-foreground">{profile.email}</p>
-                            <Button variant="outline" size="sm" type="button">Change Photo</Button>
+                            <Input id="avatar-upload" type="file" className="hidden" onChange={handleAvatarChange} accept="image/*" />
+                            <Label htmlFor="avatar-upload">
+                                 <Button type="button" variant="outline" asChild>
+                                    <span className="cursor-pointer">
+                                        <Upload className="mr-2 h-4 w-4" />
+                                        Upload Photo
+                                    </span>
+                                </Button>
+                            </Label>
                         </div>
                     </div>
                     
                     <Separator />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="firstName">First Name</Label>
-                            <Input id="firstName" name="firstName" defaultValue={profile.firstName} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="lastName">Last Name</Label>
-                            <Input id="lastName" name="lastName" defaultValue={profile.lastName} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email Address</Label>
-                            <Input id="email" name="email" type="email" defaultValue={profile.email} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" name="phone" type="tel" defaultValue={profile.phone} />
-                        </div>
+                         <FormField control={form.control} name="firstName" render={({ field }) => (
+                            <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                         )}/>
+                         <FormField control={form.control} name="lastName" render={({ field }) => (
+                            <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                         )}/>
+                         <FormField control={form.control} name="email" render={({ field }) => (
+                            <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+                         )}/>
+                         <FormField control={form.control} name="phone" render={({ field }) => (
+                            <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
+                         )}/>
                     </div>
 
                     <Separator />
@@ -130,27 +178,27 @@ export default function UserProfilePage() {
                     <div>
                         <h3 className="font-semibold text-lg">Change Password</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="currentPassword">Current Password</Label>
-                                <Input id="currentPassword" name="currentPassword" type="password" placeholder="********" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="newPassword">New Password</Label>
-                                <Input id="newPassword" name="newPassword" type="password" placeholder="********" />
-                            </div>
+                           <FormField control={form.control} name="currentPassword" render={({ field }) => (
+                                <FormItem><FormLabel>Current Password</FormLabel><FormControl><Input type="password" placeholder="********" {...field} /></FormControl><FormMessage /></FormItem>
+                            )}/>
+                            <FormField control={form.control} name="newPassword" render={({ field }) => (
+                                <FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" placeholder="Leave blank if unchanged" {...field} /></FormControl><FormMessage /></FormItem>
+                            )}/>
                         </div>
                     </div>
 
                 </CardContent>
                 <div className="p-6 pt-0">
-                    <Button type="submit" disabled={isSaving}>
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="submit" disabled={isSubmitting || !isDirty}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Changes
                     </Button>
                 </div>
             </Card>
         </form>
+        </Form>
       </div>
     </div>
   );
 }
+    
