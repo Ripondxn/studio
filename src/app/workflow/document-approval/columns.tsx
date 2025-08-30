@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { MoreHorizontal, CheckCircle, Clock, XCircle, File, Eye, MessageSquare, PlusCircle, History, User, Shield, UserCheck } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, Clock, XCircle, File, Eye, MessageSquare, PlusCircle, History, User, Shield, UserCheck, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,11 +23,21 @@ import {
   DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { type DocumentForApproval, type ApprovalHistory } from './schema';
 import { type Role, type Status } from '../types';
-import { approveDocument, rejectDocument, addCommentToDocument } from './actions';
+import { approveDocument, rejectDocument, addCommentToDocument, deleteDocument } from './actions';
 import { ActionDialog } from './action-dialog';
 import { cn } from '@/lib/utils';
 import type { UserRole } from '@/app/admin/user-roles/schema';
@@ -101,6 +111,7 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
         const doc = row.original;
         const [isHistoryOpen, setIsHistoryOpen] = useState(false);
         const [isActionOpen, setIsActionOpen] = useState(false);
+        const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
         const [currentAction, setCurrentAction] = useState<'APPROVE' | 'REJECT' | 'ADD_COMMENT' | null>(null);
         const [isProcessing, setIsProcessing] = useState(false);
         const { toast } = useToast();
@@ -114,6 +125,8 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
             (currentUser.role === 'Admin' && doc.currentStatus === 'PENDING_ADMIN_APPROVAL') ||
             (currentUser.role === 'Super Admin' && doc.currentStatus === 'PENDING_SUPER_ADMIN_APPROVAL')
         );
+        
+        const canDelete = currentUser.role === 'Super Admin';
 
         const handleAction = async (comment: string) => {
             if (!currentAction) return;
@@ -143,6 +156,19 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
             setCurrentAction(null);
         };
         
+        const handleDelete = async () => {
+            setIsProcessing(true);
+            const result = await deleteDocument(doc.id);
+            if (result.success) {
+                toast({ title: 'Document Deleted', description: 'The document has been removed from the workflow.'});
+                onUpdate();
+            } else {
+                toast({ variant: 'destructive', title: 'Error', description: result.error });
+            }
+            setIsProcessing(false);
+            setIsDeleteDialogOpen(false);
+        }
+        
 
         return (
             <>
@@ -152,6 +178,23 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
                     </DialogTrigger>
                     <ViewHistoryDialog history={doc.approvalHistory} documentId={doc.id} />
                 </Dialog>
+                
+                 <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete document "{doc.referenceNo}". This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} disabled={isProcessing} className="bg-destructive hover:bg-destructive/90">
+                                {isProcessing ? 'Deleting...' : 'Delete'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
                 
                 {currentAction && <ActionDialog
                     isOpen={isActionOpen}
@@ -182,6 +225,14 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
                         <DropdownMenuItem onSelect={() => {setCurrentAction('ADD_COMMENT'); setIsActionOpen(true);}}>
                              <PlusCircle className="mr-2 h-4 w-4" /> Add Comment
                         </DropdownMenuItem>
+                         {canDelete && (
+                            <>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </>

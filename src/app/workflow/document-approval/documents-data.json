@@ -1,2 +1,20 @@
-
-[]
+[
+  {
+    "docType": "Tenancy Contract",
+    "referenceNo": "TC-1755761192274-3",
+    "date": "2025-08-30",
+    "description": "",
+    "id": "DOC-1756540340675",
+    "submittedBy": "Super Admin",
+    "currentStatus": "PENDING_ADMIN_APPROVAL",
+    "approvalHistory": [
+      {
+        "action": "Created & Submitted",
+        "actorId": "Super Admin",
+        "actorRole": "Super Admin",
+        "timestamp": "2025-08-30T07:52:20.675Z",
+        "comments": "Initial submission"
+      }
+    ]
+  }
+]

@@ -78,6 +78,27 @@ export async function submitDocumentForApproval(data: z.infer<typeof addDocument
     return { success: true, data: newDoc };
 }
 
+export async function deleteDocument(documentId: string) {
+    if (!documentId) {
+        return { success: false, error: "Document ID is required." };
+    }
+    try {
+        const allDocuments = await readDocuments();
+        const updatedDocuments = allDocuments.filter(doc => doc.id !== documentId);
+
+        if (allDocuments.length === updatedDocuments.length) {
+            return { success: false, error: "Document not found." };
+        }
+
+        await writeDocuments(updatedDocuments);
+        revalidatePath('/workflow/document-approval');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+
 const actionSchema = z.object({
     documentId: z.string(),
     actorId: z.string(),
@@ -101,7 +122,7 @@ const performStateTransition = (currentStatus: Status, action: ActionType, actor
 };
 
 const getHistoryActionText = (action: ActionType, newStatus: Status, role: Role): string => {
-    switch (action) {
+     switch (action) {
        case 'APPROVE':
            if (newStatus === 'POSTED') return 'Final Approval';
            return `Approved by ${role}`;
@@ -147,15 +168,15 @@ async function updateDocumentWorkflow(
 
 export async function approveDocument(params: z.infer<typeof actionSchema>) {
     const { documentId, actorId, actorRole, comment } = params;
-    return updateDocumentWorkflow(documentId, 'APPROVE', actorId, actorRole as Role, comment);
+    return updateDocumentWorkflow(documentId, 'APPROVE', actorId as Role, actorRole, comment);
 }
 
 export async function rejectDocument(params: z.infer<typeof actionSchema>) {
     const { documentId, actorId, actorRole, comment } = params;
-    return updateDocumentWorkflow(documentId, 'REJECT', actorId, actorRole as Role, comment);
+    return updateDocumentWorkflow(documentId, 'REJECT', actorId as Role, actorRole, comment);
 }
 
 export async function addCommentToDocument(params: z.infer<typeof actionSchema>) {
     const { documentId, actorId, actorRole, comment } = params;
-    return updateDocumentWorkflow(documentId, 'ADD_COMMENT', actorId, actorRole as Role, comment);
+    return updateDocumentWorkflow(documentId, 'ADD_COMMENT', actorId as Role, actorRole, comment);
 }
