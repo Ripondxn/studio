@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
@@ -48,39 +48,14 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const [isCancellingSub, setIsCancellingSub] = useState(false);
-    const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string}[]; rooms: {value: string, label: string}[] }>({ properties: [], units: [], rooms: [] });
     const router = useRouter();
     const { formatCurrency } = useCurrency();
     const { toast } = useToast();
-    const { watch, setValue } = useFormContext<Tenant>();
+    const { watch } = useFormContext<Tenant>();
     
     const watchedProperty = watch('property');
     const watchedUnit = watch('unitCode');
 
-    useEffect(() => {
-        getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
-    }, []);
-
-    useEffect(() => {
-        const fetchUnits = async () => {
-            if (watchedProperty) {
-                const unitsData = await getUnitsForProperty(watchedProperty);
-                setLookups(prev => ({...prev, units: unitsData, rooms: []}));
-            }
-        }
-        fetchUnits();
-    }, [watchedProperty]);
-
-    useEffect(() => {
-        const fetchRooms = async () => {
-            if(watchedProperty && watchedUnit) {
-                const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
-                setLookups(prev => ({...prev, rooms: roomsData}));
-            }
-        }
-        fetchRooms();
-    }, [watchedProperty, watchedUnit]);
-    
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
@@ -113,7 +88,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         
         setPaymentDefaultValues({
             type: 'Receipt',
-            partyType: 'Tenant',
+            partyType: 'Customer',
             partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
@@ -157,8 +132,8 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle>Subscription & Invoices</CardTitle>
-                        <CardDescription>Manage subscription and invoices for {tenant.name}.</CardDescription>
+                        <CardTitle>Invoices</CardTitle>
+                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -273,9 +248,9 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         <Separator />
                          <CardTitle>Rented Property</CardTitle>
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <FormField control={formControl} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode','');}} placeholder="Select property" disabled={!isSubscriptionEditing} /><FormMessage /></FormItem>)} />
-                            <FormField control={formControl} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Combobox options={lookups.units} value={field.value || ''} onSelect={(value) => {setValue('unitCode', value); setValue('roomCode', '');}} placeholder="Select unit" disabled={!isSubscriptionEditing || !watchedProperty} /><FormMessage /></FormItem>)} />
-                            <FormField control={formControl} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Combobox options={lookups.rooms} value={field.value || ''} onSelect={(value) => setValue('roomCode', value)} placeholder="Select room" disabled={!isSubscriptionEditing || !watchedUnit} /><FormMessage /></FormItem>)} />
+                            <FormField control={formControl} name="property" render={({ field }) => (<FormItem><Label>Property</Label><Input value={field.value || ''} disabled /><FormMessage /></FormItem>)} />
+                            <FormField control={formControl} name="unitCode" render={({ field }) => (<FormItem><Label>Unit</Label><Input value={field.value || ''} disabled /><FormMessage /></FormItem>)} />
+                            <FormField control={formControl} name="roomCode" render={({ field }) => (<FormItem><Label>Room (Optional)</Label><Input value={field.value || ''} disabled /><FormMessage /></FormItem>)} />
                         </div>
                     </CardContent>
                 </Card>
@@ -290,20 +265,20 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
+                <GeneralInvoiceDialog
+                    isOpen={isGeneralInvoiceDialogOpen}
+                    setIsOpen={setIsGeneralInvoiceDialogOpen}
+                    invoice={selectedInvoice}
+                    customer={{code: tenant.code, name: tenant.name}}
+                    onSuccess={handleSuccess}
+                    isViewMode={isViewMode}
+                />
+
                 <SubscriptionInvoiceDialog
                     isOpen={isInvoiceDialogOpen}
                     setIsOpen={setIsInvoiceDialogOpen}
                     invoice={selectedInvoice}
                     tenant={tenant}
-                    onSuccess={handleSuccess}
-                    isViewMode={isViewMode}
-                />
-                
-                 <GeneralInvoiceDialog
-                    isOpen={isGeneralInvoiceDialogOpen}
-                    setIsOpen={setIsGeneralInvoiceDialogOpen}
-                    invoice={selectedInvoice}
-                    customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
                     isViewMode={isViewMode}
                 />
