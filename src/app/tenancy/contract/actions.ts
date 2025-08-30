@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -118,8 +119,8 @@ export async function saveContractData(data: Omit<Contract, 'id'> & { id?: strin
         } else {
             const index = allContracts.findIndex(c => c.id === data.id);
             if (index !== -1) {
-                allContracts[index] = validation.data as Contract;
-                savedContract = validation.data as Contract;
+                allContracts[index] = { ...allContracts[index], ...validatedData };
+                savedContract = allContracts[index];
             } else {
                  return { success: false, error: `Contract with ID "${data.id}" not found.` };
             }
@@ -331,10 +332,19 @@ export async function getUnitsForProperty(propertyCode: string) {
 export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
     const allRooms = await readRooms();
     const allContracts: Contract[] = await readContracts();
-    const occupiedRoomCodes = new Set(allContracts.filter(c => c.status === 'New' || c.status === 'Renew').map(c => c.roomCode));
+    const allTenants: {tenantData: Tenant}[] = await readTenants();
+
+    const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
+    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+
+    const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
+    const occupiedRoomCodesFromSubscriptions = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
+    
+    const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...occupiedRoomCodesFromSubscriptions]);
+
 
     return allRooms
-        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode && !occupiedRoomCodes.has(r.roomCode))
+        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode && !allOccupiedRoomCodes.has(r.roomCode))
         .map((r: any) => ({ value: r.roomCode, label: r.roomCode }));
 }
 
