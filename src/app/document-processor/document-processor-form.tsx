@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -18,6 +19,8 @@ import { Combobox } from '@/components/ui/combobox';
 import { createBillFromDocument, createInvoiceFromDocument, createReceiptFromDocument } from './actions';
 import { format } from 'date-fns';
 import { type UserRole } from '../admin/user-roles/schema';
+import { getProductsForSelect } from '../stores/actions';
+import { type Product } from '../products/schema';
 
 type PartyLookups = {
     vendors: { value: string, label: string }[];
@@ -45,8 +48,8 @@ const formSchema = z.object({
     unitPrice: z.number(),
     total: z.number(),
   })),
-  subTotal: z.number(),
-  tax: z.number(),
+  subTotal: z.number().optional(),
+  tax: z.number().optional(),
   taxType: z.enum(['exclusive', 'inclusive']).optional().default('exclusive'),
   taxRate: z.number().optional().default(0),
   total: z.number(),
@@ -58,6 +61,8 @@ type FormData = z.infer<typeof formSchema>;
 export function DocumentProcessorForm({ processedData, lookups, currentUser, onSuccess }: DocumentProcessorFormProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
@@ -68,6 +73,10 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
     control,
     name: "items"
   });
+
+  useEffect(() => {
+    getProductsForSelect().then(data => setProducts(data as any));
+  }, []);
 
   useEffect(() => {
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -97,6 +106,16 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
       'Customer': lookups.customers
   }[partyType] || [];
 
+  const handleItemSelect = (index: number, value: string) => {
+    const product = products.find(p => p.itemCode.toLowerCase() === value.toLowerCase() || p.itemName.toLowerCase() === value.toLowerCase());
+    if(product) {
+        setValue(`items.${index}.description`, product.itemName);
+        setValue(`items.${index}.unitPrice`, product.costPrice || product.salePrice || 0);
+    } else {
+        setValue(`items.${index}.description`, value);
+    }
+  }
+
   const handleCreate = async (data: FormData) => {
     setIsSaving(true);
     let result;
@@ -109,6 +128,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
             vendorName: lookups.vendors.find(v => v.value === data.partyCode)?.label || data.partyCode,
             billDate: data.date,
             dueDate: data.dueDate,
+            vatRegNo: data.vatRegNo,
             items: itemsWithIds,
             subTotal: data.subTotal,
             tax: data.tax || 0,
@@ -126,6 +146,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
              customerName: (lookups.customers.find(c => c.value === data.partyCode)?.label || lookups.tenants.find(t => t.value === data.partyCode)?.label) || data.partyCode,
              invoiceDate: data.date,
              dueDate: data.dueDate,
+             vatRegNo: data.vatRegNo,
              items: itemsWithIds,
              subTotal: data.subTotal,
              tax: data.tax || 0,
@@ -231,7 +252,14 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
                 <Label>Line Items</Label>
                 {fields.map((field, index) => (
                     <div key={field.id} className="flex gap-2 items-center">
-                        <Input placeholder="Description" {...register(`items.${index}.description`)} className="flex-grow"/>
+                        <div className="flex-grow">
+                             <Combobox
+                                options={products.map(p => ({ value: p.itemCode, label: p.itemName }))}
+                                value={watchedItems?.[index]?.description || ''}
+                                onSelect={(value) => handleItemSelect(index, value)}
+                                placeholder="Select or type item..."
+                             />
+                        </div>
                         <Input type="number" step="any" placeholder="Qty" {...register(`items.${index}.quantity`, { valueAsNumber: true })} className="w-20"/>
                         <Input type="number" step="any" placeholder="Price" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} className="w-24"/>
                         <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
