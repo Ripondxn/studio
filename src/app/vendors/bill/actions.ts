@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -12,6 +13,7 @@ import { getLookups as getPaymentLookups } from '@/app/finance/payment/actions';
 import { getContractLookups } from '@/app/tenancy/contract/actions';
 import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
 import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
+import { getProducts } from '@/app/products/actions';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -63,6 +65,7 @@ export async function getBillLookups() {
     const propertyLookups = await getContractLookups();
     const expenseAccounts = await getExpenseAccounts();
     const maintenanceTickets = await getOpenTickets();
+    const products = await getProducts();
     
     return {
         ...paymentLookups,
@@ -72,6 +75,7 @@ export async function getBillLookups() {
         partitions: propertyLookups.partitions,
         expenseAccounts,
         maintenanceTickets,
+        products,
     }
 }
 
