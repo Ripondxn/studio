@@ -6,7 +6,7 @@ import { processDocument, type ProcessDocumentInput } from '@/ai/flows/process-d
 import { getAllVendors } from '@/app/vendors/actions';
 import { getAllTenants } from '@/app/tenancy/tenants/actions';
 import { getAllCustomers } from '@/app/tenancy/customer/actions';
-import { saveBill } from '../vendors/bill/actions';
+import { saveBill, getNextBillNumber as getNextVendorBillNumber } from '../vendors/bill/actions';
 import { saveInvoice } from '../tenancy/customer/invoice/actions';
 import { type UserRole } from '../admin/user-roles/schema';
 import { addPayment } from '../finance/payment/actions';
@@ -54,7 +54,7 @@ async function readVendors() {
 }
 
 
-export async function createBillFromDocument(data: any, currentUser: UserRole) {
+export async function createBillFromDocument(data: any, isAutoBillNo: boolean, currentUser: UserRole) {
     try {
         const allVendors = await readVendors();
         const vendor = allVendors.find((v: any) => v.vendorData.code === data.vendorCode);
@@ -71,7 +71,7 @@ export async function createBillFromDocument(data: any, currentUser: UserRole) {
             status: 'Paid',
         };
         
-        const billResult = await saveBill(billData, true, false); 
+        const billResult = await saveBill(billData, true, isAutoBillNo); 
         if (!billResult.success || !billResult.data) {
             throw new Error(billResult.error || 'Failed to save bill from document.');
         }
@@ -196,4 +196,8 @@ export async function createReceiptFromDocument(data: any, currentUser: {name: s
     } catch (error) {
          return { success: false, error: (error as Error).message };
     }
+}
+
+export async function getNextBillNumber() {
+    return await getNextVendorBillNumber();
 }

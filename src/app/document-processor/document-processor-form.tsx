@@ -16,11 +16,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Loader2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Combobox } from '@/components/ui/combobox';
-import { createBillFromDocument, createInvoiceFromDocument, createReceiptFromDocument } from './actions';
+import { createBillFromDocument, createInvoiceFromDocument, createReceiptFromDocument, getNextBillNumber } from './actions';
 import { format } from 'date-fns';
 import { type UserRole } from '../admin/user-roles/schema';
 import { getProductsForSelect } from '../stores/actions';
 import { type Product } from '../products/schema';
+import { Switch } from '@/components/ui/switch';
 
 type PartyLookups = {
     vendors: { value: string, label: string }[];
@@ -37,6 +38,7 @@ interface DocumentProcessorFormProps {
 
 const formSchema = z.object({
   documentType: z.enum(['Bill', 'Invoice', 'Receipt']),
+  billNo: z.string().optional(),
   partyType: z.string(),
   partyCode: z.string().min(1, 'Please select a party.'),
   date: z.string(),
@@ -62,6 +64,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [isAutoBillNo, setIsAutoBillNo] = useState(true);
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -81,22 +84,27 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
   }, []);
 
   useEffect(() => {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    reset({
-        documentType: processedData.documentType,
-        partyType: 'Vendor',
-        partyCode: '',
-        date: processedData.date || today,
-        dueDate: processedData.dueDate || today,
-        vatRegNo: processedData.vatRegNo,
-        items: processedData.items.map(item => ({...item, total: item.quantity * item.unitPrice})),
-        subTotal: processedData.subTotal,
-        tax: processedData.tax,
-        total: processedData.total,
-        notes: `Processed from uploaded document.`,
-        taxType: 'exclusive',
-        taxRate: 0,
-    })
+    const initializeForm = async () => {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const nextBillNo = await getNextBillNumber();
+        reset({
+            documentType: processedData.documentType,
+            billNo: nextBillNo,
+            partyType: 'Vendor',
+            partyCode: '',
+            date: processedData.date || today,
+            dueDate: processedData.dueDate || today,
+            vatRegNo: processedData.vatRegNo,
+            items: processedData.items.map(item => ({...item, total: item.quantity * item.unitPrice})),
+            subTotal: processedData.subTotal,
+            tax: processedData.tax,
+            total: processedData.total,
+            notes: `Processed from uploaded document.`,
+            taxType: 'exclusive',
+            taxRate: 0,
+        })
+    }
+    initializeForm();
   }, [processedData, reset]);
 
   const documentType = watch('documentType');
@@ -126,6 +134,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
 
     if (data.documentType === 'Bill') {
         const billData = {
+            billNo: data.billNo,
             vendorCode: data.partyCode,
             vendorName: lookups.vendors.find(v => v.value === data.partyCode)?.label || data.partyCode,
             billDate: data.date,
@@ -140,7 +149,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
             notes: data.notes,
             status: 'Draft' as const
         };
-        result = await createBillFromDocument(billData, currentUser);
+        result = await createBillFromDocument(billData, isAutoBillNo, currentUser);
 
     } else if (data.documentType === 'Invoice') {
         const invoiceData = {
@@ -226,6 +235,24 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
                     />
                 </div>
             </div>
+
+            {documentType === 'Bill' && (
+                <div className="flex items-end gap-2">
+                    <div className="flex-grow">
+                        <Label>Bill No.</Label>
+                        <Input {...register('billNo')} disabled={isAutoBillNo} />
+                    </div>
+                     <div className="flex items-center space-x-2 pb-1">
+                        <Switch
+                            id="auto-bill-no"
+                            checked={isAutoBillNo}
+                            onCheckedChange={setIsAutoBillNo}
+                        />
+                        <Label htmlFor="auto-bill-no">Auto-generate</Label>
+                    </div>
+                </div>
+            )}
+
             <div>
                 <Label>Party Name</Label>
                  <Controller
