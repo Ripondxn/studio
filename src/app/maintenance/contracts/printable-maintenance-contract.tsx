@@ -28,7 +28,7 @@ export const PrintableMaintenanceContract = React.forwardRef<HTMLDivElement, Pri
       <div ref={ref} className="p-8 bg-white text-black font-sans">
         <header className="flex justify-between items-start pb-6 mb-6 border-b">
             <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/10 text-primary rounded-lg">
+                 <div className="p-3 bg-primary/10 text-primary rounded-lg">
                     {profile.logo ? <img src={profile.logo} alt="Company Logo" className="h-8 w-8 object-contain"/> : <Building2 className="h-8 w-8" />}
                 </div>
                 <div>
@@ -38,7 +38,7 @@ export const PrintableMaintenanceContract = React.forwardRef<HTMLDivElement, Pri
             </div>
             <div className="text-right">
                 <h2 className="text-2xl font-bold text-gray-700">Contract # {contract.contractNo}</h2>
-                <p className="text-sm text-gray-500 mt-1">Date: {format(new Date(contract.contractDate), 'PP')}</p>
+                <p className="text-sm text-gray-500 mt-1">Date: {contract.contractDate ? format(new Date(contract.contractDate), 'PP') : ''}</p>
             </div>
         </header>
 
@@ -59,7 +59,7 @@ export const PrintableMaintenanceContract = React.forwardRef<HTMLDivElement, Pri
             <Table>
                 <TableBody>
                     <TableRow><TableCell className="font-semibold">Service Type</TableCell><TableCell>{contract.serviceType}</TableCell></TableRow>
-                    <TableRow><TableCell className="font-semibold">Contract Period</TableCell><TableCell>{format(new Date(contract.startDate), 'PP')} to {format(new Date(contract.endDate), 'PP')}</TableCell></TableRow>
+                    <TableRow><TableCell className="font-semibold">Contract Period</TableCell><TableCell>{contract.startDate && contract.endDate ? `${format(new Date(contract.startDate), 'PP')} to ${format(new Date(contract.endDate), 'PP')}` : ''}</TableCell></TableRow>
                     <TableRow><TableCell className="font-semibold">Total Contract Value</TableCell><TableCell className="font-bold">{formatCurrency(contract.totalValue)}</TableCell></TableRow>
                     <TableRow><TableCell className="font-semibold">Status</TableCell><TableCell>{contract.status}</TableCell></TableRow>
                 </TableBody>
@@ -80,7 +80,7 @@ export const PrintableMaintenanceContract = React.forwardRef<HTMLDivElement, Pri
                     {contract.paymentSchedule.map(item => (
                         <TableRow key={item.installment}>
                             <TableCell>{item.installment}</TableCell>
-                            <TableCell>{format(new Date(item.dueDate), 'PP')}</TableCell>
+                            <TableCell>{item.dueDate ? format(new Date(item.dueDate), 'PP') : ''}</TableCell>
                             <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
                         </TableRow>
                     ))}
