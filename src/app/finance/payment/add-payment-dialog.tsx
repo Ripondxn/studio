@@ -610,3 +610,5 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     </Dialog>
   );
 }
+
+    
