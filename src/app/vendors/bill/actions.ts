@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -11,6 +10,7 @@ import { getContractLookups } from '@/app/tenancy/contract/actions';
 import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
 import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
 import { getProducts } from '@/app/products/actions';
+import { format } from 'date-fns';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 
@@ -78,7 +78,14 @@ export async function getBillLookups() {
 
 export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }) {
     const { isAutoBillNo, ...billData } = data;
-    const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(billData);
+
+    // Ensure dueDate has a value, defaulting to billDate if it's missing or empty.
+    const dataWithDueDate = {
+        ...billData,
+        dueDate: billData.dueDate || billData.billDate,
+    };
+
+    const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(dataWithDueDate);
 
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
