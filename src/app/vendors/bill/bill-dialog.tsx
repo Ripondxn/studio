@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveBill, getNextBillNumber } from './actions';
-import { getLookups, getExpenseAccounts } from '@/app/lookups/actions';
+import { getLookups } from '@/app/lookups/actions';
 import { type Bill, billSchema } from './schema-def';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
@@ -89,9 +89,6 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   useEffect(() => {
     getLookups().then(data => {
       setLookups(prev => ({...prev, ...data}));
-    });
-     getExpenseAccounts().then(data => {
-      setLookups(prev => ({ ...prev, expenseAccounts: data }));
     });
   }, []);
   

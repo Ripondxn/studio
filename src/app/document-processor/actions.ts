@@ -68,7 +68,8 @@ export async function createBillFromDocument(data: any, isAutoBillNo: boolean, c
             vendorName: vendor.vendorData.name,
             billDate: data.date,
             dueDate: data.dueDate || data.date,
-            status: 'Paid' as const, // Set status to Paid
+            status: 'Paid' as const,
+            maintenanceTicketId: data.maintenanceTicketId
         };
         
         const billResult = await saveBill(billData, true, isAutoBillNo); 
@@ -87,7 +88,7 @@ export async function createBillFromDocument(data: any, isAutoBillNo: boolean, c
             paymentFrom: 'Bank' as const, 
             referenceNo: savedBill.billNo,
             description: `Payment for Bill #${savedBill.billNo} from processed document.`,
-            status: 'Paid' as const, // Ensure payment is also marked as Paid
+            status: 'Paid' as const,
             billAllocations: [{ billId: savedBill.id, amount: savedBill.total }],
             createdByUser: currentUser.name,
             currentStatus: 'POSTED' as const,
