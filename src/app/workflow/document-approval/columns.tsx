@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { MoreHorizontal, CheckCircle, Clock, XCircle, File, Eye, MessageSquare, PlusCircle, History, User, Shield, UserCheck, Trash2, Printer } from 'lucide-react';
@@ -66,17 +66,36 @@ const roleIcons: { [key in Role]: React.ReactNode } = {
 
 
 const ViewHistoryDialog = ({ history, documentId }: { history: ApprovalHistory[], documentId: string }) => {
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = () => {
+        const printContent = printRef.current?.innerHTML;
+        if (printContent) {
+            const printWindow = window.open('', '', 'height=600,width=800');
+            if (printWindow) {
+                printWindow.document.write('<html><head><title>Approval History</title>');
+                printWindow.document.write('<style>body { font-family: sans-serif; } ul { list-style-type: none; padding: 0; } li { margin-bottom: 1rem; } .no-print { display: none !important; } </style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(`<h1>Approval History for: ${documentId}</h1>`);
+                printWindow.document.write(printContent);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.print();
+            }
+        }
+    };
+
     return (
     <DialogContent className="max-w-2xl">
       <DialogHeader>
         <DialogTitle>Approval History for: {documentId}</DialogTitle>
       </DialogHeader>
-      <div className="mt-4 max-h-[60vh] overflow-y-auto">
+      <div className="mt-4 max-h-[60vh] overflow-y-auto" ref={printRef}>
         <ul className="space-y-4">
           {history.map((item, index) => (
             <li key={index} className="flex gap-4">
               <div className="flex flex-col items-center">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground no-print">
                   {roleIcons[item.actorRole as Role] || <CheckCircle className="h-4 w-4" />}
                 </div>
                 {index < history.length - 1 && (
@@ -102,6 +121,14 @@ const ViewHistoryDialog = ({ history, documentId }: { history: ApprovalHistory[]
           ))}
         </ul>
       </div>
+       <DialogFooter>
+            <Button variant="outline" onClick={handlePrint} className="no-print">
+                <Printer className="mr-2 h-4 w-4"/> Print
+            </Button>
+            <DialogClose asChild>
+                <Button className="no-print">Close</Button>
+            </DialogClose>
+        </DialogFooter>
     </DialogContent>
   );
 };
@@ -175,6 +202,11 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
         return (
             <>
                 <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+                    <DialogTrigger asChild>
+                         <Button variant="ghost" size="sm">
+                            <History className="mr-2 h-4 w-4"/> View
+                         </Button>
+                    </DialogTrigger>
                     <ViewHistoryDialog history={doc.approvalHistory} documentId={doc.id} />
                 </Dialog>
                 
@@ -208,9 +240,6 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
                         <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4"/></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={() => setIsHistoryOpen(true)}>
-                            <History className="mr-2 h-4 w-4"/> View History
-                        </DropdownMenuItem>
                         {canApprove && (
                             <DropdownMenuItem onSelect={() => {setCurrentAction('APPROVE'); setIsActionOpen(true); }}>
                                 Approve
