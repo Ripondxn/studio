@@ -24,6 +24,8 @@ const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payme
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 const receiptBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/receipt-books-data.json');
+const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
+const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 
 
 async function readData(filePath: string) {
@@ -331,11 +333,13 @@ function revalidateAllPaths(payment: Payment) {
 }
 
 export async function getPartyNameLookups(): Promise<Record<string, string>> {
-    const tenants: {tenantData: Tenant}[] = await readData(path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json'));
-    const landlords: {landlordData: Landlord}[] = await readData(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'));
-    const vendors: {vendorData: Vendor}[] = await readData(path.join(process.cwd(), 'src/app/vendors/vendors-data.json'));
-    const agents: Agent[] = await readData(path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json'));
-    const customers: {customerData: Customer}[] = await readData(path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json'));
+    // This function can be moved to a central lookup file to avoid duplication
+    // For now, keeping it here to fix the immediate issue.
+    const tenants: {tenantData: any}[] = await readData(path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json'));
+    const landlords: {landlordData: any}[] = await readData(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'));
+    const vendors: {vendorData: any}[] = await readData(path.join(process.cwd(), 'src/app/vendors/vendors-data.json'));
+    const agents: any[] = await readData(path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json'));
+    const customers: {customerData: any}[] = await readData(path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json'));
 
     const lookups: Record<string, string> = {};
 
@@ -384,4 +388,83 @@ export async function getSummary() {
     }
     
     return summary;
+}
+
+export async function getReferences(partyType: string, partyName: string, referenceType: string, paymentType: string, collectorName?: string) {
+    if (!partyType || !partyName || !referenceType) return [];
+    
+    const allPayments = await readPayments();
+    const paidRefs = new Set(allPayments.filter(p => p.status !== 'Cancelled').map(p => p.referenceNo));
+    
+    let references: { value: string, label: string, amount?: number, propertyCode?: string, unitCode?: string, roomCode?: string, book?: any }[] = [];
+    
+    if (paymentType === 'Receipt') {
+        if (referenceType === 'Tenancy Contract') {
+            const contracts = await readData(tenancyContractsFilePath);
+            references = contracts
+                .filter((c: TenancyContract) => c.tenantCode === partyName)
+                .map((c: TenancyContract) => ({
+                    value: c.contractNo,
+                    label: `Contract: ${c.contractNo} (Property: ${c.property})`,
+                    amount: c.totalRent,
+                    propertyCode: c.property,
+                    unitCode: c.unitCode,
+                    roomCode: c.roomCode,
+                }));
+        } else if (referenceType === 'Invoice') {
+            const invoices = await readData(invoicesFilePath);
+            references = invoices
+                .filter((i: Invoice) => i.customerCode === partyName && i.status !== 'Paid' && i.status !== 'Cancelled')
+                .map((i: Invoice) => ({
+                    value: i.invoiceNo,
+                    label: `Invoice: ${i.invoiceNo} (Due: ${i.dueDate}, Bal: ${i.total - (i.amountPaid || 0)})`,
+                    amount: i.total - (i.amountPaid || 0),
+                    propertyCode: i.property,
+                    unitCode: i.unitCode,
+                    roomCode: i.roomCode,
+                }));
+        } else if (referenceType === 'Receipt Book') {
+            const books = await readData(receiptBooksFilePath);
+            books.forEach((book: ReceiptBook) => {
+                if(book.status === 'Active' && (!book.assignedTo || book.assignedTo === collectorName)) {
+                     for (let i = book.receiptStartNo; i <= book.receiptEndNo; i++) {
+                        const receiptNo = `${book.bookNo}-${i}`;
+                        if (!paidRefs.has(receiptNo)) {
+                            references.push({
+                                value: receiptNo,
+                                label: `Book: ${book.bookNo}, Receipt: ${i}`,
+                                book: book,
+                            });
+                        }
+                    }
+                }
+            });
+        }
+    } else { // Payment
+        if (referenceType === 'Lease Contract') {
+             const contracts = await readData(leaseContractsFilePath);
+             references = contracts
+                .filter((c: LeaseContract) => c.landlordCode === partyName)
+                .map((c: LeaseContract) => ({
+                    value: c.contractNo,
+                    label: `Lease: ${c.contractNo} (Property: ${c.property})`,
+                    amount: c.totalRent,
+                    propertyCode: c.property,
+                }));
+        } else if (referenceType === 'Bill') {
+            const bills = await readData(billsFilePath);
+            references = bills
+                .filter((b: Bill) => b.vendorCode === partyName && b.status !== 'Paid' && b.status !== 'Cancelled')
+                .map((b: Bill) => ({
+                    value: b.billNo,
+                    label: `Bill: ${b.billNo} (Due: ${b.dueDate}, Bal: ${b.total - (b.amountPaid || 0)})`,
+                    amount: b.total - (b.amountPaid || 0),
+                    propertyCode: b.property,
+                    unitCode: b.unitCode,
+                    roomCode: b.roomCode,
+                }));
+        }
+    }
+    
+    return references;
 }
