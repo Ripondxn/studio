@@ -102,7 +102,7 @@ async function writeCheques(data: Cheque[]) {
     await writeData(chequesFilePath, data);
 }
 
-export async function applyPaymentToBills(billPayments: { billId: string; amount: number }[], vendorCode: string) {
+async function applyPaymentToBills(billPayments: { billId: string; amount: number }[], vendorCode: string) {
     try {
         const allBills = await readBills();
 
