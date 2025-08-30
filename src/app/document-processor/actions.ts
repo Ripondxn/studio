@@ -107,9 +107,8 @@ export async function createBillFromDocument(data: any, isAutoBillNo: boolean, c
              throw new Error(paymentResult.error || 'Bill was saved, but failed to create the financial transaction.');
         }
         
-        // Apply financial impact since we are bypassing the normal workflow
-        await applyFinancialImpact(paymentResult.data);
-
+        // No need to call applyFinancialImpact here, as addPayment handles it for 'POSTED' status
+        
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message };
@@ -161,8 +160,7 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
              throw new Error(paymentResult.error || 'Invoice was saved, but failed to create the financial transaction.');
         }
         
-        // Apply financial impact since we are bypassing the normal workflow
-        await applyFinancialImpact(paymentResult.data);
+        // No need to call applyFinancialImpact here, as addPayment handles it for 'POSTED' status
 
         return { success: true };
     } catch (error) {
@@ -189,8 +187,8 @@ export async function createReceiptFromDocument(data: any, currentUser: {name: s
             throw new Error(result.error);
         }
         
-        // Apply financial impact since we are bypassing the normal workflow
-        await applyFinancialImpact(result.data);
+        // No need to call applyFinancialImpact here. 
+        // The addPayment function already handles financial impact for transactions with 'POSTED' status.
 
         return { success: true };
     } catch (error) {
