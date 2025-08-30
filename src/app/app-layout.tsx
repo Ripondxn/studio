@@ -112,6 +112,7 @@ const navLinks = [
             { href: '/finance/payment', label: 'Payment' },
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
+            { href: '/finance/book-management', label: 'Book Management' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
     },
