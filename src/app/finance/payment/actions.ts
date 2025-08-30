@@ -13,7 +13,7 @@ import { applyPaymentToInvoices } from '@/app/tenancy/customer/invoice/actions';
 import { type Contract as TenancyContract } from '@/app/tenancy/contract/schema';
 import { type LeaseContract } from '@/app/lease/contract/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
-import { type Bill } from '@/app/vendors/bill/schema';
+import { type Bill } from '@/app/vendors/bill/schema-def';
 import { type Cheque } from '../cheque-deposit/schema';
 import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 import { applyFinancialImpact } from '@/app/workflow/actions';
