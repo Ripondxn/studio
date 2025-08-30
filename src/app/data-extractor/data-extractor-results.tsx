@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -12,9 +13,10 @@ import { format, parseISO } from 'date-fns';
 
 interface DataExtractorResultsProps {
   processedData: ProcessedDocument;
+  fileName: string;
 }
 
-export function DataExtractorResults({ processedData }: DataExtractorResultsProps) {
+export function DataExtractorResults({ processedData, fileName }: DataExtractorResultsProps) {
     const { formatCurrency } = useCurrency();
 
     const handleExportExcel = () => {
@@ -39,11 +41,12 @@ export function DataExtractorResults({ processedData }: DataExtractorResultsProp
 
         const wsMain = XLSX.utils.json_to_sheet(mainData);
         const wsItems = XLSX.utils.json_to_sheet(itemsData);
-
+        
+        const sanitizedFileName = fileName.replace(/[\/\\?*\[\]]/g, '').substring(0, 31);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, wsMain, 'Summary');
-        XLSX.utils.book_append_sheet(wb, wsItems, 'Line Items');
-        XLSX.writeFile(wb, 'extracted-data.xlsx');
+        XLSX.utils.book_append_sheet(wb, wsMain, `${sanitizedFileName.substring(0,25)}-Sum`);
+        XLSX.utils.book_append_sheet(wb, wsItems, `${sanitizedFileName.substring(0,24)}-Items`);
+        XLSX.writeFile(wb, `extracted-${sanitizedFileName}.xlsx`);
     };
     
     return (
