@@ -63,13 +63,38 @@ export async function createBillFromDocument(data: any, currentUser: UserRole) {
         
         const billData = {
             ...data,
-            vendorName: vendor.vendorData.name, // Add the missing vendor name
+            vendorName: vendor.vendorData.name,
+            billDate: data.date,
+            dueDate: data.dueDate || data.date,
+            status: 'Draft',
         };
         
-        const result = await saveBill(billData, true, false);
-        if (!result.success) {
-            throw new Error(result.error);
+        const billResult = await saveBill(billData, true, false);
+        if (!billResult.success || !billResult.data) {
+            throw new Error(billResult.error || 'Failed to save bill from document.');
         }
+
+        // Now, create the associated payment record
+        const savedBill = billResult.data;
+        const paymentResult = await addPayment({
+            type: 'Payment',
+            date: savedBill.billDate,
+            partyType: 'Vendor',
+            partyName: savedBill.vendorCode,
+            amount: savedBill.total,
+            paymentMethod: 'Bank Transfer', // Or a suitable default
+            paymentFrom: 'Bank', // Default
+            referenceNo: savedBill.billNo,
+            description: `Payment for Bill #${savedBill.billNo} from processed document.`,
+            status: 'Paid',
+            billAllocations: [{ billId: savedBill.id, amount: savedBill.total }],
+            createdByUser: currentUser.name,
+        });
+        
+        if(!paymentResult.success) {
+             throw new Error(paymentResult.error || 'Bill was saved, but failed to create the financial transaction.');
+        }
+
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message };

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -78,13 +79,12 @@ export async function getBillLookups() {
 
 export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }) {
     const { isAutoBillNo, ...billData } = data;
-
-    // Ensure dueDate has a value, defaulting to billDate if it's missing or empty.
+    
     const dataWithDueDate = {
         ...billData,
         dueDate: billData.dueDate || billData.billDate,
     };
-
+    
     const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(dataWithDueDate);
 
     if (!validation.success) {
@@ -148,3 +148,4 @@ export async function deleteBill(billId: string) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+

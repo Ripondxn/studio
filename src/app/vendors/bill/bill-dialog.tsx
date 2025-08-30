@@ -170,21 +170,20 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
     
     if (billResult.success && billResult.data) {
         const savedBill = billResult.data;
-        // Now, create the financial payment record.
         const paymentResult = await addPayment({
             type: 'Payment',
             date: savedBill.billDate,
             partyType: 'Vendor',
             partyName: savedBill.vendorCode,
             amount: savedBill.total,
-            paymentMethod: 'Bank Transfer', // Default or choose based on context
-            paymentFrom: 'Bank', // Default
+            paymentMethod: 'Bank Transfer', 
+            paymentFrom: 'Bank',
             referenceNo: savedBill.billNo,
             property: savedBill.property,
             unitCode: savedBill.unitCode,
             roomCode: savedBill.roomCode,
             description: `Payment for Bill #${savedBill.billNo}`,
-            status: 'Paid', // Assuming direct payment, could be 'Unpaid'
+            status: 'Paid',
             billAllocations: [{ billId: savedBill.id, amount: savedBill.total }]
         });
         
@@ -193,7 +192,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
             onSuccess();
             setIsOpen(false);
         } else {
-             toast({ variant: 'destructive', title: 'Payment Error', description: paymentResult.error || 'Failed to create financial transaction for the bill.' });
+             toast({ variant: 'destructive', title: 'Payment Error', description: paymentResult.error || 'Bill was saved, but failed to create the financial transaction.' });
         }
     } else {
         toast({ variant: 'destructive', title: 'Error', description: billResult.error || 'Failed to save bill.' });
