@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -33,7 +34,9 @@ import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
-import { type Tenant } from '../../schema';
+import { type Product } from '@/app/products/schema';
+import { getProducts } from '@/app/products/actions';
+import { Combobox } from '@/components/ui/combobox';
 
 type InvoiceFormData = z.infer<typeof subscriptionInvoiceSchema>;
 
@@ -41,7 +44,7 @@ interface SubscriptionInvoiceDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   invoice: Invoice | null;
-  tenant: Tenant;
+  tenant: { code: string; name: string, isSubscriptionActive?: boolean, subscriptionStatus?: 'Yearly' | 'Monthly', subscriptionAmount?: number, property?: string, unitCode?: string, roomCode?: string };
   onSuccess: () => void;
   isViewMode?: boolean;
 }
@@ -52,6 +55,8 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const printRef = useRef<HTMLDivElement>(null);
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string}[]; rooms: {value: string, label: string}[] }>({ properties: [], units: [], rooms: [] });
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(subscriptionInvoiceSchema),
