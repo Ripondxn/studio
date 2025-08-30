@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, X } from 'lucide-react';
 import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
-import { getLookups } from '@/app/lookups/actions';
+import { getLookups, getExpenseAccounts } from '@/app/lookups/actions';
 import { type Invoice, invoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { Switch } from '@/components/ui/switch';
@@ -54,7 +54,7 @@ export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: 
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
-  const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string, propertyCode: string}[]; rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[] }>({ properties: [], units: [], rooms: [] });
+  const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string, propertyCode: string}[]; rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[]; expenseAccounts: {value: string, label: string}[] }>({ properties: [], units: [], rooms: [], expenseAccounts: [] });
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -75,7 +75,7 @@ export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: 
   
   useEffect(() => {
     getLookups().then(data => {
-        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms}));
+        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms, expenseAccounts: data.expenseAccounts || []}));
         setProducts(data.products || []);
     });
   }, []);
@@ -321,6 +321,23 @@ export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: 
                       </Select>
                     )}
                   />
+                </div>
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                 <div>
+                    <Label>Expense Account (for reporting)</Label>
+                    <Controller
+                        name="expenseAccountId"
+                        control={control}
+                        render={({ field }) => (
+                            <Combobox
+                                options={lookups.expenseAccounts}
+                                value={field.value || ''}
+                                onSelect={(value) => field.onChange(value)}
+                                placeholder="Select an expense account"
+                            />
+                        )}
+                    />
                 </div>
             </div>
           </div>

@@ -32,6 +32,7 @@ export const invoiceSchema = z.object({
   remainingBalance: z.number().optional(),
   status: z.enum(['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled']),
   notes: z.string().optional(),
+  expenseAccountId: z.string().optional(),
 });
 
 export type Invoice = z.infer<typeof invoiceSchema>;

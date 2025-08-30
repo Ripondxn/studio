@@ -121,6 +121,8 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
             ...data,
             isAutoInvoiceNo: true,
             status: 'Paid' as const,
+            // Assign a default expense account for direct posting
+            expenseAccountId: '4110', // Rental Income
         };
 
         const result = await saveInvoice(invoiceData, currentUser.name);
@@ -134,7 +136,7 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
         const paymentRecord = {
             type: 'Receipt' as const,
             date: savedInvoice.invoiceDate,
-            partyType: 'Customer' as const, // Correctly set party type
+            partyType: 'Customer' as const,
             partyName: savedInvoice.customerCode,
             amount: savedInvoice.total,
             paymentMethod: 'Bank Transfer' as const,
