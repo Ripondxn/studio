@@ -116,7 +116,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
             taxRate: data.taxRate,
             total: data.total,
             notes: data.notes,
-            status: 'Draft'
+            status: 'Draft' as const
         };
         result = await createBillFromDocument(billData, currentUser);
 
