@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -115,6 +114,7 @@ const navLinks = [
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
             { href: '/document-processor', label: 'Document Processor' },
+            { href: '/data-extractor', label: 'Data Extractor' },
         ]
     },
      {
