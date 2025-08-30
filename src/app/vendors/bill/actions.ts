@@ -9,6 +9,9 @@ import { type Payment } from '@/app/finance/payment/schema';
 import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 import { applyFinancialImpact } from '@/app/workflow/actions';
 import { getLookups as getPaymentLookups } from '@/app/finance/payment/actions';
+import { getContractLookups } from '@/app/tenancy/contract/actions';
+import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
+import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -56,11 +59,24 @@ export async function getNextBillNumber() {
 }
 
 export async function getBillLookups() {
-    return getPaymentLookups();
+    const paymentLookups = await getPaymentLookups();
+    const propertyLookups = await getContractLookups();
+    const expenseAccounts = await getExpenseAccounts();
+    const maintenanceTickets = await getOpenTickets();
+    
+    return {
+        ...paymentLookups,
+        properties: propertyLookups.properties,
+        units: propertyLookups.units,
+        rooms: propertyLookups.rooms,
+        partitions: propertyLookups.partitions,
+        expenseAccounts,
+        maintenanceTickets,
+    }
 }
 
 
-export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }, isNewRecord: boolean) {
+export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }) {
     const { isAutoBillNo, ...billData } = data;
     const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(billData);
 
@@ -75,7 +91,13 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
         const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
         const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
 
-        if (isNewRecord) {
+        if (data.id) { // Update existing
+            const index = allBills.findIndex(bill => bill.id === data.id);
+            if (index === -1) {
+                return { success: false, error: 'Bill not found.' };
+            }
+            allBills[index] = { ...allBills[index], ...validatedData };
+        } else { // Create new
             let newBillNo = validatedData.billNo;
             if (isAutoBillNo || !newBillNo) {
                  newBillNo = await getNextBillNumber();
@@ -114,13 +136,6 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
             if(initialStatus === 'POSTED') await applyFinancialImpact(newPayment as Payment);
 
             allPayments.push({...newPayment, id: `PAY-${Date.now()}`});
-            
-        } else {
-            const index = allBills.findIndex(bill => bill.id === data.id);
-            if (index === -1) {
-                return { success: false, error: 'Bill not found.' };
-            }
-            allBills[index] = { ...allBills[index], ...validatedData };
         }
         
         await writeBills(allBills);

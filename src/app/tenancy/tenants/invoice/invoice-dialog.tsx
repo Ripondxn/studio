@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -263,5 +262,3 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     </Dialog>
   );
 }
-
-    

@@ -29,7 +29,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
+import { saveInvoice, getNextGeneralInvoiceNumber, getContractLookups } from './actions';
 import { type Invoice } from './schema';
 import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
@@ -39,6 +39,7 @@ import { useCurrency } from '@/context/currency-context';
 import { type Product } from '@/app/products/schema';
 import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
+import { getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
@@ -58,6 +59,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
+  const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string}[]; rooms: {value: string, label: string}[] }>({ properties: [], units: [], rooms: [] });
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -73,12 +75,29 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const watchedItems = watch('items');
   const watchedTaxRate = watch('taxRate');
   const watchedTaxType = watch('taxType');
-
+  const watchedProperty = watch('property');
+  const watchedUnit = watch('unitCode');
+  
   useEffect(() => {
-    if (isOpen) {
-      getProducts().then(setProducts);
+    getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
+    getProducts().then(setProducts);
+  }, []);
+  
+  useEffect(() => {
+    if(watchedProperty) {
+      getUnitsForProperty(watchedProperty).then(units => setLookups(prev => ({...prev, units})));
+    } else {
+      setLookups(prev => ({...prev, units: [], rooms: []}));
     }
-  }, [isOpen]);
+  }, [watchedProperty]);
+  
+  useEffect(() => {
+    if(watchedUnit) {
+      getRoomsForUnit(watchedProperty!, watchedUnit).then(rooms => setLookups(prev => ({...prev, rooms})));
+    } else {
+      setLookups(prev => ({...prev, rooms: []}));
+    }
+  }, [watchedUnit, watchedProperty]);
 
   useEffect(() => {
     if (!watchedItems) return;
@@ -209,7 +228,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Invoice' : 'Create New Invoice'}</DialogTitle>
@@ -218,7 +237,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[60vh] overflow-y-auto p-1">
+          <div className="max-h-[70vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
               <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
               <div><Label>Customer</Label><Input value={customer.name} disabled/></div>
@@ -233,6 +252,20 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                     disabled={!!invoice}
                 />
                 <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                 <div>
+                    <Label>Property</Label>
+                     <Controller name="property" control={control} render={({ field }) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property"/>)} />
+                </div>
+                <div>
+                    <Label>Unit</Label>
+                    <Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} />
+                </div>
+                <div>
+                    <Label>Room</Label>
+                    <Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} />
+                </div>
             </div>
             
             <Table>
