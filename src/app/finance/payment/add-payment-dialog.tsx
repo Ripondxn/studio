@@ -23,6 +23,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema, type Payment } from './schema';
 import { addPayment, getReferences } from './actions';
 import { getLookups } from '@/app/lookups/actions';
+import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/lookups';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -141,7 +142,8 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
 
   useEffect(() => {
-    getLookups().then(data => setLookups(data));
+    getLookups().then(data => setLookups(prev => ({...prev, ...data})));
+    getExpenseAccounts().then(data => setLookups(prev => ({...prev, expenseAccounts: data})));
   }, [])
   
    useEffect(() => {
@@ -454,8 +456,8 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                     <CardHeader><CardTitle className="flex items-center space-x-2"><Building2 className="h-5 w-5 text-primary" /><span>Property Details</span></CardTitle></CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                          <div className="space-y-2"><Label>Property</Label><Controller name="property" control={control} render={({ field }) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property"/>)} /></div>
-                         <div className="space-y-2"><Label>Unit</Label><Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} /></div>
-                         <div className="space-y-2"><Label>Room</Label><Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} /></div>
+                         <div className="space-y-2"><Label>Unit</Label><Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units.filter(u => u.propertyCode === watchedProperty)} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} /></div>
+                         <div className="space-y-2"><Label>Room</Label><Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} /></div>
                     </CardContent>
                 </Card>
 
@@ -609,7 +611,3 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
     </Dialog>
   );
 }
-
-    
-
-    

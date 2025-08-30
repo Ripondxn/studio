@@ -59,7 +59,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
-  const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string}[]; rooms: {value: string, label: string}[] }>({ properties: [], units: [], rooms: [] });
+  const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string, propertyCode: string}[]; rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[] }>({ properties: [], units: [], rooms: [] });
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -80,26 +80,13 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   
   useEffect(() => {
     getLookups().then(data => {
-        setLookups(prev => ({...prev, properties: data.properties}));
+        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms}));
         setProducts(data.products || []);
     });
   }, []);
   
-  useEffect(() => {
-    if(watchedProperty) {
-      getLookups().then(data => setLookups(prev => ({...prev, units: data.units.filter(u => u.propertyCode === watchedProperty) })));
-    } else {
-      setLookups(prev => ({...prev, units: [], rooms: []}));
-    }
-  }, [watchedProperty]);
-  
-  useEffect(() => {
-    if(watchedUnit) {
-      getLookups().then(data => setLookups(prev => ({...prev, rooms: data.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)})));
-    } else {
-      setLookups(prev => ({...prev, rooms: []}));
-    }
-  }, [watchedUnit, watchedProperty]);
+  const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
+  const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
 
   useEffect(() => {
     if (!watchedItems) return;
@@ -267,11 +254,11 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
                 </div>
                 <div>
                     <Label>Unit</Label>
-                    <Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} />
+                    <Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={filteredUnits} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} />
                 </div>
                 <div>
                     <Label>Room</Label>
-                    <Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={lookups.rooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} />
+                    <Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={filteredRooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} />
                 </div>
             </div>
             
@@ -391,5 +378,3 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
     </Dialog>
   );
 }
-
-    

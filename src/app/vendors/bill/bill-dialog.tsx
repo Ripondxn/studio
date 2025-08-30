@@ -30,8 +30,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveBill, getNextBillNumber } from './actions';
-import { getLookups } from '@/app/lookups/actions';
+import { saveBill, getNextBillNumber, getBillLookups } from './actions';
 import { type Bill, billSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
@@ -39,6 +38,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
 import { type Product } from '@/app/products/schema';
+import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/lookups';
 
 const formSchema = billSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type BillFormData = z.infer<typeof formSchema>;
@@ -62,8 +62,8 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
 
   const [lookups, setLookups] = useState<{
     properties: {value: string, label: string}[],
-    units: {value: string, label: string}[],
-    rooms: {value: string, label: string}[],
+    units: {value: string, label: string, propertyCode: string}[],
+    rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[],
     products: Product[],
     expenseAccounts: {value: string, label: string}[],
     maintenanceTickets: {value: string, label: string}[],
@@ -93,9 +93,14 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   const watchedUnit = watch('unitCode');
 
   useEffect(() => {
-    getLookups().then(setLookups);
+    getBillLookups().then(data => {
+      setLookups(prev => ({...prev, ...data}));
+    });
+    getExpenseAccounts().then(data => {
+      setLookups(prev => ({ ...prev, expenseAccounts: data }));
+    });
   }, []);
-
+  
   useEffect(() => {
     if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
@@ -286,57 +291,15 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 border rounded-md bg-muted/50">
                   <div>
                       <Label>Property</Label>
-                      <Controller
-                          name="property"
-                          control={control}
-                          render={({ field }) => (
-                              <Combobox
-                                  options={lookups.properties || []}
-                                  value={field.value || ''}
-                                  onSelect={(value) => {
-                                      field.onChange(value);
-                                      setValue('unitCode', '');
-                                      setValue('roomCode', '');
-                                  }}
-                                  placeholder="Select Property"
-                              />
-                          )}
-                      />
+                      <Controller name="property" control={control} render={({ field }) => (<Combobox options={lookups.properties || []} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property"/>)} />
                   </div>
                   <div>
                       <Label>Unit</Label>
-                      <Controller
-                          name="unitCode"
-                          control={control}
-                          render={({ field }) => (
-                              <Combobox
-                                  options={lookups.units || []}
-                                  value={field.value || ''}
-                                  onSelect={(value) => {
-                                      field.onChange(value);
-                                      setValue('roomCode', '');
-                                  }}
-                                  placeholder="Select Unit"
-                                  disabled={!watchedProperty}
-                              />
-                          )}
-                      />
+                      <Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units.filter(u => u.propertyCode === watchedProperty)} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} />
                   </div>
                   <div>
                       <Label>Room</Label>
-                      <Controller
-                          name="roomCode"
-                          control={control}
-                          render={({ field }) => (
-                              <Combobox
-                                  options={lookups.rooms || []}
-                                  value={field.value || ''}
-                                  onSelect={(value) => field.onChange(value)}
-                                  placeholder="Select Room"
-                                  disabled={!watchedUnit || lookups.rooms.length === 0}
-                              />
-                          )}
-                      />
+                      <Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} />
                   </div>
               </div>
             )}
@@ -472,4 +435,3 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
     </Dialog>
   );
 }
-

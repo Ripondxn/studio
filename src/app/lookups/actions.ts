@@ -27,6 +27,7 @@ async function readData<T>(filePath: string, defaultValue: T[] = []): Promise<T[
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            await fs.writeFile(filePath, JSON.stringify(defaultValue, null, 2), 'utf-8');
             return defaultValue;
         }
         throw error;
