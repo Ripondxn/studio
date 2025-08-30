@@ -90,6 +90,15 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
 
   useEffect(() => {
     if (!watchedItems) return;
+    
+    // First update the total for each item
+    watchedItems.forEach((item, index) => {
+        const total = item.quantity * item.unitPrice;
+        if (item.total !== total) {
+            setValue(`items.${index}.total`, total);
+        }
+    });
+
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const taxRate = watchedTaxRate || 0;
     

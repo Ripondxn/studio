@@ -69,18 +69,12 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
     maintenanceTickets: {value: string, label: string}[],
   }>({ properties: [], units: [], rooms: [], products: [], expenseAccounts: [], maintenanceTickets: [] });
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<BillFormData>({
+  const form = useForm<BillFormData>({
     resolver: zodResolver(formSchema),
   });
   
+  const { control, register, handleSubmit, reset, watch, setValue } = form;
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
@@ -103,6 +97,15 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
 
   useEffect(() => {
     if (!watchedItems) return;
+
+    // First update the total for each item
+    watchedItems.forEach((item, index) => {
+        const total = item.quantity * item.unitPrice;
+        if (item.total !== total) {
+            setValue(`items.${index}.total`, total);
+        }
+    });
+    
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const taxRate = watchedTaxRate || 0;
     
