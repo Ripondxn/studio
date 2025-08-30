@@ -51,6 +51,7 @@ import {
   AlertTriangle,
   KeyRound,
   Eraser,
+  ScanLine
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -112,6 +113,7 @@ const navLinks = [
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
+            { href: '/document-processor', label: 'Document Processor' },
         ]
     },
      {

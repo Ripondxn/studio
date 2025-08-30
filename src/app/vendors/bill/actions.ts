@@ -3,17 +3,12 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { billSchema, type Bill } from './schema';
-import { isBefore, parseISO } from 'date-fns';
 import { type Payment } from '@/app/finance/payment/schema';
-import { getContractLookups } from '@/app/tenancy/contract/actions';
-import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
-import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
-import { getProducts } from '@/app/products/actions';
 import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 import { applyFinancialImpact } from '@/app/workflow/actions';
+import { getLookups as getPaymentLookups } from '@/app/finance/payment/actions';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -61,22 +56,11 @@ export async function getNextBillNumber() {
 }
 
 export async function getBillLookups() {
-    const [contractLookups, openTickets, expenseAccounts, products] = await Promise.all([
-        getContractLookups(),
-        getOpenTickets(),
-        getExpenseAccounts(),
-        getProducts()
-    ]);
-    return {
-        properties: contractLookups.properties,
-        maintenanceTickets: openTickets,
-        expenseAccounts,
-        products
-    }
+    return getPaymentLookups();
 }
 
 
-export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }) {
+export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }, isNewRecord: boolean) {
     const { isAutoBillNo, ...billData } = data;
     const validation = billSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(billData);
 
@@ -86,12 +70,12 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
 
     try {
         const allBills = await readBills();
-        const isNew = !data.id;
         const validatedData = validation.data;
         const workflowSettings = await getWorkflowSettings();
         const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
+        const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
 
-        if (isNew) {
+        if (isNewRecord) {
             let newBillNo = validatedData.billNo;
             if (isAutoBillNo || !newBillNo) {
                  newBillNo = await getNextBillNumber();
@@ -129,9 +113,8 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
             
             if(initialStatus === 'POSTED') await applyFinancialImpact(newPayment as Payment);
 
-            const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
             allPayments.push({...newPayment, id: `PAY-${Date.now()}`});
-            await fs.writeFile(paymentsFilePath, JSON.stringify(allPayments, null, 2), 'utf-8');
+            
         } else {
             const index = allBills.findIndex(bill => bill.id === data.id);
             if (index === -1) {
@@ -141,6 +124,8 @@ export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remaining
         }
         
         await writeBills(allBills);
+        await fs.writeFile(paymentsFilePath, JSON.stringify(allPayments, null, 2), 'utf-8');
+
         revalidatePath(`/vendors/add?code=${data.vendorCode}`);
         revalidatePath('/workflow');
         return { success: true };
