@@ -1,4 +1,5 @@
 
+'use server';
 
 import { z } from 'zod';
 
@@ -8,7 +9,7 @@ export const billItemSchema = z.object({
   quantity: z.number().min(1, 'Quantity must be at least 1.'),
   unitPrice: z.number().min(0, 'Unit price must be positive.'),
   total: z.number(),
-  expenseAccountId: z.string().optional(),
+  expenseAccountId: z.string().min(1, "Expense account is required."),
 });
 
 export const billSchema = z.object({
