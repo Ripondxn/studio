@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -32,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveBill, getNextBillNumber } from './actions';
 import { getLookups } from '@/app/lookups/actions';
+import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/lookups';
 import { type Bill, billSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
@@ -89,6 +89,9 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   useEffect(() => {
     getLookups().then(data => {
       setLookups(prev => ({...prev, ...data}));
+    });
+     getExpenseAccounts().then(data => {
+      setLookups(prev => ({ ...prev, expenseAccounts: data }));
     });
   }, []);
   
@@ -430,7 +433,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
             </DialogClose>
             <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                Save Bill
+                {bill ? 'Save Changes' : 'Save Bill'}
             </Button>
           </DialogFooter>
         </form>
