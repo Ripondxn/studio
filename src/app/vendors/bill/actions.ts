@@ -6,12 +6,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { billSchema, type Bill } from './schema';
-import { getLookups as getPaymentLookups } from '@/app/finance/payment/actions';
-import { getContractLookups } from '@/app/tenancy/contract/actions';
-import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
-import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
-import { getProducts } from '@/app/products/actions';
-import { format } from 'date-fns';
+import { getLookups } from '@/app/lookups/actions';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 
@@ -59,21 +54,9 @@ export async function getNextBillNumber() {
 }
 
 export async function getBillLookups() {
-    const paymentLookups = await getPaymentLookups();
-    const propertyLookups = await getContractLookups();
-    const expenseAccounts = await getExpenseAccounts();
-    const maintenanceTickets = await getOpenTickets();
-    const products = await getProducts();
-    
+    const lookups = await getLookups();
     return {
-        ...paymentLookups,
-        properties: propertyLookups.properties,
-        units: propertyLookups.units,
-        rooms: propertyLookups.rooms,
-        partitions: propertyLookups.partitions,
-        expenseAccounts,
-        maintenanceTickets,
-        products,
+        ...lookups,
     }
 }
 

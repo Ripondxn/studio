@@ -21,13 +21,13 @@ import { Plus, Loader2, CreditCard, Building2, FileText, Calendar as CalendarIco
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema, type Payment } from './schema';
-import { addPayment, getLookups, getReferences } from './actions';
-import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/actions';
+import { addPayment, getReferences } from './actions';
+import { getLookups } from '@/app/lookups/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
+import { getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -141,9 +141,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
 
 
   useEffect(() => {
-    getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties })));
-    getLookups().then(data => setLookups(prev => ({...prev, ...data})));
-    getExpenseAccounts().then(data => setLookups(prev => ({...prev, expenseAccounts: data })));
+    getLookups().then(data => setLookups(data));
   }, [])
   
    useEffect(() => {
@@ -523,7 +521,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                                 <TableRow key={invoice.id}>
                                   <TableCell>{invoice.invoiceNo}</TableCell>
                                   <TableCell>{format(new Date(invoice.dueDate), 'PP')}</TableCell>
-                                  <TableCell className="text-right">{formatCurrency(invoice.remainingBalance || 0)}</TableCell>
+                                  <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</TableCell>
                                   <TableCell className="text-right">
                                     <Controller
                                       control={control}
@@ -572,7 +570,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                                 <TableRow key={bill.id}>
                                   <TableCell>{bill.billNo}</TableCell>
                                   <TableCell>{format(new Date(bill.dueDate), 'PP')}</TableCell>
-                                  <TableCell className="text-right">{formatCurrency(bill.remainingBalance || 0)}</TableCell>
+                                  <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(bill.remainingBalance || 0)}</TableCell>
                                   <TableCell className="text-right">
                                     <Controller
                                       control={control}

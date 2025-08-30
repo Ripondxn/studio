@@ -29,15 +29,14 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Printer } from 'lucide-react';
 import { saveInvoice, getNextSubscriptionInvoiceNumber } from '@/app/tenancy/customer/invoice/actions';
+import { getLookups } from '@/app/lookups/actions';
 import { type Invoice, subscriptionInvoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
 import { type Product } from '@/app/products/schema';
-import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
 
 type InvoiceFormData = z.infer<typeof subscriptionInvoiceSchema>;
 
@@ -268,3 +267,4 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     </Dialog>
   );
 }
+

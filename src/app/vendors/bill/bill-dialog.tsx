@@ -30,7 +30,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveBill, getNextBillNumber, getBillLookups } from './actions';
+import { saveBill, getNextBillNumber } from './actions';
+import { getLookups } from '@/app/lookups/actions';
 import { type Bill, billSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
@@ -92,7 +93,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   const watchedUnit = watch('unitCode');
 
   useEffect(() => {
-    getBillLookups().then(setLookups);
+    getLookups().then(setLookups);
   }, []);
 
   useEffect(() => {
@@ -471,3 +472,4 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
     </Dialog>
   );
 }
+

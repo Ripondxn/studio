@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveInvoice, getNextGeneralInvoiceNumber } from './actions';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '@/app/tenancy/contract/actions';
+import { getLookups } from '@/app/lookups/actions';
 import { type Invoice } from './schema';
 import { invoiceSchema } from './schema';
 import { format } from 'date-fns';
@@ -39,7 +39,6 @@ import { InvoiceView } from './invoice-view';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
 import { type Product } from '@/app/products/schema';
-import { getProducts } from '@/app/products/actions';
 import { Combobox } from '@/components/ui/combobox';
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
@@ -80,13 +79,15 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   const watchedUnit = watch('unitCode');
   
   useEffect(() => {
-    getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties})));
-    getProducts().then(setProducts);
+    getLookups().then(data => {
+        setLookups(prev => ({...prev, properties: data.properties}));
+        setProducts(data.products || []);
+    });
   }, []);
   
   useEffect(() => {
     if(watchedProperty) {
-      getUnitsForProperty(watchedProperty).then(units => setLookups(prev => ({...prev, units})));
+      getLookups().then(data => setLookups(prev => ({...prev, units: data.units.filter(u => u.propertyCode === watchedProperty) })));
     } else {
       setLookups(prev => ({...prev, units: [], rooms: []}));
     }
@@ -94,7 +95,7 @@ export function InvoiceDialog({ isOpen, setIsOpen, invoice, customer, onSuccess,
   
   useEffect(() => {
     if(watchedUnit) {
-      getRoomsForUnit(watchedProperty!, watchedUnit).then(rooms => setLookups(prev => ({...prev, rooms})));
+      getLookups().then(data => setLookups(prev => ({...prev, rooms: data.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)})));
     } else {
       setLookups(prev => ({...prev, rooms: []}));
     }

@@ -153,14 +153,6 @@ export async function getAccounts(): Promise<Account[]> {
     return Array.from(accountMap.values());
 }
 
-export async function getExpenseAccounts(): Promise<{ value: string; label: string }[]> {
-    const accounts: Account[] = await readData(accountsFilePath);
-    return accounts
-        .filter(acc => acc.type === 'Expense' && !acc.isGroup)
-        .map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})` }));
-}
-
-
 const addAccountFormSchema = accountSchema.omit({ balance: true }).extend({
     balance: z.number().optional().default(0),
 });
