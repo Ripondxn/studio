@@ -91,7 +91,8 @@ export async function getNextGeneralInvoiceNumber() {
 
 
 export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
-    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(data);
+    const { isAutoInvoiceNo, ...invoiceData } = data;
+    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
 
     if (!validation.success) {
         console.error("Invoice Validation Error:", validation.error.format());
@@ -106,7 +107,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
 
         if (isNew) {
             let newInvoiceNo = validatedData.invoiceNo;
-            if (data.isAutoInvoiceNo || !newInvoiceNo) {
+            if (isAutoInvoiceNo || !newInvoiceNo) {
                  newInvoiceNo = await getNextGeneralInvoiceNumber();
             } else {
                 const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
@@ -120,6 +121,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
                 invoiceNo: newInvoiceNo,
                 id: `INV-${Date.now()}`,
                 amountPaid: 0,
+                 items: validatedData.items.map(item => ({...item, id: `item-${Date.now()}-${Math.random()}`}))
             };
             allInvoices.push(newInvoice);
             savedInvoice = newInvoice;
@@ -129,7 +131,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
             if (index === -1) {
                 return { success: false, error: 'Invoice not found.' };
             }
-            allInvoices[index] = { ...allInvoices[index], ...validatedData };
+            allInvoices[index] = { ...allInvoices[index], ...validatedData, items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`})) };
             savedInvoice = allInvoices[index];
         }
 
