@@ -52,13 +52,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
-    const [isCancellingSub, setIsCancellingSub] = useState(false);
     const router = useRouter();
     const { formatCurrency } = useCurrency();
-    const { toast } = useToast();
-    const { watch, setValue } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [] });
+
+    const { watch, setValue } = useFormContext<Tenant>();
 
     useEffect(() => {
         getContractLookups().then(data => {
@@ -91,7 +90,8 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         }
         fetchRooms();
     }, [watchedProperty, watchedUnit]);
-    
+
+
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
@@ -151,6 +151,9 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         }, { totalBilled: 0, totalPaid: 0 });
     }, [invoices]);
     
+    const [isCancellingSub, setIsCancellingSub] = useState(false);
+    const { toast } = useToast();
+
     const handleCancelSubscription = async () => {
         setIsCancellingSub(true);
         const result = await cancelSubscription(tenant.code);
@@ -169,7 +172,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
+                        <CardDescription>Manage invoices for {tenantName}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -331,7 +334,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                <GeneralInvoiceDialog
+                <InvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
                     invoice={selectedInvoice}
