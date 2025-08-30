@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams }from 'next/navigation';
 import {
   Card,
@@ -83,6 +83,7 @@ export default function LeaseContractPage() {
   const [initialContract, setInitialContract] = useState<LeaseContract>(initialContractState);
   const [editedInstallmentIndexes, setEditedInstallmentIndexes] = useState<Set<number>>(new Set());
   const [lookups, setLookups] = useState<LookupData>({ landlords: [], properties: [], tenancyContracts: [] });
+  const printRef = useRef<HTMLDivElement>(null);
 
 
   useEffect(() => {
@@ -260,7 +261,7 @@ export default function LeaseContractPage() {
         });
     }
     
-    const totalCalculated = installmentAmount * numberOfPayments;
+    const totalCalculated = newSchedule.reduce((sum, item) => sum + item.amount, 0);
     const remainder = rentToUse - totalCalculated;
     if(remainder !== 0 && newSchedule.length > 0) {
         newSchedule[newSchedule.length - 1].amount += remainder;
