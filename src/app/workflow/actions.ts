@@ -65,7 +65,7 @@ async function writePettyCash(data: { balance: number }) {
 
 
 export async function applyFinancialImpact(payment: Payment) {
-    const { type, amount, bankAccountId, paymentFrom, partyType, partyName } = payment;
+    const { type, amount, bankAccountId, paymentFrom, partyType, partyName, expenseAccountId } = payment;
     const allAccounts: Account[] = await readData(accountsFilePath);
     const accountsPayableIndex = allAccounts.findIndex(a => a.code === '2110'); // Accounts Payable
 
@@ -91,14 +91,26 @@ export async function applyFinancialImpact(payment: Payment) {
         }
     }
     
+    // Update Expense/Revenue accounts
+    if (type === 'Payment' && expenseAccountId) {
+        const expenseAccountIndex = allAccounts.findIndex(a => a.code === expenseAccountId);
+        if(expenseAccountIndex !== -1) {
+            allAccounts[expenseAccountIndex].balance += amount;
+        }
+    } else if (type === 'Receipt') {
+        // Assuming all receipts are rental income for now for simplicity
+        const revenueAccountIndex = allAccounts.findIndex(a => a.code === '4110');
+        if (revenueAccountIndex !== -1) {
+            allAccounts[revenueAccountIndex].balance += amount;
+        }
+    }
+
     // Update Accounts Payable for vendor transactions
     if (partyType === 'Vendor') {
         if (accountsPayableIndex !== -1) {
              if (type === 'Payment') {
-                // Paying a vendor decreases what you owe them
                 allAccounts[accountsPayableIndex].balance -= amount;
             } else { // Receipt from a vendor (refund)
-                // A refund from a vendor also decreases what you owe them (or creates a credit)
                 allAccounts[accountsPayableIndex].balance -= amount;
             }
         }

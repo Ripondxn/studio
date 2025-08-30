@@ -198,6 +198,9 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
 }
 
 async function reverseFinancialImpact(payment: Payment) {
+    if (payment.currentStatus !== 'POSTED') return; // Only reverse posted transactions
+
+    // Reverse Cash/Bank balances
     if (payment.paymentFrom === 'Petty Cash') {
         const pettyCash = await readData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'));
         if (payment.type === 'Payment') {
@@ -234,6 +237,35 @@ async function reverseFinancialImpact(payment: Payment) {
         });
         await writeInvoices(allInvoices);
     }
+
+    // Reverse Chart of Accounts
+    const allAccounts = await readData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
+    const { type, amount, expenseAccountId, partyType } = payment;
+
+    if (type === 'Payment' && expenseAccountId) {
+        const expenseAccountIndex = allAccounts.findIndex(a => a.code === expenseAccountId);
+        if(expenseAccountIndex !== -1) {
+            allAccounts[expenseAccountIndex].balance -= amount;
+        }
+    } else if (type === 'Receipt') {
+        const revenueAccountIndex = allAccounts.findIndex(a => a.code === '4110');
+        if (revenueAccountIndex !== -1) {
+            allAccounts[revenueAccountIndex].balance -= amount;
+        }
+    }
+
+    if (partyType === 'Vendor') {
+        const accountsPayableIndex = allAccounts.findIndex(a => a.code === '2110');
+        if (accountsPayableIndex !== -1) {
+             if (type === 'Payment') {
+                allAccounts[accountsPayableIndex].balance += amount;
+            } else { // Refund
+                allAccounts[accountsPayableIndex].balance += amount;
+            }
+        }
+    }
+
+    await writeData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'), allAccounts);
 }
 
 

@@ -157,9 +157,8 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
     XLSX.writeFile(wb, "all-transactions.xlsx");
   };
 
-  const canDelete = (tx: Payment): boolean => {
-    if (currentUserRole === 'Super Admin') return true;
-    return tx.currentStatus !== 'POSTED';
+  const canDelete = (): boolean => {
+    return currentUserRole === 'Super Admin';
   };
 
   return (
@@ -176,7 +175,7 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeletePayment} disabled={isDeleting}>
+                <AlertDialogAction onClick={handleDeletePayment} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -260,7 +259,7 @@ export function AllTransactionsDialog({ children }: { children: React.ReactNode 
                       {formatCurrency(tx.amount)}
                     </TableCell>
                      <TableCell className="text-right">
-                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTx(tx)} disabled={!canDelete(tx)}>
+                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTx(tx)} disabled={!canDelete()}>
                             <Trash2 className="h-4 w-4" />
                          </Button>
                       </TableCell>

@@ -55,7 +55,7 @@ declare module 'jspdf' {
     }
 }
 
-export function TransactionHistoryDialog({ account, children }: { account: BankAccount }) {
+export function TransactionHistoryDialog({ account, children }: { account: BankAccount, children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [transactions, setTransactions] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -156,9 +156,8 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
     XLSX.writeFile(wb, `transactions-${account.id}.xlsx`);
   };
 
-  const canDelete = (tx: Payment): boolean => {
-    if (currentUserRole === 'Super Admin') return true;
-    return tx.currentStatus !== 'POSTED';
+  const canDelete = (): boolean => {
+    return currentUserRole === 'Super Admin';
   };
 
   return (
@@ -175,7 +174,7 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeletePayment} disabled={isDeleting}>
+                <AlertDialogAction onClick={handleDeletePayment} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -259,7 +258,7 @@ export function TransactionHistoryDialog({ account, children }: { account: BankA
                       {formatCurrency(tx.amount)}
                     </TableCell>
                     <TableCell className="text-right">
-                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTx(tx)} disabled={!canDelete(tx)}>
+                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setSelectedTx(tx)} disabled={!canDelete()}>
                             <Trash2 className="h-4 w-4" />
                          </Button>
                       </TableCell>
