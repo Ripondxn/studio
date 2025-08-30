@@ -20,6 +20,7 @@ import { createBillFromDocument, createInvoiceFromDocument, createReceiptFromDoc
 import { format } from 'date-fns';
 import { type UserRole } from '../admin/user-roles/schema';
 import { getProductsForSelect } from '../stores/actions';
+import { getExpenseAccounts } from '../finance/chart-of-accounts/lookups';
 import { type Product } from '../products/schema';
 import { Switch } from '@/components/ui/switch';
 
@@ -49,6 +50,7 @@ const formSchema = z.object({
     quantity: z.number(),
     unitPrice: z.number(),
     total: z.number(),
+    expenseAccountId: z.string().optional(),
   })),
   subTotal: z.number().optional(),
   tax: z.number().optional(),
@@ -64,6 +66,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [expenseAccounts, setExpenseAccounts] = useState<{value: string; label: string}[]>([]);
   const [isAutoBillNo, setIsAutoBillNo] = useState(true);
   
   const form = useForm<FormData>({
@@ -81,6 +84,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
 
   useEffect(() => {
     getProductsForSelect().then(data => setProducts(data as any));
+    getExpenseAccounts().then(setExpenseAccounts);
   }, []);
 
   useEffect(() => {
@@ -88,14 +92,14 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
         const today = format(new Date(), 'yyyy-MM-dd');
         const nextBillNo = await getNextBillNumber();
         reset({
-            documentType: processedData.documentType,
+            documentType: processedData.documentType === 'Other' ? 'Bill' : processedData.documentType,
             billNo: nextBillNo,
             partyType: 'Vendor',
             partyCode: '',
             date: processedData.date || today,
             dueDate: processedData.dueDate || today,
             vatRegNo: processedData.vatRegNo,
-            items: processedData.items.map(item => ({...item, total: item.quantity * item.unitPrice})),
+            items: processedData.items.map(item => ({...item, total: item.quantity * item.unitPrice, expenseAccountId: ''})),
             subTotal: processedData.subTotal,
             tax: processedData.tax,
             total: processedData.total,
@@ -147,7 +151,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
             taxRate: data.taxRate,
             total: data.total,
             notes: data.notes,
-            status: 'Draft' as const
+            status: 'Paid' as const
         };
         result = await createBillFromDocument(billData, isAutoBillNo, currentUser);
 
@@ -165,7 +169,7 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
              taxRate: data.taxRate,
              total: data.total,
              notes: data.notes,
-             status: 'Draft'
+             status: 'Paid'
         };
          result = await createInvoiceFromDocument(invoiceData, currentUser);
     } else { // Receipt
@@ -280,15 +284,27 @@ export function DocumentProcessorForm({ processedData, lookups, currentUser, onS
             <div className="space-y-2">
                 <Label>Line Items</Label>
                 {fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2 items-center">
-                        <div className="flex-grow">
-                             <Combobox
-                                options={products.map(p => ({ value: p.itemCode, label: p.itemName }))}
-                                value={watchedItems?.[index]?.description || ''}
-                                onSelect={(value) => handleItemSelect(index, value)}
-                                placeholder="Select or type item..."
-                             />
-                        </div>
+                    <div key={field.id} className="grid grid-cols-[1fr_1fr_auto_auto_auto] gap-2 items-center">
+                        <Combobox
+                            options={products.map(p => ({ value: p.itemCode, label: p.itemName }))}
+                            value={watchedItems?.[index]?.description || ''}
+                            onSelect={(value) => handleItemSelect(index, value)}
+                            placeholder="Select or type item..."
+                        />
+                        {documentType === 'Bill' && (
+                            <Controller
+                                name={`items.${index}.expenseAccountId`}
+                                control={control}
+                                render={({ field }) => (
+                                    <Combobox
+                                        options={expenseAccounts}
+                                        value={field.value || ''}
+                                        onSelect={(value) => field.onChange(value)}
+                                        placeholder="Expense Account"
+                                    />
+                                )}
+                            />
+                        )}
                         <Input type="number" step="any" placeholder="Qty" {...register(`items.${index}.quantity`, { valueAsNumber: true })} className="w-20"/>
                         <Input type="number" step="any" placeholder="Price" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} className="w-24"/>
                         <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
