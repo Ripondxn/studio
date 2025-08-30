@@ -1,2 +1,24 @@
-
-[]
+[
+  {
+    "type": "Receipt",
+    "date": "2024-10-22",
+    "partyType": "Vendor",
+    "partyName": "V001",
+    "amount": 155.02,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "description": "Payment for uploaded receipt. Processed from uploaded document.",
+    "status": "Received",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "System",
+        "actorRole": "User",
+        "timestamp": "2025-08-30T09:26:45.025Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ],
+    "id": "PAY-1756546005025"
+  }
+]

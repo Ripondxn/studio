@@ -9,10 +9,14 @@ import { revalidatePath } from 'next/cache';
 import { type Payment } from '@/app/finance/payment/schema';
 import type { Role, Status } from './types';
 import { type BankAccount } from '@/app/finance/banking/schema';
+import { type Account } from '@/app/finance/chart-of-accounts/schema';
+
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
+const accountsFilePath = path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json');
+
 
 async function readData(filePath: string): Promise<any[]> {
     try {
@@ -59,8 +63,13 @@ async function writePettyCash(data: { balance: number }) {
     await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+
 export async function applyFinancialImpact(payment: Payment) {
-    const { type, amount, bankAccountId, paymentFrom } = payment;
+    const { type, amount, bankAccountId, paymentFrom, partyType, partyName } = payment;
+    const allAccounts: Account[] = await readData(accountsFilePath);
+    const accountsPayableIndex = allAccounts.findIndex(a => a.code === '2110'); // Accounts Payable
+
+    // Update Cash/Bank balances
     if (paymentFrom === 'Petty Cash') {
         const pettyCash = await readPettyCash();
         if (type === 'Payment') {
@@ -81,7 +90,23 @@ export async function applyFinancialImpact(payment: Payment) {
             await writeBankAccounts(allBankAccounts);
         }
     }
+    
+    // Update Accounts Payable for vendor transactions
+    if (partyType === 'Vendor') {
+        if (accountsPayableIndex !== -1) {
+             if (type === 'Payment') {
+                // Paying a vendor decreases what you owe them
+                allAccounts[accountsPayableIndex].balance -= amount;
+            } else { // Receipt from a vendor (refund)
+                // A refund from a vendor also decreases what you owe them (or creates a credit)
+                allAccounts[accountsPayableIndex].balance -= amount;
+            }
+        }
+    }
+    
+     await writeData(accountsFilePath, allAccounts);
 }
+
 
 
 type WorkflowAction = 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
@@ -213,5 +238,5 @@ export async function addCommentToTransaction(params: z.infer<typeof workflowAct
     const validation = workflowActionSchema.safeParse(params);
     if (!validation.success) return { success: false, error: "Invalid input" };
     const { transactionId, actorId, actorRole, comment } = validation.data;
-    return await updateTransactionWorkflow(transactionId, 'ADD_COMMENT', actorId, actorRole as Role, comment);
+    return await updateTransactionWorkflow(transactionId, 'ADD_COMMENT', actorId as Role, actorRole as Role, comment);
 }
