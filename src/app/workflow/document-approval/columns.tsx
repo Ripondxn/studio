@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -176,9 +175,6 @@ export const columns = ({ currentUser, onUpdate }: { currentUser: { name: string
         return (
             <>
                 <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-                    <DialogTrigger asChild>
-                         <span />
-                    </DialogTrigger>
                     <ViewHistoryDialog history={doc.approvalHistory} documentId={doc.id} />
                 </Dialog>
                 
