@@ -22,6 +22,7 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { paymentSchema, type Payment } from './schema';
 import { addPayment, getLookups, getReferences } from './actions';
+import { getExpenseAccounts } from '@/app/lookups/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -56,6 +57,7 @@ type Lookups = {
     references: {value: string, label: string, amount?: number, propertyCode?: string, unitCode?: string, roomCode?: string, partitionCode?: string, book?: ReceiptBook}[];
     users: { value: string, label: string }[];
     receiptBooks: ReceiptBook[];
+    expenseAccounts: { value: string; label: string; }[];
 }
 
 interface AddPaymentDialogProps {
@@ -75,7 +77,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], agents: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [], references: [], users: [], receiptBooks: [] });
+  const [lookups, setLookups] = useState<Lookups>({ tenants: [], landlords: [], vendors: [], agents: [], customers: [], bankAccounts: [], properties: [], units: [], rooms: [], partitions: [], references: [], users: [], receiptBooks: [], expenseAccounts: [] });
   const [currentUser, setCurrentUser] = useState<string>('');
 
   const {
@@ -141,6 +143,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
   useEffect(() => {
     getContractLookups().then(data => setLookups(prev => ({...prev, properties: data.properties })));
     getLookups().then(data => setLookups(prev => ({...prev, ...data})));
+    getExpenseAccounts().then(data => setLookups(prev => ({...prev, expenseAccounts: data })));
   }, [])
   
    useEffect(() => {
@@ -204,7 +207,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
             const units = await getUnitsForProperty(watchedProperty);
             setLookups(prev => ({...prev, units}));
         } else {
-            setLookups(prev => ({...prev, units: []}));
+            setLookups(prev => ({...prev, units: [], rooms: []}));
         }
     }
     fetchUnits();
@@ -520,7 +523,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                                 <TableRow key={invoice.id}>
                                   <TableCell>{invoice.invoiceNo}</TableCell>
                                   <TableCell>{format(new Date(invoice.dueDate), 'PP')}</TableCell>
-                                  <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.remainingBalance || 0)}</TableCell>
+                                  <TableCell className="text-right">{formatCurrency(invoice.remainingBalance || 0)}</TableCell>
                                   <TableCell className="text-right">
                                     <Controller
                                       control={control}
@@ -569,7 +572,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                                 <TableRow key={bill.id}>
                                   <TableCell>{bill.billNo}</TableCell>
                                   <TableCell>{format(new Date(bill.dueDate), 'PP')}</TableCell>
-                                  <TableCell className="text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(bill.remainingBalance || 0)}</TableCell>
+                                  <TableCell className="text-right">{formatCurrency(bill.remainingBalance || 0)}</TableCell>
                                   <TableCell className="text-right">
                                     <Controller
                                       control={control}
