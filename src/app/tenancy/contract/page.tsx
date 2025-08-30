@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Save, X, FileText, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveContractData, findContract, deleteContract, getContractLookups, getUnitDetails, getUnitsForProperty, getRoomsForUnit, getRoomDetails, moveTenant, getLatestContractForTenant } from './actions';
 import { type Contract, type PaymentInstallment } from './schema';
@@ -659,7 +659,7 @@ export default function TenancyContractPage() {
                                 </div>
                                 <div>
                                     <Label htmlFor="rent-amount">Total Rent</Label>
-                                    <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent || ''} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!canEdit}/>
+                                    <Input id="rent-amount" type="number" placeholder="0.00" value={contract.totalRent || 0} onChange={e => handleNumberInputChange('totalRent', e.target.value)} disabled={!canEdit}/>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -879,6 +879,9 @@ export default function TenancyContractPage() {
             </Card>
          </TabsContent>
       </Tabs>
+      <div className="hidden">
+        <PrintableMaintenanceContract ref={printRef} contract={contract as any} lookups={maintenanceLookups} />
+      </div>
     </div>
   );
 }
