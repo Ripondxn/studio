@@ -7,11 +7,6 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { paymentSchema, type Payment } from './schema';
-import { type Tenant } from '@/app/tenancy/tenants/schema';
-import { type Landlord } from '@/app/landlord/schema';
-import { type Vendor } from '@/app/vendors/schema';
-import { type Agent } from '@/app/vendors/agents/schema';
-import { type Customer } from '@/app/tenancy/customer/schema';
 import { type BankAccount } from '@/app/finance/banking/schema';
 import { startOfMonth, endOfMonth, isWithinInterval, parseISO, isBefore } from 'date-fns';
 import { applyPaymentToInvoices } from '@/app/tenancy/customer/invoice/actions';
@@ -26,18 +21,8 @@ import { type ReceiptBook } from '../book-management/schema';
 
 
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
-const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
-const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
-const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
-const agentsFilePath = path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json');
-const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
-const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
-const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
-const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
-const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
-const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-deposit/cheques-data.json');
 const receiptBooksFilePath = path.join(process.cwd(), 'src/app/finance/book-management/receipt-books-data.json');
 
 
@@ -66,21 +51,6 @@ async function writePayments(data: Payment[]) {
     await fs.writeFile(paymentsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-async function readBankAccounts(): Promise<BankAccount[]> {
-    return await readData(bankAccountsFilePath);
-}
-async function writeBankAccounts(data: BankAccount[]) {
-    await writeData(bankAccountsFilePath, data);
-}
-
-async function readPettyCash() {
-    const data = await readData(pettyCashFilePath);
-    if (!data || (Array.isArray(data) && data.length === 0)) return { balance: 0 };
-    return data;
-}
-async function writePettyCash(data: { balance: number }) {
-    await fs.writeFile(pettyCashFilePath, JSON.stringify(data, null, 2), 'utf-8');
-}
 async function readInvoices(): Promise<Invoice[]> {
     return await readData(invoicesFilePath);
 }
@@ -93,13 +63,6 @@ async function readBills(): Promise<Bill[]> {
 }
 async function writeBills(data: Bill[]) {
     await fs.writeFile(billsFilePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-async function readCheques(): Promise<Cheque[]> {
-    return await readData(chequesFilePath);
-}
-async function writeCheques(data: Cheque[]) {
-    await writeData(chequesFilePath, data);
 }
 
 async function applyPaymentToBills(billPayments: { billId: string; amount: number }[], vendorCode: string) {
@@ -234,15 +197,15 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
 
 async function reverseFinancialImpact(payment: Payment) {
     if (payment.paymentFrom === 'Petty Cash') {
-        const pettyCash = await readPettyCash();
+        const pettyCash = await readData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'));
         if (payment.type === 'Payment') {
             pettyCash.balance += payment.amount;
         } else { // Receipt
             pettyCash.balance -= payment.amount;
         }
-        await writePettyCash(pettyCash);
+        await writeData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'), pettyCash);
     } else if (payment.bankAccountId) {
-            const allBankAccounts = await readBankAccounts();
+            const allBankAccounts = await readData(path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json'));
             const accountIndex = allBankAccounts.findIndex(acc => acc.id === payment.bankAccountId);
             if (accountIndex !== -1) {
             if (payment.type === 'Payment') {
@@ -250,7 +213,7 @@ async function reverseFinancialImpact(payment: Payment) {
             } else { // Receipt
                 allBankAccounts[accountIndex].balance -= payment.amount;
             }
-            await writeBankAccounts(allBankAccounts);
+            await writeData(path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json'), allBankAccounts);
             }
     }
     
@@ -367,35 +330,12 @@ function revalidateAllPaths(payment: Payment) {
     revalidatePath(`/vendors/add?code=${payment.partyName}`);
 }
 
-
-export async function getLookups() {
-    const tenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
-    const landlords: {landlordData: Landlord}[] = await readData(landlordsFilePath);
-    const vendors: {vendorData: Vendor}[] = await readData(vendorsFilePath);
-    const agents: Agent[] = await readData(agentsFilePath);
-    const customers: {customerData: Customer}[] = await readData(customersFilePath);
-    const bankAccounts: BankAccount[] = await readData(bankAccountsFilePath);
-    const users = await readData(path.join(process.cwd(), 'src/app/admin/user-roles/users.json'));
-    const receiptBooks = await readData(receiptBooksFilePath) as ReceiptBook[];
-
-    return {
-        tenants: tenants.map(t => ({ value: t.tenantData.code, label: t.tenantData.name })),
-        landlords: landlords.map(l => ({ value: l.landlordData.code, label: l.landlordData.name })),
-        vendors: vendors.map(v => ({ value: v.vendorData.code, label: v.vendorData.name })),
-        agents: agents.map(a => ({ value: a.code, label: a.name })),
-        customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
-        bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`})),
-        users: users.map((u: any) => ({ value: u.name, label: u.name })),
-        receiptBooks: receiptBooks
-    }
-}
-
 export async function getPartyNameLookups(): Promise<Record<string, string>> {
-    const tenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
-    const landlords: {landlordData: Landlord}[] = await readData(landlordsFilePath);
-    const vendors: {vendorData: Vendor}[] = await readData(vendorsFilePath);
-    const agents: Agent[] = await readData(agentsFilePath);
-    const customers: {customerData: Customer}[] = await readData(customersFilePath);
+    const tenants: {tenantData: Tenant}[] = await readData(path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json'));
+    const landlords: {landlordData: Landlord}[] = await readData(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'));
+    const vendors: {vendorData: Vendor}[] = await readData(path.join(process.cwd(), 'src/app/vendors/vendors-data.json'));
+    const agents: Agent[] = await readData(path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json'));
+    const customers: {customerData: Customer}[] = await readData(path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json'));
 
     const lookups: Record<string, string> = {};
 
@@ -444,127 +384,4 @@ export async function getSummary() {
     }
     
     return summary;
-}
-
-export async function getReferences(partyType: string, partyCode: string, referenceType: string, paymentType?: 'Payment' | 'Receipt', assignedTo?: string) {
-    if (!partyType && !referenceType) return [];
-    
-    const allPayments: Payment[] = await readPayments();
-    const paidInstallmentIds = new Set(allPayments.filter(p => p.status !== 'Cancelled').map(p => p.referenceNo));
-
-    switch(referenceType) {
-        case 'Tenancy Contract': {
-            if (partyType !== 'Tenant' || !partyCode) return [];
-            const contracts: TenancyContract[] = await readData(tenancyContractsFilePath);
-            const tenantContracts = contracts.filter(c => c.tenantCode === partyCode);
-            let installments = [];
-            for (const contract of tenantContracts) {
-                for (const installment of contract.paymentSchedule) {
-                    const installmentId = `${contract.contractNo}-${installment.installment}`;
-                    if (!paidInstallmentIds.has(installmentId)) {
-                        installments.push({
-                            value: installmentId,
-                            label: `${contract.contractNo} (Installment ${installment.installment}) - ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(installment.amount)}`,
-                            amount: installment.amount,
-                            propertyCode: contract.property,
-                            unitCode: contract.unitCode,
-                            roomCode: contract.roomCode,
-                        });
-                    }
-                }
-            }
-            return installments;
-        }
-        case 'Lease Contract': {
-            if (partyType !== 'Landlord' || !partyCode) return [];
-            const contracts: LeaseContract[] = await readData(leaseContractsFilePath);
-            const landlordContracts = contracts.filter(c => c.landlordCode === partyCode);
-            let installments = [];
-             for (const contract of landlordContracts) {
-                for (const installment of contract.paymentSchedule) {
-                    const installmentId = `${contract.contractNo}-${installment.installment}`;
-                    if (!paidInstallmentIds.has(installmentId)) {
-                         installments.push({
-                            value: installmentId,
-                            label: `${contract.contractNo} (Installment ${installment.installment}) - ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(installment.amount)}`,
-                            amount: installment.amount,
-                            propertyCode: contract.property,
-                        });
-                    }
-                }
-            }
-            return installments;
-        }
-        case 'Invoice': {
-            if (partyType !== 'Customer' || !partyCode) return [];
-            const invoices: Invoice[] = await readData(invoicesFilePath);
-            return invoices
-                .filter(i => i.customerCode === partyCode && i.status !== 'Paid' && i.status !== 'Cancelled')
-                .map(i => {
-                    const remainingBalance = i.total - (i.amountPaid || 0);
-                    return {
-                        value: i.invoiceNo,
-                        label: `${i.invoiceNo} - Bal: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(remainingBalance)}`,
-                        amount: remainingBalance,
-                        propertyCode: i.property,
-                        unitCode: i.unitCode,
-                        roomCode: i.roomCode,
-                    };
-                });
-        }
-         case 'Bill': {
-            if (partyType !== 'Vendor' || !partyCode) return [];
-            const bills: Bill[] = await readData(billsFilePath);
-
-            // If it's a refund (Receipt), show paid bills. If it's a payment, show unpaid bills.
-            const filterCondition = paymentType === 'Receipt'
-                ? (b: Bill) => b.vendorCode === partyCode && b.status === 'Paid'
-                : (b: Bill) => b.vendorCode === partyCode && b.status !== 'Paid' && b.status !== 'Cancelled';
-
-            return bills
-                .filter(filterCondition)
-                .map(b => {
-                    const remainingBalance = b.total - (b.amountPaid || 0);
-                     // For refunds, the amount to potentially refund is the total of the bill
-                    const amountForReference = paymentType === 'Receipt' ? b.total : remainingBalance;
-                    return {
-                        value: b.billNo,
-                        label: `${b.billNo} - Total: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(b.total)}`,
-                        amount: amountForReference,
-                        propertyCode: b.property,
-                        unitCode: b.unitCode,
-                        roomCode: b.roomCode,
-                    };
-                });
-        }
-        case 'Receipt Book': {
-            const books = await readData(receiptBooksFilePath) as ReceiptBook[];
-            const usedReceipts = new Set(allPayments.filter(p => p.referenceType === 'Receipt Book').map(p => p.referenceNo));
-
-            const availableReceipts: { value: string, label: string, book: ReceiptBook }[] = [];
-            
-            const relevantBooks = assignedTo 
-                ? books.filter(b => b.assignedTo === assignedTo && b.status === 'Active') 
-                : books.filter(b => b.status === 'Active');
-
-            relevantBooks.forEach(book => {
-                const start = book.receiptStartNo;
-                const end = book.receiptEndNo;
-                for (let i = start; i <= end; i++) {
-                    const receiptNo = `${book.bookNo}-${i}`;
-                    if (!usedReceipts.has(receiptNo)) {
-                        availableReceipts.push({ 
-                            value: receiptNo, 
-                            label: `Book: ${book.bookNo}, Receipt: ${i}`,
-                            book: book,
-                        });
-                    }
-                }
-            });
-            
-            return availableReceipts;
-        }
-        default:
-            return [];
-    }
 }

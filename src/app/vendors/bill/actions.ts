@@ -7,15 +7,10 @@ import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { type Payment } from '@/app/finance/payment/schema';
 import { billSchema, type Bill } from './schema';
-import { getLookups as getPaymentLookups } from '@/app/finance/payment/actions';
-import { getContractLookups } from '@/app/tenancy/contract/actions';
-import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/lookups';
-import { getOpenTickets } from '@/app/maintenance/ticket-issue/actions';
-import { getProducts } from '@/app/products/actions';
+import { getLookups } from '@/app/lookups/actions';
 import { format } from 'date-fns';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
-const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
 
 async function readBills(): Promise<Bill[]> {
     try {
@@ -35,19 +30,6 @@ async function writeBills(data: Bill[]) {
     await fs.writeFile(billsFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-
-async function getPayments(): Promise<Payment[]> {
-    try {
-        await fs.access(paymentsFilePath);
-        const data = await fs.readFile(paymentsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
-    }
-}
 
 export async function getBillsForVendor(vendorCode: string) {
     const allBills = await readBills();
@@ -71,17 +53,15 @@ export async function getNextBillNumber() {
 }
 
 export async function getBillLookups() {
-    const paymentLookups = await getPaymentLookups();
-    const contractLookups = await getContractLookups();
-    const expenseAccounts = await getExpenseAccounts();
-    const maintenanceTickets = await getOpenTickets();
-    const products = await getProducts();
+    const lookups = await getLookups();
     return {
-        ...paymentLookups,
-        ...contractLookups,
-        expenseAccounts,
-        maintenanceTickets,
-        products
+        vendors: lookups.vendors,
+        properties: lookups.properties,
+        units: lookups.units,
+        rooms: lookups.rooms,
+        expenseAccounts: await getExpenseAccounts(),
+        maintenanceTickets: lookups.maintenanceTickets,
+        products: lookups.products,
     }
 }
 
@@ -157,4 +137,3 @@ export async function deleteBill(billId: string) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
-
