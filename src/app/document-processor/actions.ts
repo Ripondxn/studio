@@ -134,7 +134,7 @@ export async function createInvoiceFromDocument(data: any, currentUser: {name: s
         const paymentRecord = {
             type: 'Receipt' as const,
             date: savedInvoice.invoiceDate,
-            partyType: 'Customer' as const, 
+            partyType: 'Customer' as const, // Correctly set party type
             partyName: savedInvoice.customerCode,
             amount: savedInvoice.total,
             paymentMethod: 'Bank Transfer' as const,
