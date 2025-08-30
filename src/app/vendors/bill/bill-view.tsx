@@ -2,7 +2,7 @@
 
 'use client';
 
-import { type Bill } from './schema';
+import { type Bill } from './schema-def';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Building2 } from 'lucide-react';

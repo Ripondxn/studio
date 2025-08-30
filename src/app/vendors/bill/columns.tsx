@@ -7,7 +7,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash, FileText, DollarSign } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash, FileText, DollarSign, Share2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
-import { type Bill } from './schema';
+import { type Bill } from './schema-def';
 import { deleteBill } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -48,7 +48,7 @@ export const columns = ({ onEdit, onView, onRecordPayment }: { onEdit: (bill: Bi
     }
 
     const isPaidOrCancelled = row.original.status === 'Paid' || row.original.status === 'Cancelled';
-
+    
     return (
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <DropdownMenu>

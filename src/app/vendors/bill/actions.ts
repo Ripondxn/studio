@@ -1,11 +1,10 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
-import { billSchema, type Bill } from './schema';
+import { billSchema, type Bill } from './schema-def';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 

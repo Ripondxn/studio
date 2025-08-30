@@ -31,9 +31,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveBill, getNextBillNumber } from './actions';
-import { getLookups } from '@/app/lookups/actions';
-import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/lookups';
-import { type Bill, billSchema } from './schema';
+import { getLookups, getExpenseAccounts } from '@/app/lookups/actions';
+import { type Bill, billSchema } from './schema-def';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
 import { Combobox } from '@/components/ui/combobox';
@@ -160,7 +159,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                 billDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
                 vatRegNo: '',
-                items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 }],
+                items: [{ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0, expenseAccountId: '' }],
                 subTotal: 0,
                 tax: 0,
                 taxType: 'exclusive',
@@ -357,7 +356,7 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                   ))}
               </TableBody>
             </Table>
-            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
+            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0, expenseAccountId: '' })}>
               <Plus className="mr-2 h-4 w-4" /> Add Item
             </Button>
 
