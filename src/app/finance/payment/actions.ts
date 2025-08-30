@@ -237,6 +237,22 @@ async function reverseFinancialImpact(payment: Payment) {
         });
         await writeInvoices(allInvoices);
     }
+    
+    // Reverse bill allocations if applicable
+    if (payment.type === 'Payment' && payment.billAllocations && payment.billAllocations.length > 0) {
+        const allBills = await readBills();
+        payment.billAllocations.forEach(allocation => {
+            const billIndex = allBills.findIndex(bill => bill.id === allocation.billId);
+            if (billIndex !== -1) {
+                allBills[billIndex].amountPaid = (allBills[billIndex].amountPaid || 0) - allocation.amount;
+                if (allBills[billIndex].status === 'Paid') {
+                    const dueDate = parseISO(allBills[billIndex].dueDate);
+                    allBills[billIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
+                }
+            }
+        });
+        await writeBills(allBills);
+    }
 
     // Reverse Chart of Accounts
     const allAccounts = await readData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
@@ -259,8 +275,8 @@ async function reverseFinancialImpact(payment: Payment) {
         if (accountsPayableIndex !== -1) {
              if (type === 'Payment') {
                 allAccounts[accountsPayableIndex].balance += amount;
-            } else { // Refund
-                allAccounts[accountsPayableIndex].balance += amount;
+            } else { // Refund from vendor
+                allAccounts[accountsPayableIndex].balance -= amount;
             }
         }
     }

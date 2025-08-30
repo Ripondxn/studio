@@ -1,1 +1,24 @@
-[]
+[
+  {
+    "type": "Receipt",
+    "date": "2024-10-22",
+    "partyType": "Customer",
+    "partyName": "C002",
+    "amount": 155.02,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Petty Cash",
+    "description": "Payment for uploaded receipt. Processed from uploaded document.",
+    "status": "Cancelled",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created Transaction",
+        "actorId": "System",
+        "actorRole": "User",
+        "timestamp": "2025-08-30T09:41:23.239Z",
+        "comments": "Initial status set to POSTED"
+      }
+    ],
+    "id": "PAY-1756546883239"
+  }
+]
