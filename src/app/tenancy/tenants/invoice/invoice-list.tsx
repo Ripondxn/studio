@@ -172,7 +172,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {tenantName}.</CardDescription>
+                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
