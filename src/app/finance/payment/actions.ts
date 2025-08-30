@@ -16,7 +16,7 @@ import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { type Bill } from '@/app/vendors/bill/schema-def';
 import { type Cheque } from '../cheque-deposit/schema';
 import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
-import { applyFinancialImpact } from '@/app/workflow/actions';
+import { applyFinancialImpact, reverseFinancialImpact } from '@/app/workflow/actions';
 import { type ReceiptBook } from '../book-management/schema';
 
 
@@ -151,21 +151,17 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
             }
         }
 
-        const workflowSettings = await getWorkflowSettings();
-
-        const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
-        
         const newPayment: Payment = {
             ...paymentData,
             id: `PAY-${Date.now()}`,
-            currentStatus: initialStatus,
+            currentStatus: 'POSTED', // Always post directly from this function
             approvalHistory: [
               {
-                action: 'Created Transaction',
+                action: 'Created & Posted',
                 actorId: paymentData.createdByUser || 'System',
-                actorRole: 'User',
+                actorRole: 'User', // This can be refined later if needed
                 timestamp: new Date().toISOString(),
-                comments: `Initial status set to ${initialStatus}`,
+                comments: `Directly recorded transaction.`,
               },
             ],
         };
@@ -182,9 +178,8 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
             await updateReceiptBookUsage(newPayment.referenceNo);
         }
 
-        if (initialStatus === 'POSTED') {
-            await applyFinancialImpact(newPayment);
-        }
+        // Apply financial impact since it's always posted now
+        await applyFinancialImpact(newPayment);
         
         allPayments.push(newPayment);
         await writePayments(allPayments);
@@ -195,93 +190,6 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
-}
-
-async function reverseFinancialImpact(payment: Payment) {
-    if (payment.currentStatus !== 'POSTED') return; // Only reverse posted transactions
-
-    // Reverse Cash/Bank balances
-    if (payment.paymentFrom === 'Petty Cash') {
-        const pettyCash = await readData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'));
-        if (payment.type === 'Payment') {
-            pettyCash.balance += payment.amount;
-        } else { // Receipt
-            pettyCash.balance -= payment.amount;
-        }
-        await writeData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'), pettyCash);
-    } else if (payment.bankAccountId) {
-            const allBankAccounts = await readData(path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json'));
-            const accountIndex = allBankAccounts.findIndex(acc => acc.id === payment.bankAccountId);
-            if (accountIndex !== -1) {
-            if (payment.type === 'Payment') {
-                allBankAccounts[accountIndex].balance += payment.amount;
-            } else { // Receipt
-                allBankAccounts[accountIndex].balance -= payment.amount;
-            }
-            await writeData(path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json'), allBankAccounts);
-            }
-    }
-    
-    // Reverse invoice allocations if applicable
-    if (payment.type === 'Receipt' && payment.invoiceAllocations && payment.invoiceAllocations.length > 0) {
-        const allInvoices = await readInvoices();
-        payment.invoiceAllocations.forEach(allocation => {
-            const invoiceIndex = allInvoices.findIndex(inv => inv.id === allocation.invoiceId);
-            if (invoiceIndex !== -1) {
-                allInvoices[invoiceIndex].amountPaid = (allInvoices[invoiceIndex].amountPaid || 0) - allocation.amount;
-                if (allInvoices[invoiceIndex].status === 'Paid') {
-                    const dueDate = parseISO(allInvoices[invoiceIndex].dueDate);
-                    allInvoices[invoiceIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
-                }
-            }
-        });
-        await writeInvoices(allInvoices);
-    }
-    
-    // Reverse bill allocations if applicable
-    if (payment.type === 'Payment' && payment.billAllocations && payment.billAllocations.length > 0) {
-        const allBills = await readBills();
-        payment.billAllocations.forEach(allocation => {
-            const billIndex = allBills.findIndex(bill => bill.id === allocation.billId);
-            if (billIndex !== -1) {
-                allBills[billIndex].amountPaid = (allBills[billIndex].amountPaid || 0) - allocation.amount;
-                if (allBills[billIndex].status === 'Paid') {
-                    const dueDate = parseISO(allBills[billIndex].dueDate);
-                    allBills[billIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
-                }
-            }
-        });
-        await writeBills(allBills);
-    }
-
-    // Reverse Chart of Accounts
-    const allAccounts = await readData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
-    const { type, amount, expenseAccountId, partyType } = payment;
-
-    if (type === 'Payment' && expenseAccountId) {
-        const expenseAccountIndex = allAccounts.findIndex(a => a.code === expenseAccountId);
-        if(expenseAccountIndex !== -1) {
-            allAccounts[expenseAccountIndex].balance -= amount;
-        }
-    } else if (type === 'Receipt') {
-        const revenueAccountIndex = allAccounts.findIndex(a => a.code === '4110');
-        if (revenueAccountIndex !== -1) {
-            allAccounts[revenueAccountIndex].balance -= amount;
-        }
-    }
-
-    if (partyType === 'Vendor') {
-        const accountsPayableIndex = allAccounts.findIndex(a => a.code === '2110');
-        if (accountsPayableIndex !== -1) {
-             if (type === 'Payment') {
-                allAccounts[accountsPayableIndex].balance += amount;
-            } else { // Refund from vendor
-                allAccounts[accountsPayableIndex].balance -= amount;
-            }
-        }
-    }
-
-    await writeData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'), allAccounts);
 }
 
 
@@ -444,7 +352,7 @@ export async function getReferences(partyType: string, partyName: string, refere
     const allPayments = await readPayments();
     const paidRefs = new Set(allPayments.filter(p => p.status !== 'Cancelled').map(p => p.referenceNo));
     
-    let references: { value: string, label: string, amount?: number, propertyCode?: string, unitCode?: string, roomCode?: string, book?: any }[] = [];
+    let references: { value: string, label: string, amount?: number, propertyCode?: string, unitCode?: string, roomCode?: string, partitionCode?: string, book?: any }[] = [];
     
     if (paymentType === 'Receipt') {
         if (referenceType === 'Tenancy Contract') {

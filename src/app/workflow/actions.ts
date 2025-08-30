@@ -16,6 +16,8 @@ const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payme
 const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
 const pettyCashFilePath = path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json');
 const accountsFilePath = path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json');
+const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 
 
 async function readData(filePath: string): Promise<any[]> {
@@ -31,7 +33,7 @@ async function readData(filePath: string): Promise<any[]> {
     }
 }
 
-async function writeData(filePath: string, data: any[]) {
+async function writeData(filePath: string, data: any) {
     await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
@@ -251,4 +253,92 @@ export async function addCommentToTransaction(params: z.infer<typeof workflowAct
     if (!validation.success) return { success: false, error: "Invalid input" };
     const { transactionId, actorId, actorRole, comment } = validation.data;
     return await updateTransactionWorkflow(transactionId, 'ADD_COMMENT', actorId as Role, actorRole as Role, comment);
+}
+
+
+export async function reverseFinancialImpact(payment: Payment) {
+    if (payment.currentStatus !== 'POSTED') return; // Only reverse posted transactions
+
+    // Reverse Cash/Bank balances
+    if (payment.paymentFrom === 'Petty Cash') {
+        const pettyCash = await readData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'));
+        if (payment.type === 'Payment') {
+            pettyCash.balance += payment.amount;
+        } else { // Receipt
+            pettyCash.balance -= payment.amount;
+        }
+        await writeData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'), pettyCash);
+    } else if (payment.bankAccountId) {
+            const allBankAccounts = await readData(path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json'));
+            const accountIndex = allBankAccounts.findIndex(acc => acc.id === payment.bankAccountId);
+            if (accountIndex !== -1) {
+            if (payment.type === 'Payment') {
+                allBankAccounts[accountIndex].balance += payment.amount;
+            } else { // Receipt
+                allBankAccounts[accountIndex].balance -= payment.amount;
+            }
+            await writeData(path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json'), allBankAccounts);
+            }
+    }
+    
+    // Reverse invoice allocations if applicable
+    if (payment.type === 'Receipt' && payment.invoiceAllocations && payment.invoiceAllocations.length > 0) {
+        const allInvoices: Invoice[] = await readData(invoicesFilePath);
+        payment.invoiceAllocations.forEach(allocation => {
+            const invoiceIndex = allInvoices.findIndex(inv => inv.id === allocation.invoiceId);
+            if (invoiceIndex !== -1) {
+                allInvoices[invoiceIndex].amountPaid = (allInvoices[invoiceIndex].amountPaid || 0) - allocation.amount;
+                if (allInvoices[invoiceIndex].status === 'Paid') {
+                    const dueDate = parseISO(allInvoices[invoiceIndex].dueDate);
+                    allInvoices[invoiceIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
+                }
+            }
+        });
+        await writeData(invoicesFilePath, allInvoices);
+    }
+    
+    // Reverse bill allocations if applicable
+    if (payment.type === 'Payment' && payment.billAllocations && payment.billAllocations.length > 0) {
+        const allBills: Bill[] = await readData(billsFilePath);
+        payment.billAllocations.forEach(allocation => {
+            const billIndex = allBills.findIndex(bill => bill.id === allocation.billId);
+            if (billIndex !== -1) {
+                allBills[billIndex].amountPaid = (allBills[billIndex].amountPaid || 0) - allocation.amount;
+                if (allBills[billIndex].status === 'Paid') {
+                    const dueDate = parseISO(allBills[billIndex].dueDate);
+                    allBills[billIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
+                }
+            }
+        });
+        await writeData(billsFilePath, allBills);
+    }
+
+    // Reverse Chart of Accounts
+    const allAccounts = await readData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
+    const { type, amount, expenseAccountId, partyType } = payment;
+
+    if (type === 'Payment' && expenseAccountId) {
+        const expenseAccountIndex = allAccounts.findIndex(a => a.code === expenseAccountId);
+        if(expenseAccountIndex !== -1) {
+            allAccounts[expenseAccountIndex].balance -= amount;
+        }
+    } else if (type === 'Receipt') {
+        const revenueAccountIndex = allAccounts.findIndex(a => a.code === '4110');
+        if (revenueAccountIndex !== -1) {
+            allAccounts[revenueAccountIndex].balance -= amount;
+        }
+    }
+
+    if (partyType === 'Vendor') {
+        const accountsPayableIndex = allAccounts.findIndex(a => a.code === '2110');
+        if (accountsPayableIndex !== -1) {
+             if (type === 'Payment') {
+                allAccounts[accountsPayableIndex].balance += amount;
+            } else { // Refund from vendor
+                allAccounts[accountsPayableIndex].balance += amount;
+            }
+        }
+    }
+
+    await writeData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'), allAccounts);
 }

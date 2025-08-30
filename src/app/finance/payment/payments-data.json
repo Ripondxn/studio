@@ -1,24 +1,29 @@
 [
   {
     "type": "Receipt",
-    "date": "2024-08-27",
+    "date": "2025-08-30",
     "partyType": "Customer",
-    "partyName": "V001",
-    "amount": 26.25,
+    "partyName": "C002",
+    "amount": 120,
     "paymentMethod": "Cash",
-    "paymentFrom": "Petty Cash",
-    "description": "Payment for uploaded receipt. Processed from uploaded document.",
+    "paymentFrom": "Bank",
+    "referenceType": "",
+    "referenceNo": "",
+    "description": "",
     "status": "Received",
+    "createdByUser": "Super Admin",
+    "invoiceAllocations": [],
+    "billAllocations": [],
+    "id": "PAY-1756547992265",
     "currentStatus": "POSTED",
     "approvalHistory": [
       {
         "action": "Created Transaction",
-        "actorId": "System",
+        "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-08-30T09:54:30.831Z",
+        "timestamp": "2025-08-30T09:59:52.265Z",
         "comments": "Initial status set to POSTED"
       }
-    ],
-    "id": "PAY-1756547670831"
+    ]
   }
 ]
