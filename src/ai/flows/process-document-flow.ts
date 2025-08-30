@@ -6,7 +6,7 @@
  *
  * - processDocument - A function that extracts structured data from a document image or PDF.
  * - ProcessDocumentInput - The input type for the processDocument function.
- * - ProcessDocumentOutput - The return type for the processDocument function.
+ * - ProcessedDocument - The return type for the processDocument function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -28,7 +28,7 @@ const LineItemSchema = z.object({
     total: z.number().describe('The total price for the line item (quantity * unitPrice).'),
 });
 
-export const ProcessedDocumentSchema = z.object({
+const ProcessedDocumentSchema = z.object({
   documentType: z.enum(['Invoice', 'Receipt', 'Bill', 'Other']).describe('The type of document, e.g., Invoice, Receipt, Bill.'),
   vendorName: z.string().optional().describe("The name of the vendor or company that issued the document."),
   customerName: z.string().optional().describe("The name of the customer or person the document was issued to."),
