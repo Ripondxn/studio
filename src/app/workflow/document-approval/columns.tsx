@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { MoreHorizontal, CheckCircle, Clock, XCircle, File, Eye, MessageSquare, PlusCircle, History, User, Shield, UserCheck, Trash2 } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, Clock, XCircle, File, Eye, MessageSquare, PlusCircle, History, User, Shield, UserCheck, Trash2, Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +23,8 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
+  DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
 import {
     AlertDialog,
