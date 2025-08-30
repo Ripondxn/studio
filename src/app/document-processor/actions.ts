@@ -2,7 +2,7 @@
 'use server';
 
 import { processDocument, type ProcessDocumentInput } from '@/ai/flows/process-document-flow';
-import { getVendors } from '@/app/vendors/actions';
+import { getAllVendors } from '@/app/vendors/actions';
 import { getAllTenants } from '@/app/tenancy/tenants/actions';
 import { getAllCustomers } from '@/app/tenancy/customer/actions';
 import { saveBill } from '../vendors/bill/actions';
@@ -22,7 +22,7 @@ export async function extractDataFromDocument(input: ProcessDocumentInput) {
 
 export async function getPartyLookups() {
     const [vendors, tenants, customers] = await Promise.all([
-        getVendors(),
+        getAllVendors(),
         getAllTenants(),
         getAllCustomers(),
     ]);
@@ -37,7 +37,7 @@ export async function getPartyLookups() {
 
 export async function createBillFromDocument(data: any, currentUser: UserRole) {
     try {
-        const result = await saveBill(data, true);
+        const result = await saveBill(data, true, false);
         if (!result.success) {
             throw new Error(result.error);
         }
