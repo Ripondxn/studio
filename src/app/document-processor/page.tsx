@@ -8,6 +8,7 @@ import { extractDataFromDocument, getPartyLookups } from './actions';
 import { type ProcessedDocument } from '@/ai/flows/process-document-flow';
 import { DocumentProcessorForm } from './document-processor-form';
 import { type UserRole } from '../admin/user-roles/schema';
+import { Button } from '@/components/ui/button';
 
 type PartyLookups = {
     vendors: { value: string, label: string }[];
