@@ -113,7 +113,15 @@ const navLinks = [
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
+        ]
+    },
+    {
+        label: 'Data Processing',
+        icon: <ScanLine />,
+        subItems: [
             { href: '/document-processor', label: 'Document Processor' },
+            { href: '/data-processing/single-data-extractor', label: 'Single Data Extractor' },
+            { href: '/data-processing/batch-data-extractor', label: 'Batch Data Extractor' },
         ]
     },
      {
