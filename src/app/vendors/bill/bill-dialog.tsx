@@ -30,7 +30,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveBill, getNextBillNumber, getBillLookups } from './actions';
+import { saveBill, getNextBillNumber } from './actions';
+import { getLookups } from '@/app/lookups/actions';
 import { type Bill, billSchema } from './schema';
 import { format } from 'date-fns';
 import { BillView } from './bill-view';
@@ -38,7 +39,6 @@ import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
 import { type Product } from '@/app/products/schema';
-import { getExpenseAccounts } from '@/app/finance/chart-of-accounts/lookups';
 
 const formSchema = billSchema.omit({ id: true, amountPaid: true, remainingBalance: true });
 type BillFormData = z.infer<typeof formSchema>;
@@ -91,16 +91,16 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
   const watchedTaxType = watch('taxType');
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
-
+  
   useEffect(() => {
-    getBillLookups().then(data => {
+    getLookups().then(data => {
       setLookups(prev => ({...prev, ...data}));
-    });
-    getExpenseAccounts().then(data => {
-      setLookups(prev => ({ ...prev, expenseAccounts: data }));
     });
   }, []);
   
+  const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
+  const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
+
   useEffect(() => {
     if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
@@ -295,11 +295,11 @@ export function BillDialog({ isOpen, setIsOpen, bill, vendor, onSuccess, isViewM
                   </div>
                   <div>
                       <Label>Unit</Label>
-                      <Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units.filter(u => u.propertyCode === watchedProperty)} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} />
+                      <Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={filteredUnits} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} />
                   </div>
                   <div>
                       <Label>Room</Label>
-                      <Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} />
+                      <Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={filteredRooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} />
                   </div>
               </div>
             )}

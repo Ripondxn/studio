@@ -28,4 +28,3 @@ export async function getExpenseAccounts(): Promise<{ value: string; label: stri
         .filter(acc => acc.type === 'Expense' && !acc.isGroup)
         .map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})` }));
 }
-

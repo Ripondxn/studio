@@ -5,10 +5,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
-import { type Payment } from '@/app/finance/payment/schema';
 import { billSchema, type Bill } from './schema';
-import { getLookups } from '@/app/lookups/actions';
-import { format } from 'date-fns';
 
 const billsFilePath = path.join(process.cwd(), 'src/app/vendors/bill/bills-data.json');
 
@@ -51,20 +48,6 @@ export async function getNextBillNumber() {
     });
     return `BL-${(maxNum + 1).toString().padStart(4, '0')}`;
 }
-
-export async function getBillLookups() {
-    const lookups = await getLookups();
-    return {
-        vendors: lookups.vendors,
-        properties: lookups.properties,
-        units: lookups.units,
-        rooms: lookups.rooms,
-        expenseAccounts: await getExpenseAccounts(),
-        maintenanceTickets: lookups.maintenanceTickets,
-        products: lookups.products,
-    }
-}
-
 
 export async function saveBill(data: Omit<Bill, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoBillNo?: boolean }) {
     const { isAutoBillNo, ...billData } = data;
