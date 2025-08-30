@@ -51,8 +51,7 @@ import {
   AlertTriangle,
   KeyRound,
   Eraser,
-  ScanLine,
-  FileCheck2
+  ScanLine
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -121,7 +120,8 @@ const navLinks = [
         icon: <ScanLine />,
         subItems: [
             { href: '/document-processor', label: 'Document Processor' },
-            { href: '/data-extractor', label: 'Data Extractor' },
+            { href: '/data-processing/single-data-extractor', label: 'Single Data Extractor' },
+            { href: '/data-processing/batch-data-extractor', label: 'Batch Data Extractor' },
         ]
     },
      {
@@ -154,11 +154,8 @@ const navLinks = [
     },
     {
         label: 'Workflow',
+        href: '/workflow',
         icon: <LineChart />,
-        subItems: [
-            { href: '/workflow', label: 'Financial Approvals' },
-            { href: '/workflow/document-approval', label: 'Document Approvals' },
-        ]
     },
     { 
         label: 'Settings', 
