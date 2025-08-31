@@ -45,6 +45,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
+    const [isGeneralInvoiceDialogOpen, setIsGeneralInvoiceDialogOpen] = useState(false);
     const router = useRouter();
     const { formatCurrency } = useCurrency();
     const { watch } = useFormContext<Tenant>();
@@ -52,7 +53,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
-        setIsCreateInvoiceOpen(true);
+        setIsGeneralInvoiceDialogOpen(true);
     }
     
     const handleEditClick = (invoice: Invoice) => {
@@ -246,16 +247,16 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                <CreateInvoiceDialog
+                {tenant && <CreateInvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
-                />
+                />}
 
                 <SubscriptionInvoiceDialog
-                    isOpen={isInvoiceDialogOpen}
-                    setIsOpen={setIsInvoiceDialogOpen}
+                    isOpen={isEditInvoiceOpen}
+                    setIsOpen={setIsEditInvoiceOpen}
                     invoice={selectedInvoice}
                     tenant={tenant}
                     onSuccess={handleSuccess}
