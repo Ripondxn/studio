@@ -21,12 +21,13 @@ import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { FormField, FormItem, type Control, FormMessage, FormLabel } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Combobox } from '@/components/ui/combobox';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { useFormContext } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
-import { Combobox } from '@/components/ui/combobox';
 import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -55,10 +56,9 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
-    const [isGeneralInvoiceDialogOpen, setIsGeneralInvoiceDialogOpen] = useState(false);
     const router = useRouter();
     const { formatCurrency } = useCurrency();
-    const { watch, setValue, getValues } = useFormContext<Tenant>();
+    const { watch, setValue } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [] });
 
@@ -118,7 +118,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
-        setIsGeneralInvoiceDialogOpen(true);
+        setIsCreateInvoiceOpen(true);
     }
     
     const handleEditClick = (invoice: Invoice) => {
@@ -186,7 +186,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
+                        <CardDescription>Manage invoices for {customerName}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -379,8 +379,8 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 </div>
                 
                 <CreateInvoiceDialog
-                    isOpen={isGeneralInvoiceDialogOpen}
-                    setIsOpen={setIsGeneralInvoiceDialogOpen}
+                    isOpen={isCreateInvoiceOpen}
+                    setIsOpen={setIsCreateInvoiceOpen}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
                 />
