@@ -76,6 +76,7 @@ export const featurePermissions: FeaturePermission[] = [
         { action: 'access_control', description: 'Manage user roles and permissions', allowedRoles: ['Super Admin'] },
         { action: 'communication', description: 'Manage communication (Email/SMS) settings', allowedRoles: ['Super Admin', 'Admin'] },
         { action: 'backup', description: 'Manage data backup and restore', allowedRoles: ['Super Admin'] },
+        { action: 'external_storage', description: 'Configure external storage (e.g., Google Drive)', allowedRoles: ['Developer'] },
         { action: 'notifications', description: 'Send system-wide notifications', allowedRoles: ['Super Admin', 'Admin'] },
         { action: 'contract_continuity', description: 'Review and fix contract data issues', allowedRoles: ['Super Admin'] },
     ]

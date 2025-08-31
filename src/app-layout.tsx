@@ -51,7 +51,8 @@ import {
   AlertTriangle,
   KeyRound,
   Eraser,
-  ScanLine
+  ScanLine,
+  Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -109,7 +110,7 @@ const navLinks = [
             { href: '/finance/banking', label: 'Banking' },
             { href: '/finance/cheque-management', label: 'Cheque Management' },
             { href: '/finance/receipt-vouchers', label: 'Receipt Vouchers' },
-            { href: '/finance/payment', label: 'Payment' },
+            { href: '/finance/payment', label: 'Payment Vouchers' },
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
@@ -172,6 +173,7 @@ const navLinks = [
             { href: '/admin/access-control', label: 'Access Control' },
             { href: '/admin/workflow-settings', label: 'Workflow Settings' },
             { href: '/admin/contract-continuity', label: 'Contract Continuity' },
+            { href: '/admin/external-storage', label: 'External Storage' },
             { href: '/admin/license', label: 'License Settings' },
             { href: '/admin/developer-credit', label: 'Developer Credit' },
             { href: '/admin/reset-data', label: 'Reset Data' },
