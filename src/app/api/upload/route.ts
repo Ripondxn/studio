@@ -1,8 +1,30 @@
 
 import { NextResponse } from 'next/server';
-// In a real application, you would install and import the Google API client:
-// import { google } from 'googleapis';
-// import { Readable } from 'stream';
+import { google } from 'googleapis';
+import { Readable } from 'stream';
+import path from 'path';
+import fs from 'fs/promises';
+
+// Define the required scopes for Google Drive
+const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
+// The ID of the folder in your Google Drive where files will be uploaded.
+// You need to create a folder in your Drive and share it with your service account's email address.
+const GDRIVE_FOLDER_ID = 'YOUR_GOOGLE_DRIVE_FOLDER_ID'; // IMPORTANT: Replace with your actual folder ID
+
+async function getAuthenticatedClient() {
+    const keyFilePath = path.join(process.cwd(), 'google-credentials.json');
+    try {
+        await fs.access(keyFilePath);
+    } catch (error) {
+        throw new Error('Google credentials file not found. Please place "google-credentials.json" in the root directory.');
+    }
+
+    const auth = new google.auth.GoogleAuth({
+        keyFile: keyFilePath,
+        scopes: SCOPES,
+    });
+    return auth.getClient();
+}
 
 export async function POST(request: Request) {
     try {
@@ -11,48 +33,44 @@ export async function POST(request: Request) {
         if (!fileDataUri || !fileName) {
             return NextResponse.json({ error: 'Missing file data or name.' }, { status: 400 });
         }
-
-        // --- REAL GOOGLE DRIVE UPLOAD LOGIC (PLACEHOLDER) ---
-        // This section is where you would integrate the googleapis library.
-        // 1. Authenticate with your service account credentials.
-        //    const auth = new google.auth.GoogleAuth({
-        //        keyFile: 'path/to/your/google-credentials.json',
-        //        scopes: ['https://www.googleapis.com/auth/drive.file'],
-        //    });
-        //    const drive = google.drive({ version: 'v3', auth });
-        //
-        // 2. Convert the base64 data URI to a buffer/stream.
-        //    const buffer = Buffer.from(fileDataUri.split(',')[1], 'base64');
-        //    const stream = Readable.from(buffer);
-        //
-        // 3. Upload the file to a specific folder in Google Drive.
-        //    const response = await drive.files.create({
-        //        requestBody: {
-        //            name: fileName,
-        //            parents: ['YOUR_GOOGLE_DRIVE_FOLDER_ID'], // Important: Specify a folder
-        //        },
-        //        media: {
-        //            mimeType: fileDataUri.split(';')[0].split(':')[1],
-        //            body: stream,
-        //        },
-        //        fields: 'id',
-        //    });
-        //
-        // 4. Return the file ID from the Drive API response.
-        //    const fileId = response.data.id;
-        //    const filePath = `gdrive://${fileId}`;
-        // --- END OF REAL LOGIC ---
-
-        // For now, we simulate a successful upload and return a placeholder path.
-        const simulatedFileId = `simulated_gdrive_${Date.now()}`;
-        const filePath = `gdrive://${simulatedFileId}`;
         
-        console.log(`Simulated upload complete. File path: ${filePath}`);
+        const authClient = await getAuthenticatedClient();
+        const drive = google.drive({ version: 'v3', auth: authClient as any });
 
+        const fileMetadata = {
+            name: fileName,
+            parents: [GDRIVE_FOLDER_ID],
+        };
+
+        // Convert base64 to a readable stream
+        const base64Data = fileDataUri.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const stream = Readable.from(buffer);
+        const mimeType = fileDataUri.split(';')[0].split(':')[1];
+
+        const media = {
+            mimeType: mimeType,
+            body: stream,
+        };
+
+        const response = await drive.files.create({
+            // @ts-ignore
+            resource: fileMetadata,
+            media: media,
+            fields: 'id',
+        });
+        
+        const fileId = response.data.id;
+        if (!fileId) {
+            throw new Error('File ID not returned from Google Drive API.');
+        }
+
+        const filePath = `gdrive://${fileId}`;
+        
         return NextResponse.json({ success: true, filePath });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Upload API Error:', error);
-        return NextResponse.json({ error: 'Failed to upload file.' }, { status: 500 });
+        return NextResponse.json({ error: error.message || 'Failed to upload file to Google Drive.' }, { status: 500 });
     }
 }
