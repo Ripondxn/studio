@@ -72,7 +72,7 @@ async function createChequesFromContract(contract: Contract) {
                 status: 'In Hand',
                 type: 'Incoming',
                 partyType: 'Tenant',
-                partyName: contract.tenantCode,
+                partyName: contract.tenantCode || '',
                 property: contract.property,
                 unitCode: contract.unitCode,
                 roomCode: contract.roomCode,
@@ -302,7 +302,7 @@ export async function getUnitsForProperty(propertyCode: string) {
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
 
     const fullyOccupiedUnitCodes = new Set<string>();
-    activeContracts.filter(c => !c.roomCode && c.unitCode).forEach(c => fullyOccupiedUnitCodes.add(c.unitCode));
+    activeContracts.filter(c => !c.roomCode && c.unitCode).forEach(c => fullyOccupiedUnitCodes.add(c.unitCode!));
     activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).forEach(t => fullyOccupiedUnitCodes.add(t.tenantData.unitCode!));
 
     const occupiedRoomCodes = new Set<string>();
