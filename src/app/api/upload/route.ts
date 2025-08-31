@@ -5,6 +5,9 @@ import { Readable } from 'stream';
 import path from 'path';
 import fs from 'fs/promises';
 
+// This forces the route to use the Node.js runtime instead of the Edge runtime.
+export const runtime = 'nodejs';
+
 // Define the required scopes for Google Drive
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 // The ID of the folder in your Google Drive where files will be uploaded.
