@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -109,8 +108,6 @@ export default function TenantPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
@@ -121,7 +118,7 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const { control, handleSubmit, watch, setValue, reset, getValues, register } = form;
+  const { control, handleSubmit, watch, setValue, reset, getValues, register, formState: { errors } } = form;
   
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
@@ -199,44 +196,6 @@ export default function TenantPage() {
   }, [searchParams, handleFindClick]);
 
   
-  const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
-     const currentAttachments = getValues('attachments') || [];
-    const index = currentAttachments.findIndex(a => a.id === id);
-    if(index === -1) return;
-    
-    const currentItem = currentAttachments[index];
-    if (field === 'file' && currentItem.url) {
-        URL.revokeObjectURL(currentItem.url);
-    }
-    const newUrl = (field === 'file' && value instanceof File) ? URL.createObjectURL(value) : undefined;
-    
-    // @ts-ignore
-    update(index, { ...currentItem, [field]: value, url: newUrl });
-  };
-
-
-  const addAttachmentRow = () => {
-    append({
-        id: Date.now(),
-        name: '',
-        file: null,
-        remarks: '',
-        isLink: false
-    });
-  };
-
-  const removeAttachmentRow = (index: number) => {
-    const attachmentToRemove = getValues(`attachments.${index}`);
-    if (attachmentToRemove && attachmentToRemove.url) {
-        URL.revokeObjectURL(attachmentToRemove.url);
-    }
-    remove(index);
-  };
-
-  const handleEditClick = () => {
-    setIsEditing(true);
-  }
-
   const onSave = async (data: Tenant, isAttachmentSave = false, attachmentIndex?: number) => {
     if (!isAttachmentSave) setIsSaving(true);
     if (isAttachmentSave && attachmentIndex !== undefined) setSavingAttachmentId(fields[attachmentIndex].id);
@@ -279,7 +238,7 @@ export default function TenantPage() {
 
         const dataToSave = {
             tenantData: data,
-            attachments: finalAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
+            attachments: finalAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null, url: undefined})),
         };
 
         const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
@@ -321,7 +280,6 @@ export default function TenantPage() {
         router.push('/tenancy/tenants');
      } else {
         form.reset();
-        setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
         setIsSubscriptionEditing(false);
      }
@@ -356,11 +314,10 @@ export default function TenantPage() {
     if (item.isLink && typeof item.file === 'string') {
         return item.file;
     }
-    if (item.url) { // This is for new, unsaved file uploads
+    if (item.url) {
         return item.url;
     }
-    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
-        // Note: gdrive links aren't directly viewable and would need a download route
+    if (typeof item.file === 'string' && (item.file.startsWith('data:'))) {
         return item.file;
     }
     return '#';
@@ -404,7 +361,7 @@ export default function TenantPage() {
                     />
                 )}
                 {!isEditing && (
-                <Button type="button" onClick={handleEditClick}>
+                <Button type="button" onClick={() => setIsEditing(true)}>
                     <Pencil className="mr-2 h-4 w-4" /> Edit
                 </Button>
                 )}
@@ -457,7 +414,7 @@ export default function TenantPage() {
       <Tabs defaultValue="info">
         <TabsList>
             <TabsTrigger value="info">Tenant Information</TabsTrigger>
-            <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
+            <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription &amp; Invoices</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
         </TabsList>
         <TabsContent value="info">
@@ -627,7 +584,7 @@ export default function TenantPage() {
                                                         <Input 
                                                             type="file" 
                                                             className="text-sm w-full" 
-                                                            onChange={(e) => handleAttachmentChange(index, 'file', e.target.files?.[0] || null)}
+                                                            onChange={(e) => update(index, {...getValues(`attachments.${index}`), file: e.target.files?.[0] || null})}
                                                             disabled={!isEditing}
                                                         />
                                                     )}
@@ -661,7 +618,7 @@ export default function TenantPage() {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => addAttachmentRow()} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>
