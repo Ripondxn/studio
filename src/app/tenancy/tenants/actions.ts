@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -10,13 +9,12 @@ import { type Unit } from '@/app/property/units/schema';
 import { type Room } from '@/app/property/rooms/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { getUnits } from '@/app/property/units/actions';
+import { getRooms } from '@/app/property/rooms/actions';
 
 
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
-const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
-const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
-const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
 
@@ -190,7 +188,29 @@ export async function findTenantData(tenantCode: string) {
     const tenant = allTenants.find((l: any) => l.tenantData.code === tenantCode);
 
     if (tenant) {
-       return { success: true, data: tenant };
+       const allUnits = await getUnits();
+       const allRooms = await getRooms();
+       let occupancyStatus: 'Vacant' | 'Occupied' | 'Partially Occupied' | undefined = undefined;
+
+       if (tenant.tenantData.property && tenant.tenantData.unitCode) {
+           if (tenant.tenantData.roomCode) {
+               const room = allRooms.find(r => r.propertyCode === tenant.tenantData.property && r.unitCode === tenant.tenantData.unitCode && r.roomCode === tenant.tenantData.roomCode);
+               occupancyStatus = room?.occupancyStatus;
+           } else {
+               const unit = allUnits.find(u => u.propertyCode === tenant.tenantData.property && u.unitCode === tenant.tenantData.unitCode);
+               occupancyStatus = unit?.occupancyStatus;
+           }
+       }
+       
+       const tenantWithStatus = {
+           ...tenant,
+           tenantData: {
+               ...tenant.tenantData,
+               occupancyStatus,
+           }
+       };
+
+       return { success: true, data: tenantWithStatus };
     } else {
        return { success: false, error: "Not Found" };
     }
@@ -237,48 +257,5 @@ export async function cancelSubscription(tenantCode: string) {
 
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
-    }
-}
-
-export async function getTenantLookups() {
-    const properties = await readData(propertiesFilePath);
-    
-    return {
-        properties: properties.map((p: any) => ({ value: (p.propertyData || p).code, label: (p.propertyData || p).name })),
-    }
-}
-
-export async function getUnitsForProperty(propertyCode: string) {
-    const allUnits: Unit[] = await readData(unitsFilePath);
-    return allUnits
-        .filter(u => u.propertyCode === propertyCode)
-        .map(u => ({ value: u.unitCode, label: u.unitCode }));
-}
-
-export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
-    const allRooms: Room[] = await readData(roomsFilePath);
-     return allRooms
-        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode)
-        .map(r => ({ value: r.roomCode, label: r.roomCode }));
-}
-
-export async function getTenantForProperty(propertyCode: string, unitCode: string, roomCode?: string) {
-    try {
-        const contracts: Contract[] = await fs.readFile(contractsFilePath, 'utf-8').then(JSON.parse);
-        
-        const activeContract = contracts.find(c =>
-            c.property === propertyCode &&
-            c.unitCode === unitCode &&
-            (roomCode ? c.roomCode === roomCode : true) && // Match room if provided
-            (c.status === 'New' || c.status === 'Renew')
-        );
-
-        if (activeContract) {
-            return { success: true, tenantName: activeContract.tenantName };
-        }
-        return { success: false, error: 'No active tenant found for this location.' };
-
-    } catch (error) {
-        return { success: false, error: (error as Error).message };
     }
 }
