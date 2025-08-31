@@ -42,9 +42,10 @@
       "property": "LT-C38",
       "unitCode": "F101",
       "roomCode": "Room-1/A",
-      "isSubscriptionActive": false,
-      "subscriptionAmount": 0,
-      "occupancyStatus": "Vacant"
+      "isSubscriptionActive": true,
+      "subscriptionAmount": 500,
+      "occupancyStatus": "Vacant",
+      "subscriptionStatus": "Monthly"
     }
   },
   {
@@ -62,14 +63,14 @@
       "brokerMobile": "",
       "brokerEmail": "",
       "brokerCommission": 0,
-      "property": "LT-C38",
-      "unitCode": "F101",
-      "roomCode": "Room-1/B",
-      "isSubscriptionActive": true,
+      "isSubscriptionActive": false,
       "subscriptionAmount": 900,
       "attachments": [],
-      "subscriptionStatus": "Monthly",
-      "occupancyStatus": "Occupied"
+      "occupancyStatus": "Occupied",
+      "property": "",
+      "unitCode": "",
+      "roomCode": "",
+      "subscriptionStatus": "Monthly"
     }
   }
 ]

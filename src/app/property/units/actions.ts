@@ -48,25 +48,12 @@ export async function getUnits() {
 
     // 1. Consolidate all occupied spaces from both sources
     const fullyOccupiedUnitCodes = new Set<string>();
+    activeContracts.filter(c => !c.roomCode && c.unitCode).forEach(c => fullyOccupiedUnitCodes.add(c.unitCode));
+    activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).forEach(t => fullyOccupiedUnitCodes.add(t.tenantData.unitCode!));
+
     const occupiedRoomCodes = new Set<string>();
-
-    // From contracts
-    for (const contract of activeContracts) {
-        if (contract.unitCode && !contract.roomCode) {
-            fullyOccupiedUnitCodes.add(contract.unitCode);
-        } else if (contract.roomCode) {
-            occupiedRoomCodes.add(contract.roomCode);
-        }
-    }
-
-    // From subscriptions
-    for (const tenant of activeSubscriptionTenants) {
-        if (tenant.tenantData.unitCode && !tenant.tenantData.roomCode) {
-            fullyOccupiedUnitCodes.add(tenant.tenantData.unitCode);
-        } else if (tenant.tenantData.roomCode) {
-            occupiedRoomCodes.add(tenant.tenantData.roomCode);
-        }
-    }
+    activeContracts.filter(c => c.roomCode).forEach(c => occupiedRoomCodes.add(c.roomCode!));
+    activeSubscriptionTenants.filter(t => t.tenantData.roomCode).forEach(t => occupiedRoomCodes.add(t.tenantData.roomCode!));
     
     // 2. Determine status for each unit based on the consolidated data
     return allUnits.map(unit => {
