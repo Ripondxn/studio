@@ -92,6 +92,16 @@ const initialTenantData: Tenant = {
     subscriptionAmount: 0,
 };
 
+// Helper function to read a file as a Base64 string on the client
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export default function TenantPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
@@ -106,6 +116,7 @@ export default function TenantPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
+  const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
 
   const form = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
@@ -228,7 +239,8 @@ export default function TenantPage() {
             attachments.map(async (att) => {
                 let fileData: string | null = null;
                 if (att.file && att.file instanceof File) {
-                    fileData = await handleFileUpload(att.file);
+                    const base64 = await fileToBase64(att.file);
+                    fileData = await handleFileUpload(base64, att.file.name);
                 } else {
                     fileData = att.file;
                 }
@@ -273,6 +285,57 @@ export default function TenantPage() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  const handleSaveAttachment = async (attachmentId: number) => {
+      setSavingAttachmentId(attachmentId);
+      try {
+        const attachmentToSave = attachments.find(a => a.id === attachmentId);
+        if (!attachmentToSave) throw new Error("Attachment not found.");
+
+        let fileData: string | null = null;
+        if (attachmentToSave.file && attachmentToSave.file instanceof File) {
+            const base64 = await fileToBase64(attachmentToSave.file);
+            fileData = await handleFileUpload(base64, attachmentToSave.file.name);
+        } else {
+            fileData = attachmentToSave.file;
+        }
+        
+        const updatedAttachments = attachments.map(att => 
+            att.id === attachmentId 
+                ? { ...att, file: fileData }
+                : att
+        );
+        
+        const dataToSave = {
+            tenantData: form.getValues(),
+            attachments: updatedAttachments.map(a => ({
+                id: a.id,
+                name: a.name,
+                file: a.file instanceof File ? a.file.name : a.file,
+                remarks: a.remarks,
+                isLink: a.isLink,
+            })),
+        };
+
+        const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
+
+        if(result.success) {
+            setAttachments(updatedAttachments);
+            toast({ title: 'Success', description: `Attachment "${attachmentToSave.name}" saved.` });
+        } else {
+             throw new Error(result.error || 'An unknown error occurred');
+        }
+
+      } catch (error) {
+          toast({
+            variant: "destructive",
+            title: "Error Saving Attachment",
+            description: (error as Error).message || "An unknown error occurred.",
+          });
+      } finally {
+          setSavingAttachmentId(null);
+      }
   }
 
 
@@ -575,8 +638,11 @@ export default function TenantPage() {
                                             )
                                         )}
                                     </TableCell>
-                                    <TableCell>
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                    <TableCell className="text-right">
+                                    <Button size="sm" onClick={() => handleSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                        {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                     </TableCell>
@@ -596,3 +662,4 @@ export default function TenantPage() {
     </div>
   );
 }
+
