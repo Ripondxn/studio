@@ -70,34 +70,25 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     useEffect(() => {
         getContractLookups().then(data => {
             if (data.properties) {
-                setLookups(prev => ({ ...prev, properties: data.properties }));
+                setLookups(prev => ({ 
+                    ...prev, 
+                    properties: data.properties,
+                    units: (data.units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})),
+                    rooms: (data.rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode})),
+                 }));
             }
         });
     }, []);
 
-    useEffect(() => {
-        const fetchUnits = async () => {
-            if (watchedProperty) {
-                const unitsData = await getUnitsForProperty(watchedProperty);
-                setLookups(prev => ({...prev, units: unitsData.map(u => ({...u, value: u.unitCode, label: u.unitCode})), rooms: []}));
-            } else {
-                setLookups(prev => ({...prev, units: [], rooms: []}));
-            }
-        }
-        fetchUnits();
-    }, [watchedProperty]);
-
-    useEffect(() => {
-        const fetchRooms = async () => {
-            if (watchedProperty && watchedUnit) {
-                const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
-                setLookups(prev => ({...prev, rooms: roomsData.map(r => ({...r, value: r.roomCode, label: r.roomCode}))}));
-            } else {
-                setLookups(prev => ({...prev, rooms: []}));
-            }
-        }
-        fetchRooms();
-    }, [watchedProperty, watchedUnit]);
+    const filteredUnits = useMemo(() => {
+        if (!watchedProperty) return [];
+        return lookups.units.filter(u => u.propertyCode === watchedProperty)
+    }, [lookups.units, watchedProperty]);
+    
+    const filteredRooms = useMemo(() => {
+        if (!watchedProperty || !watchedUnit) return [];
+        return lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)
+    }, [lookups.rooms, watchedProperty, watchedUnit]);
     
     const occupancyStatus = useMemo(() => {
         if(watchedRoom) {
@@ -305,7 +296,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             />
                         </div>
                          <Separator />
-                        <div>
+                         <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-base font-semibold">Assigned Property</h3>
                                 {config && <Badge variant={config.variant as any} className={cn(config.color, 'border-transparent')}>{occupancyStatus}</Badge>}
@@ -338,7 +329,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <FormItem>
                                             <FormLabel>Unit</FormLabel>
                                             <Combobox 
-                                                options={lookups.units}
+                                                options={filteredUnits}
                                                 value={field.value || ''}
                                                 onSelect={(value) => {
                                                     field.onChange(value);
@@ -357,7 +348,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <FormItem>
                                             <FormLabel>Room</FormLabel>
                                             <Combobox 
-                                                options={lookups.rooms}
+                                                options={filteredRooms}
                                                 value={field.value || ''}
                                                 onSelect={field.onChange}
                                                 placeholder="Select Room"
@@ -381,12 +372,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                <CreateInvoiceDialog
+                 {tenant && <CreateInvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
-                />
+                />}
 
                 <SubscriptionInvoiceDialog
                     isOpen={isEditInvoiceOpen}
