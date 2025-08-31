@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { Plus, Loader2, DollarSign, Edit, Save, X, BedDouble, Building } from 'l
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
-import { InvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
+import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -183,7 +182,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                         {tenant?.name && <CardDescription>Manage invoices for {tenant.name}.</CardDescription>}
+                        {tenant?.name && <CardDescription>Manage invoices for {tenant.name}.</CardDescription>}
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
