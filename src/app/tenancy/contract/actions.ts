@@ -326,30 +326,19 @@ export async function getUnitsForProperty(propertyCode: string) {
     });
 
     return allUnits
-        .filter(u => u.propertyCode === propertyCode)
-        .map(u => {
-            const isFullyOccupied = fullyOccupiedUnitCodes.has(u.unitCode);
-            const roomCounts = unitsWithRoomCounts.get(u.unitCode);
-            let occupancyStatus: Unit['occupancyStatus'] = 'Vacant';
-            
-            if (isFullyOccupied) {
-                occupancyStatus = 'Occupied';
-            } else if (roomCounts) {
-                if (roomCounts.occupied === 0) {
-                    occupancyStatus = 'Vacant';
-                } else if (roomCounts.occupied < roomCounts.total) {
-                    occupancyStatus = 'Partially Occupied';
-                } else {
-                    occupancyStatus = 'Occupied';
-                }
+        .filter(u => {
+            if (u.propertyCode !== propertyCode) {
+                return false;
             }
-
-            return {
-                ...u,
-                occupancyStatus
-            };
+            if (fullyOccupiedUnitCodes.has(u.unitCode)) {
+                return false;
+            }
+            const roomCounts = unitsWithRoomCounts.get(u.unitCode);
+            if (roomCounts) {
+                return roomCounts.occupied < roomCounts.total;
+            }
+            return true;
         })
-        .filter(u => u.occupancyStatus !== 'Occupied')
         .map((u: any) => ({ ...u, value: u.unitCode, label: u.unitCode }));
 }
 
