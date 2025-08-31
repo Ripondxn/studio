@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -110,6 +110,8 @@ export default function TenantPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
@@ -128,6 +130,7 @@ export default function TenantPage() {
   });
 
   const tenantCode = watch('code');
+  const tenantName = watch('name');
   
   const fetchInvoices = useCallback(async (customerCode: string) => {
     if (!customerCode) return;
@@ -198,7 +201,7 @@ export default function TenantPage() {
 
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
-    const currentAttachments = getValues('attachments') || [];
+     const currentAttachments = getValues('attachments') || [];
     const index = currentAttachments.findIndex(a => a.id === id);
     if(index === -1) return;
     
@@ -208,6 +211,7 @@ export default function TenantPage() {
     }
     const newUrl = (field === 'file' && value instanceof File) ? URL.createObjectURL(value) : undefined;
     
+    // @ts-ignore
     update(index, { ...currentItem, [field]: value, url: newUrl });
   };
 
@@ -318,6 +322,7 @@ export default function TenantPage() {
         router.push('/tenancy/tenants');
      } else {
         form.reset();
+        setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
         setIsSubscriptionEditing(false);
      }
@@ -356,7 +361,6 @@ export default function TenantPage() {
         return item.url;
     }
     if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
-        // Note: gdrive links aren't directly viewable and would need a download route
         return item.file;
     }
     return '#';

@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, DollarSign, Edit, Save, X } from 'lucide-react';
+import { Plus, Loader2, DollarSign, Edit, Save, X, BedDouble, Building } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
@@ -28,6 +29,8 @@ import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../
 import { useFormContext } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -70,6 +73,14 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     
     const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
     const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
+    
+    const occupancyStatus = watch('occupancyStatus');
+    const occupancyStatusConfig = {
+        'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
+        'Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700' },
+        'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700' }
+    };
+    const config = occupancyStatus ? occupancyStatusConfig[occupancyStatus] : null;
 
     useEffect(() => {
         const fetchUnits = async () => {
@@ -172,7 +183,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
+                         {tenant?.name && <CardDescription>Manage invoices for {tenant.name}.</CardDescription>}
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -286,7 +297,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         </div>
                         <Separator />
                          <CardTitle>Rented Property</CardTitle>
-                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <FormField
                                 control={formControl}
                                 name="property"
@@ -320,6 +331,11 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 </FormItem>
                                 )}
                             />
+                             <div className="flex items-end pb-2">
+                               {config && <Badge variant={config.variant as any} className={cn(config.color, 'border-transparent')}>
+                                    {occupancyStatus}
+                                </Badge>}
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
