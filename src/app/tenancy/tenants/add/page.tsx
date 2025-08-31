@@ -144,11 +144,12 @@ export default function TenantPage() {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
         
         const attachmentsWithUrls = result.data.attachments?.map((a: any) => ({
-            ...a,
+            id: a.id || Date.now() + Math.random(),
             name: a.name || '',
             remarks: a.remarks || '',
             file: a.file || null,
-            url: undefined
+            isLink: a.isLink || false,
+            url: undefined // This is client-side only
         })) || [];
         
         form.reset({
@@ -173,6 +174,7 @@ export default function TenantPage() {
           title: 'Not Found',
           description: `No record found for Tenant Code: ${code}. You can create a new one.`,
         });
+        // Call recursively to reset to a new state
         handleFindClick('new');
       }
     } catch (error) {
@@ -192,6 +194,7 @@ export default function TenantPage() {
       handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
+
   
   const handleAttachmentChange = (index: number, field: keyof Attachment, value: any) => {
     const currentAttachments = getValues('attachments') || [];
@@ -234,7 +237,7 @@ export default function TenantPage() {
     
     try {
         const attachmentsToProcess = isAttachmentSave
-            ? data.attachments?.filter(a => a.id === attachmentId) || []
+            ? (data.attachments || []).filter(a => a.id === attachmentId)
             : data.attachments || [];
 
         const processedAttachments = await Promise.all(
@@ -285,7 +288,7 @@ export default function TenantPage() {
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
-                 form.reset({ ...data, attachments: finalAttachments });
+                 form.reset({ ...data, attachments: finalAttachments.map(a => ({ ...a, url: undefined })) });
             }
         } else {
             throw new Error(result.error || 'An unknown error occurred');
@@ -347,15 +350,18 @@ export default function TenantPage() {
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${form.watch('name')}`;
 
   const getViewLink = (item: Attachment): string => {
-    if (item.isLink && typeof item.file === 'string') {
+    if (item.isLink && typeof item.file === 'string' && item.file.startsWith('http')) {
         return item.file;
     }
     if (item.url) { // This is for new, unsaved file uploads
         return item.url;
     }
-    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
-        // Note: gdrive links aren't directly viewable and would need a download route
+    if (typeof item.file === 'string' && item.file.startsWith('data:')) { // For saved base64
         return item.file;
+    }
+    if (typeof item.file === 'string' && item.file.startsWith('gdrive:')) {
+        // This won't be directly viewable but can be shown for info
+        return '#gdrive-file';
     }
     return '#';
   };
@@ -635,18 +641,18 @@ export default function TenantPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <Button asChild variant="outline" size="icon" disabled={!item.file}>
-                                                <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer">
+                                             <Button asChild variant="outline" size="icon" disabled={!watch(`attachments.${index}.file`)}>
+                                                <a href={getViewLink(watch(`attachments.${index}`))} target="_blank" rel="noopener noreferrer">
                                                     <Eye className="h-4 w-4" />
                                                 </a>
                                             </Button>
-                                            <Button variant="outline" size="icon" disabled={!item.isLink || !item.file} onClick={() => handleCopyLink(item.file)}>
+                                             <Button variant="outline" size="icon" disabled={!watch(`attachments.${index}.file`) || !watch(`attachments.${index}.isLink`)} onClick={() => handleCopyLink(watch(`attachments.${index}.file`))}>
                                                 <ClipboardCopy className="h-4 w-4" />
                                             </Button>
-                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(index)} disabled={savingAttachmentId === item.id || !isEditing}>
                                                 {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                             </Button>
-                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => remove(index)}>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(index)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -667,4 +673,3 @@ export default function TenantPage() {
     </div>
   );
 }
-
