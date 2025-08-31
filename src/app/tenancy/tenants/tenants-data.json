@@ -21,7 +21,14 @@
       "subscriptionAmount": 1000,
       "subscriptionStatus": "Monthly"
     },
-    "attachments": []
+    "attachments": [
+      {
+        "id": 1,
+        "name": "test",
+        "file": "\"C:\\Users\\Ripon Ahmed\\Desktop\\Google Drive API.txt\"",
+        "remarks": "t"
+      }
+    ]
   },
   {
     "id": "T1756477127322",

@@ -26,7 +26,8 @@ import {
   Search,
   X,
   FileUp,
-  Link2
+  Link2,
+  Eye,
 } from 'lucide-react';
 import {
   Table,
@@ -58,6 +59,7 @@ import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { MoveTenantDialog } from './move-tenant-dialog';
+import { handleFileUpload } from '@/app/services/attachment-service';
 
 
 type Attachment = {
@@ -188,40 +190,72 @@ export default function TenantPage() {
     setIsEditing(true);
   }
 
-  const onSave = async (data: Tenant) => {
-    setIsSaving(true);
-    try {
-      const dataToSave = {
-        tenantData: data,
-        attachments,
-      };
+  const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
+    if (!isAttachmentSave) setIsSaving(true);
+    if (isAttachmentSave && attachmentId) setSavingAttachmentId(attachmentId);
 
-      const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
-      if (result.success && result.data) {
-        toast({
-          title: "Success",
-          description: `Tenant "${data.name}" saved successfully.`,
-        });
-        setIsEditing(false);
-        setIsSubscriptionEditing(false);
-        if (isNewRecord) {
-            router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
-        } else {
-            form.reset(data);
+    try {
+        const currentAttachments = isAttachmentSave
+            ? attachments.filter(a => a.id === attachmentId)
+            : attachments;
+
+        const processedAttachments = await Promise.all(
+            currentAttachments.map(async (att) => ({
+                id: att.id,
+                name: att.name,
+                file: att.file,
+                remarks: att.remarks,
+                isLink: true,
+            }))
+        );
+
+        let finalAttachments = [...attachments];
+        if (isAttachmentSave) {
+            finalAttachments = attachments.map(att => {
+                const saved = processedAttachments.find(p => p.id === att.id);
+                return saved || att;
+            });
         }
-      } else {
-        throw new Error(result.error || 'An unknown error occurred');
-      }
+
+        const dataToSave = {
+            tenantData: data,
+            attachments: finalAttachments,
+        };
+
+        const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
+        if (result.success && result.data) {
+            toast({
+                title: "Success",
+                description: isAttachmentSave ? `Attachment saved.` : `Tenant "${data.name}" saved successfully.`,
+            });
+            if (!isAttachmentSave) {
+                setIsEditing(false);
+                setIsSubscriptionEditing(false);
+            }
+            if (isNewRecord) {
+                router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
+            } else {
+                 form.reset(data);
+                 setAttachments(finalAttachments);
+            }
+        } else {
+            throw new Error(result.error || 'An unknown error occurred');
+        }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: (error as Error).message || "Failed to save tenant data.",
-      });
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: (error as Error).message || "Failed to save data.",
+        });
     } finally {
-      setIsSaving(false);
+        if (!isAttachmentSave) setIsSaving(false);
+        if (isAttachmentSave) setSavingAttachmentId(null);
     }
   }
+
+  const onSaveAttachment = (id: number) => {
+    form.handleSubmit((data) => onSave(data, true, id))();
+  };
 
   const handleCancelClick = () => {
      if (isNewRecord) {
@@ -468,10 +502,10 @@ export default function TenantPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                            <TableHead>Attachment Name</TableHead>
-                            <TableHead>Link</TableHead>
+                            <TableHead className="w-1/4">Attachment Name</TableHead>
+                            <TableHead className="w-1/2">Link</TableHead>
                             <TableHead>Remarks</TableHead>
-                            <TableHead>Action</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -486,15 +520,13 @@ export default function TenantPage() {
                                         />
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                type="text"
-                                                placeholder="https://example.com"
-                                                value={typeof item.file === 'string' ? item.file : ''}
-                                                onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
-                                                disabled={!isEditing}
-                                            />
-                                        </div>
+                                         <Input
+                                            type="text"
+                                            placeholder="https://example.com"
+                                            value={typeof item.file === 'string' ? item.file : ''}
+                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                            disabled={!isEditing}
+                                        />
                                     </TableCell>
                                      <TableCell>
                                         <Input 
@@ -504,9 +536,14 @@ export default function TenantPage() {
                                             placeholder="Add remarks..."
                                         />
                                     </TableCell>
-                                    <TableCell className="text-right">
-                                    <Button size="sm" type="button" onClick={form.handleSubmit(onSave)} disabled={isSaving || !isEditing}>
-                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin"/> : 'Save'}
+                                    <TableCell className="text-right flex gap-1">
+                                    <Button asChild variant="outline" size="icon" disabled={!item.file || typeof item.file !== 'string'}>
+                                        <a href={typeof item.file === 'string' ? item.file : '#'} target="_blank" rel="noopener noreferrer">
+                                            <Eye className="h-4 w-4" />
+                                        </a>
+                                    </Button>
+                                    <Button size="sm" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                        {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : 'Save'}
                                     </Button>
                                     <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                         <Trash2 className="h-4 w-4" />
