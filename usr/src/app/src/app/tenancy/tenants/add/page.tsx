@@ -59,6 +59,7 @@ import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { MoveTenantDialog } from './move-tenant-dialog';
+import { handleFileUpload } from '@/app/services/attachment-service';
 
 
 type Attachment = {
@@ -89,6 +90,16 @@ const initialTenantData: Tenant = {
     isSubscriptionActive: false,
     subscriptionStatus: undefined,
     subscriptionAmount: 0,
+};
+
+// Helper function to read a file as a Base64 string on the client
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
 };
 
 export default function TenantPage() {
@@ -223,15 +234,29 @@ export default function TenantPage() {
   const onSave = async (data: Tenant) => {
     setIsSaving(true);
     try {
+        const processedAttachments = await Promise.all(
+            attachments.map(async (att) => {
+                let fileData: string | null = null;
+                if (att.file && att.file instanceof File) {
+                    const base64 = await fileToBase64(att.file);
+                    // Now call the server action with the base64 string
+                    fileData = await handleFileUpload(base64, att.file.name);
+                } else {
+                    fileData = att.file;
+                }
+                return {
+                    id: att.id,
+                    name: att.name,
+                    file: fileData,
+                    remarks: att.remarks,
+                    isLink: att.isLink,
+                }
+            })
+        );
+        
       const dataToSave = {
         tenantData: data,
-        attachments: attachments.map(a => ({ 
-            id: a.id, 
-            name: a.name, 
-            file: a.file instanceof File ? a.file.name : a.file, 
-            remarks: a.remarks,
-            isLink: a.isLink 
-        })),
+        attachments: processedAttachments,
       };
 
       const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
@@ -246,6 +271,7 @@ export default function TenantPage() {
             router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
             form.reset(data);
+            setAttachments(processedAttachments.map(a => ({...a, file: a.file, url: undefined})));
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
