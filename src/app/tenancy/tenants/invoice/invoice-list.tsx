@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X, BedDouble, Building } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
-import { InvoiceDialog } from './invoice-dialog';
+import { SubscriptionInvoiceDialog } from './invoice-dialog';
 import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
@@ -246,14 +246,14 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                <CreateInvoiceDialog
+                {tenant && <CreateInvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
-                />
+                />}
 
-                <InvoiceDialog
+                <SubscriptionInvoiceDialog
                     isOpen={isEditInvoiceOpen}
                     setIsOpen={setIsEditInvoiceOpen}
                     invoice={selectedInvoice}
