@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -189,7 +188,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit' : 'Create'} Subscription Invoice</DialogTitle>
