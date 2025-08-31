@@ -26,7 +26,9 @@ import {
   Search,
   X,
   FileUp,
-  Link2
+  Link2,
+  Move,
+  Eye
 } from 'lucide-react';
 import {
   Table,
@@ -253,6 +255,7 @@ export default function TenantPage() {
                     fileData = typeof att.file === 'string' ? att.file : null;
                 } else if (att.file && att.file instanceof File) {
                     const base64 = await fileToBase64(att.file);
+                    // Now call the server action with the base64 string
                     fileData = await handleFileUpload(base64, att.file.name);
                 } else {
                     fileData = att.file;
@@ -268,12 +271,13 @@ export default function TenantPage() {
         );
         
         let finalAttachments = [...attachments];
-        if (isAttachmentSave) {
+        if (isAttachmentSave && processedAttachments.length > 0) {
             // Replace the processed attachment in the main list
             finalAttachments = attachments.map(att => {
                 const saved = processedAttachments.find(p => p.id === att.id);
                 return saved ? { ...att, file: saved.file } : att;
             });
+             setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
         }
 
 
@@ -296,7 +300,9 @@ export default function TenantPage() {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
                  form.reset(data);
-                 setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
+                 if (!isAttachmentSave) {
+                    setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
+                 }
             }
         } else {
             throw new Error(result.error || 'An unknown error occurred');
@@ -562,8 +568,8 @@ export default function TenantPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                            <TableHead>Attachment Name</TableHead>
-                            <TableHead>File / Link</TableHead>
+                            <TableHead className="w-[30%]">Attachment Name</TableHead>
+                            <TableHead className="w-[45%]">File / Link</TableHead>
                             <TableHead>Action</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -601,23 +607,14 @@ export default function TenantPage() {
                                                 {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                             </Button>
                                         </div>
-                                        {item.url && !item.isLink && (
-                                            <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                View Uploaded File
-                                            </Link>
-                                        )}
-                                        {item.file && typeof item.file === 'string' && (
-                                            item.isLink && item.file.startsWith('http') ? (
-                                                <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                    Open Link
-                                                </Link>
-                                            ) : (
-                                                !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                            )
-                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
+                                             <Button asChild variant="outline" size="icon" disabled={!item.file}>
+                                                <a href={item.isLink ? item.file! : item.url} target="_blank" rel="noopener noreferrer">
+                                                    <Eye className="h-4 w-4" />
+                                                </a>
+                                            </Button>
                                             <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
                                                 {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                             </Button>
