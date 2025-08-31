@@ -31,7 +31,10 @@ function ExternalStorageClient({ initialSettings }: { initialSettings: StorageSe
     const { toast } = useToast();
     const form = useForm<StorageFormData>({
         resolver: zodResolver(storageSettingsSchema),
-        defaultValues: initialSettings,
+        defaultValues: {
+            ...initialSettings,
+            googleDriveApiKey: initialSettings.googleDriveApiKey || '', // Ensure defined value
+        },
     });
 
     const {
