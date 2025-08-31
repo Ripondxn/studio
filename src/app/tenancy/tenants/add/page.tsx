@@ -1,10 +1,10 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useFieldArray, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -138,6 +138,27 @@ const TenantAttachments = ({isEditing}: {isEditing: boolean}) => {
             setSavingAttachmentId(null);
         }
     };
+
+    const onSaveAttachment = (id: number) => {
+        // This is tricky without access to the main form's submit handler.
+        // A better approach would be to have a global state management or lift state up.
+        // For now, this button won't do anything to prevent incorrect saves.
+        toast({ title: "Save Tenant to persist attachments", description: "Please save the main tenant form to commit attachment changes."})
+    }
+    
+    const getViewLink = (item: Attachment): string => {
+        if (item.isLink && typeof item.file === 'string') {
+            return item.file;
+        }
+        if (item.url) { // This is for new, unsaved file uploads
+            return item.url;
+        }
+        if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
+            // Note: gdrive links aren't directly viewable and would need a download route
+            return item.file;
+        }
+        return '#';
+    };
     
     return (
          <Card>
@@ -202,12 +223,10 @@ const TenantAttachments = ({isEditing}: {isEditing: boolean}) => {
                                         )}
                                          {savingAttachmentId === item.id && <Loader2 className="h-4 w-4 animate-spin" />}
                                     </div>
-                                    {item.file && typeof item.file === 'string' && (
-                                        item.isLink ? (
-                                            <a href={item.file} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm">Open Link</a>
-                                        ) : (
-                                           <span className="text-sm text-muted-foreground italic truncate">File uploaded</span>
-                                        )
+                                    {item.file && (
+                                        <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm">
+                                            {item.isLink ? 'Open Link' : 'View File'}
+                                        </a>
                                     )}
                                 </TableCell>
                                 <TableCell>
@@ -239,6 +258,7 @@ export default function TenantPage() {
   
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
 
   const formMethods = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
@@ -336,6 +356,7 @@ export default function TenantPage() {
           description: `Tenant "${data.name}" saved successfully.`,
         });
         setIsEditing(false);
+        setIsSubscriptionEditing(false);
         if (isNewRecord) {
             router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
@@ -362,6 +383,7 @@ export default function TenantPage() {
      } else {
         reset();
         setIsEditing(false);
+        setIsSubscriptionEditing(false);
      }
   }
 
@@ -586,7 +608,7 @@ export default function TenantPage() {
                 isLoading={isLoadingInvoices}
                 onRefresh={() => fetchInvoices(getValues('code'))}
                 isSubscriptionEditing={isEditing}
-                setIsSubscriptionEditing={setIsEditing}
+                setIsSubscriptionEditing={setIsSubscriptionEditing}
                 formControl={control}
             />
         </TabsContent>

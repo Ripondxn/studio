@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -56,7 +57,8 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
-  
+  const [lookups, setLookups] = useState<{ properties: {value: string, label: string}[]; units: {value: string, label: string, propertyCode: string}[]; rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[] }>({ properties: [], units: [], rooms: [] });
+
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(subscriptionInvoiceSchema),
   });
@@ -187,7 +189,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-4xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit' : 'Create'} Subscription Invoice</DialogTitle>
             <DialogDescription>
@@ -279,9 +281,9 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>
             </DialogClose>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                {invoice ? 'Update Invoice' : 'Save Subs Invoice'}
+                Save Subs Invoice
             </Button>
           </DialogFooter>
         </form>

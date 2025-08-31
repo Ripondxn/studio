@@ -377,7 +377,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
          <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Payment</Button></DialogTrigger>
       )}
       <DialogContent className="max-w-4xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form>
             <DialogHeader>
                 <div className="flex items-center space-x-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
@@ -454,7 +454,7 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                  <Card>
                     <CardHeader><CardTitle className="flex items-center space-x-2"><Building2 className="h-5 w-5 text-primary" /><span>Property Details</span></CardTitle></CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                         <div className="space-y-2"><Label>Property</Label><Controller name="property" control={control} render={({ field }) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property"/>)} /></div>
+                         <div className="space-y-2"><Label>Property</Label><Controller name="property" control={control} render={({ field }) => (<Combobox options={lookups.properties || []} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property"/>)} /></div>
                          <div className="space-y-2"><Label>Unit</Label><Controller name="unitCode" control={control} render={({ field }) => (<Combobox options={lookups.units.filter(u => u.propertyCode === watchedProperty)} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!watchedProperty}/>)} /></div>
                          <div className="space-y-2"><Label>Room</Label><Controller name="roomCode" control={control} render={({ field }) => (<Combobox options={lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!watchedUnit}/>)} /></div>
                     </CardContent>
@@ -597,10 +597,10 @@ export function AddPaymentDialog({ onPaymentAdded, children, isOpen: externalOpe
                   </Card>
                 )}
             </div>
-            <DialogFooter>
+            <DialogFooter className="mt-6 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={handleReset}><X className="mr-2 h-4 w-4"/>Clear</Button>
                 <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-                <Button type="submit" disabled={isSaving}>
+                <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Record Payment
                 </Button>
