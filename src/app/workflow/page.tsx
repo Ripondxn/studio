@@ -332,7 +332,7 @@ export default function WorkflowPage() {
 
   const [currentActionInfo, setCurrentActionInfo] = useState<{
     transactionId: string;
-    action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'REJECT' | 'ADD_COMMENT';
+    action: 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
   } | null>(null);
 
   const fetchData = React.useCallback(async (user: { email: string, name: string, role: UserRole['role'] }) => {
@@ -532,7 +532,7 @@ export default function WorkflowPage() {
             printWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}/globals.css" type="text/css" />`); // Not ideal but might work
             printWindow.document.write('<style>body { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; } @page { size: A4; margin: 1cm; }</style>');
             printWindow.document.write('</head><body class="bg-white">');
-            printWindow.document.write(printContent);
+            printWindow.document.write(printContent.innerHTML);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
              setTimeout(() => printWindow.print(), 1000);
@@ -545,7 +545,7 @@ export default function WorkflowPage() {
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="w-full">
      {currentActionInfo && (
         <ActionDialog 
             isOpen={isActionDialogOpen}

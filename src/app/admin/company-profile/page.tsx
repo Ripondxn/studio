@@ -5,6 +5,8 @@ import { getCompanyProfile } from './actions';
 export default async function CompanyProfilePage() {
     const profile = await getCompanyProfile();
     return (
-        <CompanyProfileClient initialProfile={profile} />
+        <div className="w-full">
+            <CompanyProfileClient initialProfile={profile} />
+        </div>
     )
 }
