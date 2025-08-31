@@ -116,8 +116,8 @@ const navLinks = [
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
     },
-    { 
-        label: 'Data Processing', 
+    {
+        label: 'Data Processing',
         icon: <ScanLine />,
         subItems: [
             { href: '/document-processor', label: 'Document Processor' },
