@@ -28,7 +28,8 @@ import {
   FileUp,
   Link2,
   Move,
-  Eye
+  Eye,
+  ClipboardCopy
 } from 'lucide-react';
 import {
   Table,
@@ -61,6 +62,7 @@ import { type Tenant, tenantSchema, attachmentSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { MoveTenantDialog } from './move-tenant-dialog';
 import { handleFileUpload } from '@/app/services/attachment-service';
+import { z } from 'zod';
 
 
 type Attachment = z.infer<typeof attachmentSchema> & { url?: string };
@@ -146,7 +148,7 @@ export default function TenantPage() {
             name: a.name || '',
             remarks: a.remarks || '',
             file: a.file || null,
-            url: a.file && a.isLink === false && typeof a.file === 'string' && a.file.startsWith('data:') ? a.file : undefined
+            url: undefined
         })) || [];
         
         form.reset({
@@ -190,16 +192,16 @@ export default function TenantPage() {
       handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
-
   
   const handleAttachmentChange = (index: number, field: keyof Attachment, value: any) => {
-    const currentAttachment = watch(`attachments.${index}`);
-    if (field === 'file' && currentAttachment.url) {
-        URL.revokeObjectURL(currentAttachment.url);
+    const currentAttachments = getValues('attachments') || [];
+    const currentItem = currentAttachments[index];
+    if (field === 'file' && currentItem.url) {
+        URL.revokeObjectURL(currentItem.url);
     }
     const newUrl = (field === 'file' && value instanceof File) ? URL.createObjectURL(value) : undefined;
     
-    update(index, { ...currentAttachment, [field]: value, url: newUrl });
+    update(index, { ...currentItem, [field]: value, url: newUrl });
   };
 
 
@@ -214,7 +216,8 @@ export default function TenantPage() {
   };
 
   const removeAttachmentRow = (index: number) => {
-    const attachmentToRemove = watch(`attachments.${index}`);
+    const currentAttachments = getValues('attachments');
+    const attachmentToRemove = currentAttachments?.[index];
     if (attachmentToRemove && attachmentToRemove.url) {
         URL.revokeObjectURL(attachmentToRemove.url);
     }
@@ -355,6 +358,23 @@ export default function TenantPage() {
         return item.file;
     }
     return '#';
+  };
+  
+  const handleCopyLink = (link: string | null | File) => {
+    if (typeof link === 'string' && link) {
+      navigator.clipboard.writeText(link).then(() => {
+        toast({
+          title: "Link Copied",
+          description: "The attachment link has been copied to your clipboard.",
+        });
+      }).catch(err => {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not copy the link.",
+        });
+      });
+    }
   };
 
 
@@ -615,12 +635,15 @@ export default function TenantPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                             <Button asChild variant="outline" size="icon" disabled={!watch(`attachments.${index}.file`)}>
-                                                <a href={getViewLink(watch(`attachments.${index}`))} target="_blank" rel="noopener noreferrer">
+                                            <Button asChild variant="outline" size="icon" disabled={!item.file}>
+                                                <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer">
                                                     <Eye className="h-4 w-4" />
                                                 </a>
                                             </Button>
-                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(index)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                            <Button variant="outline" size="icon" disabled={!item.isLink || !item.file} onClick={() => handleCopyLink(item.file)}>
+                                                <ClipboardCopy className="h-4 w-4" />
+                                            </Button>
+                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
                                                 {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                             </Button>
                                             <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => remove(index)}>
@@ -632,7 +655,7 @@ export default function TenantPage() {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => addAttachmentRow()} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>
@@ -644,3 +667,4 @@ export default function TenantPage() {
     </div>
   );
 }
+
