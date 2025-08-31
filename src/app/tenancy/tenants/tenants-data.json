@@ -46,7 +46,6 @@
       "subscriptionAmount": 500,
       "subscriptionStatus": "Monthly",
       "occupancyStatus": "Occupied"
-    },
-    "attachments": []
+    }
   }
 ]
