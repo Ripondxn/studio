@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -109,7 +109,6 @@ export default function TenantPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
@@ -120,7 +119,7 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const { control, handleSubmit, watch, setValue, reset, getValues, register, formState: { errors } } = form;
+  const { control, handleSubmit, watch, setValue, reset, getValues } = form;
   
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
@@ -199,23 +198,25 @@ export default function TenantPage() {
 
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
-    const currentAttachments = getValues('attachments') || [];
-    const updatedAttachments = currentAttachments.map(item => {
-        if (item.id === id) {
-             if (field === 'file') {
-                if (item.url) URL.revokeObjectURL(item.url);
-                const newUrl = (value instanceof File) ? URL.createObjectURL(value) : undefined;
-                return {...item, file: value, url: newUrl};
-            }
-             if (field === 'isLink') {
-                 if (item.url) URL.revokeObjectURL(item.url);
-                 return {...item, isLink: value, file: null, url: undefined };
-            }
-            return {...item, [field]: value};
-        }
-        return item;
-    });
-    setValue('attachments', updatedAttachments, { shouldDirty: true });
+    const attachmentIndex = fields.findIndex(a => a.id === id);
+    if(attachmentIndex === -1) return;
+
+    let updatedAttachment = { ...fields[attachmentIndex] };
+    
+    if (field === 'file') {
+        const file = value instanceof FileList ? value[0] : value;
+        if (updatedAttachment.url) URL.revokeObjectURL(updatedAttachment.url);
+        const newUrl = (file instanceof File) ? URL.createObjectURL(file) : undefined;
+        updatedAttachment = {...updatedAttachment, file: file, url: newUrl};
+    } else if (field === 'isLink') {
+        if (updatedAttachment.url) URL.revokeObjectURL(updatedAttachment.url);
+        updatedAttachment = {...updatedAttachment, isLink: value, file: null, url: undefined };
+    } else {
+        // @ts-ignore
+        updatedAttachment[field] = value;
+    }
+    
+    update(attachmentIndex, updatedAttachment);
   };
 
   const addAttachmentRow = () => {
@@ -228,30 +229,24 @@ export default function TenantPage() {
       });
   };
 
-  const removeAttachmentRow = (id: number) => {
-    const attachmentIndex = fields.findIndex(item => item.id === id);
-    if(attachmentIndex > -1) {
-        remove(attachmentIndex);
+  const removeAttachmentRow = (index: number) => {
+    const attachmentToRemove = fields[index];
+    if (attachmentToRemove && attachmentToRemove.url) {
+        URL.revokeObjectURL(attachmentToRemove.url);
     }
+    remove(index);
   };
 
   const handleEditClick = () => {
     setIsEditing(true);
   }
 
-  const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
-    if (!isAttachmentSave) setIsSaving(true);
-    if (isAttachmentSave && attachmentId) setSavingAttachmentId(attachmentId);
+  const onSave = async (data: Tenant) => {
+    setIsSaving(true);
     
     try {
-        const currentAttachments = getValues('attachments') || [];
-        
-        const attachmentsToProcess = isAttachmentSave
-            ? currentAttachments.filter(a => a.id === attachmentId)
-            : currentAttachments;
-
-        const processedAttachments = await Promise.all(
-            attachmentsToProcess.map(async (att) => {
+        const attachmentsToSave = await Promise.all(
+            data.attachments!.map(async (att) => {
                 let fileData: string | null = null;
                  if (att.isLink) {
                     fileData = typeof att.file === 'string' ? att.file : null;
@@ -261,46 +256,34 @@ export default function TenantPage() {
                 } else {
                     fileData = att.file;
                 }
+                
                 return {
                     id: att.id,
                     name: att.name,
-                    remarks: att.remarks,
                     file: fileData,
+                    remarks: att.remarks,
                     isLink: att.isLink,
                 }
             })
         );
         
-        let finalAttachments = [...currentAttachments];
-        if (isAttachmentSave && processedAttachments.length > 0) {
-             finalAttachments = currentAttachments.map(att => {
-                const saved = processedAttachments.find(p => p.id === att.id);
-                return saved ? { ...att, file: saved.file, url: undefined } : att;
-             });
-             setValue('attachments', finalAttachments);
-        } else if (!isAttachmentSave) {
-            finalAttachments = processedAttachments;
-        }
-
         const dataToSave = {
             tenantData: data,
-            attachments: finalAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
+            attachments: attachmentsToSave,
         };
 
         const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
         if (result.success && result.data) {
             toast({
                 title: "Success",
-                description: isAttachmentSave ? `Attachment saved.` : `Tenant "${data.name}" saved successfully.`,
+                description: `Tenant "${data.name}" saved successfully.`,
             });
-            if (!isAttachmentSave) {
-                setIsEditing(false);
-                setIsSubscriptionEditing(false);
-            }
+            setIsEditing(false);
+            setIsSubscriptionEditing(false);
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
-                 form.reset({ ...data, attachments: finalAttachments.map(a => ({ ...a, url: undefined })) });
+                 form.reset({ ...data, attachments: attachmentsToSave });
             }
         } else {
             throw new Error(result.error || 'An unknown error occurred');
@@ -312,35 +295,30 @@ export default function TenantPage() {
         description: (error as Error).message || "Failed to save data.",
       });
     } finally {
-        if (!isAttachmentSave) setIsSaving(false);
-        if (isAttachmentSave) setSavingAttachmentId(null);
+        setIsSaving(false);
     }
   }
 
-  const onSaveAttachment = (id: number) => {
-    form.handleSubmit((data) => onSave(data, true, id))();
-  };
 
   const handleCancelClick = () => {
      if (isNewRecord) {
         router.push('/tenancy/tenants');
      } else {
         form.reset();
-        setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
         setIsSubscriptionEditing(false);
      }
   }
 
   const handleDelete = async () => {
-    const code = form.getValues('code');
+    const code = getValues('code');
     if (!code) return;
     try {
       const result = await deleteTenantData(code);
       if (result.success) {
         toast({
           title: 'Deleted',
-          description: `Tenant "${form.getValues('name')}" has been deleted.`,
+          description: `Tenant "${getValues('name')}" has been deleted.`,
         });
         router.push('/tenancy/tenants');
       } else {
@@ -355,17 +333,16 @@ export default function TenantPage() {
     }
   };
   
-  const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${form.watch('name')}`;
+  const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${watch('name')}`;
 
   const getViewLink = (item: Attachment): string => {
     if (item.isLink && typeof item.file === 'string') {
         return item.file;
     }
-    if (item.url) { // This is for new, unsaved file uploads
+    if (item.url) {
         return item.url;
     }
-    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
-        // Note: gdrive links aren't directly viewable and would need a download route
+    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) {
         return item.file;
     }
     return '#';
@@ -374,20 +351,20 @@ export default function TenantPage() {
 
   return (
     <div className="container mx-auto p-4 bg-background">
-     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSave)}>
+     <FormProvider {...formMethods}>
+      <form onSubmit={handleSubmit(onSave)}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
             </h1>
             <div className="flex items-center gap-2">
-                {!isEditing && !isNewRecord && form.getValues('contractId') && (
+                {!isEditing && !isNewRecord && getValues('contractId') && (
                     <MoveTenantDialog
-                        contractId={form.getValues('contractId')!}
+                        contractId={getValues('contractId')!}
                         currentLocation={{
-                            property: form.getValues('property') || 'N/A',
-                            unit: form.getValues('unitCode') || 'N/A',
-                            room: form.getValues('roomCode'),
+                            property: getValues('property') || 'N/A',
+                            unit: getValues('unitCode') || 'N/A',
+                            room: getValues('roomCode'),
                         }}
                     />
                 )}
@@ -407,7 +384,7 @@ export default function TenantPage() {
                     </Button>
                 </>
                 )}
-                 <AlertDialog>
+                <AlertDialog>
                     <AlertDialogTrigger asChild>
                     <Button
                         type="button"
@@ -422,7 +399,7 @@ export default function TenantPage() {
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete the
-                        tenant "{form.getValues('name')}".
+                        tenant "{getValues('name')}".
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -457,7 +434,7 @@ export default function TenantPage() {
                 <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <FormField
-                      control={form.control}
+                      control={control}
                       name="code"
                       render={({ field }) => (
                         <FormItem>
@@ -481,7 +458,7 @@ export default function TenantPage() {
                       )}
                     />
                     <FormField
-                      control={form.control}
+                      control={control}
                       name="name"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
@@ -492,7 +469,7 @@ export default function TenantPage() {
                       )}
                     />
                     <FormField
-                      control={form.control}
+                      control={control}
                       name="mobile"
                       render={({ field }) => (
                         <FormItem>
@@ -503,7 +480,7 @@ export default function TenantPage() {
                       )}
                     />
                      <FormField
-                      control={form.control}
+                      control={control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
@@ -514,7 +491,7 @@ export default function TenantPage() {
                       )}
                     />
                      <FormField
-                      control={form.control}
+                      control={control}
                       name="address"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
@@ -525,7 +502,7 @@ export default function TenantPage() {
                       )}
                     />
                     <FormField
-                      control={form.control}
+                      control={control}
                       name="eid"
                       render={({ field }) => (
                         <FormItem>
@@ -536,7 +513,7 @@ export default function TenantPage() {
                       )}
                     />
                     <FormField
-                      control={form.control}
+                      control={control}
                       name="occupation"
                       render={({ field }) => (
                         <FormItem>
@@ -546,8 +523,8 @@ export default function TenantPage() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                        control={form.control}
+                     <FormField
+                        control={control}
                         name="contractNo"
                         render={({ field }) => (
                         <FormItem>
@@ -563,13 +540,13 @@ export default function TenantPage() {
         </TabsContent>
         <TabsContent value="subscription">
             <InvoiceList 
-                tenant={form.getValues()}
+                tenant={watch()}
                 invoices={invoices}
                 isLoading={isLoadingInvoices}
-                onRefresh={() => fetchInvoices(form.getValues('code'))}
+                onRefresh={() => fetchInvoices(watch('code'))}
                 isSubscriptionEditing={isEditing}
                 setIsSubscriptionEditing={setIsEditing}
-                formControl={form.control}
+                formControl={control}
             />
         </TabsContent>
         <TabsContent value="attachments">
@@ -591,50 +568,44 @@ export default function TenantPage() {
                                 <TableRow key={item.id}>
                                     <TableCell>
                                         <Input 
-                                            {...register(`attachments.${index}.name`)} 
+                                            defaultValue={item.name}
+                                            onBlur={(e) => update(index, {...item, name: e.target.value})}
                                             disabled={!isEditing} 
                                             placeholder="e.g. Passport Copy"
                                         />
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <Controller
-                                                control={control}
-                                                name={`attachments.${index}.isLink`}
-                                                render={({ field }) => (
-                                                  <>
-                                                    {field.value ? (
-                                                        <Input
-                                                            type="text"
-                                                            placeholder="https://example.com"
-                                                            defaultValue={getValues(`attachments.${index}.file`) as string || ''}
-                                                            onChange={(e) => update(index, {...getValues(`attachments.${index}`), file: e.target.value})}
-                                                            disabled={!isEditing}
-                                                        />
-                                                    ) : (
-                                                        <Input 
-                                                            type="file" 
-                                                            className="text-sm w-full" 
-                                                            onChange={(e) => update(index, {...getValues(`attachments.${index}`), file: e.target.files?.[0] || null})}
-                                                            disabled={!isEditing}
-                                                        />
-                                                    )}
-                                                    <Button type="button" variant="ghost" size="icon" onClick={() => field.onChange(!field.value)} disabled={!isEditing}>
-                                                        {field.value ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                                                    </Button>
-                                                  </>
-                                                )}
-                                            />
+                                            {item.isLink ? (
+                                                <Input
+                                                    type="text"
+                                                    placeholder="https://example.com"
+                                                    defaultValue={typeof item.file === 'string' ? item.file : ''}
+                                                     onBlur={(e) => update(index, {...item, file: e.target.value})}
+                                                    disabled={!isEditing}
+                                                />
+                                            ) : (
+                                                <Input 
+                                                    type="file" 
+                                                    className="text-sm w-full" 
+                                                    ref={(el) => (fileInputRefs.current[index] = el)}
+                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                    disabled={!isEditing}
+                                                />
+                                            )}
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                                {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                            </Button>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                             <Button asChild variant="outline" size="icon" disabled={!watch(`attachments.${index}.file`)}>
-                                                <a href={getViewLink(watch(`attachments.${index}`))} target="_blank" rel="noopener noreferrer">
+                                             <Button asChild variant="outline" size="icon" disabled={!item.file}>
+                                                <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer">
                                                     <Eye className="h-4 w-4" />
                                                 </a>
                                             </Button>
-                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                             <Button size="icon" type="button" onClick={() => handleSubmit((data) => onSave(data, true, item.id))()} disabled={savingAttachmentId === item.id || !isEditing}>
                                                 {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                             </Button>
                                             <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => remove(index)}>
@@ -646,7 +617,7 @@ export default function TenantPage() {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => addAttachmentRow()} disabled={!isEditing}>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>
@@ -654,7 +625,7 @@ export default function TenantPage() {
         </TabsContent>
       </Tabs>
       </form>
-    </Form>
+    </FormProvider>
     </div>
   );
 }
