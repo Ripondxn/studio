@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, useFieldArray, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -22,13 +22,11 @@ import {
   Plus,
   Pencil,
   Loader2,
-  Search,
   X,
   FileUp,
   Link2,
   Move,
-  Eye,
-  ClipboardCopy
+  Eye
 } from 'lucide-react';
 import {
   Table,
@@ -62,7 +60,6 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { MoveTenantDialog } from './move-tenant-dialog';
 import { handleFileUpload } from '@/app/services/attachment-service';
 import { z } from 'zod';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getUnitDetails, getRoomDetails, getLatestContractForTenant } from '../../contract/actions';
 
 
 type Attachment = z.infer<typeof attachmentSchema> & { url?: string };
@@ -100,6 +97,137 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
+const TenantAttachments = ({isEditing}: {isEditing: boolean}) => {
+    const { control, getValues, setValue } = useFormContext<Tenant>();
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: "attachments"
+    });
+    
+    const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
+    const { toast } = useToast();
+
+    const addAttachmentRow = () => {
+        append({
+            id: fields.length > 0 ? Math.max(...fields.map(item => item.id)) + 1 : 1,
+            name: '',
+            file: null,
+            remarks: '',
+            isLink: false
+        });
+    };
+    
+    const removeAttachmentRow = (index: number) => {
+        remove(index);
+    };
+
+    const handleFileChange = async (index: number, file: File | null) => {
+        if (!file) return;
+
+        setSavingAttachmentId(fields[index].id);
+        try {
+            const base64 = await fileToBase64(file);
+            const savedPath = await handleFileUpload(base64, file.name);
+            const currentAttachments = getValues('attachments') || [];
+            currentAttachments[index].file = savedPath;
+            setValue('attachments', currentAttachments, { shouldDirty: true });
+            toast({ title: 'Attachment Uploaded', description: 'File is ready to be saved with the tenant.' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not upload the file.' });
+        } finally {
+            setSavingAttachmentId(null);
+        }
+    };
+    
+    return (
+         <Card>
+            <CardHeader>
+                <CardTitle>Attachments</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Attachment Name</TableHead>
+                        <TableHead>File / Link</TableHead>
+                        <TableHead>Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {fields.map((item, index) => (
+                            <TableRow key={item.id}>
+                                <TableCell>
+                                    <FormField
+                                        control={control}
+                                        name={`attachments.${index}.name`}
+                                        render={({ field }) => (
+                                            <Input {...field} disabled={!isEditing} placeholder="e.g. Passport Copy" />
+                                        )}
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                         <FormField
+                                            control={control}
+                                            name={`attachments.${index}.isLink`}
+                                            render={({ field }) => (
+                                                <Switch
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                    disabled={!isEditing}
+                                                />
+                                            )}
+                                        />
+                                        {watch(`attachments.${index}.isLink`) ? (
+                                            <FormField
+                                                control={control}
+                                                name={`attachments.${index}.file`}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        type="text"
+                                                        placeholder="https://example.com"
+                                                        value={typeof field.value === 'string' ? field.value : ''}
+                                                        onChange={field.onChange}
+                                                        disabled={!isEditing}
+                                                    />
+                                                )}
+                                            />
+                                        ) : (
+                                            <Input 
+                                                type="file" 
+                                                className="text-sm w-full" 
+                                                onChange={(e) => handleFileChange(index, e.target.files?.[0] || null)}
+                                                disabled={!isEditing || savingAttachmentId === item.id}
+                                            />
+                                        )}
+                                         {savingAttachmentId === item.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    </div>
+                                    {item.file && typeof item.file === 'string' && (
+                                        item.isLink ? (
+                                            <a href={item.file} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm">Open Link</a>
+                                        ) : (
+                                           <span className="text-sm text-muted-foreground italic truncate">File uploaded</span>
+                                        )
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(index)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+                <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                    <Plus className="mr-2 h-4 w-4"/> Add Attachment
+                </Button>
+            </CardContent>
+        </Card>
+    )
+}
+
+
 export default function TenantPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
@@ -111,20 +239,13 @@ export default function TenantPage() {
   
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
-  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
-  const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
 
-  const form = useForm<Tenant>({
+  const formMethods = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
     defaultValues: initialTenantData,
   });
 
-  const { control, handleSubmit, watch, setValue, reset, getValues } = form;
-  
-  const { fields, append, remove, update } = useFieldArray({
-    control: form.control,
-    name: "attachments"
-  });
+  const { control, handleSubmit, watch, setValue, reset, getValues } = formMethods;
 
   const tenantCode = watch('code');
   const tenantName = watch('name');
@@ -152,7 +273,7 @@ export default function TenantPage() {
             url: undefined 
         }));
         
-        form.reset({
+        reset({
             ...fullTenantData,
             attachments: attachmentsWithUrls
         });
@@ -185,7 +306,7 @@ export default function TenantPage() {
         description: (error as Error).message || 'Failed to find tenant data.',
       });
     }
-  }, [form, toast, fetchInvoices]);
+  }, [reset, toast, fetchInvoices]);
 
   useEffect(() => {
     const tenantCodeParam = searchParams.get('code');
@@ -196,106 +317,41 @@ export default function TenantPage() {
     }
   }, [searchParams, handleFindClick]);
 
-  
-  const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
-    const attachmentIndex = fields.findIndex(a => a.id === id);
-    if(attachmentIndex === -1) return;
-
-    let updatedAttachment = { ...fields[attachmentIndex] };
-    
-    if (field === 'file') {
-        const file = value instanceof FileList ? value[0] : value;
-        if (updatedAttachment.url) URL.revokeObjectURL(updatedAttachment.url);
-        const newUrl = (file instanceof File) ? URL.createObjectURL(file) : undefined;
-        updatedAttachment = {...updatedAttachment, file: file, url: newUrl};
-    } else if (field === 'isLink') {
-        if (updatedAttachment.url) URL.revokeObjectURL(updatedAttachment.url);
-        updatedAttachment = {...updatedAttachment, isLink: value, file: null, url: undefined };
-    } else {
-        // @ts-ignore
-        updatedAttachment[field] = value;
-    }
-    
-    update(attachmentIndex, updatedAttachment);
-  };
-
-  const addAttachmentRow = () => {
-    append({
-        id: fields.length > 0 ? Math.max(...fields.map(item => item.id)) + 1 : 1,
-        name: '',
-        file: null,
-        remarks: '',
-        isLink: false
-      });
-  };
-
-  const removeAttachmentRow = (index: number) => {
-    const attachmentToRemove = fields[index];
-    if (attachmentToRemove && attachmentToRemove.url) {
-        URL.revokeObjectURL(attachmentToRemove.url);
-    }
-    remove(index);
-  };
-
   const handleEditClick = () => {
     setIsEditing(true);
   }
 
   const onSave = async (data: Tenant) => {
     setIsSaving(true);
-    
     try {
-        const attachmentsToSave = await Promise.all(
-            data.attachments!.map(async (att) => {
-                let fileData: string | null = null;
-                 if (att.isLink) {
-                    fileData = typeof att.file === 'string' ? att.file : null;
-                } else if (att.file && att.file instanceof File) {
-                    const base64 = await fileToBase64(att.file);
-                    fileData = await handleFileUpload(base64, att.file.name);
-                } else {
-                    fileData = att.file;
-                }
-                
-                return {
-                    id: att.id,
-                    name: att.name,
-                    file: fileData,
-                    remarks: att.remarks,
-                    isLink: att.isLink,
-                }
-            })
-        );
-        
-        const dataToSave = {
-            tenantData: data,
-            attachments: attachmentsToSave,
-        };
+      const dataToSave = {
+        tenantData: data,
+        attachments: data.attachments || [],
+      };
 
-        const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
-        if (result.success && result.data) {
-            toast({
-                title: "Success",
-                description: `Tenant "${data.name}" saved successfully.`,
-            });
-            setIsEditing(false);
-            setIsSubscriptionEditing(false);
-            if (isNewRecord) {
-                router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
-            } else {
-                 form.reset({ ...data, attachments: attachmentsToSave });
-            }
+      const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
+      if (result.success && result.data) {
+        toast({
+          title: "Success",
+          description: `Tenant "${data.name}" saved successfully.`,
+        });
+        setIsEditing(false);
+        if (isNewRecord) {
+            router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
-            throw new Error(result.error || 'An unknown error occurred');
+            reset(data);
         }
+      } else {
+        throw new Error(result.error || 'An unknown error occurred');
+      }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: (error as Error).message || "Failed to save data.",
+        description: (error as Error).message || "Failed to save tenant data.",
       });
     } finally {
-        setIsSaving(false);
+      setIsSaving(false);
     }
   }
 
@@ -304,9 +360,8 @@ export default function TenantPage() {
      if (isNewRecord) {
         router.push('/tenancy/tenants');
      } else {
-        form.reset();
+        reset();
         setIsEditing(false);
-        setIsSubscriptionEditing(false);
      }
   }
 
@@ -334,20 +389,6 @@ export default function TenantPage() {
   };
   
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${watch('name')}`;
-
-  const getViewLink = (item: Attachment): string => {
-    if (item.isLink && typeof item.file === 'string') {
-        return item.file;
-    }
-    if (item.url) {
-        return item.url;
-    }
-    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) {
-        return item.file;
-    }
-    return '#';
-  };
-
 
   return (
     <div className="container mx-auto p-4 bg-background">
@@ -540,88 +581,17 @@ export default function TenantPage() {
         </TabsContent>
         <TabsContent value="subscription">
             <InvoiceList 
-                tenant={watch()}
+                tenant={getValues()}
                 invoices={invoices}
                 isLoading={isLoadingInvoices}
-                onRefresh={() => fetchInvoices(watch('code'))}
+                onRefresh={() => fetchInvoices(getValues('code'))}
                 isSubscriptionEditing={isEditing}
                 setIsSubscriptionEditing={setIsEditing}
                 formControl={control}
             />
         </TabsContent>
         <TabsContent value="attachments">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Attachments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Attachment Name</TableHead>
-                            <TableHead>File / Link</TableHead>
-                            <TableHead>Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {fields.map((item, index) => (
-                                <TableRow key={item.id}>
-                                    <TableCell>
-                                        <Input 
-                                            defaultValue={item.name}
-                                            onBlur={(e) => update(index, {...item, name: e.target.value})}
-                                            disabled={!isEditing} 
-                                            placeholder="e.g. Passport Copy"
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            {item.isLink ? (
-                                                <Input
-                                                    type="text"
-                                                    placeholder="https://example.com"
-                                                    defaultValue={typeof item.file === 'string' ? item.file : ''}
-                                                     onBlur={(e) => update(index, {...item, file: e.target.value})}
-                                                    disabled={!isEditing}
-                                                />
-                                            ) : (
-                                                <Input 
-                                                    type="file" 
-                                                    className="text-sm w-full" 
-                                                    ref={(el) => (fileInputRefs.current[index] = el)}
-                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                                    disabled={!isEditing}
-                                                />
-                                            )}
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
-                                                {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                             <Button asChild variant="outline" size="icon" disabled={!item.file}>
-                                                <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer">
-                                                    <Eye className="h-4 w-4" />
-                                                </a>
-                                            </Button>
-                                             <Button size="icon" type="button" onClick={() => handleSubmit((data) => onSave(data, true, item.id))()} disabled={savingAttachmentId === item.id || !isEditing}>
-                                                {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
-                                            </Button>
-                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => remove(index)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
-                        <Plus className="mr-2 h-4 w-4"/> Add Attachment
-                    </Button>
-                </CardContent>
-            </Card>
+            <TenantAttachments isEditing={isEditing} />
         </TabsContent>
       </Tabs>
       </form>
