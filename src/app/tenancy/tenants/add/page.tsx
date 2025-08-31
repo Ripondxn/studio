@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -148,7 +149,13 @@ export default function TenantPage() {
       if (result.success && result.data) {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
         form.reset(fullTenantData);
-        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
+        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({
+            ...a, 
+            name: a.name || '',
+            remarks: a.remarks || '',
+            file: a.file || null, 
+            url: undefined
+        })) : []);
         
         if (code !== 'new') {
             setIsNewRecord(false);
@@ -235,12 +242,12 @@ export default function TenantPage() {
     if (isAttachmentSave && attachmentId) setSavingAttachmentId(attachmentId);
 
     try {
-        const currentAttachments = isAttachmentSave
+        const attachmentsToProcess = isAttachmentSave
             ? attachments.filter(a => a.id === attachmentId)
             : attachments;
 
         const processedAttachments = await Promise.all(
-            currentAttachments.map(async (att) => {
+            attachmentsToProcess.map(async (att) => {
                 let fileData: string | null = null;
                  if (att.isLink) {
                     fileData = typeof att.file === 'string' ? att.file : null;
@@ -259,14 +266,16 @@ export default function TenantPage() {
                 }
             })
         );
-
+        
         let finalAttachments = [...attachments];
         if (isAttachmentSave) {
+            // Replace the processed attachment in the main list
             finalAttachments = attachments.map(att => {
                 const saved = processedAttachments.find(p => p.id === att.id);
-                return saved || att;
+                return saved ? { ...att, file: saved.file } : att;
             });
         }
+
 
         const dataToSave = {
             tenantData: data,
@@ -347,7 +356,7 @@ export default function TenantPage() {
   return (
     <div className="container mx-auto p-4 bg-background">
      <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSave)}>
+      <form onSubmit={form.handleSubmit((data) => onSave(data))}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
@@ -633,3 +642,4 @@ export default function TenantPage() {
     </div>
   );
 }
+
