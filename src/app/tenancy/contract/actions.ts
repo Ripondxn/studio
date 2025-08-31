@@ -281,9 +281,14 @@ async function readTenants(): Promise<{tenantData: Tenant}[]> {
 export async function getContractLookups() {
     const properties = await readProperties();
     const tenants = await readTenants();
+    const units = await readUnits();
+    const rooms = await readRooms();
+
     return {
         properties: properties.map((p: any) => ({ value: (p.propertyData || p).code, label: (p.propertyData || p).name })),
         tenants: tenants.map((t: any) => ({ value: t.tenantData.code, label: t.tenantData.name, ...t.tenantData })),
+        units: units.map(u => ({...u, value: u.unitCode, label: u.unitCode })),
+        rooms: rooms.map(r => ({...r, value: r.roomCode, label: r.roomCode })),
     }
 }
 
@@ -334,7 +339,7 @@ export async function getUnitsForProperty(propertyCode: string) {
             }
             return true;
         })
-        .map((u: any) => ({ value: u.unitCode, label: u.unitCode }));
+        .map((u: any) => ({ ...u, value: u.unitCode, label: u.unitCode }));
 }
 
 export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
@@ -353,7 +358,7 @@ export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
 
     return allRooms
         .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode && !allOccupiedRoomCodes.has(r.roomCode))
-        .map((r: any) => ({ value: r.roomCode, label: r.roomCode }));
+        .map((r: any) => ({ ...r, value: r.roomCode, label: r.roomCode }));
 }
 
 export async function getUnitDetails(unitCode: string) {
@@ -474,3 +479,4 @@ export async function getLatestContractForTenant(tenantCode: string): Promise<{ 
         return { success: false, error: (error as Error).message };
     }
 }
+

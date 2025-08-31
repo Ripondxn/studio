@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -21,7 +22,6 @@ import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { FormField, FormItem, type Control, FormMessage, FormLabel } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
@@ -68,33 +68,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
 
     useEffect(() => {
         getContractLookups().then(data => {
-            setLookups(prev => ({...prev, properties: data.properties || []}));
+            setLookups(prev => ({...prev, properties: data.properties || [], units: (data.units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})), rooms: (data.rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode}))}));
         });
     }, []);
     
-    useEffect(() => {
-        const fetchUnits = async () => {
-            if (watchedProperty) {
-                const units = await getUnitsForProperty(watchedProperty);
-                setLookups(prev => ({...prev, units: (units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})), rooms: []}));
-            } else {
-                 setLookups(prev => ({...prev, units: [], rooms: []}));
-            }
-        };
-        fetchUnits();
-    }, [watchedProperty]);
-
-    useEffect(() => {
-        const fetchRooms = async () => {
-            if (watchedProperty && watchedUnit) {
-                const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
-                 setLookups(prev => ({...prev, rooms: (rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode}))}));
-            } else {
-                 setLookups(prev => ({...prev, rooms: []}));
-            }
-        };
-        fetchRooms();
-    }, [watchedProperty, watchedUnit]);
+    const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
+    const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
     
     const occupancyStatus = useMemo(() => {
         if(watchedRoom) {
@@ -137,7 +116,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         
         setPaymentDefaultValues({
             type: 'Receipt',
-            partyType: 'Tenant',
+            partyType: 'Customer',
             partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
@@ -245,9 +224,9 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                             onCheckedChange={field.onChange}
                                             disabled={!isSubscriptionEditing}
                                         />
-                                        <Label htmlFor="isSubscriptionActive" className="!mt-0">
+                                        <FormLabel htmlFor="isSubscriptionActive" className="!mt-0">
                                             Enable Subscription-Based Tenancy
-                                        </Label>
+                                        </FormLabel>
                                     </FormItem>
                                 )}
                             />
@@ -334,7 +313,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <FormItem>
                                             <FormLabel>Unit</FormLabel>
                                             <Combobox 
-                                                options={lookups.units}
+                                                options={filteredUnits}
                                                 value={field.value || ''}
                                                 onSelect={(value) => {
                                                     field.onChange(value);
@@ -353,7 +332,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <FormItem>
                                             <FormLabel>Room</FormLabel>
                                             <Combobox 
-                                                options={lookups.rooms}
+                                                options={filteredRooms}
                                                 value={field.value || ''}
                                                 onSelect={field.onChange}
                                                 placeholder="Select Room"
