@@ -5,11 +5,10 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, DollarSign, Edit, Save, X, Building } from 'lucide-react';
+import { Plus, Loader2, DollarSign, Edit, Save, X, Building, RotateCw } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
-import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -25,7 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+import { getContractLookups } from '../../contract/actions';
 import { useFormContext } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
 import { type Room } from '@/app/property/rooms/schema';
@@ -66,11 +65,19 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const watchedUnit = watch('unitCode');
     const watchedRoom = watch('roomCode');
 
-    useEffect(() => {
-        getContractLookups().then(data => {
-            setLookups(prev => ({...prev, properties: data.properties || [], units: (data.units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})), rooms: (data.rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode}))}));
-        });
+    const fetchLookups = useCallback(async () => {
+        const data = await getContractLookups();
+        setLookups(prev => ({
+            ...prev,
+            properties: data.properties || [],
+            units: (data.units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})),
+            rooms: (data.rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode}))
+        }));
     }, []);
+
+    useEffect(() => {
+        fetchLookups();
+    }, [fetchLookups]);
     
     const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
     const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
@@ -224,9 +231,9 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                             onCheckedChange={field.onChange}
                                             disabled={!isSubscriptionEditing}
                                         />
-                                        <FormLabel htmlFor="isSubscriptionActive" className="!mt-0">
+                                        <Label htmlFor="isSubscriptionActive" className="!mt-0">
                                             Enable Subscription-Based Tenancy
-                                        </FormLabel>
+                                        </Label>
                                     </FormItem>
                                 )}
                             />
@@ -356,10 +363,11 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                <CreateInvoiceDialog
+                <SubscriptionInvoiceDialog
                     isOpen={isCreateInvoiceOpen}
                     setIsOpen={setIsCreateInvoiceOpen}
-                    customer={{code: tenant.code, name: tenant.name}}
+                    invoice={null}
+                    tenant={tenant}
                     onSuccess={handleSuccess}
                 />
 

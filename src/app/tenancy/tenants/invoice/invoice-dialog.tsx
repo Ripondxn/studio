@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -17,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -26,12 +28,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Printer } from 'lucide-react';
-import { saveInvoice } from '@/app/tenancy/customer/invoice/actions';
+import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
+import { saveSubscriptionInvoice, getNextSubscriptionInvoiceNumber } from './actions';
+import { getLookups } from '@/app/lookups/actions';
 import { type Invoice, subscriptionInvoiceSchema } from './schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
+import { Switch } from '@/components/ui/switch';
 import { useCurrency } from '@/context/currency-context';
+import { type Product } from '@/app/products/schema';
+import { Combobox } from '@/components/ui/combobox';
 
 type InvoiceFormData = z.infer<typeof subscriptionInvoiceSchema>;
 
@@ -48,22 +54,17 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const [isAutoInvoiceNo, setIsAutoInvoiceNo] = useState(true);
   const { formatCurrency } = useCurrency();
-
+  const [products, setProducts] = useState<Product[]>([]);
+  
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(subscriptionInvoiceSchema),
   });
   
-  const {
-    control,
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-  } = form;
+  const { control, register, handleSubmit, reset, watch, setValue } = form;
   
-  const { fields } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
   });
@@ -75,15 +76,42 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     setValue('subTotal', subTotal);
     setValue('total', subTotal);
+    setValue('tax', 0);
   }, [watchedItems, setValue]);
   
 
   useEffect(() => {
-    const initializeForm = () => {
-        if (!tenant || !invoice) return;
-        reset(invoice);
+    const initializeForm = async () => {
+        if (!tenant) return;
+
+        if (invoice) { // Editing existing invoice
+            setIsAutoInvoiceNo(false);
+            reset(invoice);
+        } else { // Creating new invoice
+            const newInvoiceNo = await getNextSubscriptionInvoiceNumber();
+            setIsAutoInvoiceNo(true);
+            reset({
+                invoiceNo: newInvoiceNo,
+                customerCode: tenant.code,
+                customerName: tenant.name,
+                property: tenant.property || '',
+                unitCode: tenant.unitCode || '',
+                roomCode: tenant.roomCode || '',
+                invoiceDate: format(new Date(), 'yyyy-MM-dd'),
+                dueDate: format(new Date(), 'yyyy-MM-dd'),
+                items: [{ id: `item-${Date.now()}`, description: `${tenant.subscriptionStatus || 'Monthly'} Subscription`, quantity: 1, unitPrice: tenant.subscriptionAmount || 0, total: tenant.subscriptionAmount || 0 }],
+                subTotal: tenant.subscriptionAmount || 0,
+                tax: 0,
+                total: tenant.subscriptionAmount || 0,
+                notes: '',
+                status: 'Draft',
+            });
+        }
     };
     if (isOpen) {
+      getLookups().then(data => {
+        setProducts(data.products || []);
+      });
       initializeForm();
     }
   }, [isOpen, invoice, reset, tenant]);
@@ -97,7 +125,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     const currentUser = JSON.parse(userProfile);
 
     setIsSaving(true);
-    const result = await saveInvoice({ ...data, id: invoice?.id }, currentUser.name);
+    const result = await saveSubscriptionInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();
@@ -124,6 +152,16 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     }
   }
   
+  const handleItemSelect = (index: number, value: string, label?: string) => {
+    const product = products.find(p => p.itemCode.toLowerCase() === value.toLowerCase() || p.itemName.toLowerCase() === value.toLowerCase());
+    if(product) {
+        setValue(`items.${index}.description`, product.itemName);
+        setValue(`items.${index}.unitPrice`, product.salePrice);
+    } else {
+        setValue(`items.${index}.description`, label || value);
+    }
+  }
+
   if (isViewMode && invoice) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -147,21 +185,44 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-4xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Edit Subscription Invoice</DialogTitle>
+            <DialogTitle>{invoice ? 'Edit' : 'Create'} Subscription Invoice</DialogTitle>
             <DialogDescription>
-              Editing invoice {invoice?.invoiceNo} for {tenant.name}
+              {invoice ? `Editing invoice ${invoice.invoiceNo}` : `Creating a new invoice for ${tenant.name}`}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[60vh] overflow-y-auto p-1 space-y-4">
+          <div className="max-h-[70vh] overflow-y-auto p-1">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled /></div>
+              <div><Label>Invoice #</Label><Input {...register('invoiceNo')} disabled={isAutoInvoiceNo} /></div>
               <div><Label>Tenant</Label><Input value={tenant.name} disabled/></div>
               <div><Label>Invoice Date</Label><Input type="date" {...register('invoiceDate')}/></div>
               <div><Label>Due Date</Label><Input type="date" {...register('dueDate')}/></div>
+            </div>
+             <div className="flex items-center space-x-2 mb-4">
+                <Switch 
+                    id="auto-invoice-no-switch"
+                    checked={isAutoInvoiceNo}
+                    onCheckedChange={setIsAutoInvoiceNo}
+                    disabled={!!invoice}
+                />
+                <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                 <div>
+                    <Label>Property</Label>
+                     <Input {...register('property')} disabled />
+                </div>
+                <div>
+                    <Label>Unit</Label>
+                    <Input {...register('unitCode')} disabled />
+                </div>
+                <div>
+                    <Label>Room</Label>
+                    <Input {...register('roomCode')} disabled />
+                </div>
             </div>
             
             <Table>
@@ -171,29 +232,46 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead className="text-right">Total</TableHead>
+                      <TableHead></TableHead>
                   </TableRow>
               </TableHeader>
               <TableBody>
                   {fields.map((field, index) => (
                       <TableRow key={field.id}>
-                          <TableCell><Input {...register(`items.${index}.description`)} /></TableCell>
+                          <TableCell>
+                            <Combobox
+                                options={products.map(p => ({value: p.itemCode, label: p.itemName}))}
+                                value={watchedItems?.[index]?.description || ''}
+                                onSelect={(value, label) => handleItemSelect(index, value, label)}
+                                placeholder="Select or type item..."
+                             />
+                          </TableCell>
                           <TableCell><Input type="number" {...register(`items.${index}.quantity`, { valueAsNumber: true, min: 1 })} /></TableCell>
                           <TableCell><Input type="number" step="0.01" {...register(`items.${index}.unitPrice`, { valueAsNumber: true })} /></TableCell>
                           <TableCell className="text-right">
                             {formatCurrency((watchedItems?.[index]?.quantity || 0) * (watchedItems?.[index]?.unitPrice || 0))}
                           </TableCell>
+                          <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
                       </TableRow>
                   ))}
               </TableBody>
             </Table>
+            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
+              <Plus className="mr-2 h-4 w-4" /> Add Item
+            </Button>
+
+              <div className="flex justify-end mt-4">
+                  <div className="w-full max-w-xs space-y-2">
+                      <div className="flex justify-between border-t pt-2 mt-2">
+                          <Label className="text-lg font-bold">Total</Label>
+                          <span className="font-bold text-lg">{formatCurrency(watch('total') || 0)}</span>
+                      </div>
+                  </div>
+              </div>
             
-            <div className="flex justify-end mt-4">
-                <div className="w-full max-w-xs space-y-2">
-                    <div className="flex justify-between border-t pt-2 mt-2">
-                        <Label className="text-lg font-bold">Total</Label>
-                        <span className="font-bold text-lg">{formatCurrency(watch('total') || 0)}</span>
-                    </div>
-                </div>
+            <div className="space-y-2 mt-6">
+                <Label>Notes</Label>
+                <Textarea {...register('notes')} />
             </div>
           </div>
           <DialogFooter className="mt-6 pt-4 border-t">
@@ -202,7 +280,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             </DialogClose>
             <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                Save Changes
+                {invoice ? 'Update Invoice' : 'Create Invoice'}
             </Button>
           </DialogFooter>
         </form>
