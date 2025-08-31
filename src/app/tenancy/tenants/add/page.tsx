@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -52,9 +52,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InvoiceList } from '@/app/tenancy/customer/invoice/invoice-list';
+import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
-import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { type Invoice } from '../invoice/schema';
 import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list';
 import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema, attachmentSchema } from '../schema';
@@ -117,15 +117,15 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const { control, handleSubmit, watch, setValue, reset, register } = form;
+  const { control, handleSubmit, watch, setValue, reset, register, getValues } = form;
 
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "attachments"
   });
 
-  const tenantCode = form.watch('code');
-  const tenantName = form.watch('name');
+  const tenantCode = watch('code');
+  const tenantName = watch('name');
   
   const fetchInvoices = useCallback(async (customerCode: string) => {
     if (!customerCode) return;
@@ -163,6 +163,7 @@ export default function TenantPage() {
             setIsNewRecord(true);
             setIsEditing(true);
             setIsAutoCode(true);
+            setInvoices([]);
         }
       } else {
         toast({
@@ -258,7 +259,7 @@ export default function TenantPage() {
         if (isAttachmentSave && processedAttachments.length > 0) {
             finalAttachments = (data.attachments || []).map(att => {
                 const saved = processedAttachments.find(p => p.id === att.id);
-                return saved ? { ...att, file: saved.file } : att;
+                return saved ? { ...att, file: saved.file, url: undefined } : att;
             });
         }
 
@@ -299,7 +300,12 @@ export default function TenantPage() {
   }
 
   const onSaveAttachment = (index: number) => {
-    form.handleSubmit((data) => onSave(data, true, fields[index].id))();
+    const attachmentId = getValues(`attachments.${index}.id`);
+    if(attachmentId === undefined) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not find attachment to save.' });
+        return;
+    }
+    form.handleSubmit((data) => onSave(data, true, attachmentId))();
   };
 
   const handleCancelClick = () => {
@@ -614,7 +620,7 @@ export default function TenantPage() {
                                                     <Eye className="h-4 w-4" />
                                                 </a>
                                             </Button>
-                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(index)} disabled={savingAttachmentId === item.id || !isEditing}>
                                                 {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                             </Button>
                                             <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => remove(index)}>
@@ -626,7 +632,7 @@ export default function TenantPage() {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => addAttachmentRow()} disabled={!isEditing}>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>
