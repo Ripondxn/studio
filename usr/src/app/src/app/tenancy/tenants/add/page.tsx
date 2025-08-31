@@ -27,7 +27,8 @@ import {
   X,
   FileUp,
   Link2,
-  Move
+  Move,
+  Eye
 } from 'lucide-react';
 import {
   Table,
@@ -116,6 +117,7 @@ export default function TenantPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
+  const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
 
   const form = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
@@ -149,7 +151,13 @@ export default function TenantPage() {
       if (result.success && result.data) {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
         form.reset(fullTenantData);
-        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
+        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({
+            ...a, 
+            name: a.name || '',
+            remarks: a.remarks || '',
+            file: a.file || null, 
+            url: a.file && a.isLink === false && typeof a.file === 'string' && a.file.startsWith('data:') ? a.file : undefined
+        })) : []);
         
         if (code !== 'new') {
             setIsNewRecord(false);
@@ -231,15 +239,22 @@ export default function TenantPage() {
     setIsEditing(true);
   }
 
-  const onSave = async (data: Tenant) => {
-    setIsSaving(true);
+  const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
+    if (!isAttachmentSave) setIsSaving(true);
+    if (isAttachmentSave && attachmentId) setSavingAttachmentId(attachmentId);
+
     try {
+        const attachmentsToProcess = isAttachmentSave
+            ? attachments.filter(a => a.id === attachmentId)
+            : attachments;
+
         const processedAttachments = await Promise.all(
-            attachments.map(async (att) => {
+            attachmentsToProcess.map(async (att) => {
                 let fileData: string | null = null;
-                if (att.file && att.file instanceof File) {
+                 if (att.isLink) {
+                    fileData = typeof att.file === 'string' ? att.file : null;
+                } else if (att.file && att.file instanceof File) {
                     const base64 = await fileToBase64(att.file);
-                    // Now call the server action with the base64 string
                     fileData = await handleFileUpload(base64, att.file.name);
                 } else {
                     fileData = att.file;
@@ -254,39 +269,57 @@ export default function TenantPage() {
             })
         );
         
-      const dataToSave = {
-        tenantData: data,
-        attachments: processedAttachments,
-      };
-
-      const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
-      if (result.success && result.data) {
-        toast({
-          title: "Success",
-          description: `Tenant "${data.name}" saved successfully.`,
-        });
-        setIsEditing(false);
-        setIsSubscriptionEditing(false);
-        if (isNewRecord) {
-            router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
-        } else {
-            form.reset(data);
-            setAttachments(processedAttachments.map(a => ({...a, file: a.file, url: undefined})));
+        let finalAttachments = [...attachments];
+        if (isAttachmentSave && processedAttachments.length > 0) {
+            finalAttachments = attachments.map(att => {
+                const saved = processedAttachments.find(p => p.id === att.id);
+                return saved ? { ...att, file: saved.file } : att;
+            });
+             setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
         }
-      } else {
-        throw new Error(result.error || 'An unknown error occurred');
-      }
+
+
+        const dataToSave = {
+            tenantData: data,
+            attachments: finalAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
+        };
+
+        const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
+        if (result.success && result.data) {
+            toast({
+                title: "Success",
+                description: isAttachmentSave ? `Attachment saved.` : `Tenant "${data.name}" saved successfully.`,
+            });
+            if (!isAttachmentSave) {
+                setIsEditing(false);
+                setIsSubscriptionEditing(false);
+            }
+            if (isNewRecord) {
+                router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
+            } else {
+                 form.reset(data);
+                 if (!isAttachmentSave) {
+                    setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
+                 }
+            }
+        } else {
+            throw new Error(result.error || 'An unknown error occurred');
+        }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: (error as Error).message || "Failed to save tenant data.",
+        description: (error as Error).message || "Failed to save data.",
       });
     } finally {
-      setIsSaving(false);
+        if (!isAttachmentSave) setIsSaving(false);
+        if (isAttachmentSave) setSavingAttachmentId(null);
     }
   }
 
+  const onSaveAttachment = (id: number) => {
+    form.handleSubmit((data) => onSave(data, true, id))();
+  };
 
   const handleCancelClick = () => {
      if (isNewRecord) {
@@ -324,10 +357,25 @@ export default function TenantPage() {
   
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${form.watch('name')}`;
 
+  const getViewLink = (item: Attachment): string => {
+    if (item.isLink && typeof item.file === 'string') {
+        return item.file;
+    }
+    if (item.url) { // This is for new, unsaved file uploads
+        return item.url;
+    }
+    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
+        // Note: gdrive links aren't directly viewable and would need a download route
+        return item.file;
+    }
+    return '#';
+  };
+
+
   return (
     <div className="container mx-auto p-4 bg-background">
      <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSave)}>
+      <form onSubmit={form.handleSubmit((data) => onSave(data))}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
@@ -572,25 +620,21 @@ export default function TenantPage() {
                                                 {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                             </Button>
                                         </div>
-                                        {item.url && !item.isLink && (
-                                            <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                View Uploaded File
-                                            </Link>
-                                        )}
-                                        {item.file && typeof item.file === 'string' && (
-                                            item.isLink && item.file.startsWith('http') ? (
-                                                <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                    Open Link
-                                                </Link>
-                                            ) : (
-                                                !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                            )
-                                        )}
                                     </TableCell>
                                     <TableCell>
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                        <div className="flex items-center gap-2">
+                                             <Button asChild variant="outline" size="icon" disabled={!item.file}>
+                                                <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer">
+                                                    <Eye className="h-4 w-4" />
+                                                </a>
+                                            </Button>
+                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                                {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
+                                            </Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
