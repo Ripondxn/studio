@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -29,6 +30,9 @@ import { Label } from '@/components/ui/label';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { type Room } from '@/app/property/rooms/schema';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { type Unit } from '@/app/property/units/schema';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -41,9 +45,9 @@ interface InvoiceListProps {
 }
 
 type Lookups = {
-    properties: { value: string, label: string }[];
-    units: { value: string, label: string, propertyCode: string }[];
-    rooms: (Room & { value: string, label: string })[];
+    properties: { value: string; label: string }[];
+    units: (Unit & { value: string; label: string })[];
+    rooms: (Room & { value: string; label: string })[];
 }
 
 export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, formControl }: InvoiceListProps) {
@@ -62,6 +66,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
 
     const watchedProperty = watch('property');
     const watchedUnit = watch('unitCode');
+    const watchedRoom = watch('roomCode');
 
     useEffect(() => {
         getContractLookups().then(data => {
@@ -75,9 +80,9 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         const fetchUnits = async () => {
             if (watchedProperty) {
                 const unitsData = await getUnitsForProperty(watchedProperty);
-                setLookups(prev => ({ ...prev, units: unitsData, rooms: [] }));
+                setLookups(prev => ({...prev, units: unitsData.map(u => ({...u, value: u.unitCode, label: u.unitCode})), rooms: []}));
             } else {
-                setLookups(prev => ({ ...prev, units: [], rooms: [] }));
+                setLookups(prev => ({...prev, units: [], rooms: []}));
             }
         }
         fetchUnits();
@@ -87,13 +92,32 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         const fetchRooms = async () => {
             if (watchedProperty && watchedUnit) {
                 const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
-                setLookups(prev => ({ ...prev, rooms: roomsData }));
+                setLookups(prev => ({...prev, rooms: roomsData.map(r => ({...r, value: r.roomCode, label: r.roomCode}))}));
             } else {
                 setLookups(prev => ({...prev, rooms: []}));
             }
         }
         fetchRooms();
     }, [watchedProperty, watchedUnit]);
+    
+    const occupancyStatus = useMemo(() => {
+        if(watchedRoom) {
+            return lookups.rooms.find(r => r.roomCode === watchedRoom)?.occupancyStatus || 'Vacant';
+        }
+        if(watchedUnit) {
+            return lookups.units.find(u => u.unitCode === watchedUnit)?.occupancyStatus || 'Vacant';
+        }
+        return null;
+    }, [watchedRoom, watchedUnit, lookups.rooms, lookups.units]);
+
+    const statusConfig = {
+        'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
+        'Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700' },
+        'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700' }
+    };
+  
+    const config = occupancyStatus ? statusConfig[occupancyStatus] : null;
+
 
     const handleCreateClick = () => {
         setSelectedInvoice(null);
@@ -280,7 +304,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         </div>
                         <Separator />
                         <div>
-                            <h3 className="text-base font-semibold mb-4">Assigned Property</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-base font-semibold">Assigned Property</h3>
+                                {config && <Badge variant={config.variant as any} className={cn(config.color, 'border-transparent')}>{occupancyStatus}</Badge>}
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <FormField
                                     control={formControl}
@@ -309,7 +336,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <FormItem>
                                             <FormLabel>Unit</FormLabel>
                                             <Combobox 
-                                                options={lookups.units.filter(u => u.propertyCode === watchedProperty)}
+                                                options={lookups.units}
                                                 value={field.value || ''}
                                                 onSelect={(value) => {
                                                     field.onChange(value);
@@ -328,7 +355,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <FormItem>
                                             <FormLabel>Room</FormLabel>
                                             <Combobox 
-                                                options={lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)}
+                                                options={lookups.rooms}
                                                 value={field.value || ''}
                                                 onSelect={field.onChange}
                                                 placeholder="Select Room"
