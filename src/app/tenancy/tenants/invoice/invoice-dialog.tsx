@@ -71,7 +71,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   });
 
   const watchedItems = watch('items');
-
+  
   useEffect(() => {
     if (!watchedItems) return;
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
@@ -188,7 +188,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit' : 'Create'} Subscription Invoice</DialogTitle>
@@ -212,20 +212,6 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                     disabled={!!invoice}
                 />
                 <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                 <div>
-                    <Label>Property</Label>
-                     <Input {...register('property')} disabled />
-                </div>
-                <div>
-                    <Label>Unit</Label>
-                    <Input {...register('unitCode')} disabled />
-                </div>
-                <div>
-                    <Label>Room</Label>
-                    <Input {...register('roomCode')} disabled />
-                </div>
             </div>
             
             <Table>
