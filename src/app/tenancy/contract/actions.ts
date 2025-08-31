@@ -13,12 +13,12 @@ import { type Room } from '@/app/property/rooms/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { addCheque } from '@/app/finance/cheque-deposit/actions';
 import { differenceInDays, parseISO, addDays } from 'date-fns';
+import { getUnits } from '@/app/property/units/actions';
+import { getRooms } from '@/app/property/rooms/actions';
+
 
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
-const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
 const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
-const floorsFilePath = path.join(process.cwd(), 'src/app/property/floors/floors-data.json');
-const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
 
 
@@ -72,7 +72,7 @@ async function createChequesFromContract(contract: Contract) {
                 status: 'In Hand',
                 type: 'Incoming',
                 partyType: 'Tenant',
-                partyName: contract.tenantCode || '',
+                partyName: contract.tenantCode,
                 property: contract.property,
                 unitCode: contract.unitCode,
                 roomCode: contract.roomCode,
@@ -233,35 +233,9 @@ export async function deleteContract(contractId: string) {
     }
 }
 
-async function readUnits(): Promise<Unit[]> {
-    try {
-        const data = await fs.readFile(unitsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
-}
-
 async function readProperties() {
     try {
         const data = await fs.readFile(propertiesFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
-}
-
-async function readFloors(): Promise<Floor[]> {
-    try {
-        const data = await fs.readFile(floorsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
-}
-async function readRooms(): Promise<Room[]> {
-    try {
-        const data = await fs.readFile(roomsFilePath, 'utf-8');
         return JSON.parse(data);
     } catch (e) {
         return [];
@@ -281,8 +255,8 @@ async function readTenants(): Promise<{tenantData: Tenant}[]> {
 export async function getContractLookups() {
     const properties = await readProperties();
     const tenants = await readTenants();
-    const units = await readUnits();
-    const rooms = await readRooms();
+    const units = await getUnits();
+    const rooms = await getRooms();
 
     return {
         properties: properties.map((p: any) => ({ value: (p.propertyData || p).code, label: (p.propertyData || p).name })),
@@ -293,76 +267,21 @@ export async function getContractLookups() {
 }
 
 export async function getUnitsForProperty(propertyCode: string) {
-    const allUnits = await readUnits();
-    const allRooms = await readRooms();
-    const allContracts: Contract[] = await readContracts();
-    const allTenants: {tenantData: Tenant}[] = await readTenants();
-    
-    const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
-    const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
-
-    const fullyOccupiedUnitCodes = new Set<string>();
-    activeContracts.filter(c => !c.roomCode && c.unitCode).forEach(c => fullyOccupiedUnitCodes.add(c.unitCode!));
-    activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).forEach(t => fullyOccupiedUnitCodes.add(t.tenantData.unitCode!));
-
-    const occupiedRoomCodes = new Set<string>();
-    activeContracts.filter(c => c.roomCode).forEach(c => occupiedRoomCodes.add(c.roomCode!));
-    activeSubscriptionTenants.filter(t => t.tenantData.roomCode).forEach(t => occupiedRoomCodes.add(t.tenantData.roomCode!));
-
-
-    const unitsWithRoomCounts = new Map<string, { total: number, occupied: number }>();
-
-    allRooms.forEach(room => {
-        if (room.propertyCode === propertyCode) {
-            if (!unitsWithRoomCounts.has(room.unitCode!)) {
-                unitsWithRoomCounts.set(room.unitCode!, { total: 0, occupied: 0 });
-            }
-            const counts = unitsWithRoomCounts.get(room.unitCode!)!;
-            counts.total++;
-            if (occupiedRoomCodes.has(room.roomCode)) {
-                counts.occupied++;
-            }
-        }
-    });
-
+    const allUnits = await getUnits();
     return allUnits
-        .filter(u => {
-            if (u.propertyCode !== propertyCode) {
-                return false;
-            }
-            if (fullyOccupiedUnitCodes.has(u.unitCode)) {
-                return false;
-            }
-            const roomCounts = unitsWithRoomCounts.get(u.unitCode);
-            if (roomCounts) {
-                return roomCounts.occupied < roomCounts.total;
-            }
-            return true;
-        })
+        .filter(u => u.propertyCode === propertyCode && u.occupancyStatus !== 'Occupied')
         .map((u: any) => ({ ...u, value: u.unitCode, label: u.unitCode }));
 }
 
 export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
-    const allRooms = await readRooms();
-    const allContracts: Contract[] = await readContracts();
-    const allTenants: {tenantData: Tenant}[] = await readTenants();
-
-    const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
-    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode!));
-
-    const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
-    const occupiedRoomCodesFromSubscriptions = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode!));
-    
-    const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...occupiedRoomCodesFromSubscriptions]);
-
-
+    const allRooms = await getRooms();
     return allRooms
-        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode && !allOccupiedRoomCodes.has(r.roomCode))
+        .filter(r => r.propertyCode === propertyCode && r.unitCode === unitCode && r.occupancyStatus === 'Vacant')
         .map((r: any) => ({ ...r, value: r.roomCode, label: r.roomCode }));
 }
 
 export async function getUnitDetails(unitCode: string) {
-    const allUnits = await readUnits();
+    const allUnits = await getUnits();
     const unit = allUnits.find(u => u.unitCode === unitCode);
 
     if (!unit) {
@@ -378,7 +297,7 @@ export async function getUnitDetails(unitCode: string) {
 }
 
 export async function getRoomDetails(roomCode: string) {
-    const allRooms = await readRooms();
+    const allRooms = await getRooms();
     const room = allRooms.find(r => r.roomCode === roomCode);
     if (!room) {
         return { success: false, error: 'Room not found' };
@@ -479,3 +398,4 @@ export async function getLatestContractForTenant(tenantCode: string): Promise<{ 
         return { success: false, error: (error as Error).message };
     }
 }
+

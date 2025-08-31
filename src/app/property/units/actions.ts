@@ -48,7 +48,7 @@ export async function getUnits() {
 
     // 1. Consolidate all occupied spaces from both sources
     const fullyOccupiedUnitCodes = new Set<string>();
-    activeContracts.filter(c => !c.roomCode && c.unitCode).forEach(c => fullyOccupiedUnitCodes.add(c.unitCode));
+    activeContracts.filter(c => !c.roomCode && c.unitCode).forEach(c => fullyOccupiedUnitCodes.add(c.unitCode!));
     activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).forEach(t => fullyOccupiedUnitCodes.add(t.tenantData.unitCode!));
 
     const occupiedRoomCodes = new Set<string>();

@@ -44,12 +44,12 @@ export async function getRooms() {
     const allTenants: {tenantData: Tenant}[] = await readData(tenantsFilePath);
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
-    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode!));
     
     const subscribedRoomCodes = new Set(
       allTenants
         .filter(t => t.tenantData.isSubscriptionActive && t.tenantData.roomCode)
-        .map(t => t.tenantData.roomCode)
+        .map(t => t.tenantData.roomCode!)
     );
     
     const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...subscribedRoomCodes]);
@@ -240,3 +240,4 @@ export async function importRooms(roomsData: unknown) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred during import.' };
     }
 }
+
