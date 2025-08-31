@@ -114,7 +114,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
   
     const config = occupancyStatus ? statusConfig[occupancyStatus] : null;
 
-
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
@@ -138,7 +137,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         
         setPaymentDefaultValues({
             type: 'Receipt',
-            partyType: 'Customer',
+            partyType: 'Tenant',
             partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
@@ -186,7 +185,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {customerName}.</CardDescription>
+                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -335,7 +334,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <FormItem>
                                             <FormLabel>Unit</FormLabel>
                                             <Combobox 
-                                                options={filteredUnits}
+                                                options={lookups.units}
                                                 value={field.value || ''}
                                                 onSelect={(value) => {
                                                     field.onChange(value);
@@ -354,7 +353,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <FormItem>
                                             <FormLabel>Room</FormLabel>
                                             <Combobox 
-                                                options={filteredRooms}
+                                                options={lookups.rooms}
                                                 value={field.value || ''}
                                                 onSelect={field.onChange}
                                                 placeholder="Select Room"
