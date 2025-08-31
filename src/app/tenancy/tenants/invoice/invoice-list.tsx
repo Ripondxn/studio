@@ -5,11 +5,11 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, DollarSign, Edit, Save, X, Building, RotateCw } from 'lucide-react';
+import { Plus, Loader2, DollarSign, Edit, Save, X } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
-import { SubscriptionInvoiceDialog } from './invoice-dialog';
-import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
+import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
@@ -32,7 +32,6 @@ import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type Unit } from '@/app/property/units/schema';
-import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
 
 
 interface InvoiceListProps {
@@ -85,24 +84,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
     const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
     
-    const occupancyStatus = useMemo(() => {
-        if (watchedRoom) {
-            return lookups.rooms.find(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit && r.roomCode === watchedRoom)?.occupancyStatus || 'Vacant';
-        }
-        if (watchedUnit) {
-            return lookups.units.find(u => u.propertyCode === watchedProperty && u.unitCode === watchedUnit)?.occupancyStatus || 'Vacant';
-        }
-        return null;
-    }, [watchedProperty, watchedUnit, watchedRoom, lookups.units, lookups.rooms]);
-
-    const statusConfig = {
-        'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
-        'Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700' },
-        'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700' }
-    };
-  
-    const config = occupancyStatus ? statusConfig[occupancyStatus] : null;
-
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
@@ -301,7 +282,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                          <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-base font-semibold">Assigned Property</h3>
-                                {config && <Badge variant={config.variant as any} className={cn(config.color, 'border-transparent')}>{occupancyStatus}</Badge>}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <FormField
