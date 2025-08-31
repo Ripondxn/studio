@@ -109,7 +109,11 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
         if (isNew) {
             let newInvoiceNo = validatedData.invoiceNo;
             if (isAutoInvoiceNo || !newInvoiceNo) {
-                 newInvoiceNo = await getNextGeneralInvoiceNumber();
+                if (validatedData.items.some(item => item.description.toLowerCase().includes('subscription'))) {
+                    newInvoiceNo = await getNextSubscriptionInvoiceNumber();
+                } else {
+                    newInvoiceNo = await getNextGeneralInvoiceNumber();
+                }
             } else {
                 const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
                 if (invoiceExists) {

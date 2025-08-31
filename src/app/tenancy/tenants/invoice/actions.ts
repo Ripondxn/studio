@@ -5,7 +5,8 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { saveInvoice } from '@/app/tenancy/customer/invoice/actions';
-import { type Invoice } from './schema';
+import { type Invoice, subscriptionInvoiceSchema } from './schema';
+import { z } from 'zod';
 
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
 
@@ -39,6 +40,7 @@ export async function getNextSubscriptionInvoiceNumber() {
 
 
 export async function saveSubscriptionInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
+    const { isAutoInvoiceNo, ...invoiceData } = data;
     // We can reuse the main saveInvoice function. The important part is that this action file only exports async functions.
-    return saveInvoice(data, createdBy);
+    return saveInvoice({ ...invoiceData, isAutoInvoiceNo }, createdBy);
 }
