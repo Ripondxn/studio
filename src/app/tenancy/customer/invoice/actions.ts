@@ -106,8 +106,23 @@ export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingB
         let savedInvoice: Invoice;
 
         if (isNewRecord) {
+             let newInvoiceNo = validatedData.invoiceNo;
+             if ((data as any).isAutoInvoiceNo) {
+                if(newInvoiceNo.startsWith('SUB-INV-')) {
+                    newInvoiceNo = await getNextSubscriptionInvoiceNumber();
+                } else {
+                    newInvoiceNo = await getNextGeneralInvoiceNumber();
+                }
+             } else {
+                 const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
+                 if (invoiceExists) {
+                    return { success: false, error: `An invoice with number "${newInvoiceNo}" already exists.`};
+                 }
+             }
+
             const newInvoice: Invoice = {
                 ...validatedData,
+                invoiceNo: newInvoiceNo,
                 id: `INV-${Date.now()}`,
                 amountPaid: 0,
                  items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`}))

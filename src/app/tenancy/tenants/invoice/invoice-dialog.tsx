@@ -206,12 +206,12 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             </div>
              <div className="flex items-center space-x-2 mb-4">
                 <Switch 
-                    id="auto-invoice-no-switch"
+                    id="auto-invoice-no-switch-sub"
                     checked={isAutoInvoiceNo}
                     onCheckedChange={setIsAutoInvoiceNo}
                     disabled={!!invoice}
                 />
-                <Label htmlFor="auto-invoice-no-switch">Auto-generate Invoice No</Label>
+                <Label htmlFor="auto-invoice-no-switch-sub">Auto-generate Invoice No</Label>
             </div>
             
             <Table>

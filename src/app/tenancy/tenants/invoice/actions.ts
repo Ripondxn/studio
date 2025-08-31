@@ -39,7 +39,7 @@ export async function getNextSubscriptionInvoiceNumber() {
 }
 
 
-export async function saveSubscriptionInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'>, createdBy: string) {
-    // This function now correctly passes all data to the main saveInvoice function.
-    return saveInvoice(data, createdBy);
+export async function saveSubscriptionInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & {id?: string, isAutoInvoiceNo?: boolean}, createdBy: string) {
+    const { isAutoInvoiceNo, ...invoiceData } = data;
+    return saveInvoice({ ...invoiceData, isAutoInvoiceNo: isAutoInvoiceNo }, createdBy);
 }

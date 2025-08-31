@@ -74,7 +74,7 @@ export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: 
   
   useEffect(() => {
     getLookups().then(data => {
-        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms, expenseAccounts: data.expenseAccounts || []}));
+        setLookups(prev => ({...prev, ...data, expenseAccounts: data.expenseAccounts || []}));
         setProducts(data.products || []);
     });
   }, []);
