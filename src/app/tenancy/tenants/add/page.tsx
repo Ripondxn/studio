@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -63,6 +62,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { MoveTenantDialog } from './move-tenant-dialog';
 import { handleFileUpload } from '@/app/services/attachment-service';
 import { z } from 'zod';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getUnitDetails, getRoomDetails } from '../../contract/actions';
 
 
 type Attachment = z.infer<typeof attachmentSchema> & { url?: string };
@@ -114,12 +114,19 @@ export default function TenantPage() {
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
 
+  const [lookups, setLookups] = useState<{
+    properties: {value: string, label: string}[],
+    tenants: { value: string, label: string }[],
+    units: {value: string, label: string, propertyCode: string}[],
+    rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[],
+  }>({ properties: [], tenants: [], units: [], rooms: [] });
+
   const form = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
     defaultValues: initialTenantData,
   });
 
-  const { control, handleSubmit, watch, setValue, reset, register, getValues } = form;
+  const { control, handleSubmit, watch, setValue, reset, getValues } = form;
 
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
@@ -128,6 +135,8 @@ export default function TenantPage() {
 
   const tenantCode = watch('code');
   const tenantName = watch('name');
+  const watchedProperty = watch('property');
+  const watchedUnit = watch('unitCode');
   
   const fetchInvoices = useCallback(async (customerCode: string) => {
     if (!customerCode) return;
@@ -143,14 +152,14 @@ export default function TenantPage() {
       if (result.success && result.data) {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
         
-        const attachmentsWithUrls = result.data.attachments?.map((a: any) => ({
+        const attachmentsWithUrls = (result.data.attachments || []).map((a: any) => ({
             id: a.id || Date.now() + Math.random(),
             name: a.name || '',
             remarks: a.remarks || '',
             file: a.file || null,
             isLink: a.isLink || false,
-            url: undefined // This is client-side only
-        })) || [];
+            url: undefined 
+        }));
         
         form.reset({
             ...fullTenantData,
@@ -161,7 +170,9 @@ export default function TenantPage() {
             setIsNewRecord(false);
             setIsEditing(false);
             setIsAutoCode(false);
-            fetchInvoices(result.data.tenantData.code);
+            if (result.data.tenantData.code) {
+                fetchInvoices(result.data.tenantData.code);
+            }
         } else {
             setIsNewRecord(true);
             setIsEditing(true);
@@ -174,7 +185,6 @@ export default function TenantPage() {
           title: 'Not Found',
           description: `No record found for Tenant Code: ${code}. You can create a new one.`,
         });
-        // Call recursively to reset to a new state
         handleFindClick('new');
       }
     } catch (error) {
@@ -197,7 +207,7 @@ export default function TenantPage() {
 
   
   const handleAttachmentChange = (index: number, field: keyof Attachment, value: any) => {
-    const currentAttachments = getValues('attachments') || [];
+     const currentAttachments = getValues('attachments') || [];
     const currentItem = currentAttachments[index];
     if (field === 'file' && currentItem.url) {
         URL.revokeObjectURL(currentItem.url);
@@ -219,8 +229,7 @@ export default function TenantPage() {
   };
 
   const removeAttachmentRow = (index: number) => {
-    const currentAttachments = getValues('attachments');
-    const attachmentToRemove = currentAttachments?.[index];
+    const attachmentToRemove = getValues(`attachments.${index}`);
     if (attachmentToRemove && attachmentToRemove.url) {
         URL.revokeObjectURL(attachmentToRemove.url);
     }
@@ -231,13 +240,13 @@ export default function TenantPage() {
     setIsEditing(true);
   }
 
-  const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
+  const onSave = async (data: Tenant, isAttachmentSave = false, attachmentIndex?: number) => {
     if (!isAttachmentSave) setIsSaving(true);
-    if (isAttachmentSave && attachmentId) setSavingAttachmentId(attachmentId);
+    if (isAttachmentSave && attachmentIndex !== undefined) setSavingAttachmentId(fields[attachmentIndex].id);
     
     try {
-        const attachmentsToProcess = isAttachmentSave
-            ? (data.attachments || []).filter(a => a.id === attachmentId)
+        const attachmentsToProcess = isAttachmentSave && attachmentIndex !== undefined
+            ? [data.attachments![attachmentIndex]]
             : data.attachments || [];
 
         const processedAttachments = await Promise.all(
@@ -262,13 +271,14 @@ export default function TenantPage() {
         );
         
         let finalAttachments = [...(data.attachments || [])];
-        if (isAttachmentSave && processedAttachments.length > 0) {
-            finalAttachments = (data.attachments || []).map(att => {
-                const saved = processedAttachments.find(p => p.id === att.id);
-                return saved ? { ...att, file: saved.file, url: undefined } : att;
-            });
+        if (isAttachmentSave && attachmentIndex !== undefined && processedAttachments.length > 0) {
+             const currentAttachments = getValues('attachments') || [];
+             finalAttachments = currentAttachments.map((att, idx) => 
+                idx === attachmentIndex ? { ...att, file: processedAttachments[0].file } : att
+             );
+        } else if (!isAttachmentSave) {
+            finalAttachments = processedAttachments;
         }
-
 
         const dataToSave = {
             tenantData: data,
@@ -306,12 +316,7 @@ export default function TenantPage() {
   }
 
   const onSaveAttachment = (index: number) => {
-    const attachmentId = getValues(`attachments.${index}.id`);
-    if(attachmentId === undefined) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not find attachment to save.' });
-        return;
-    }
-    form.handleSubmit((data) => onSave(data, true, attachmentId))();
+    form.handleSubmit((data) => onSave(data, true, index))();
   };
 
   const handleCancelClick = () => {
@@ -387,7 +392,7 @@ export default function TenantPage() {
   return (
     <div className="container mx-auto p-4 bg-background">
      <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => onSave(data))}>
+      <form onSubmit={form.handleSubmit(onSave)}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
@@ -602,41 +607,45 @@ export default function TenantPage() {
                             {fields.map((item, index) => (
                                 <TableRow key={item.id}>
                                     <TableCell>
-                                         <Input 
-                                            {...register(`attachments.${index}.name`)} 
+                                        <Input
+                                            {...form.register(`attachments.${index}.name`)}
                                             disabled={!isEditing} 
                                             placeholder="e.g. Passport Copy"
                                         />
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
+                                             <Controller
+                                                control={control}
+                                                name={`attachments.${index}.isLink`}
+                                                render={({ field }) => (
+                                                   <Switch
+                                                        checked={field.value}
+                                                        onCheckedChange={(checked) => {
+                                                            field.onChange(checked);
+                                                            setValue(`attachments.${index}.file`, null);
+                                                        }}
+                                                        disabled={!isEditing}
+                                                    />
+                                                )}
+                                            />
+                                             <Label>{watch(`attachments.${index}.isLink`) ? 'Link' : 'File'}</Label>
+                                            
                                             {watch(`attachments.${index}.isLink`) ? (
                                                 <Input
-                                                    {...register(`attachments.${index}.file`)}
                                                     type="text"
                                                     placeholder="https://example.com"
+                                                    {...register(`attachments.${index}.file`)}
                                                     disabled={!isEditing}
                                                 />
                                             ) : (
                                                 <Input 
                                                     type="file" 
                                                     className="text-sm w-full" 
-                                                    onChange={(e) => {
-                                                        const file = e.target.files?.[0] || null;
-                                                        handleAttachmentChange(index, 'file', file);
-                                                    }}
+                                                    onChange={(e) => handleAttachmentChange(index, 'file', e.target.files?.[0] || null)}
                                                     disabled={!isEditing}
                                                 />
                                             )}
-                                             <Switch
-                                                checked={watch(`attachments.${index}.isLink`)}
-                                                onCheckedChange={(checked) => {
-                                                    const currentItem = watch(`attachments.${index}`);
-                                                    update(index, { ...currentItem, isLink: checked, file: null, url: undefined });
-                                                }}
-                                                disabled={!isEditing}
-                                            />
-                                            <Label>{watch(`attachments.${index}.isLink`) ? 'Link' : 'File'}</Label>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -646,13 +655,13 @@ export default function TenantPage() {
                                                     <Eye className="h-4 w-4" />
                                                 </a>
                                             </Button>
-                                             <Button variant="outline" size="icon" disabled={!watch(`attachments.${index}.file`) || !watch(`attachments.${index}.isLink`)} onClick={() => handleCopyLink(watch(`attachments.${index}.file`))}>
+                                             <Button type="button" variant="outline" size="icon" disabled={!watch(`attachments.${index}.isLink`)} onClick={() => handleCopyLink(watch(`attachments.${index}.file`))}>
                                                 <ClipboardCopy className="h-4 w-4" />
                                             </Button>
                                             <Button size="icon" type="button" onClick={() => onSaveAttachment(index)} disabled={savingAttachmentId === item.id || !isEditing}>
                                                 {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                             </Button>
-                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(index)}>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => remove(index)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
