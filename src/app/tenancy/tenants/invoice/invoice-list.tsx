@@ -31,6 +31,7 @@ import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type Unit } from '@/app/property/units/schema';
+import { Label } from '@/components/ui/label';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -68,16 +69,22 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
 
     useEffect(() => {
         getContractLookups().then(data => {
-            if (data.properties) {
-                setLookups(prev => ({ 
-                    ...prev, 
-                    properties: data.properties,
-                    units: (data.units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})),
-                    rooms: (data.rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode})),
-                 }));
+            const fetchUnitsAndRooms = async () => {
+                const units = await getUnitsForProperty(watchedProperty || '');
+                const rooms = await getRoomsForUnit(watchedProperty || '', watchedUnit || '');
+                setLookups({
+                    properties: data.properties || [],
+                    units: (units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})),
+                    rooms: (rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode})),
+                });
+            };
+
+            setLookups(prev => ({...prev, properties: data.properties || []}));
+            if (watchedProperty) {
+                fetchUnitsAndRooms();
             }
         });
-    }, []);
+    }, [watchedProperty, watchedUnit]);
 
     const filteredUnits = useMemo(() => {
         if (!watchedProperty) return [];
@@ -371,12 +378,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                {tenant && <CreateInvoiceDialog
+                <CreateInvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
-                />}
+                />
 
                 <SubscriptionInvoiceDialog
                     isOpen={isEditInvoiceOpen}
