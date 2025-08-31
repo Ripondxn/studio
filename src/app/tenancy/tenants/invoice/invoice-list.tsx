@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -379,12 +378,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                {tenant && <CreateInvoiceDialog
+                <CreateInvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
-                />}
+                />
 
                 <SubscriptionInvoiceDialog
                     isOpen={isEditInvoiceOpen}

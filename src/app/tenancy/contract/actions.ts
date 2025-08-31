@@ -291,11 +291,19 @@ export async function getUnitsForProperty(propertyCode: string) {
     const allUnits = await readUnits();
     const allRooms = await readRooms();
     const allContracts: Contract[] = await readContracts();
+    const allTenants: {tenantData: Tenant}[] = await readTenants();
     
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
-    
-    const fullyOccupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode && c.unitCode).map(c => c.unitCode));
-    const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+    const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
+
+    const fullyOccupiedUnitCodes = new Set<string>();
+    activeContracts.filter(c => !c.roomCode && c.unitCode).forEach(c => fullyOccupiedUnitCodes.add(c.unitCode));
+    activeSubscriptionTenants.filter(t => t.tenantData.unitCode && !t.tenantData.roomCode).forEach(t => fullyOccupiedUnitCodes.add(t.tenantData.unitCode!));
+
+    const occupiedRoomCodes = new Set<string>();
+    activeContracts.filter(c => c.roomCode).forEach(c => occupiedRoomCodes.add(c.roomCode!));
+    activeSubscriptionTenants.filter(t => t.tenantData.roomCode).forEach(t => occupiedRoomCodes.add(t.tenantData.roomCode!));
+
 
     const unitsWithRoomCounts = new Map<string, { total: number, occupied: number }>();
 
