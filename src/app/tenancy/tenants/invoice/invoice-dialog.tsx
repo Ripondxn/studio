@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -282,7 +281,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             </DialogClose>
             <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                {invoice ? 'Update Invoice' : 'Create Invoice'}
+                {invoice ? 'Update Invoice' : 'Save Subs Invoice'}
             </Button>
           </DialogFooter>
         </form>
