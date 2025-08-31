@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { useFormContext } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit, getUnitDetails, getRoomDetails } from '../../contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
@@ -59,7 +59,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [isGeneralInvoiceDialogOpen, setIsGeneralInvoiceDialogOpen] = useState(false);
     const router = useRouter();
     const { formatCurrency } = useCurrency();
-    const { watch, setValue } = useFormContext<Tenant>();
+    const { watch, setValue, getValues } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [] });
 
@@ -226,7 +226,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 </Button>
                             ) : (
                                 <div className="flex gap-2">
-                                    <Button size="sm" onClick={() => setIsSubscriptionEditing(false)}>
+                                    <Button size="sm" onClick={() => {
+                                        setIsSubscriptionEditing(false);
+                                        onRefresh(); // To revert any unsaved changes
+                                    }}>
                                         <X className="mr-2 h-4 w-4" /> Cancel
                                     </Button>
                                 </div>
@@ -301,7 +304,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 )}
                             />
                         </div>
-                        <Separator />
+                         <Separator />
                         <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-base font-semibold">Assigned Property</h3>
