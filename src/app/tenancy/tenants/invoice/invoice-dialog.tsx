@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
 import { saveSubscriptionInvoice, getNextSubscriptionInvoiceNumber } from './actions';
@@ -189,7 +190,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-4xl">
-        <form>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit' : 'Create'} Subscription Invoice</DialogTitle>
             <DialogDescription>
@@ -281,7 +282,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>
             </DialogClose>
-            <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
+            <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 Save Subs Invoice
             </Button>
