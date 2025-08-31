@@ -156,7 +156,7 @@ export default function TenantPage() {
             name: a.name || '',
             remarks: a.remarks || '',
             file: a.file || null, 
-            url: undefined
+            url: a.file && a.isLink === false && typeof a.file === 'string' && a.file.startsWith('data:') ? a.file : undefined
         })) : []);
         
         if (code !== 'new') {
@@ -255,7 +255,6 @@ export default function TenantPage() {
                     fileData = typeof att.file === 'string' ? att.file : null;
                 } else if (att.file && att.file instanceof File) {
                     const base64 = await fileToBase64(att.file);
-                    // Now call the server action with the base64 string
                     fileData = await handleFileUpload(base64, att.file.name);
                 } else {
                     fileData = att.file;
@@ -272,7 +271,6 @@ export default function TenantPage() {
         
         let finalAttachments = [...attachments];
         if (isAttachmentSave && processedAttachments.length > 0) {
-            // Replace the processed attachment in the main list
             finalAttachments = attachments.map(att => {
                 const saved = processedAttachments.find(p => p.id === att.id);
                 return saved ? { ...att, file: saved.file } : att;
@@ -358,6 +356,20 @@ export default function TenantPage() {
   };
   
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${form.watch('name')}`;
+
+  const getViewLink = (item: Attachment): string => {
+    if (item.isLink && typeof item.file === 'string') {
+        return item.file;
+    }
+    if (item.url) { // This is for new, unsaved file uploads
+        return item.url;
+    }
+    if (typeof item.file === 'string' && item.file.startsWith('data:')) { // For saved base64 files
+        return item.file;
+    }
+    return '#';
+  };
+
 
   return (
     <div className="container mx-auto p-4 bg-background">
@@ -568,8 +580,8 @@ export default function TenantPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                            <TableHead className="w-[30%]">Attachment Name</TableHead>
-                            <TableHead className="w-[45%]">File / Link</TableHead>
+                            <TableHead>Attachment Name</TableHead>
+                            <TableHead>File / Link</TableHead>
                             <TableHead>Action</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -611,7 +623,7 @@ export default function TenantPage() {
                                     <TableCell>
                                         <div className="flex items-center gap-2">
                                              <Button asChild variant="outline" size="icon" disabled={!item.file}>
-                                                <a href={item.isLink ? item.file! : item.url} target="_blank" rel="noopener noreferrer">
+                                                <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer">
                                                     <Eye className="h-4 w-4" />
                                                 </a>
                                             </Button>
@@ -639,4 +651,3 @@ export default function TenantPage() {
     </div>
   );
 }
-
