@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -28,6 +27,7 @@ import {
   FileUp,
   Link2,
   Eye,
+  Move
 } from 'lucide-react';
 import {
   Table,
@@ -65,8 +65,10 @@ import { handleFileUpload } from '@/app/services/attachment-service';
 type Attachment = {
   id: number;
   name: string;
-  file: string | null;
+  file: File | null | string;
+  url?: string;
   remarks: string;
+  isLink: boolean;
 };
 
 const initialTenantData: Tenant = {
@@ -90,6 +92,16 @@ const initialTenantData: Tenant = {
     subscriptionAmount: 0,
 };
 
+// Helper function to read a file as a Base64 string on the client
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export default function TenantPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(true);
@@ -100,6 +112,7 @@ export default function TenantPage() {
   const searchParams = useSearchParams();
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
@@ -121,13 +134,23 @@ export default function TenantPage() {
     setIsLoadingInvoices(false);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      attachments.forEach(attachment => {
+        if (attachment.url) {
+          URL.revokeObjectURL(attachment.url);
+        }
+      });
+    };
+  }, [attachments]);
+
   const handleFindClick = useCallback(async (code: string) => {
     try {
       const result = await findTenantData(code);
       if (result.success && result.data) {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
         form.reset(fullTenantData);
-        setAttachments(result.data.attachments || []);
+        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({...a, file: a.file || null, url: undefined})) : []);
         
         if (code !== 'new') {
             setIsNewRecord(false);
@@ -167,7 +190,21 @@ export default function TenantPage() {
 
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
-    setAttachments(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
+    setAttachments(prev => prev.map(item => {
+        if (item.id === id) {
+             if (field === 'file') {
+                if (item.url) URL.revokeObjectURL(item.url);
+                const newUrl = (value instanceof File) ? URL.createObjectURL(value) : undefined;
+                return {...item, file: value, url: newUrl};
+            }
+             if (field === 'isLink') {
+                 if (item.url) URL.revokeObjectURL(item.url);
+                 return {...item, isLink: value, file: null, url: undefined };
+            }
+            return {...item, [field]: value};
+        }
+        return item;
+    }));
   };
 
   const addAttachmentRow = () => {
@@ -178,11 +215,16 @@ export default function TenantPage() {
         name: '',
         file: null,
         remarks: '',
+        isLink: false
       }
     ]);
   };
 
   const removeAttachmentRow = (id: number) => {
+    const attachmentToRemove = attachments.find(item => item.id === id);
+    if (attachmentToRemove && attachmentToRemove.url) {
+        URL.revokeObjectURL(attachmentToRemove.url);
+    }
     setAttachments(prev => prev.filter(item => item.id !== id));
   };
 
@@ -200,13 +242,24 @@ export default function TenantPage() {
             : attachments;
 
         const processedAttachments = await Promise.all(
-            currentAttachments.map(async (att) => ({
-                id: att.id,
-                name: att.name,
-                file: att.file,
-                remarks: att.remarks,
-                isLink: true,
-            }))
+            currentAttachments.map(async (att) => {
+                let fileData: string | null = null;
+                 if (att.isLink) {
+                    fileData = typeof att.file === 'string' ? att.file : null;
+                } else if (att.file && att.file instanceof File) {
+                    const base64 = await fileToBase64(att.file);
+                    fileData = await handleFileUpload(base64, att.file.name);
+                } else {
+                    fileData = att.file;
+                }
+                return {
+                    id: att.id,
+                    name: att.name,
+                    file: fileData,
+                    remarks: att.remarks,
+                    isLink: att.isLink,
+                }
+            })
         );
 
         let finalAttachments = [...attachments];
@@ -219,7 +272,7 @@ export default function TenantPage() {
 
         const dataToSave = {
             tenantData: data,
-            attachments: finalAttachments,
+            attachments: finalAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
         };
 
         const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
@@ -236,17 +289,17 @@ export default function TenantPage() {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
                  form.reset(data);
-                 setAttachments(finalAttachments);
+                 setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
             }
         } else {
             throw new Error(result.error || 'An unknown error occurred');
         }
     } catch (error) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: (error as Error).message || "Failed to save data.",
-        });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (error as Error).message || "Failed to save data.",
+      });
     } finally {
         if (!isAttachmentSave) setIsSaving(false);
         if (isAttachmentSave) setSavingAttachmentId(null);
@@ -502,10 +555,9 @@ export default function TenantPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                            <TableHead className="w-1/4">Attachment Name</TableHead>
-                            <TableHead className="w-1/2">Link</TableHead>
-                            <TableHead>Remarks</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead>Attachment Name</TableHead>
+                            <TableHead>File / Link</TableHead>
+                            <TableHead>Action</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -520,34 +572,38 @@ export default function TenantPage() {
                                         />
                                     </TableCell>
                                     <TableCell>
-                                         <Input
-                                            type="text"
-                                            placeholder="https://example.com"
-                                            value={typeof item.file === 'string' ? item.file : ''}
-                                            onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
-                                            disabled={!isEditing}
-                                        />
+                                        <div className="flex items-center gap-2">
+                                            {item.isLink ? (
+                                                <Input
+                                                    type="text"
+                                                    placeholder="https://example.com"
+                                                    value={typeof item.file === 'string' ? item.file : ''}
+                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                    disabled={!isEditing}
+                                                />
+                                            ) : (
+                                                <Input 
+                                                    type="file" 
+                                                    className="text-sm w-full" 
+                                                    ref={(el) => (fileInputRefs.current[index] = el)}
+                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                    disabled={!isEditing}
+                                                />
+                                            )}
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                                {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                            </Button>
+                                        </div>
                                     </TableCell>
-                                     <TableCell>
-                                        <Input 
-                                            value={item.remarks} 
-                                            onChange={(e) => handleAttachmentChange(item.id, 'remarks', e.target.value)} 
-                                            disabled={!isEditing} 
-                                            placeholder="Add remarks..."
-                                        />
-                                    </TableCell>
-                                    <TableCell className="text-right flex gap-1">
-                                    <Button asChild variant="outline" size="icon" disabled={!item.file || typeof item.file !== 'string'}>
-                                        <a href={typeof item.file === 'string' ? item.file : '#'} target="_blank" rel="noopener noreferrer">
-                                            <Eye className="h-4 w-4" />
-                                        </a>
-                                    </Button>
-                                    <Button size="sm" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
-                                        {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : 'Save'}
-                                    </Button>
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                                {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
+                                            </Button>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
