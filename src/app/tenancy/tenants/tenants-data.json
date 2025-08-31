@@ -44,7 +44,8 @@
       "roomCode": "Room-1/A",
       "isSubscriptionActive": true,
       "subscriptionAmount": 500,
-      "subscriptionStatus": "Monthly"
+      "subscriptionStatus": "Monthly",
+      "occupancyStatus": "Occupied"
     },
     "attachments": []
   }

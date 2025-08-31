@@ -63,7 +63,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   });
   
   const { control, register, handleSubmit, reset, watch, setValue } = form;
-  
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
@@ -102,6 +102,8 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                 items: [{ id: `item-${Date.now()}`, description: `${tenant.subscriptionStatus || 'Monthly'} Subscription`, quantity: 1, unitPrice: tenant.subscriptionAmount || 0, total: tenant.subscriptionAmount || 0 }],
                 subTotal: tenant.subscriptionAmount || 0,
                 tax: 0,
+                taxRate: 0,
+                taxType: 'exclusive',
                 total: tenant.subscriptionAmount || 0,
                 notes: '',
                 status: 'Draft',
