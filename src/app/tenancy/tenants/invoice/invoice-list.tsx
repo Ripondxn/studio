@@ -31,7 +31,6 @@ import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type Unit } from '@/app/property/units/schema';
-import { Label } from '@/components/ui/label';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -69,32 +68,33 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
 
     useEffect(() => {
         getContractLookups().then(data => {
-            const fetchUnitsAndRooms = async () => {
-                const units = await getUnitsForProperty(watchedProperty || '');
-                const rooms = await getRoomsForUnit(watchedProperty || '', watchedUnit || '');
-                setLookups({
-                    properties: data.properties || [],
-                    units: (units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})),
-                    rooms: (rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode})),
-                });
-            };
-
             setLookups(prev => ({...prev, properties: data.properties || []}));
-            if (watchedProperty) {
-                fetchUnitsAndRooms();
-            }
         });
-    }, [watchedProperty, watchedUnit]);
-
-    const filteredUnits = useMemo(() => {
-        if (!watchedProperty) return [];
-        return lookups.units.filter(u => u.propertyCode === watchedProperty)
-    }, [lookups.units, watchedProperty]);
+    }, []);
     
-    const filteredRooms = useMemo(() => {
-        if (!watchedProperty || !watchedUnit) return [];
-        return lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit)
-    }, [lookups.rooms, watchedProperty, watchedUnit]);
+    useEffect(() => {
+        const fetchUnits = async () => {
+            if (watchedProperty) {
+                const units = await getUnitsForProperty(watchedProperty);
+                setLookups(prev => ({...prev, units: (units || []).map(u => ({...u, value: u.unitCode, label: u.unitCode})), rooms: []}));
+            } else {
+                 setLookups(prev => ({...prev, units: [], rooms: []}));
+            }
+        };
+        fetchUnits();
+    }, [watchedProperty]);
+
+    useEffect(() => {
+        const fetchRooms = async () => {
+            if (watchedProperty && watchedUnit) {
+                const rooms = await getRoomsForUnit(watchedProperty, watchedUnit);
+                 setLookups(prev => ({...prev, rooms: (rooms || []).map(r => ({...r, value: r.roomCode, label: r.roomCode}))}));
+            } else {
+                 setLookups(prev => ({...prev, rooms: []}));
+            }
+        };
+        fetchRooms();
+    }, [watchedProperty, watchedUnit]);
     
     const occupancyStatus = useMemo(() => {
         if(watchedRoom) {
