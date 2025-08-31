@@ -252,7 +252,7 @@ export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: 
                   ))}
               </TableBody>
             </Table>
-            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
+            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0, expenseAccountId: '' })}>
               <Plus className="mr-2 h-4 w-4" /> Add Item
             </Button>
 

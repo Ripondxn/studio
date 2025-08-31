@@ -91,8 +91,9 @@ export async function getNextGeneralInvoiceNumber() {
 }
 
 
-export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingBalance'>, createdBy: string) {
-    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(data);
+export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingBalance'> & { isAutoInvoiceNo?: boolean }, createdBy: string) {
+    const { isAutoInvoiceNo, ...invoiceData } = data;
+    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
 
     if (!validation.success) {
         console.error("Invoice Validation Error:", validation.error.format());
@@ -107,7 +108,7 @@ export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingB
 
         if (isNewRecord) {
              let newInvoiceNo = validatedData.invoiceNo;
-             if ((data as any).isAutoInvoiceNo) {
+             if (isAutoInvoiceNo) {
                 if(newInvoiceNo.startsWith('SUB-INV-')) {
                     newInvoiceNo = await getNextSubscriptionInvoiceNumber();
                 } else {
