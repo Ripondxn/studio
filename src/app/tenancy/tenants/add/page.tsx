@@ -25,9 +25,7 @@ import {
   Search,
   X,
   FileUp,
-  Link2,
-  Eye,
-  Move
+  Link2
 } from 'lucide-react';
 import {
   Table,
@@ -594,6 +592,20 @@ export default function TenantPage() {
                                                 {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                             </Button>
                                         </div>
+                                        {item.url && !item.isLink && (
+                                            <Link href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                View Uploaded File
+                                            </Link>
+                                        )}
+                                        {item.file && typeof item.file === 'string' && (
+                                            item.isLink && item.file.startsWith('http') ? (
+                                                <Link href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                    Open Link
+                                                </Link>
+                                            ) : (
+                                                !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
+                                            )
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
