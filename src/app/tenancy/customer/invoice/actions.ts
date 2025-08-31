@@ -91,9 +91,8 @@ export async function getNextGeneralInvoiceNumber() {
 }
 
 
-export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
-    const { isAutoInvoiceNo, ...invoiceData } = data;
-    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
+export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingBalance'>, createdBy: string) {
+    const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(data);
 
     if (!validation.success) {
         console.error("Invoice Validation Error:", validation.error.format());
@@ -102,28 +101,13 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
 
     try {
         const allInvoices = await readInvoices();
-        const isNew = !data.id;
+        const isNewRecord = !data.id;
         const validatedData = validation.data;
         let savedInvoice: Invoice;
 
-        if (isNew) {
-            let newInvoiceNo = validatedData.invoiceNo;
-            if (isAutoInvoiceNo || !newInvoiceNo) {
-                if (validatedData.items.some(item => item.description.toLowerCase().includes('subscription'))) {
-                    newInvoiceNo = await getNextSubscriptionInvoiceNumber();
-                } else {
-                    newInvoiceNo = await getNextGeneralInvoiceNumber();
-                }
-            } else {
-                const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
-                if (invoiceExists) {
-                    return { success: false, error: `An invoice with number "${newInvoiceNo}" already exists.`};
-                }
-            }
-
+        if (isNewRecord) {
             const newInvoice: Invoice = {
                 ...validatedData,
-                invoiceNo: newInvoiceNo,
                 id: `INV-${Date.now()}`,
                 amountPaid: 0,
                  items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`}))

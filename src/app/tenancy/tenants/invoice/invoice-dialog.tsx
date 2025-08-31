@@ -129,7 +129,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     const currentUser = JSON.parse(userProfile);
 
     setIsSaving(true);
-    const result = await saveSubscriptionInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo }, currentUser.name);
+    const result = await saveSubscriptionInvoice({ ...data, id: invoice?.id }, currentUser.name);
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();
