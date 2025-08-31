@@ -326,19 +326,27 @@ export async function getUnitsForProperty(propertyCode: string) {
     });
 
     return allUnits
-        .filter(u => {
-            if (u.propertyCode !== propertyCode) {
-                return false;
-            }
-            if (fullyOccupiedUnitCodes.has(u.unitCode)) {
-                return false;
-            }
+        .filter(u => u.propertyCode === propertyCode)
+        .map(u => {
+            const isFullyOccupied = fullyOccupiedUnitCodes.has(u.unitCode);
             const roomCounts = unitsWithRoomCounts.get(u.unitCode);
-            if (roomCounts) {
-                return roomCounts.occupied < roomCounts.total;
+            let occupancyStatus: Unit['occupancyStatus'] = 'Vacant';
+            
+            if (isFullyOccupied) {
+                occupancyStatus = 'Occupied';
+            } else if (roomCounts) {
+                if (roomCounts.occupied === 0) {
+                    occupancyStatus = 'Vacant';
+                } else if (roomCounts.occupied < roomCounts.total) {
+                    occupancyStatus = 'Partially Occupied';
+                } else {
+                    occupancyStatus = 'Occupied';
+                }
             }
-            return true;
+
+            return { ...u, occupancyStatus };
         })
+        .filter(u => u.occupancyStatus !== 'Occupied')
         .map((u: any) => ({ ...u, value: u.unitCode, label: u.unitCode }));
 }
 
@@ -479,4 +487,3 @@ export async function getLatestContractForTenant(tenantCode: string): Promise<{ 
         return { success: false, error: (error as Error).message };
     }
 }
-
