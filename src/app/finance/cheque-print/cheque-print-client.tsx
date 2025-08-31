@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Printer, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ToWords } from 'to-words';
-import { getLookups } from '../payment/actions';
+import { getLookups } from '@/app/lookups/actions';
 import { getDuesForPayee } from './actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -73,7 +73,7 @@ export function ChequePrintClient() {
   });
 
   useEffect(() => {
-    getLookups().then(data => setLookups(data));
+    getLookups().then(data => setLookups(data as any));
   }, []);
 
   const payeeOptions = [
