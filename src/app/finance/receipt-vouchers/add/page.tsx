@@ -62,14 +62,12 @@ export default function AddReceiptVoucherPage() {
         }
     });
 
-    const { control, watch, setValue } = form;
+    const { control, watch, setValue, handleSubmit } = form;
 
     const { fields, append, remove, replace } = useFieldArray({
         control,
         name: "vouchers",
     });
-
-    const watchedVouchers = watch('vouchers');
 
     useEffect(() => {
         const userProfile = sessionStorage.getItem('userProfile');
@@ -79,12 +77,6 @@ export default function AddReceiptVoucherPage() {
 
         getReceiptVoucherLookups().then(setLookups);
     }, []);
-    
-    useEffect(() => {
-        if(currentUser && fields.length === 0) {
-            addVoucherRow();
-        }
-    }, [currentUser, fields.length]);
     
     const addVoucherRow = useCallback(() => {
          append({
@@ -108,6 +100,12 @@ export default function AddReceiptVoucherPage() {
         });
     }, [append, currentUser]);
 
+    useEffect(() => {
+        if(currentUser && fields.length === 0) {
+            addVoucherRow();
+        }
+    }, [currentUser, fields.length, addVoucherRow]);
+    
     const handlePartySelect = async (index: number, partyCode: string, partyType: 'Tenant' | 'Customer') => {
         const partyOptions = partyType === 'Tenant' ? lookups.tenants : lookups.customers;
         const partyName = partyOptions.find(p => p.value === partyCode)?.label || partyCode;
@@ -214,7 +212,7 @@ export default function AddReceiptVoucherPage() {
                      <ImportReceiptsDialog onDataImport={handleDataImport} />
                      <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4"/>PDF</Button>
                      <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4"/>Excel</Button>
-                    <Button onClick={form.handleSubmit(onSubmit)} disabled={isSaving}>
+                    <Button onClick={handleSubmit(onSubmit)} disabled={isSaving}>
                         {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                         Save Vouchers
                     </Button>
@@ -224,7 +222,7 @@ export default function AddReceiptVoucherPage() {
                 </div>
             </div>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <Card>
                         <CardHeader><CardTitle>Receipt Entries</CardTitle></CardHeader>
                         <CardContent>
@@ -242,24 +240,24 @@ export default function AddReceiptVoucherPage() {
                                             <TableHead className="w-[8%] text-right">Amount</TableHead>
                                             <TableHead className="w-[10%]">Method</TableHead>
                                             <TableHead className="w-[10%]">Collector</TableHead>
-                                            <TableHead className="w-[15%]">Details</TableHead>
+                                            <TableHead className="w-[15%]">Notes</TableHead>
                                             <TableHead className="w-[5%]">Action</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {fields.map((field, index) => (
                                             <TableRow key={field.id}>
-                                                 <TableCell><FormField name={`vouchers.${index}.receiptNo`} control={form.control} render={({ field }) => ( <Combobox options={lookups.receipts} value={field.value || ''} onSelect={(value) => handleReceiptSelect(index, value)} placeholder="Select..."/>)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.date`} control={form.control} render={({ field }) => ( <Input type="date" {...field} />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.partyType`} control={form.control} render={({ field }) => ( <Select onValueChange={(value) => { field.onChange(value); form.setValue(`vouchers.${index}.partyName`, ''); }} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.partyName`} control={form.control} render={({ field }) => (<Combobox options={form.watch(`vouchers.${index}.partyType`) === 'Tenant' ? lookups.tenants : lookups.customers} value={field.value || ''} onSelect={(value) => handlePartySelect(index, value, form.watch(`vouchers.${index}.partyType`))} placeholder="Select Party" />)}/></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.property`} control={form.control} render={({ field }) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => {field.onChange(value); form.setValue(`vouchers.${index}.unitCode`, ''); form.setValue(`vouchers.${index}.roomCode`,'');}} placeholder="Property" />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.unitCode`} control={form.control} render={({ field }) => (<Combobox options={lookups.units.filter(u => u.propertyCode === watch(`vouchers.${index}.property`))} value={field.value || ''} onSelect={(value) => {field.onChange(value); form.setValue(`vouchers.${index}.roomCode`, '');}} placeholder="Unit" disabled={!watch(`vouchers.${index}.property`)} />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.roomCode`} control={form.control} render={({ field }) => (<Combobox options={lookups.rooms.filter(r => r.propertyCode === watch(`vouchers.${index}.property`) && r.unitCode === watch(`vouchers.${index}.unitCode`))} value={field.value || ''} onSelect={field.onChange} placeholder="Room" disabled={!watch(`vouchers.${index}.unitCode`)} />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.amount`} control={form.control} render={({ field }) => ( <Input type="number" {...field} className="text-right" onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.paymentMethod`} control={form.control} render={({ field }) => ( <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.collectedBy`} control={form.control} render={({ field }) => ( <Combobox options={lookups.collectors} value={field.value || ''} onSelect={field.onChange} placeholder="Collector..."/>)} /></TableCell>
-                                                 <TableCell><FormField name={`vouchers.${index}.notes`} control={form.control} render={({ field }) => ( <Input placeholder="Notes..." {...field} />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.receiptNo`} control={control} render={({ field }) => ( <Combobox options={lookups.receipts} value={field.value || ''} onSelect={(value) => handleReceiptSelect(index, value)} placeholder="Select..."/>)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.date`} control={control} render={({ field }) => ( <Input type="date" {...field} />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.partyType`} control={control} render={({ field }) => ( <Select onValueChange={(value) => { field.onChange(value); setValue(`vouchers.${index}.partyName`, ''); }} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Tenant">Tenant</SelectItem><SelectItem value="Customer">Customer</SelectItem></SelectContent></Select>)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.partyName`} control={control} render={({ field }) => (<Combobox options={watch(`vouchers.${index}.partyType`) === 'Tenant' ? lookups.tenants : lookups.customers} value={field.value || ''} onSelect={(value) => handlePartySelect(index, value, watch(`vouchers.${index}.partyType`))} placeholder="Select Party" />)}/></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.property`} control={control} render={({ field }) => (<Combobox options={lookups.properties} value={field.value || ''} onSelect={(value) => {field.onChange(value); setValue(`vouchers.${index}.unitCode`, ''); setValue(`vouchers.${index}.roomCode`,'');}} placeholder="Property" />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.unitCode`} control={control} render={({ field }) => (<Combobox options={lookups.units.filter(u => u.propertyCode === watch(`vouchers.${index}.property`))} value={field.value || ''} onSelect={(value) => {field.onChange(value); setValue(`vouchers.${index}.roomCode`, '');}} placeholder="Unit" disabled={!watch(`vouchers.${index}.property`)} />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.roomCode`} control={control} render={({ field }) => (<Combobox options={lookups.rooms.filter(r => r.propertyCode === watch(`vouchers.${index}.property`) && r.unitCode === watch(`vouchers.${index}.unitCode`))} value={field.value || ''} onSelect={field.onChange} placeholder="Room" disabled={!watch(`vouchers.${index}.unitCode`)} />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.amount`} control={control} render={({ field }) => ( <Input type="number" {...field} className="text-right" onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.paymentMethod`} control={control} render={({ field }) => ( <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Cheque">Cheque</SelectItem><SelectItem value="Bank Transfer">Bank Transfer</SelectItem><SelectItem value="Card">Card</SelectItem></SelectContent></Select>)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.collectedBy`} control={control} render={({ field }) => ( <Combobox options={lookups.collectors} value={field.value || ''} onSelect={field.onChange} placeholder="Collector..."/>)} /></TableCell>
+                                                 <TableCell><FormField name={`vouchers.${index}.notes`} control={control} render={({ field }) => ( <Input placeholder="Notes..." {...field} />)} /></TableCell>
                                                  <TableCell><Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
                                             </TableRow>
                                         ))}
