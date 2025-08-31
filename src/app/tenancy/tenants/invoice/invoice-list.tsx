@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -237,6 +236,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                                     setValue('property', '');
                                                     setValue('unitCode', '');
                                                     setValue('roomCode', '');
+                                                    setLookups(prev => ({ ...prev, units: [], rooms: [] }));
                                                 }
                                             }}
                                             disabled={!isSubscriptionEditing}
@@ -315,7 +315,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                                 onSelect={(value) => {
                                                     field.onChange(value);
                                                     setValue('unitCode', '');
-                                                    setValue('roomCode', '');
+                                                    setValue('roomCode','');
                                                 }}
                                                 placeholder="Select Property"
                                                 disabled={!isSubscriptionEditing}
