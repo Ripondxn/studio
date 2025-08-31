@@ -398,4 +398,3 @@ export async function getLatestContractForTenant(tenantCode: string): Promise<{ 
         return { success: false, error: (error as Error).message };
     }
 }
-
