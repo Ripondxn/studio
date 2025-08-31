@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -85,14 +86,14 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
     
     const occupancyStatus = useMemo(() => {
-        if(watchedRoom) {
-            return lookups.rooms.find(r => r.roomCode === watchedRoom)?.occupancyStatus || 'Vacant';
+        if (watchedRoom) {
+            return lookups.rooms.find(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit && r.roomCode === watchedRoom)?.occupancyStatus || 'Vacant';
         }
-        if(watchedUnit) {
-            return lookups.units.find(u => u.unitCode === watchedUnit)?.occupancyStatus || 'Vacant';
+        if (watchedUnit) {
+            return lookups.units.find(u => u.propertyCode === watchedProperty && u.unitCode === watchedUnit)?.occupancyStatus || 'Vacant';
         }
         return null;
-    }, [watchedRoom, watchedUnit, lookups.rooms, lookups.units]);
+    }, [watchedProperty, watchedUnit, watchedRoom, lookups.units, lookups.rooms]);
 
     const statusConfig = {
         'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
