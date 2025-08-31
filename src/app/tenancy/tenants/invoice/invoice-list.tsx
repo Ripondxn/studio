@@ -32,6 +32,8 @@ import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type Unit } from '@/app/property/units/schema';
+import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
+
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -371,7 +373,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     onSuccess={handleSuccess}
                 />
 
-                <InvoiceDialog
+                <SubscriptionInvoiceDialog
                     isOpen={isEditInvoiceOpen}
                     setIsOpen={setIsEditInvoiceOpen}
                     invoice={selectedInvoice}
