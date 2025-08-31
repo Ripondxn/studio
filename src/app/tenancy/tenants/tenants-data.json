@@ -42,9 +42,8 @@
       "property": "LT-C38",
       "unitCode": "F101",
       "roomCode": "Room-1/A",
-      "isSubscriptionActive": true,
-      "subscriptionAmount": 500,
-      "subscriptionStatus": "Monthly",
+      "isSubscriptionActive": false,
+      "subscriptionAmount": 0,
       "occupancyStatus": "Occupied"
     }
   },
@@ -69,7 +68,8 @@
       "isSubscriptionActive": true,
       "subscriptionAmount": 900,
       "attachments": [],
-      "subscriptionStatus": "Monthly"
+      "subscriptionStatus": "Monthly",
+      "occupancyStatus": "Occupied"
     }
   }
 ]

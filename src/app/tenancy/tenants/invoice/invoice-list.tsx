@@ -356,7 +356,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
 
                 <div className="mt-6">
                     {isLoading ? (
-                        <div className="flex justify-center items-center h-40">
+                         <div className="flex justify-center items-center h-40">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         </div>
                     ) : (
@@ -364,15 +364,14 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                <SubscriptionInvoiceDialog
+                <CreateInvoiceDialog
                     isOpen={isCreateInvoiceOpen}
                     setIsOpen={setIsCreateInvoiceOpen}
-                    invoice={null}
-                    tenant={tenant}
+                    customer={{ code: tenant.code, name: tenant.name }}
                     onSuccess={handleSuccess}
                 />
 
-                <SubscriptionInvoiceDialog
+                <InvoiceDialog
                     isOpen={isEditInvoiceOpen}
                     setIsOpen={setIsEditInvoiceOpen}
                     invoice={selectedInvoice}

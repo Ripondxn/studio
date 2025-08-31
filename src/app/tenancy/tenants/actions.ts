@@ -262,6 +262,9 @@ export async function cancelSubscription(tenantCode: string) {
         allTenants[index].tenantData.isSubscriptionActive = false;
         allTenants[index].tenantData.subscriptionStatus = undefined;
         allTenants[index].tenantData.subscriptionAmount = 0;
+        allTenants[index].tenantData.property = undefined;
+        allTenants[index].tenantData.unitCode = undefined;
+        allTenants[index].tenantData.roomCode = undefined;
         
         await writeTenants(allTenants);
         revalidatePath(`/tenancy/tenants/add?code=${tenantCode}`);
