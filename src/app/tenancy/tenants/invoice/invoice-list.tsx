@@ -231,7 +231,14 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                         <Switch
                                             id="isSubscriptionActive"
                                             checked={field.value}
-                                            onCheckedChange={field.onChange}
+                                            onCheckedChange={(checked) => {
+                                                field.onChange(checked);
+                                                if (!checked) {
+                                                    setValue('property', '');
+                                                    setValue('unitCode', '');
+                                                    setValue('roomCode', '');
+                                                }
+                                            }}
                                             disabled={!isSubscriptionEditing}
                                         />
                                         <Label htmlFor="isSubscriptionActive" className="!mt-0">
