@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -46,7 +47,7 @@ const ActionsCell = ({ row }: { row: { original: ReceiptVoucher } }) => {
         }
         setIsDeleting(false);
         setIsDeleteDialogOpen(false);
-    }
+    };
 
     return (
         <>

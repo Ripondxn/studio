@@ -17,6 +17,7 @@ import { type Partition } from '@/app/property/partitions/schema';
 import { type ReceiptBook } from '@/app/finance/book-management/schema';
 import { type Product } from '@/app/products/schema';
 import { type MaintenanceTicket } from '@/app/maintenance/ticket-issue/schema';
+import { type Account } from '@/app/finance/chart-of-accounts/schema';
 
 
 async function readData<T>(filePath: string, defaultValue: T[] = []): Promise<T[]> {
@@ -47,6 +48,8 @@ export async function getLookups() {
     const roomsData: Room[] = await readData(path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json'));
     const productsData: Product[] = await readData(path.join(process.cwd(), 'src/app/products/products-data.json'));
     const maintenanceTicketsData: MaintenanceTicket[] = await readData(path.join(process.cwd(), 'src/app/maintenance/ticket-issue/tickets-data.json'));
+    const expenseAccountsData: Account[] = await readData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
+
 
     return {
         tenants: tenantsData.map(t => ({ value: t.tenantData.code, label: t.tenantData.name })),
@@ -64,5 +67,17 @@ export async function getLookups() {
         maintenanceTickets: maintenanceTicketsData
             .filter(t => t.status !== 'Completed' && t.status !== 'Cancelled')
             .map(t => ({ value: t.id, label: `${t.ticketNo} - ${t.issueType}` })),
+        expenseAccounts: expenseAccountsData
+            .filter(acc => acc.type === 'Expense' && !acc.isGroup)
+            .map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})` })),
     }
 }
+
+
+export async function getExpenseAccounts(): Promise<{ value: string; label: string }[]> {
+    const accounts: Account[] = await readData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
+    return accounts
+        .filter(acc => acc.type === 'Expense' && !acc.isGroup)
+        .map(acc => ({ value: acc.code, label: `${acc.name} (${acc.code})` }));
+}
+

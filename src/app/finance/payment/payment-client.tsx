@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -7,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { getPayments, getSummary } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { AddPaymentDialog } from './add-payment-dialog';
+import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowDownLeft, ArrowUpRight, RefreshCw, Plus, Receipt } from 'lucide-react';
 import { type Payment } from './schema';
