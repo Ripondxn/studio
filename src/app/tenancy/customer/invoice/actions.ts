@@ -126,7 +126,7 @@ export async function saveInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'rem
                 invoiceNo: newInvoiceNo,
                 id: `INV-${Date.now()}`,
                 amountPaid: 0,
-                 items: validatedData.items.map(item => ({...item, id: `item-${Date.now()}-${Math.random()}`}))
+                 items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`}))
             };
             allInvoices.push(newInvoice);
             savedInvoice = newInvoice;

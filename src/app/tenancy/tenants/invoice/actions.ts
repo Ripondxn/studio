@@ -40,7 +40,6 @@ export async function getNextSubscriptionInvoiceNumber() {
 
 
 export async function saveSubscriptionInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & { id?: string, isAutoInvoiceNo?: boolean }, createdBy: string) {
-    const { isAutoInvoiceNo, ...invoiceData } = data;
-    // We can reuse the main saveInvoice function. The important part is that this action file only exports async functions.
-    return saveInvoice({ ...invoiceData, isAutoInvoiceNo }, createdBy);
+    // This function now correctly passes all data, including the isAutoInvoiceNo flag, to the main saveInvoice function.
+    return saveInvoice(data, createdBy);
 }
