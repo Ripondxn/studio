@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -127,7 +127,7 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const { control, handleSubmit, watch, setValue, reset, getValues } = form;
+  const { control, handleSubmit, watch, setValue, reset, getValues, register } = form;
 
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
@@ -208,7 +208,7 @@ export default function TenantPage() {
 
   
   const handleAttachmentChange = (index: number, field: keyof Attachment, value: any) => {
-     const currentAttachments = getValues('attachments') || [];
+    const currentAttachments = getValues('attachments') || [];
     const currentItem = currentAttachments[index];
     if (field === 'file' && currentItem.url) {
         URL.revokeObjectURL(currentItem.url);
@@ -264,8 +264,8 @@ export default function TenantPage() {
                 return {
                     id: att.id,
                     name: att.name,
-                    file: fileData,
                     remarks: att.remarks,
+                    file: fileData,
                     isLink: att.isLink,
                 }
             })
@@ -359,15 +359,13 @@ export default function TenantPage() {
     if (item.isLink && typeof item.file === 'string' && item.file.startsWith('http')) {
         return item.file;
     }
-    if (item.url) { // This is for new, unsaved file uploads
+    if (item.url) {
         return item.url;
     }
-    if (typeof item.file === 'string' && item.file.startsWith('data:')) { // For saved base64
+    if (typeof item.file === 'string' && item.file.startsWith('data:')) {
         return item.file;
     }
-    // This part assumes you have a way to serve gdrive files. This would likely be another API route.
     if (typeof item.file === 'string' && item.file.startsWith('gdrive:')) {
-        // Example: return `/api/files/view?id=${item.file.replace('gdrive://', '')}`;
         return '#';
     }
     return '#';
@@ -617,7 +615,7 @@ export default function TenantPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                              <Controller
+                                             <Controller
                                                 control={control}
                                                 name={`attachments.${index}.isLink`}
                                                 render={({ field }) => (
