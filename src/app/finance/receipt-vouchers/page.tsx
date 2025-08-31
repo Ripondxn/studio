@@ -1,5 +1,7 @@
 
+'use client';
 
+import { useState, useEffect } from 'react';
 import { getReceiptVouchers } from './actions';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -7,8 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function ReceiptVouchersPage() {
-  const vouchers = await getReceiptVouchers();
+export default function ReceiptVouchersPage() {
+  const [vouchers, setVouchers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getReceiptVouchers().then(data => {
+      setVouchers(data);
+      setIsLoading(false);
+    });
+  }, []);
   
   return (
     <div className="container mx-auto py-10">

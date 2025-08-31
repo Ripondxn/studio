@@ -109,10 +109,9 @@ const navLinks = [
             { href: '/finance/banking', label: 'Banking' },
             { href: '/finance/cheque-management', label: 'Cheque Management' },
             { href: '/finance/receipt-vouchers', label: 'Receipt Vouchers' },
-            { href: '/finance/payment', label: 'Payment' },
+            { href: '/finance/payment', label: 'Payment Vouchers' },
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
-            { href: '/finance/book-management', label: 'Book Management' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
     },

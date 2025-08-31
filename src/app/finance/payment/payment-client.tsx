@@ -121,9 +121,9 @@ export function PaymentsClient() {
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <div>
-            <h1 className="text-3xl font-bold font-headline">Payments & Receipts</h1>
+            <h1 className="text-3xl font-bold font-headline">Payment Vouchers</h1>
             <p className="text-muted-foreground">
-                Record and manage all incoming and outgoing payments.
+                Record and manage all outgoing payments to vendors and landlords.
             </p>
         </div>
         <div className="flex items-center gap-2">
