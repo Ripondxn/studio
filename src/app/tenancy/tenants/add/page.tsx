@@ -1,11 +1,10 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -123,7 +122,7 @@ export default function TenantPage() {
   });
 
   const { control, handleSubmit, watch, setValue, reset, getValues, register } = form;
-
+  
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "attachments"
@@ -361,6 +360,7 @@ export default function TenantPage() {
         return item.url;
     }
     if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
+        // Note: gdrive links aren't directly viewable and would need a download route
         return item.file;
     }
     return '#';
@@ -387,7 +387,7 @@ export default function TenantPage() {
   return (
     <div className="container mx-auto p-4 bg-background">
      <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSave)}>
+      <form onSubmit={form.handleSubmit((data) => onSave(data))}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
@@ -610,7 +610,7 @@ export default function TenantPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                             <Controller
+                                            <Controller
                                                 control={control}
                                                 name={`attachments.${index}.isLink`}
                                                 render={({ field }) => (
