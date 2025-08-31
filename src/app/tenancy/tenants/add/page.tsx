@@ -52,9 +52,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InvoiceList } from '../invoice/invoice-list';
+import { InvoiceList } from '@/app/tenancy/customer/invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
-import { type Invoice } from '../invoice/schema';
+import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list';
 import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
@@ -168,6 +168,7 @@ export default function TenantPage() {
             setIsNewRecord(true);
             setIsEditing(true);
             setIsAutoCode(true);
+            setAttachments([]); // Explicitly set attachments to empty for new records
         }
       } else {
         toast({
@@ -364,7 +365,8 @@ export default function TenantPage() {
     if (item.url) { // This is for new, unsaved file uploads
         return item.url;
     }
-    if (typeof item.file === 'string' && item.file.startsWith('data:')) { // For saved base64 files
+    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
+        // Note: gdrive links aren't directly viewable and would need a download route
         return item.file;
     }
     return '#';
@@ -651,3 +653,4 @@ export default function TenantPage() {
     </div>
   );
 }
+
