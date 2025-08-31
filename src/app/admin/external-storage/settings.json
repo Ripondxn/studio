@@ -1,5 +1,5 @@
-
 {
-  "provider": "local",
-  "enabled": false
+  "provider": "google-drive",
+  "googleDriveApiKey": "AIzaSyDWLmhLnZVqo7BxutXq9VWn7Rl8akTaR30",
+  "enabled": true
 }

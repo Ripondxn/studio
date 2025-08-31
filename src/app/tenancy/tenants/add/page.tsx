@@ -26,7 +26,8 @@ import {
   Search,
   X,
   FileUp,
-  Link2
+  Link2,
+  Move
 } from 'lucide-react';
 import {
   Table,
@@ -57,6 +58,8 @@ import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list'
 import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { MoveTenantDialog } from './move-tenant-dialog';
+import { handleFileUpload } from '@/app/services/attachment-service';
 
 
 type Attachment = {
@@ -221,15 +224,27 @@ export default function TenantPage() {
   const onSave = async (data: Tenant) => {
     setIsSaving(true);
     try {
+        const processedAttachments = await Promise.all(
+            attachments.map(async (att) => {
+                let fileData: string | null = null;
+                if (att.file && att.file instanceof File) {
+                    fileData = await handleFileUpload(att.file);
+                } else {
+                    fileData = att.file;
+                }
+                return {
+                    id: att.id,
+                    name: att.name,
+                    file: fileData,
+                    remarks: att.remarks,
+                    isLink: att.isLink,
+                }
+            })
+        );
+        
       const dataToSave = {
         tenantData: data,
-        attachments: attachments.map(a => ({ 
-            id: a.id, 
-            name: a.name, 
-            file: a.file instanceof File ? a.file.name : a.file, 
-            remarks: a.remarks,
-            isLink: a.isLink 
-        })),
+        attachments: processedAttachments,
       };
 
       const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
@@ -244,6 +259,7 @@ export default function TenantPage() {
             router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
             form.reset(data);
+            setAttachments(processedAttachments.map(a => ({...a, file: a.file, url: undefined})));
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -305,6 +321,16 @@ export default function TenantPage() {
             {pageTitle}
             </h1>
             <div className="flex items-center gap-2">
+                {!isEditing && !isNewRecord && (
+                    <MoveTenantDialog
+                        contractId={form.getValues('contractId')!}
+                        currentLocation={{
+                            property: form.getValues('property') || 'N/A',
+                            unit: form.getValues('unitCode') || 'N/A',
+                            room: form.getValues('roomCode'),
+                        }}
+                    />
+                )}
                 {!isEditing && (
                 <Button type="button" onClick={handleEditClick}>
                     <Pencil className="mr-2 h-4 w-4" /> Edit
