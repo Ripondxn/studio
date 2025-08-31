@@ -19,13 +19,22 @@
       "roomCode": "",
       "isSubscriptionActive": true,
       "subscriptionAmount": 1000,
-      "subscriptionStatus": "Monthly"
+      "subscriptionStatus": "Monthly",
+      "attachments": [
+        {
+          "id": 1,
+          "name": "test",
+          "file": "\"C:\\Users\\Ripon Ahmed\\Desktop\\Google Drive API.txt\"",
+          "remarks": "t",
+          "isLink": true
+        }
+      ]
     },
     "attachments": [
       {
         "id": 1,
         "name": "test",
-        "file": "gdfgfd",
+        "file": "\"C:\\Users\\Ripon Ahmed\\Desktop\\Google Drive API.txt\"",
         "remarks": "t",
         "isLink": true
       }
