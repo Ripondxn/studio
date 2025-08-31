@@ -53,11 +53,11 @@ import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
-import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
+import { type Invoice } from '../invoice/schema';
 import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list';
 import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormMessage } from '@/components/ui/form';
 import { MoveTenantDialog } from './move-tenant-dialog';
 import { handleFileUpload } from '@/app/services/attachment-service';
 
@@ -531,7 +531,7 @@ export default function TenantPage() {
                                 <TableRow key={item.id}>
                                     <TableCell>
                                         <Input 
-                                            value={item.name} 
+                                            value={item.name || ''} 
                                             onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
                                             disabled={!isEditing} 
                                             placeholder="e.g. Passport Copy"
