@@ -344,7 +344,10 @@ export async function getUnitsForProperty(propertyCode: string) {
                 }
             }
 
-            return { ...u, occupancyStatus };
+            return {
+                ...u,
+                occupancyStatus
+            };
         })
         .filter(u => u.occupancyStatus !== 'Occupied')
         .map((u: any) => ({ ...u, value: u.unitCode, label: u.unitCode }));
@@ -356,10 +359,10 @@ export async function getRoomsForUnit(propertyCode: string, unitCode: string) {
     const allTenants: {tenantData: Tenant}[] = await readTenants();
 
     const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
-    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
+    const occupiedRoomCodesFromContracts = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode!));
 
     const activeSubscriptionTenants = allTenants.filter(t => t.tenantData.isSubscriptionActive);
-    const occupiedRoomCodesFromSubscriptions = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode));
+    const occupiedRoomCodesFromSubscriptions = new Set(activeSubscriptionTenants.filter(t => t.tenantData.roomCode).map(t => t.tenantData.roomCode!));
     
     const allOccupiedRoomCodes = new Set([...occupiedRoomCodesFromContracts, ...occupiedRoomCodesFromSubscriptions]);
 
