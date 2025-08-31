@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -196,8 +197,11 @@ export default function TenantPage() {
   }, [searchParams, handleFindClick]);
 
   
-  const handleAttachmentChange = (index: number, field: keyof Attachment, value: any) => {
+  const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     const currentAttachments = getValues('attachments') || [];
+    const index = currentAttachments.findIndex(a => a.id === id);
+    if(index === -1) return;
+    
     const currentItem = currentAttachments[index];
     if (field === 'file' && currentItem.url) {
         URL.revokeObjectURL(currentItem.url);
@@ -306,7 +310,7 @@ export default function TenantPage() {
   }
 
   const onSaveAttachment = (index: number) => {
-    handleSubmit((data) => onSave(data, true, index))();
+    form.handleSubmit((data) => onSave(data, true, index))();
   };
 
   const handleCancelClick = () => {
@@ -352,6 +356,7 @@ export default function TenantPage() {
         return item.url;
     }
     if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
+        // Note: gdrive links aren't directly viewable and would need a download route
         return item.file;
     }
     return '#';
@@ -378,7 +383,7 @@ export default function TenantPage() {
   return (
     <div className="container mx-auto p-4 bg-background">
      <Form {...form}>
-      <form onSubmit={handleSubmit(data => onSave(data))}>
+      <form onSubmit={form.handleSubmit(onSave)}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
@@ -565,13 +570,15 @@ export default function TenantPage() {
             </Card>
         </TabsContent>
         <TabsContent value="subscription">
-            <InvoiceList 
+            {tenantCode && <InvoiceList 
+                tenant={getValues()}
                 invoices={invoices}
                 isLoading={isLoadingInvoices}
-                onRefresh={() => fetchInvoices(form.getValues('code'))}
+                onRefresh={() => fetchInvoices(tenantCode)}
                 isSubscriptionEditing={isEditing}
                 setIsSubscriptionEditing={setIsEditing}
-            />
+                formControl={control}
+            />}
         </TabsContent>
         <TabsContent value="attachments">
             <Card>
@@ -650,7 +657,7 @@ export default function TenantPage() {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => addAttachmentRow()} disabled={!isEditing}>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>
