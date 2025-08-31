@@ -7,7 +7,7 @@ import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { type Contract } from '../contract/schema';
 import { type Unit } from '@/app/property/units/schema';
-import { type Room } from '@/app/property/rooms/schema';
+import { type Room } from '../rooms/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { getUnits } from '@/app/property/units/actions';
