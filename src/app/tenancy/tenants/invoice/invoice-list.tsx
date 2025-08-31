@@ -334,14 +334,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                <InvoiceDialog
+                {tenant && <CreateInvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
-                    invoice={selectedInvoice}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
-                    isViewMode={isViewMode}
-                />
+                />}
 
                 <SubscriptionInvoiceDialog
                     isOpen={isInvoiceDialogOpen}
