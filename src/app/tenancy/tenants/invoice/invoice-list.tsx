@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X, BedDouble, Building } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
-import { SubscriptionInvoiceDialog } from './invoice-dialog';
+import { InvoiceDialog } from './invoice-dialog';
 import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
@@ -23,13 +23,9 @@ import { FormField, FormItem, type Control, FormMessage, FormLabel } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Combobox } from '@/components/ui/combobox';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { useFormContext } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -41,92 +37,34 @@ interface InvoiceListProps {
     formControl: Control<Tenant>;
 }
 
-type Lookups = {
-    properties: {value: string, label: string}[];
-    units: {value: string, label: string, propertyCode: string}[];
-    rooms: {value: string, label: string, propertyCode: string, unitCode?: string}[];
-}
 
 export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, formControl }: InvoiceListProps) {
-    const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
-    const [isGeneralInvoiceDialogOpen, setIsGeneralInvoiceDialogOpen] = useState(false);
+    const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+    const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
     const { formatCurrency } = useCurrency();
+    const { watch } = useFormContext<Tenant>();
     
-    const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [] });
-
-    const { watch, setValue } = useFormContext<Tenant>();
-
-    useEffect(() => {
-        getContractLookups().then(data => {
-            setLookups(prev => ({...prev, properties: data.properties}));
-        });
-    }, []);
-
-    const watchedProperty = watch('property');
-    const watchedUnit = watch('unitCode');
-    
-    const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
-    const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
-    
-    const occupancyStatus = watch('occupancyStatus');
-    const occupancyStatusConfig = {
-        'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700' },
-        'Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700' },
-        'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700' }
-    };
-    const config = occupancyStatus ? occupancyStatusConfig[occupancyStatus] : null;
-
-    useEffect(() => {
-        const fetchUnits = async () => {
-            if(watchedProperty) {
-                const unitsData = await getUnitsForProperty(watchedProperty);
-                setLookups(prev => ({...prev, units: unitsData, rooms: []}));
-            }
-        }
-        fetchUnits();
-    }, [watchedProperty]);
-
-    useEffect(() => {
-        const fetchRooms = async () => {
-            if(watchedProperty && watchedUnit) {
-                const roomsData = await getRoomsForUnit(watchedProperty, watchedUnit);
-                setLookups(prev => ({...prev, rooms: roomsData}));
-            }
-        }
-        fetchRooms();
-    }, [watchedProperty, watchedUnit]);
-
-
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
-        // Always open the general invoice dialog for new invoices from this screen
-        setIsGeneralInvoiceDialogOpen(true);
+        setIsCreateInvoiceOpen(true);
     }
     
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(false);
-        if (invoice.invoiceNo.startsWith('SUB-INV')) {
-            setIsInvoiceDialogOpen(true);
-        } else {
-            setIsGeneralInvoiceDialogOpen(true);
-        }
+        setIsEditInvoiceOpen(true);
     }
     
     const handleViewClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(true);
-         if (invoice.invoiceNo.startsWith('SUB-INV')) {
-            setIsInvoiceDialogOpen(true);
-        } else {
-            setIsGeneralInvoiceDialogOpen(true);
-        }
+        setIsEditInvoiceOpen(true);
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
@@ -295,47 +233,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             />
                         </div>
                         <Separator />
-                         <CardTitle>Rented Property</CardTitle>
-                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <FormField
-                                control={formControl}
-                                name="property"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Property</FormLabel>
-                                     <Combobox options={lookups.properties || []} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('unitCode', ''); setValue('roomCode',''); }} placeholder="Select property" disabled={!isSubscriptionEditing}/>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={formControl}
-                                name="unitCode"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Unit</FormLabel>
-                                     <Combobox options={filteredUnits} value={field.value || ''} onSelect={value => { field.onChange(value); setValue('roomCode',''); }} placeholder="Select unit" disabled={!isSubscriptionEditing || !watchedProperty}/>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={formControl}
-                                name="roomCode"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Room (Optional)</FormLabel>
-                                    <Combobox options={filteredRooms} value={field.value || ''} onSelect={field.onChange} placeholder="Select room" disabled={!isSubscriptionEditing || !watchedUnit}/>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                             <div className="flex items-end pb-2">
-                               {config && <Badge variant={config.variant as any} className={cn(config.color, 'border-transparent')}>
-                                    {occupancyStatus}
-                                </Badge>}
-                            </div>
-                        </div>
                     </CardContent>
                 </Card>
 
@@ -349,12 +246,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                {tenant && <CreateInvoiceDialog
+                <CreateInvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
-                />}
+                />
 
                 <SubscriptionInvoiceDialog
                     isOpen={isInvoiceDialogOpen}
