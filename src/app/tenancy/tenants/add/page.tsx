@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -364,9 +365,10 @@ export default function TenantPage() {
     if (typeof item.file === 'string' && item.file.startsWith('data:')) { // For saved base64
         return item.file;
     }
+    // This part assumes you have a way to serve gdrive files. This would likely be another API route.
     if (typeof item.file === 'string' && item.file.startsWith('gdrive:')) {
-        // This won't be directly viewable but can be shown for info
-        return '#gdrive-file';
+        // Example: return `/api/files/view?id=${item.file.replace('gdrive://', '')}`;
+        return '#';
     }
     return '#';
   };
@@ -392,7 +394,7 @@ export default function TenantPage() {
   return (
     <div className="container mx-auto p-4 bg-background">
      <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSave)}>
+      <form onSubmit={form.handleSubmit((data) => onSave(data))}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
@@ -607,15 +609,15 @@ export default function TenantPage() {
                             {fields.map((item, index) => (
                                 <TableRow key={item.id}>
                                     <TableCell>
-                                        <Input
-                                            {...form.register(`attachments.${index}.name`)}
+                                         <Input 
+                                            {...register(`attachments.${index}.name`)} 
                                             disabled={!isEditing} 
                                             placeholder="e.g. Passport Copy"
                                         />
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                             <Controller
+                                              <Controller
                                                 control={control}
                                                 name={`attachments.${index}.isLink`}
                                                 render={({ field }) => (
@@ -655,7 +657,7 @@ export default function TenantPage() {
                                                     <Eye className="h-4 w-4" />
                                                 </a>
                                             </Button>
-                                             <Button type="button" variant="outline" size="icon" disabled={!watch(`attachments.${index}.isLink`)} onClick={() => handleCopyLink(watch(`attachments.${index}.file`))}>
+                                            <Button type="button" variant="outline" size="icon" disabled={!watch(`attachments.${index}.isLink`)} onClick={() => handleCopyLink(watch(`attachments.${index}.file`))}>
                                                 <ClipboardCopy className="h-4 w-4" />
                                             </Button>
                                             <Button size="icon" type="button" onClick={() => onSaveAttachment(index)} disabled={savingAttachmentId === item.id || !isEditing}>
