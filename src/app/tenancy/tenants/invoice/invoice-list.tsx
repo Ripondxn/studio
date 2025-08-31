@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X, BedDouble, Building } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
@@ -36,7 +36,6 @@ interface InvoiceListProps {
     setIsSubscriptionEditing: (isEditing: boolean) => void;
     formControl: Control<Tenant>;
 }
-
 
 export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, formControl }: InvoiceListProps) {
     const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
@@ -121,7 +120,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        {tenant?.name && <CardDescription>Manage invoices for {tenant.name}.</CardDescription>}
+                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -247,14 +246,14 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                {tenant && <CreateInvoiceDialog
+                <CreateInvoiceDialog
                     isOpen={isGeneralInvoiceDialogOpen}
                     setIsOpen={setIsGeneralInvoiceDialogOpen}
                     customer={{code: tenant.code, name: tenant.name}}
                     onSuccess={handleSuccess}
-                />}
+                />
 
-                <SubscriptionInvoiceDialog
+                <InvoiceDialog
                     isOpen={isEditInvoiceOpen}
                     setIsOpen={setIsEditInvoiceOpen}
                     invoice={selectedInvoice}
