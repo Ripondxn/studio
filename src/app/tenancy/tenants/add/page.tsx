@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -57,20 +57,14 @@ import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
 import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list';
 import { Switch } from '@/components/ui/switch';
-import { type Tenant, tenantSchema } from '../schema';
+import { type Tenant, tenantSchema, attachmentSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { MoveTenantDialog } from './move-tenant-dialog';
 import { handleFileUpload } from '@/app/services/attachment-service';
 
 
-type Attachment = {
-  id: number;
-  name: string;
-  file: File | null | string;
-  url?: string;
-  remarks: string;
-  isLink: boolean;
-};
+type Attachment = z.infer<typeof attachmentSchema> & { url?: string };
+
 
 const initialTenantData: Tenant = {
     code: '',
@@ -91,6 +85,7 @@ const initialTenantData: Tenant = {
     isSubscriptionActive: false,
     subscriptionStatus: undefined,
     subscriptionAmount: 0,
+    attachments: [],
 };
 
 // Helper function to read a file as a Base64 string on the client
@@ -112,8 +107,6 @@ export default function TenantPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
@@ -122,6 +115,11 @@ export default function TenantPage() {
   const form = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
     defaultValues: initialTenantData,
+  });
+
+  const { fields, append, remove, update } = useFieldArray({
+    control: form.control,
+    name: "attachments"
   });
 
   const tenantCode = form.watch('code');
@@ -135,29 +133,24 @@ export default function TenantPage() {
     setIsLoadingInvoices(false);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      attachments.forEach(attachment => {
-        if (attachment.url) {
-          URL.revokeObjectURL(attachment.url);
-        }
-      });
-    };
-  }, [attachments]);
-
   const handleFindClick = useCallback(async (code: string) => {
     try {
       const result = await findTenantData(code);
       if (result.success && result.data) {
         const fullTenantData = { ...initialTenantData, ...(result.data.tenantData || {}) };
-        form.reset(fullTenantData);
-        setAttachments(result.data.attachments ? result.data.attachments.map((a: any) => ({
-            ...a, 
+        
+        const attachmentsWithUrls = result.data.attachments?.map((a: any) => ({
+            ...a,
             name: a.name || '',
             remarks: a.remarks || '',
-            file: a.file || null, 
+            file: a.file || null,
             url: a.file && a.isLink === false && typeof a.file === 'string' && a.file.startsWith('data:') ? a.file : undefined
-        })) : []);
+        })) || [];
+        
+        form.reset({
+            ...fullTenantData,
+            attachments: attachmentsWithUrls
+        });
         
         if (code !== 'new') {
             setIsNewRecord(false);
@@ -168,7 +161,6 @@ export default function TenantPage() {
             setIsNewRecord(true);
             setIsEditing(true);
             setIsAutoCode(true);
-            setAttachments([]); // Explicitly set attachments to empty for new records
         }
       } else {
         toast({
@@ -195,47 +187,7 @@ export default function TenantPage() {
       handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
-
   
-  const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
-    setAttachments(prev => prev.map(item => {
-        if (item.id === id) {
-             if (field === 'file') {
-                if (item.url) URL.revokeObjectURL(item.url);
-                const newUrl = (value instanceof File) ? URL.createObjectURL(value) : undefined;
-                return {...item, file: value, url: newUrl};
-            }
-             if (field === 'isLink') {
-                 if (item.url) URL.revokeObjectURL(item.url);
-                 return {...item, isLink: value, file: null, url: undefined };
-            }
-            return {...item, [field]: value};
-        }
-        return item;
-    }));
-  };
-
-  const addAttachmentRow = () => {
-    setAttachments(prev => [
-      ...prev,
-      {
-        id: prev.length > 0 ? Math.max(...prev.map(item => item.id)) + 1 : 1,
-        name: '',
-        file: null,
-        remarks: '',
-        isLink: false
-      }
-    ]);
-  };
-
-  const removeAttachmentRow = (id: number) => {
-    const attachmentToRemove = attachments.find(item => item.id === id);
-    if (attachmentToRemove && attachmentToRemove.url) {
-        URL.revokeObjectURL(attachmentToRemove.url);
-    }
-    setAttachments(prev => prev.filter(item => item.id !== id));
-  };
-
   const handleEditClick = () => {
     setIsEditing(true);
   }
@@ -243,14 +195,14 @@ export default function TenantPage() {
   const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
     if (!isAttachmentSave) setIsSaving(true);
     if (isAttachmentSave && attachmentId) setSavingAttachmentId(attachmentId);
-
+    
     try {
-        const attachmentsToProcess = isAttachmentSave
-            ? attachments.filter(a => a.id === attachmentId)
-            : attachments;
-
         const processedAttachments = await Promise.all(
-            attachmentsToProcess.map(async (att) => {
+            (data.attachments || []).map(async (att) => {
+                if (isAttachmentSave && att.id !== attachmentId) {
+                    return att; // Don't re-process other attachments
+                }
+
                 let fileData: string | null = null;
                  if (att.isLink) {
                     fileData = typeof att.file === 'string' ? att.file : null;
@@ -269,20 +221,10 @@ export default function TenantPage() {
                 }
             })
         );
-        
-        let finalAttachments = [...attachments];
-        if (isAttachmentSave && processedAttachments.length > 0) {
-            finalAttachments = attachments.map(att => {
-                const saved = processedAttachments.find(p => p.id === att.id);
-                return saved ? { ...att, file: saved.file } : att;
-            });
-             setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
-        }
-
 
         const dataToSave = {
             tenantData: data,
-            attachments: finalAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
+            attachments: processedAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
         };
 
         const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
@@ -298,10 +240,7 @@ export default function TenantPage() {
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
-                 form.reset(data);
-                 if (!isAttachmentSave) {
-                    setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
-                 }
+                form.reset({ ...data, attachments: processedAttachments });
             }
         } else {
             throw new Error(result.error || 'An unknown error occurred');
@@ -318,8 +257,8 @@ export default function TenantPage() {
     }
   }
 
-  const onSaveAttachment = (id: number) => {
-    form.handleSubmit((data) => onSave(data, true, id))();
+  const onSaveAttachment = (index: number) => {
+    form.handleSubmit((data) => onSave(data, true, fields[index].id))();
   };
 
   const handleCancelClick = () => {
@@ -327,7 +266,6 @@ export default function TenantPage() {
         router.push('/tenancy/tenants');
      } else {
         form.reset();
-        setAttachments(form.getValues().attachments || []);
         setIsEditing(false);
         setIsSubscriptionEditing(false);
      }
@@ -366,7 +304,6 @@ export default function TenantPage() {
         return item.url;
     }
     if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
-        // Note: gdrive links aren't directly viewable and would need a download route
         return item.file;
     }
     return '#';
@@ -588,38 +525,45 @@ export default function TenantPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {attachments.map((item, index) => (
+                            {fields.map((item, index) => (
                                 <TableRow key={item.id}>
                                     <TableCell>
-                                        <Input 
-                                            value={item.name} 
-                                            onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                         <Input 
+                                            {...register(`attachments.${index}.name`)} 
                                             disabled={!isEditing} 
                                             placeholder="e.g. Passport Copy"
                                         />
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            {item.isLink ? (
+                                            {watch(`attachments.${index}.isLink`) ? (
                                                 <Input
+                                                    {...register(`attachments.${index}.file`)}
                                                     type="text"
                                                     placeholder="https://example.com"
-                                                    value={typeof item.file === 'string' ? item.file : ''}
-                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
                                                     disabled={!isEditing}
                                                 />
                                             ) : (
                                                 <Input 
                                                     type="file" 
                                                     className="text-sm w-full" 
-                                                    ref={(el) => (fileInputRefs.current[index] = el)}
-                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0] || null;
+                                                        const url = file ? URL.createObjectURL(file) : undefined;
+                                                        update(index, { ...item, file, url });
+                                                    }}
                                                     disabled={!isEditing}
                                                 />
                                             )}
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
-                                                {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                                            </Button>
+                                             <Switch
+                                                checked={watch(`attachments.${index}.isLink`)}
+                                                onCheckedChange={(checked) => {
+                                                    const currentItem = watch(`attachments.${index}`);
+                                                    update(index, { ...currentItem, isLink: checked, file: null, url: undefined });
+                                                }}
+                                                disabled={!isEditing}
+                                            />
+                                            <Label>{watch(`attachments.${index}.isLink`) ? 'Link' : 'File'}</Label>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -632,7 +576,7 @@ export default function TenantPage() {
                                             <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
                                                 {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                             </Button>
-                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                            <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => remove(index)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -641,7 +585,7 @@ export default function TenantPage() {
                             ))}
                         </TableBody>
                     </Table>
-                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: Date.now(), name: '', file: null, remarks: '', isLink: false })} disabled={!isEditing}>
                         <Plus className="mr-2 h-4 w-4"/> Add Attachment
                     </Button>
                 </CardContent>
@@ -653,4 +597,3 @@ export default function TenantPage() {
     </div>
   );
 }
-
