@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -180,7 +179,7 @@ export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-4xl">
-        <form>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>Create New Invoice</DialogTitle>
             <DialogDescription>
@@ -345,7 +344,7 @@ export function CreateInvoiceDialog({ isOpen, setIsOpen, customer, onSuccess }: 
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>
             </DialogClose>
-            <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
+            <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 Save Invoice
             </Button>
