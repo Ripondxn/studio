@@ -1,11 +1,10 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Card,
@@ -110,6 +109,8 @@ export default function TenantPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
@@ -356,17 +357,14 @@ export default function TenantPage() {
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${form.watch('name')}`;
 
   const getViewLink = (item: Attachment): string => {
-    if (item.isLink && typeof item.file === 'string' && item.file.startsWith('http')) {
+    if (item.isLink && typeof item.file === 'string') {
         return item.file;
     }
     if (item.url) {
         return item.url;
     }
-    if (typeof item.file === 'string' && item.file.startsWith('data:')) {
+    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) {
         return item.file;
-    }
-    if (typeof item.file === 'string' && item.file.startsWith('gdrive:')) {
-        return '#';
     }
     return '#';
   };
@@ -392,7 +390,7 @@ export default function TenantPage() {
   return (
     <div className="container mx-auto p-4 bg-background">
      <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => onSave(data))}>
+      <form onSubmit={form.handleSubmit(data => onSave(data))}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
@@ -615,22 +613,6 @@ export default function TenantPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                             <Controller
-                                                control={control}
-                                                name={`attachments.${index}.isLink`}
-                                                render={({ field }) => (
-                                                   <Switch
-                                                        checked={field.value}
-                                                        onCheckedChange={(checked) => {
-                                                            field.onChange(checked);
-                                                            setValue(`attachments.${index}.file`, null);
-                                                        }}
-                                                        disabled={!isEditing}
-                                                    />
-                                                )}
-                                            />
-                                             <Label>{watch(`attachments.${index}.isLink`) ? 'Link' : 'File'}</Label>
-                                            
                                             {watch(`attachments.${index}.isLink`) ? (
                                                 <Input
                                                     type="text"
@@ -646,6 +628,15 @@ export default function TenantPage() {
                                                     disabled={!isEditing}
                                                 />
                                             )}
+                                             <Controller
+                                                control={control}
+                                                name={`attachments.${index}.isLink`}
+                                                render={({ field }) => (
+                                                   <Button type="button" variant="ghost" size="icon" onClick={() => field.onChange(!field.value)} disabled={!isEditing}>
+                                                        {field.value ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                                    </Button>
+                                                )}
+                                            />
                                         </div>
                                     </TableCell>
                                     <TableCell>
