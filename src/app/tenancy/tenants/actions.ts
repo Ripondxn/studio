@@ -65,12 +65,15 @@ export async function getAllTenants() {
         }
     }
 
-    const invoiceBalanceByCustomer = new Map<string, number>();
+    const invoiceStatsByCustomer = new Map<string, { totalBilled: number, totalPaid: number }>();
     for (const invoice of invoices) {
-        if (invoice.status !== 'Paid' && invoice.status !== 'Cancelled') {
-            const currentBalance = invoiceBalanceByCustomer.get(invoice.customerCode) || 0;
-            const remainingBalance = invoice.total - (invoice.amountPaid || 0);
-            invoiceBalanceByCustomer.set(invoice.customerCode, currentBalance + remainingBalance);
+        if (invoice.status !== 'Cancelled') {
+            if (!invoiceStatsByCustomer.has(invoice.customerCode)) {
+                invoiceStatsByCustomer.set(invoice.customerCode, { totalBilled: 0, totalPaid: 0 });
+            }
+            const stats = invoiceStatsByCustomer.get(invoice.customerCode)!;
+            stats.totalBilled += invoice.total;
+            stats.totalPaid += invoice.amountPaid || 0;
         }
     }
 
@@ -80,13 +83,19 @@ export async function getAllTenants() {
             const tenantCode = l.tenantData.code;
             const contract = contractsByTenantCode.get(tenantCode);
             let dueBalance = 0;
+            let contractValue = 0;
+            let paidAmount = 0;
 
             if (l.tenantData.isSubscriptionActive) {
-                dueBalance = invoiceBalanceByCustomer.get(tenantCode) || 0;
+                const stats = invoiceStatsByCustomer.get(tenantCode) || { totalBilled: 0, totalPaid: 0 };
+                contractValue = stats.totalBilled;
+                paidAmount = stats.totalPaid;
+                dueBalance = contractValue - paidAmount;
             } else if (contract) {
-                dueBalance = contract.paymentSchedule
-                    .filter(p => p.status === 'unpaid')
-                    .reduce((sum, p) => sum + p.amount, 0);
+                contractValue = contract.totalRent;
+                const paidInstallments = contract.paymentSchedule.filter(p => p.status === 'paid');
+                paidAmount = paidInstallments.reduce((sum, p) => sum + p.amount, 0);
+                dueBalance = contractValue - paidAmount;
             }
 
             return {
@@ -95,6 +104,8 @@ export async function getAllTenants() {
                 contractId: contract?.id || null,
                 contractNo: contract?.contractNo || null,
                 isSubscriptionActive: l.tenantData.isSubscriptionActive || false,
+                contractValue,
+                paidAmount,
                 dueBalance,
             }
         });

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -225,22 +226,36 @@ export const columns: ColumnDef<Tenant>[] = [
     }
   },
   {
+    accessorKey: 'contractValue',
+    header: () => <div className="text-right">Contract Value</div>,
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
+      const amount = row.original.contractValue || 0;
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>;
+    },
+  },
+  {
+    accessorKey: 'paidAmount',
+    header: () => <div className="text-right">Paid Amount</div>,
+    cell: function Cell({ row }) {
+      const { formatCurrency } = useCurrency();
+      const amount = row.original.paidAmount || 0;
+      return <div className="text-right font-medium text-green-600">{formatCurrency(amount)}</div>;
+    },
+  },
+  {
     accessorKey: 'dueBalance',
     header: () => <div className="text-right">Due Balance</div>,
     cell: function Cell({ row }) {
-        const { formatCurrency } = useCurrency();
-        const amount = row.original.dueBalance || 0;
-        const color = amount > 0 ? 'text-destructive' : 'text-muted-foreground';
-        return <div className={`text-right font-medium ${color}`}>{formatCurrency(amount)}</div>;
+      const { formatCurrency } = useCurrency();
+      const amount = row.original.dueBalance || 0;
+      const color = amount > 0 ? 'text-destructive' : 'text-muted-foreground';
+      return <div className={`text-right font-medium ${color}`}>{formatCurrency(amount)}</div>;
     },
   },
   {
     accessorKey: 'mobile',
     header: 'Mobile',
-  },
-  {
-    accessorKey: 'email',
-    header: 'Email',
   },
   {
     accessorKey: 'contractNo',
