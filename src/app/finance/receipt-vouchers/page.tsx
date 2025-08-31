@@ -29,11 +29,18 @@ export default function ReceiptVouchersPage() {
                 Create and manage all payment receipt vouchers.
             </p>
         </div>
-        <Button asChild>
-            <Link href="/finance/receipt-vouchers/add">
-                 <Plus className="mr-2 h-4 w-4" /> Create Receipt Voucher
-            </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button asChild>
+                <Link href="/finance/receipt-vouchers/add-single">
+                    <Plus className="mr-2 h-4 w-4" /> Create Single Voucher
+                </Link>
+            </Button>
+             <Button asChild variant="outline">
+                <Link href="/finance/receipt-vouchers/add">
+                    <Plus className="mr-2 h-4 w-4" /> Create Batch Voucher
+                </Link>
+            </Button>
+        </div>
       </div>
       <DataTable columns={columns} data={vouchers} />
     </div>
