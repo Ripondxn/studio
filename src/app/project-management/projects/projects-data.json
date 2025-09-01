@@ -1,2 +1,17 @@
-
-[]
+[
+  {
+    "projectNo": "34545",
+    "projectName": "Dubai Mall",
+    "projectType": "Main Contractor",
+    "partyType": "Customer",
+    "partyCode": "C002",
+    "partyName": "Md Ripon Ahmed",
+    "status": "In Progress",
+    "startDate": "2025-09-01",
+    "endDate": "2025-09-01",
+    "contractValue": 150000,
+    "retentionPercentage": 0,
+    "notes": "",
+    "id": "PROJ-1756743393682"
+  }
+]

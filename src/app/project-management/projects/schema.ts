@@ -1,6 +1,15 @@
 
 import { z } from 'zod';
 
+export const progressBillingSchema = z.object({
+  id: z.string(),
+  date: z.string(),
+  description: z.string(),
+  percentage: z.number(),
+  amount: z.number(),
+  status: z.enum(['Draft', 'Submitted', 'Paid', 'Cancelled']),
+});
+
 export const projectSchema = z.object({
   id: z.string(),
   projectNo: z.string().min(1, 'Project number is required.'),
@@ -16,6 +25,8 @@ export const projectSchema = z.object({
   retentionPercentage: z.number().min(0).max(100).optional().default(0),
   retentionReleaseDate: z.string().optional(),
   notes: z.string().optional(),
+  progressBillings: z.array(progressBillingSchema).optional().default([]),
 });
 
 export type Project = z.infer<typeof projectSchema>;
+export type ProgressBilling = z.infer<typeof progressBillingSchema>;
