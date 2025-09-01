@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -447,7 +448,7 @@ export default function TenantPage() {
             <Tabs defaultValue="info">
                 <TabsList>
                     <TabsTrigger value="info">Tenant Information</TabsTrigger>
-                    <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
+                    <TabsTrigger value="invoices" disabled={isNewRecord}>Invoices</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info">
                     <Card>
@@ -648,12 +649,15 @@ export default function TenantPage() {
                         isLoading={isLoadingInvoices}
                         onRefresh={() => fetchInvoices(tenantCode)}
                         isSubscriptionEditing={isEditing}
+                        control={control}
+                        watch={watch}
+                        setValue={setValue}
                         onCreateInvoice={handleOpenSubscriptionDialog}
                     />
                 </TabsContent>
               </Tabs>
-            </form>
-          </FormProvider>
+        </form>
+      </FormProvider>
      
         <SubscriptionInvoiceDialog
             isOpen={isSubInvoiceOpen}
@@ -665,3 +669,4 @@ export default function TenantPage() {
     </div>
   );
 }
+
