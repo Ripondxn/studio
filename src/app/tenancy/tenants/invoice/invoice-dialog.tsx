@@ -120,7 +120,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     }
   }, [isOpen, invoice, reset, tenant]);
 
-  const onSubmit = async (data: InvoiceFormData) => {
+  const onSaveInvoice = async (data: InvoiceFormData) => {
     const userProfile = sessionStorage.getItem('userProfile');
     if(!userProfile) {
         toast({variant: 'destructive', title: 'Error', description: 'Could not identify current user.'});
@@ -190,7 +190,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSaveInvoice)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit' : 'Create'} Subscription Invoice</DialogTitle>
             <DialogDescription>
