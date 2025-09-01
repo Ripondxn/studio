@@ -27,9 +27,13 @@ import { Switch } from '@/components/ui/switch';
 import { Combobox } from '@/components/ui/combobox';
 import { getLookups } from '@/app/lookups/actions';
 
-const formSchema = projectSchema.omit({ id: true, partyName: true });
+const getFormSchema = (isAutoCode: boolean) => projectSchema.omit({ id: true, partyName: true }).extend({
+    projectNo: isAutoCode ? z.string().optional() : z.string().min(1, 'Project number is required.'),
+    contractValue: z.coerce.number().min(0, "Contract value must be a positive number.")
+});
 
-type ProjectFormData = z.infer<typeof formSchema>;
+
+type ProjectFormData = z.infer<ReturnType<typeof getFormSchema>>;
 
 interface AddProjectDialogProps {
     project?: Project;
@@ -49,6 +53,28 @@ export function AddProjectDialog({ project, isOpen, setIsOpen, onSuccess }: AddP
   const { toast } = useToast();
   const [lookups, setLookups] = useState<Lookups>({ vendors: [], customers: [] });
 
+  const form = useForm<ProjectFormData>({
+    resolver: zodResolver(getFormSchema(isAutoCode)),
+    defaultValues: {
+        projectNo: '',
+        projectName: '',
+        projectType: 'Main Contractor',
+        partyType: 'Customer',
+        partyCode: '',
+        status: 'Planning',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0],
+        contractValue: 0,
+        retentionPercentage: 0,
+        notes: '',
+    }
+  });
+
+  useEffect(() => {
+    // Re-validate when isAutoCode changes
+    form.trigger();
+  }, [isAutoCode, form]);
+
   const {
     register,
     handleSubmit,
@@ -56,9 +82,7 @@ export function AddProjectDialog({ project, isOpen, setIsOpen, onSuccess }: AddP
     reset,
     watch,
     formState: { errors },
-  } = useForm<ProjectFormData>({
-    resolver: zodResolver(formSchema),
-  });
+  } = form;
 
   useEffect(() => {
     if (isOpen) {
