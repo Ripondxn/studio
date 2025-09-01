@@ -30,6 +30,14 @@ export const featurePermissions: FeaturePermission[] = [
       { action: 'delete', description: 'Delete a unit', allowedRoles: ['Super Admin'] },
     ],
   },
+   {
+    feature: 'Rent-A-Car',
+    description: 'Manage vehicle rental agreements.',
+    actions: [
+      { action: 'view', description: 'View rental agreements', allowedRoles: ['Super Admin', 'Admin', 'User'] },
+      { action: 'manage', description: 'Add/Edit/Delete rental agreements', allowedRoles: ['Super Admin', 'Admin'] },
+    ],
+  },
   {
     feature: 'Landlords',
     description: 'Manage landlord profiles and their associated contracts.',

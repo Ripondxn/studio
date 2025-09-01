@@ -53,6 +53,7 @@ import {
   ScanLine,
   Database,
   Lightbulb,
+  CarFront,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -117,7 +118,7 @@ const navLinks = [
         ]
     },
      { 
-        label: 'Utility Management', 
+        label: 'Utilities', 
         href: '/utilities',
         icon: <Lightbulb />,
     },
@@ -139,6 +140,11 @@ const navLinks = [
         label: 'Vaults & Stores',
         href: '/stores',
         icon: <Warehouse />,
+    },
+     {
+        label: 'Rent-A-Car',
+        href: '/rent-a-car',
+        icon: <CarFront />,
     },
     {
         label: 'Asset Management',

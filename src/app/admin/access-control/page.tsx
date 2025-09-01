@@ -2,6 +2,11 @@
 import { getPermissions, getRoles } from './actions';
 import { AccessControlClient } from './access-control-client';
 import { featurePermissions } from './permissions';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { CarFront } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+
 
 export default async function AccessControlPage() {
   const savedPermissions = await getPermissions();
@@ -24,13 +29,40 @@ export default async function AccessControlPage() {
   });
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 space-y-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold font-headline">Access Control Management</h1>
         <p className="text-muted-foreground">
           Define which user roles can access specific features and perform key actions across the application.
         </p>
       </div>
+      
+      <Card>
+        <CardHeader>
+            <CardTitle>Module Management</CardTitle>
+            <CardDescription>Enable or disable major application modules.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
+                    <CarFront className="h-6 w-6 text-primary" />
+                    <div className="space-y-0.5">
+                        <Label htmlFor="rent-a-car-module" className="text-base">Rent-A-Car Module</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Enable or disable the entire Rent-A-Car module.
+                        </p>
+                    </div>
+                </div>
+                <Switch
+                    id="rent-a-car-module"
+                    // In a real app, this would come from a settings file.
+                    // For now, it's just a visual placeholder.
+                    defaultChecked={true} 
+                />
+            </div>
+        </CardContent>
+      </Card>
+      
       <AccessControlClient
         initialPermissions={allPermissions}
         roles={roles}

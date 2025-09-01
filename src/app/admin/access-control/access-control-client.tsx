@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -19,12 +20,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronDown, Loader2, Save } from 'lucide-react';
+import { ChevronDown, Loader2, Save, CarFront } from 'lucide-react';
 import { type FeaturePermission } from './permissions';
 import { savePermissions } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface AccessControlClientProps {
   initialPermissions: FeaturePermission[];
@@ -57,7 +60,7 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
     const newPermissions = [...permissions];
     const action = newPermissions[featureIndex].actions[actionIndex];
     if (checked) {
-      action.allowedRoles = [...action.allowedRoles, role];
+      action.allowedRoles = [...new Set([...action.allowedRoles, role])];
     } else {
       action.allowedRoles = action.allowedRoles.filter((r) => r !== role);
     }
