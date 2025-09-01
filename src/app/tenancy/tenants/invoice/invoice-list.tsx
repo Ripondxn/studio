@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X, UserCheck, UserX } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
+import { InvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
 import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
@@ -52,6 +53,7 @@ type Lookups = {
 
 export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, formControl }: InvoiceListProps) {
     const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+    const [isCreateSubInvoiceOpen, setIsCreateSubInvoiceOpen] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
@@ -65,7 +67,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
 
     const watchedProperty = watch('property');
     const watchedUnit = watch('unitCode');
-    const watchedRoom = watch('roomCode');
     const occupancyStatus = watch('occupancyStatus');
 
     const fetchLookups = useCallback(async () => {
@@ -88,7 +89,11 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const handleCreateClick = () => {
         setSelectedInvoice(null);
         setIsViewMode(false);
-        setIsCreateInvoiceOpen(true);
+        if (tenant.isSubscriptionActive) {
+            setIsCreateSubInvoiceOpen(true);
+        } else {
+            setIsCreateInvoiceOpen(true);
+        }
     }
     
     const handleEditClick = (invoice: Invoice) => {
@@ -148,20 +153,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
             toast({ variant: 'destructive', title: 'Error', description: result.error });
         }
         setIsCancellingSub(false);
-    };
-
-    const OccupancyBadge = () => {
-      if (!occupancyStatus) return null;
-      const variant = occupancyStatus === 'Occupied' ? 'destructive' : 'default';
-      const color = occupancyStatus === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700';
-      const Icon = occupancyStatus === 'Occupied' ? UserX : UserCheck;
-
-      return (
-        <Badge variant={variant} className={cn('gap-1 text-xs', color, 'border-transparent')}>
-          <Icon className="h-3 w-3" />
-          {occupancyStatus}
-        </Badge>
-      )
     };
 
     return (
@@ -297,7 +288,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                          <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-base font-semibold">Assigned Property</h3>
-                                <OccupancyBadge/>
+                                {/* Occupancy badge logic can be added here if needed */}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <FormField
@@ -376,12 +367,18 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     customer={{ code: tenant.code, name: tenant.name }}
                     onSuccess={handleSuccess}
                 />
-
-                <SubscriptionInvoiceDialog
+                 <SubscriptionInvoiceDialog
+                    isOpen={isCreateSubInvoiceOpen}
+                    setIsOpen={setIsCreateSubInvoiceOpen}
+                    invoice={null}
+                    tenant={tenant}
+                    onSuccess={handleSuccess}
+                />
+                <InvoiceDialog
                     isOpen={isEditInvoiceOpen}
                     setIsOpen={setIsEditInvoiceOpen}
                     invoice={selectedInvoice}
-                    tenant={tenant}
+                    customer={{ code: tenant.code, name: tenant.name }}
                     onSuccess={handleSuccess}
                     isViewMode={isViewMode}
                 />
