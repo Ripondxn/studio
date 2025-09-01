@@ -84,8 +84,8 @@ export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAcc
     });
   }, [accounts, filters]);
   
-  const uniqueProviders = [...new Set(accounts.map(a => a.provider))];
-  const uniqueUtilityTypes = [...new Set(accounts.map(a => a.utilityType))];
+  const uniqueProviders = [...new Set(accounts.map(a => a.provider).filter(Boolean))];
+  const uniqueUtilityTypes = [...new Set(accounts.map(a => a.utilityType).filter(Boolean))];
 
 
   const handleExportPDF = () => {
