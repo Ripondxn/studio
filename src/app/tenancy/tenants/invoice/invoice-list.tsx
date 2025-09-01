@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -18,7 +17,7 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { FormField, FormItem, type Control, FormMessage, FormLabel } from '@/components/ui/form';
+import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
 import { useFormContext } from 'react-hook-form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -34,22 +33,23 @@ import { type Unit } from '@/app/property/units/schema';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
 
 interface InvoiceListProps {
+    tenant: Tenant;
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
     isSubscriptionEditing: boolean;
 }
 
-export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEditing }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing }: InvoiceListProps) {
     const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
-    const [isCreateSubInvoiceOpen, setIsCreateSubInvoiceOpen] = useState(false);
+    const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
     const { formatCurrency } = useCurrency();
-    const { watch, setValue, control, getValues } = useFormContext<Tenant>();
+    const { control, watch, setValue } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<{
         properties: { value: string; label: string }[];
@@ -57,7 +57,6 @@ export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEdit
         rooms: (Room & { value: string; label: string })[];
     }>({ properties: [], units: [], rooms: [] });
 
-    const tenant = watch();
     const watchedProperty = watch('property');
     const watchedUnit = watch('unitCode');
     const occupancyStatus = watch('occupancyStatus');
@@ -79,26 +78,16 @@ export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEdit
     const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty && u.occupancyStatus !== 'Occupied'), [lookups.units, watchedProperty]);
     const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit && r.occupancyStatus !== 'Occupied'), [lookups.rooms, watchedProperty, watchedUnit]);
     
-    const handleCreateClick = () => {
-        setSelectedInvoice(null);
-        setIsViewMode(false);
-        if (tenant.isSubscriptionActive) {
-            setIsCreateSubInvoiceOpen(true);
-        } else {
-            setIsCreateInvoiceOpen(true);
-        }
-    }
-    
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(false);
-        setIsCreateSubInvoiceOpen(true);
+        setIsCreateInvoiceOpen(true);
     }
     
     const handleViewClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(true);
-        setIsCreateSubInvoiceOpen(true);
+        setIsCreateInvoiceOpen(true);
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
@@ -117,10 +106,6 @@ export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEdit
             }))
         });
         setIsPaymentDialogOpen(true);
-    }
-
-    const handleSuccess = () => {
-        onRefresh();
     }
     
     const financialSummary = useMemo(() => {
@@ -167,14 +152,6 @@ export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEdit
                     <div>
                         <CardTitle>Invoices</CardTitle>
                         <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
-                    </div>
-                     <div className="flex items-center gap-2">
-                        <Button type="button" onClick={() => handleRecordPayment()}>
-                            <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
-                        </Button>
-                         <Button type="button" variant="outline" onClick={handleCreateClick}>
-                            <Plus className="mr-2 h-4 w-4" /> {tenant.isSubscriptionActive ? 'Create Subs Invoice' : 'Create Invoice'}
-                        </Button>
                     </div>
                 </div>
                  <div className="grid grid-cols-3 gap-4 text-center mt-4 border rounded-lg p-4">
@@ -358,7 +335,7 @@ export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEdit
                     customer={{ code: tenant.code, name: tenant.name }}
                     onSuccess={handleSuccess}
                 />
-                 <SubscriptionInvoiceDialog
+                <SubscriptionInvoiceDialog
                     isOpen={isCreateSubInvoiceOpen}
                     setIsOpen={setIsCreateSubInvoiceOpen}
                     invoice={selectedInvoice}
