@@ -1,12 +1,12 @@
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X, UserCheck, UserX } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
-import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -17,8 +17,7 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
-import { useFormContext } from 'react-hook-form';
+import { FormField, FormItem, FormControl, FormLabel, useFormContext } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -30,7 +29,6 @@ import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type Unit } from '@/app/property/units/schema';
-import { SubscriptionInvoiceDialog } from './invoice-dialog';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -38,13 +36,13 @@ interface InvoiceListProps {
     isLoading: boolean;
     onRefresh: () => void;
     isSubscriptionEditing: boolean;
+    onCreateInvoice: () => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing }: InvoiceListProps) {
-    const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
-    const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
+    const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
@@ -81,13 +79,13 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(false);
-        setIsCreateInvoiceOpen(true);
+        setIsEditInvoiceOpen(true);
     }
     
     const handleViewClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(true);
-        setIsCreateInvoiceOpen(true);
+        setIsEditInvoiceOpen(true);
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
@@ -106,6 +104,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
             }))
         });
         setIsPaymentDialogOpen(true);
+    }
+
+    const handleSuccess = () => {
+        onRefresh();
     }
     
     const financialSummary = useMemo(() => {
@@ -317,6 +319,16 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             </div>
                         </div>
                     </CardContent>
+                    <CardFooter>
+                         <div className="flex items-center gap-2">
+                            <Button onClick={() => handleRecordPayment()}>
+                                <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
+                            </Button>
+                            <Button variant="outline" onClick={onCreateInvoice}>
+                                <Plus className="mr-2 h-4 w-4" /> Create Invoice
+                            </Button>
+                        </div>
+                    </CardFooter>
                 </Card>
 
                 <div className="mt-6">
@@ -329,21 +341,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     )}
                 </div>
                 
-                <CreateInvoiceDialog
-                    isOpen={isCreateInvoiceOpen}
-                    setIsOpen={setIsCreateInvoiceOpen}
-                    customer={{ code: tenant.code, name: tenant.name }}
-                    onSuccess={handleSuccess}
-                />
-                <SubscriptionInvoiceDialog
-                    isOpen={isCreateSubInvoiceOpen}
-                    setIsOpen={setIsCreateSubInvoiceOpen}
-                    invoice={selectedInvoice}
-                    tenant={tenant}
-                    onSuccess={handleSuccess}
-                    isViewMode={isViewMode}
-                />
-
                 <AddPaymentDialog
                     isOpen={isPaymentDialogOpen}
                     setIsOpen={setIsPaymentDialogOpen}
