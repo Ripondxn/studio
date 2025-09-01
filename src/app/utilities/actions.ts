@@ -59,22 +59,35 @@ export async function getAllUtilityAccounts(): Promise<UtilityAccount[]> {
     }));
 }
 
-export async function saveUtilityAccount(data: Omit<UtilityAccount, 'id'|'totalPaid'> & { id?: string }) {
+export async function saveUtilityAccount(
+    data: Omit<UtilityAccount, 'id'|'totalPaid'> & { id?: string, billAmount?: number, billDate?: string }, 
+    currentUser: UserRole
+) {
     const validation = utilityAccountSchema.omit({ id: true, totalPaid: true }).safeParse(data);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
     }
 
     const allAccounts = await readAccounts();
+    let savedAccount: UtilityAccount;
+
     if (data.id) { // Update
         const index = allAccounts.findIndex(a => a.id === data.id);
         if (index === -1) return { success: false, error: 'Account not found.' };
         allAccounts[index] = { ...allAccounts[index], ...validation.data };
+        savedAccount = allAccounts[index];
     } else { // Create
         const newAccount: UtilityAccount = { ...validation.data, id: `UTIL-${Date.now()}` };
         allAccounts.push(newAccount);
+        savedAccount = newAccount;
     }
     await writeAccounts(allAccounts);
+
+    // If an initial bill is included, record it.
+    if (data.billAmount && data.billAmount > 0 && data.billDate) {
+        await recordBillPayment(savedAccount.id, data.billAmount, data.billDate, currentUser);
+    }
+
     revalidatePath('/utilities');
     return { success: true };
 }
@@ -112,6 +125,7 @@ export async function recordBillPayment(accountId: string, amount: number, billD
         currentStatus: 'POSTED',
         property: account.propertyCode,
         unitCode: account.unitCode,
+        utilityAccountId: account.id, // Link payment to utility account
         expenseAccountId: '5130' // Utilities expense account code
     });
 

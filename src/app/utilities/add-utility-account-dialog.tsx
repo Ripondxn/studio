@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { utilityAccountSchema, type UtilityAccount } from './schema';
 import { saveUtilityAccount } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,9 +28,17 @@ import { getUnitsForProperty } from '@/app/tenancy/contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { type Unit } from '@/app/property/units/schema';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import type { UserRole } from '@/app/admin/user-roles/schema';
 
-type FormData = Omit<UtilityAccount, 'id' | 'totalPaid'>;
-const formSchema = utilityAccountSchema.omit({ id: true, totalPaid: true });
+const formSchema = utilityAccountSchema.omit({ id: true, totalPaid: true }).extend({
+    recordFirstBill: z.boolean().optional(),
+    billAmount: z.number().optional(),
+    billDate: z.string().optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 interface AddUtilityAccountDialogProps {
   isOpen: boolean;
@@ -37,9 +46,10 @@ interface AddUtilityAccountDialogProps {
   account?: UtilityAccount;
   onSuccess: () => void;
   propertyCode?: string; // Make propertyCode optional
+  currentUser: UserRole | null;
 }
 
-export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess, propertyCode }: AddUtilityAccountDialogProps) {
+export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess, propertyCode, currentUser }: AddUtilityAccountDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [lookups, setLookups] = useState<{properties: {value: string, label: string}[], units: Unit[]}>({properties: [], units: []});
@@ -56,6 +66,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
   });
 
   const watchedPropertyCode = watch('propertyCode', propertyCode);
+  const recordFirstBill = watch('recordFirstBill');
 
   useEffect(() => {
     async function fetchLookups() {
@@ -86,7 +97,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
 
   useEffect(() => {
     if (isOpen) {
-        reset(account || {
+        reset(account ? { ...account, recordFirstBill: false } : {
             utilityType: 'Water & Electricity',
             provider: '',
             accountNumber: '',
@@ -94,13 +105,20 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
             unitCode: '',
             status: 'Active',
             notes: '',
+            recordFirstBill: false,
+            billAmount: 0,
+            billDate: '',
         });
     }
   }, [isOpen, account, reset, propertyCode]);
 
   const onSubmit = async (data: FormData) => {
+    if (!currentUser) {
+      toast({ variant: 'destructive', title: 'Error', description: 'User not found. Please log in again.' });
+      return;
+    }
     setIsSaving(true);
-    const result = await saveUtilityAccount({ ...data, id: account?.id });
+    const result = await saveUtilityAccount({ ...data, id: account?.id }, currentUser);
     if (result.success) {
       toast({
         title: account ? 'Account Updated' : 'Account Added',
@@ -120,7 +138,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
             <DialogTitle>{account ? 'Edit Utility Account' : 'Add New Utility Account'}</DialogTitle>
@@ -164,19 +182,39 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
                         )} />
                     </div>
                 </div>
-                <div className="space-y-2">
-                    <Label>Status</Label>
-                     <Controller name="status" control={control} render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="Inactive">Inactive</SelectItem>
-                        </SelectContent></Select>
-                    )} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Notes</Label>
-                    <Textarea {...register('notes')} />
-                </div>
+                 {!account && (
+                    <>
+                        <Separator className="my-2" />
+                        <div className="space-y-4">
+                            <div className="flex items-center space-x-2">
+                                <Controller
+                                    name="recordFirstBill"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Switch
+                                            id="recordFirstBill"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="recordFirstBill">Record first bill for this account?</Label>
+                            </div>
+                            {recordFirstBill && (
+                                <div className="grid grid-cols-2 gap-4 p-4 border rounded-md">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="billAmount">Bill Amount</Label>
+                                        <Input id="billAmount" type="number" {...register('billAmount')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="billDate">Bill Date</Label>
+                                        <Input id="billDate" type="date" {...register('billDate')} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
             </div>
             <DialogFooter>
                 <DialogClose asChild>

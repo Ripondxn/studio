@@ -10,12 +10,21 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { AddUtilityAccountDialog } from './add-utility-account-dialog';
 import { RecordBillDialog } from './record-bill-dialog';
+import { type UserRole } from '@/app/admin/user-roles/schema';
 
 export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAccount[] }) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isBillDialogOpen, setIsBillDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<UtilityAccount | undefined>(undefined);
+  const [currentUser, setCurrentUser] = useState<UserRole | null>(null);
+
+   useEffect(() => {
+    const userProfile = sessionStorage.getItem('userProfile');
+    if(userProfile) {
+      setCurrentUser(JSON.parse(userProfile));
+    }
+  }, []);
 
   const refreshAccounts = async () => {
     const updatedAccounts = await getAllUtilityAccounts();
@@ -55,6 +64,7 @@ export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAcc
         setIsOpen={setIsAddDialogOpen}
         onSuccess={refreshAccounts}
         account={selectedAccount}
+        currentUser={currentUser}
       />
       {selectedAccount && (
          <RecordBillDialog
