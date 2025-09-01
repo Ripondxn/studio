@@ -3,7 +3,7 @@ import { getPermissions, getRoles } from './actions';
 import { AccessControlClient } from './access-control-client';
 import { featurePermissions } from './permissions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote } from 'lucide-react';
+import { CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote, UserSquare } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -85,6 +85,21 @@ export default async function AccessControlPage() {
                 </div>
                 <Switch
                     id="customer-module"
+                    defaultChecked={true} 
+                />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
+                    <UserSquare className="h-6 w-6 text-primary" />
+                    <div className="space-y-0.5">
+                        <Label htmlFor="vendor-module" className="text-base">Vendor / Supplier Module</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Manage vendors, suppliers, and their bills.
+                        </p>
+                    </div>
+                </div>
+                <Switch
+                    id="vendor-module"
                     defaultChecked={true} 
                 />
             </div>

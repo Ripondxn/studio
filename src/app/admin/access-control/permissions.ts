@@ -115,6 +115,15 @@ export const featurePermissions: FeaturePermission[] = [
       { action: 'delete', description: 'Delete a landlord', allowedRoles: ['Super Admin'] },
     ],
   },
+    {
+    feature: 'Vendors',
+    description: 'Manage supplier and vendor profiles.',
+    actions: [
+      { action: 'view', description: 'View vendor list and details', allowedRoles: ['Super Admin', 'Admin', 'Property Manager', 'Accountant', 'User'] },
+      { action: 'edit', description: 'Edit vendor information', allowedRoles: ['Super Admin', 'Admin', 'Property Manager'] },
+      { action: 'delete', description: 'Delete a vendor', allowedRoles: ['Super Admin'] },
+    ],
+  },
   {
     feature: 'Tenants',
     description: 'Manage tenant profiles and their tenancy contracts.',
