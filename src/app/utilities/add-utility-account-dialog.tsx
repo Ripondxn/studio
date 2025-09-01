@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,13 +9,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
@@ -22,8 +23,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { utilityAccountSchema, type UtilityAccount } from './schema';
 import { saveUtilityAccount } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getLookups } from '../lookups/actions';
+import { getLookups as getGeneralLookups } from '@/app/lookups/actions';
+import { getUnitsForProperty } from '@/app/property/units/actions';
 import { Combobox } from '@/components/ui/combobox';
+import { type Unit } from '@/app/property/units/schema';
 
 type FormData = Omit<UtilityAccount, 'id' | 'totalPaid'>;
 const formSchema = utilityAccountSchema.omit({ id: true, totalPaid: true });
@@ -33,37 +36,70 @@ interface AddUtilityAccountDialogProps {
   setIsOpen: (open: boolean) => void;
   account?: UtilityAccount;
   onSuccess: () => void;
+  propertyCode?: string; // Make propertyCode optional
 }
 
-export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess }: AddUtilityAccountDialogProps) {
+export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess, propertyCode }: AddUtilityAccountDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<{properties: {value: string, label: string}[]}>({properties: []});
+  const [lookups, setLookups] = useState<{properties: {value: string, label: string}[], units: Unit[]}>({properties: [], units: []});
 
   const {
     register,
     handleSubmit,
     control,
     reset,
-    formState: { errors },
+    watch
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
 
+  const watchedPropertyCode = watch('propertyCode', propertyCode);
+
+  useEffect(() => {
+    async function fetchLookups() {
+        if(isOpen) {
+            const data = await getGeneralLookups();
+            setLookups(prev => ({...prev, properties: data.properties || []}));
+            
+            if(propertyCode) {
+                 const unitsResult = await getUnitsForProperty(propertyCode);
+                 if (unitsResult.success) {
+                    setLookups(prev => ({...prev, units: unitsResult.data || []}));
+                 }
+            }
+        }
+    }
+    fetchLookups();
+  }, [isOpen, propertyCode]);
+  
+  useEffect(() => {
+    async function fetchUnits() {
+        if (watchedPropertyCode) {
+             const unitsResult = await getUnitsForProperty(watchedPropertyCode);
+             if (unitsResult.success) {
+                setLookups(prev => ({...prev, units: unitsResult.data || []}));
+             }
+        }
+    }
+    if (watchedPropertyCode && watchedPropertyCode !== propertyCode) {
+      fetchUnits();
+    }
+  }, [watchedPropertyCode, propertyCode]);
+
   useEffect(() => {
     if (isOpen) {
-        getLookups().then(data => setLookups(prev => ({...prev, properties: data.properties || []})));
         reset(account || {
             utilityType: 'Water & Electricity',
             provider: '',
             accountNumber: '',
-            propertyCode: '',
+            propertyCode: propertyCode || '',
             unitCode: '',
             status: 'Active',
             notes: '',
         });
     }
-  }, [isOpen, account, reset]);
+  }, [isOpen, account, reset, propertyCode]);
 
   const onSubmit = async (data: FormData) => {
     setIsSaving(true);
@@ -120,13 +156,15 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess 
                     <div className="space-y-2">
                         <Label>Property</Label>
                         <Controller name="propertyCode" control={control} render={({ field }) => (
-                            <Combobox options={lookups.properties} value={field.value} onSelect={field.onChange} placeholder="Select Property" />
+                            <Combobox options={lookups.properties} value={field.value} onSelect={field.onChange} placeholder="Select Property" disabled={!!propertyCode} />
                         )} />
                         {errors.propertyCode && <p className="text-destructive text-xs mt-1">{errors.propertyCode.message}</p>}
                     </div>
                      <div className="space-y-2">
                         <Label>Unit (Optional)</Label>
-                        <Input {...register('unitCode')} placeholder="e.g., F101" />
+                         <Controller name="unitCode" control={control} render={({ field }) => (
+                            <Combobox options={lookups.units.map(u => ({value: u.unitCode, label: u.unitCode}))} value={field.value || ''} onSelect={field.onChange} placeholder="Select Unit" disabled={!watchedPropertyCode}/>
+                        )} />
                     </div>
                 </div>
                 <div className="space-y-2">
@@ -157,3 +195,4 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess 
     </Dialog>
   );
 }
+

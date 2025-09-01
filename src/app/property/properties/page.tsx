@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
@@ -53,7 +53,8 @@ import {
   Users,
   LayoutGrid,
   List,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Lightbulb
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -94,6 +95,7 @@ import { UnitGrid } from '../units/unit-grid';
 import { RoomGrid } from '../rooms/room-grid';
 import { ImportUnitsDialog } from '../units/import-units-dialog';
 import { ImportRoomsDialog } from '../rooms/import-rooms-dialog';
+import { AddUtilityAccountDialog } from '@/app/utilities/add-utility-account-dialog';
 
 
 type Particular = {
@@ -161,6 +163,7 @@ export default function PropertyPage() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isAutoCode, setIsAutoCode] = useState(true);
   
   const [propertyData, setPropertyData] = useState(initialPropertyData);
   const [initialData, setInitialData] = useState(initialPropertyData);
@@ -187,6 +190,7 @@ export default function PropertyPage() {
   const [lookups, setLookups] = useState<{ landlords: { code: string, name: string }[] }>({ landlords: [] });
   const [unitsViewMode, setUnitsViewMode] = useState<ViewMode>('grid');
   const [roomsViewMode, setRoomsViewMode] = useState<ViewMode>('grid');
+  const [isUtilityDialogOpen, setIsUtilityDialogOpen] = useState(false);
 
 
   const fetchPropertySubData = useCallback((code: string) => {
@@ -596,7 +600,7 @@ export default function PropertyPage() {
                   variant="destructive"
                   disabled={isNewRecord || isEditing}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete Property
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -742,6 +746,7 @@ export default function PropertyPage() {
                          <Button variant="outline" size="sm" onClick={handleExportUnitsPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
                          <Button variant="outline" size="sm" onClick={handleExportUnitsExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
                         <AddUnitDialog propertyCode={propertyData.code} onUnitAdded={() => fetchPropertySubData(propertyData.code)} />
+                        <AddUtilityAccountDialog propertyCode={propertyData.code} onUtilityAccountAdded={() => {}} />
                     </div>
                 </div>
             </CardHeader>
@@ -919,6 +924,12 @@ export default function PropertyPage() {
             </Card>
         </TabsContent>
       </Tabs>
+        <AddUtilityAccountDialog
+            isOpen={isUtilityDialogOpen}
+            setIsOpen={setIsUtilityDialogOpen}
+            propertyCode={propertyData.code}
+            onUtilityAccountAdded={() => {}}
+        />
     </div>
   );
 }
