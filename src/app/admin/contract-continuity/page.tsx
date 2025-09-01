@@ -8,7 +8,7 @@ import { ContinuityClient } from './client';
 import { type Contract } from '@/app/tenancy/contract/schema';
 import { type MovementHistoryItem, type VacantPeriod } from './actions';
 import { Loader2 } from 'lucide-react';
-import { useAuthorization } from '@/context/permission-context';
+import { useAuthorization } from '@/hooks/useAuthorization';
 
 type ContinuityData = {
     problematicContracts: Contract[],
