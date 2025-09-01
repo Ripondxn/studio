@@ -11,6 +11,9 @@ import {
   getFilteredRowModel,
   ColumnFiltersState,
 } from '@tanstack/react-table';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import {
   Table,
   TableBody,
@@ -21,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Printer } from 'lucide-react';
+import { FileText, FileSpreadsheet, Printer } from 'lucide-react';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -56,7 +59,7 @@ export function DataTable<TData, TValue>({
             printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; } h1 { text-align: center; } .no-print { display: none; } </style>');
             printWindow.document.write('</head><body>');
             printWindow.document.write('<h1>Utility Accounts</h1>');
-            printWindow.document.write(printContent);
+            printWindow.document.write(printContent.innerHTML);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.print();
@@ -64,10 +67,32 @@ export function DataTable<TData, TValue>({
     }
   };
 
+    const handleExportExcel = () => {
+    const dataToExport = table.getFilteredRowModel().rows.map(row => {
+        const acc = row.original as any;
+        return {
+            'Utility Type': acc.utilityType,
+            'Provider': acc.provider,
+            'Account Number': acc.accountNumber,
+            'Property': acc.propertyCode,
+            'Unit': acc.unitCode || 'N/A',
+            'Total Paid': acc.totalPaid || 0,
+            'Status': acc.status,
+        }
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Utility Accounts");
+    XLSX.writeFile(wb, "utility-accounts.xlsx");
+  };
+
+
   return (
     <div>
-        <div className="flex justify-end mb-4 no-print">
+        <div className="flex justify-end mb-4 no-print gap-2">
             <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+            <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
         </div>
         <div ref={printRef}>
             <div className="rounded-md border">
