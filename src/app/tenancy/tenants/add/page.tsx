@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
@@ -49,7 +49,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, saveSubscriptionSettings, cancelSubscription } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
@@ -60,16 +60,6 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { MoveTenantDialog } from './move-tenant-dialog';
 import { handleFileUpload } from '@/app/services/attachment-service';
 import { SubscriptionInvoiceDialog } from '../invoice/invoice-dialog';
-import { Separator } from '@/components/ui/separator';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
-import { Combobox } from '@/components/ui/combobox';
-import type { UserRole } from '@/app/admin/user-roles/schema';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Unit } from '@/app/property/units/schema';
-import { Room } from '@/app/property/rooms/schema';
-import { UserCheck, UserX } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 type Attachment = {
   id: number;
@@ -127,13 +117,6 @@ export default function TenantPage() {
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
-  
-  const [lookups, setLookups] = useState<{
-        properties: { value: string; label: string }[];
-        units: (Unit & { value: string; label: string })[];
-        rooms: (Room & { value: string; label: string })[];
-        tenants: { value: string, label: string, mobile?: string, email?: string, address?: string }[];
-    }>({ properties: [], units: [], rooms: [], tenants: [] });
 
 
   const formMethods = useForm<Tenant>({
@@ -144,10 +127,6 @@ export default function TenantPage() {
   const { control, handleSubmit, watch, setValue, reset, getValues } = formMethods;
 
   const tenantCode = watch('code');
-  const watchedProperty = watch('property');
-  const watchedUnit = watch('unitCode');
-  const occupancyStatus = watch('occupancyStatus');
-
   
   const fetchInvoices = useCallback(async (customerCode: string) => {
     if (!customerCode) return;
@@ -156,6 +135,16 @@ export default function TenantPage() {
     setInvoices(data.map(i => ({...i, remainingBalance: i.total - (i.amountPaid || 0)})));
     setIsLoadingInvoices(false);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      attachments.forEach(attachment => {
+        if (attachment.url) {
+          URL.revokeObjectURL(attachment.url);
+        }
+      });
+    };
+  }, [attachments]);
 
   const handleFindClick = useCallback(async (code: string) => {
     try {
@@ -197,12 +186,8 @@ export default function TenantPage() {
       });
     }
   }, [reset, toast, fetchInvoices]);
-  
-  useEffect(() => {
-    getContractLookups().then(data => {
-        setLookups(prev => ({...prev, properties: data.properties, units: data.units.map(u=> ({...u, value: u.unitCode, label: u.unitCode})), rooms: data.rooms.map(r => ({...r, value: r.roomCode, label: r.roomCode})) }));
-    });
 
+  useEffect(() => {
     const tenantCodeParam = searchParams.get('code');
     if (tenantCodeParam) {
       handleFindClick(tenantCodeParam);
@@ -210,20 +195,6 @@ export default function TenantPage() {
       handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
-  
-  const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty && u.occupancyStatus !== 'Occupied'), [lookups.units, watchedProperty]);
-  const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit && r.occupancyStatus !== 'Occupied'), [lookups.rooms, watchedProperty, watchedUnit]);
-
-
-  useEffect(() => {
-    return () => {
-      attachments.forEach(attachment => {
-        if (attachment.url) {
-          URL.revokeObjectURL(attachment.url);
-        }
-      });
-    };
-  }, [attachments]);
 
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
@@ -274,34 +245,47 @@ export default function TenantPage() {
     try {
         const processedAttachments = await Promise.all(
             attachments.map(async (att) => {
-                if (att.file && att.file instanceof File) {
+                let fileData: string | null = null;
+                 if (att.isLink) {
+                    fileData = typeof att.file === 'string' ? att.file : null;
+                } else if (att.file && att.file instanceof File) {
                     const base64 = await fileToBase64(att.file);
-                    const savedPath = await handleFileUpload(base64, att.file.name);
-                    return { ...att, file: savedPath, url: undefined };
+                    fileData = await handleFileUpload(base64, att.file.name);
+                } else {
+                    fileData = att.file;
                 }
-                return { ...att, url: undefined };
+                return {
+                    id: att.id,
+                    name: att.name,
+                    file: fileData,
+                    remarks: att.remarks,
+                    isLink: att.isLink,
+                }
             })
         );
+        
+      const dataToSave = {
+        tenantData: data,
+        attachments: processedAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
+      };
 
-        const dataToSave = {
-            tenantData: data,
-            attachments: processedAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
-        };
-
-        const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
-        if (result.success && result.data) {
-            toast({ title: "Success", description: `Tenant "${data.name}" saved successfully.` });
-            setIsEditing(false);
-            setIsSubscriptionEditing(false);
-            if (isNewRecord) {
-                router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
-            } else {
-                 reset(data);
-                 setAttachments(processedAttachments);
-            }
+      const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
+      if (result.success && result.data) {
+        toast({
+          title: "Success",
+          description: `Tenant "${data.name}" saved successfully.`,
+        });
+        setIsEditing(false);
+        setIsSubscriptionEditing(false);
+        if (isNewRecord) {
+            router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
         } else {
-            throw new Error(result.error || 'An unknown error occurred');
+            reset(data);
+            setAttachments(processedAttachments.map(a => ({...a, url: undefined})));
         }
+      } else {
+        throw new Error(result.error || 'An unknown error occurred');
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -309,10 +293,9 @@ export default function TenantPage() {
         description: (error as Error).message || "Failed to save data.",
       });
     } finally {
-        setIsSaving(false);
+      setIsSaving(false);
     }
   }
-
 
   const handleCancelClick = () => {
      if (isNewRecord) {
@@ -367,23 +350,6 @@ export default function TenantPage() {
   const handleOpenSubscriptionDialog = () => {
     setIsSubInvoiceOpen(true);
   };
-  
-  const handleSaveSubscription = async () => {
-    await handleSubmit(onSave)();
-  };
-
-  const OccupancyStatusBadge = () => {
-      if (!occupancyStatus) return null;
-      
-      const config = {
-          'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700', icon: <UserCheck className="h-3 w-3" /> },
-          'Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700', icon: <UserX className="h-3 w-3" /> },
-          'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700', icon: <UserX className="h-3 w-3" /> }
-      }[occupancyStatus] || { variant: 'secondary', color: '', icon: null };
-      
-      return <Badge variant={config.variant as any} className={cn('gap-1', config.color, 'border-transparent')}>{config.icon} {occupancyStatus}</Badge>;
-  };
-
 
   return (
     <div className="container mx-auto p-4 bg-background">
@@ -624,7 +590,7 @@ export default function TenantPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    <Button size="icon" type="button" onClick={() => handleSubmit(onSave)()} disabled={savingAttachmentId === item.id || !isEditing}>
+                                                    <Button size="icon" type="button" onClick={() => handleSubmit(data => onSave(data, true, item.id))()} disabled={savingAttachmentId === item.id || !isEditing}>
                                                         {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                                     </Button>
                                                     <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
@@ -657,9 +623,9 @@ export default function TenantPage() {
                     />
                 </TabsContent>
             </Tabs>
-        </form>
+      </form>
     </FormProvider>
-     <SubscriptionInvoiceDialog
+    <SubscriptionInvoiceDialog
       isOpen={isSubInvoiceOpen}
       setIsOpen={setIsSubInvoiceOpen}
       invoice={null}
@@ -669,3 +635,5 @@ export default function TenantPage() {
   </div>
   );
 }
+
+    
