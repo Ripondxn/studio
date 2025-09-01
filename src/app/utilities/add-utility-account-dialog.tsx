@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
@@ -45,7 +44,7 @@ interface AddUtilityAccountDialogProps {
   setIsOpen: (open: boolean) => void;
   account?: UtilityAccount;
   onSuccess: () => void;
-  propertyCode?: string; // Make propertyCode optional
+  propertyCode?: string;
   currentUser: UserRole | null;
 }
 
@@ -63,6 +62,9 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      recordFirstBill: false
+    }
   });
 
   const watchedPropertyCode = watch('propertyCode', propertyCode);
@@ -215,6 +217,10 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
                         </div>
                     </>
                 )}
+                 <div className="space-y-2">
+                    <Label>Notes</Label>
+                    <Textarea {...register('notes')} />
+                </div>
             </div>
             <DialogFooter>
                 <DialogClose asChild>
