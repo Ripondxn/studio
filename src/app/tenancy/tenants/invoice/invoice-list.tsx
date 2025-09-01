@@ -184,10 +184,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
-                        <Button onClick={() => handleRecordPayment()}>
+                        <Button type="button" onClick={() => handleRecordPayment()}>
                             <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                         </Button>
-                        <Button variant="outline" onClick={handleCreateClick}>
+                        <Button type="button" variant="outline" onClick={handleCreateClick}>
                             <Plus className="mr-2 h-4 w-4" /> {tenant.isSubscriptionActive ? 'Create Subs Invoice' : 'Create Invoice'}
                         </Button>
                     </div>
@@ -218,7 +218,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 </Button>
                             ) : (
                                 <div className="flex gap-2">
-                                    <Button size="sm" onClick={() => {
+                                    <Button size="sm" type="button" onClick={() => {
                                         setIsSubscriptionEditing(false);
                                         onRefresh(); // To revert any unsaved changes
                                     }}>
@@ -258,7 +258,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                              {tenant.isSubscriptionActive && (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" size="sm" disabled={isCancellingSub || isSubscriptionEditing}>
+                                        <Button type="button" variant="destructive" size="sm" disabled={isCancellingSub || isSubscriptionEditing}>
                                             {isCancellingSub && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                             Cancel Subscription
                                         </Button>
