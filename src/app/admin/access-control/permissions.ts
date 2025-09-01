@@ -57,6 +57,15 @@ export const featurePermissions: FeaturePermission[] = [
     ],
   },
   {
+    feature: 'Asset Management',
+    description: 'Manage company assets, depreciation, and assignments.',
+    actions: [
+      { action: 'view', description: 'View asset list', allowedRoles: ['Super Admin', 'Admin', 'Accountant'] },
+      { action: 'manage', description: 'Add, edit, and assign assets', allowedRoles: ['Super Admin', 'Admin'] },
+      { action: 'delete', description: 'Delete assets from the register', allowedRoles: ['Super Admin'] },
+    ],
+  },
+  {
     feature: 'Landlords',
     description: 'Manage landlord profiles and their associated contracts.',
     actions: [
