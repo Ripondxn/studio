@@ -49,7 +49,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, saveSubscriptionSettings } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
@@ -244,17 +244,16 @@ export default function TenantPage() {
   const onSave = async (data: Tenant) => {
     setIsSaving(true);
     try {
-        // Process only attachments that have a new file object.
         const processedAttachments = await Promise.all(
             attachments.map(async (att) => {
                 let fileData: string | null = null;
-                if (att.isLink) {
+                 if (att.isLink) {
                     fileData = typeof att.file === 'string' ? att.file : null;
                 } else if (att.file && att.file instanceof File) {
                     const base64 = await fileToBase64(att.file);
                     fileData = await handleFileUpload(base64, att.file.name);
                 } else {
-                    fileData = att.file; // Keep existing string data
+                    fileData = att.file;
                 }
                 return {
                     id: att.id,
@@ -278,7 +277,6 @@ export default function TenantPage() {
                 description: `Tenant "${data.name}" saved successfully.`,
             });
             setIsEditing(false);
-            setIsSubscriptionEditing(false);
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
@@ -334,20 +332,6 @@ export default function TenantPage() {
     }
   };
   
-  const handleSaveSubscription = async () => {
-    setIsSaving(true);
-    const data = getValues();
-    const result = await saveSubscriptionSettings(data.code, data);
-    if (result.success) {
-        toast({ title: 'Subscription settings saved.' });
-        setIsSubscriptionEditing(false);
-        fetchInvoices(data.code);
-    } else {
-        toast({ variant: 'destructive', title: 'Error', description: result.error });
-    }
-    setIsSaving(false);
-  };
-  
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${watch('name')}`;
 
   const getViewLink = (item: Attachment): string => {
@@ -372,7 +356,7 @@ export default function TenantPage() {
   return (
     <div className="container mx-auto p-4 bg-background">
       <FormProvider {...formMethods}>
-      <form onSubmit={handleSubmit(onSave)}>
+      <form onSubmit={form.handleSubmit(onSave)}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
             {pageTitle}
@@ -632,9 +616,11 @@ export default function TenantPage() {
                     onRefresh={() => fetchInvoices(tenantCode)}
                     isSubscriptionEditing={isSubscriptionEditing}
                     setIsSubscriptionEditing={setIsSubscriptionEditing}
-                    handleSaveSubscription={handleSaveSubscription}
                     isSavingSub={isSaving}
                     onCreateInvoice={handleOpenSubscriptionDialog}
+                    control={control}
+                    watch={watch}
+                    setValue={setValue}
                 />
             </TabsContent>
         </Tabs>
