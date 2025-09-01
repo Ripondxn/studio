@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -43,6 +44,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveEmployeeData, findEmployeeData, deleteEmployeeData } from '../actions';
@@ -85,6 +87,7 @@ const initialEmployeeData: Omit<Employee, 'id'> = {
     photo: null,
 };
 
+// Helper function to read a file as a Base64 string on the client
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -295,6 +298,8 @@ export default function EmployeeAddPage() {
     }
   };
 
+  const pageTitle = isNewRecord ? 'Add New Employee' : `Edit Employee: ${watch('name')}`;
+
   const getViewLink = (item: Attachment): string => {
     if (item.isLink && typeof item.file === 'string') {
         return item.file;
@@ -303,6 +308,7 @@ export default function EmployeeAddPage() {
         return item.url;
     }
     if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) {
+        // Note: gdrive links aren't directly viewable and would need a download route
         return item.file;
     }
     return '#';
@@ -610,3 +616,4 @@ export default function EmployeeAddPage() {
     </div>
   );
 }
+
