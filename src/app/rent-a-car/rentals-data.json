@@ -1,2 +1,18 @@
-
-[]
+[
+  {
+    "contractNo": "rent220",
+    "contractDate": "2025-09-01",
+    "rentalType": "Hired",
+    "partyType": "Vendor",
+    "partyCode": "V0002",
+    "partyName": "Abu Dhabi Distribution Company",
+    "carDetails": "dfgdgdf",
+    "plateNumber": "grt57567",
+    "startDate": "2025-09-01",
+    "endDate": "2025-10-02",
+    "rentalAmount": 5000,
+    "status": "Active",
+    "notes": "",
+    "id": "RAC-1756742880827"
+  }
+]

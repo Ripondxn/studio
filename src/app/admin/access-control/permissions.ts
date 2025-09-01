@@ -39,6 +39,15 @@ export const featurePermissions: FeaturePermission[] = [
     ],
   },
   {
+    feature: 'Project Management',
+    description: 'Manage all aspects of projects, including billing, sub-contractors, and resource allocation.',
+    actions: [
+      { action: 'view', description: 'View project list and details', allowedRoles: ['Super Admin', 'Admin', 'Property Manager'] },
+      { action: 'manage', description: 'Create, edit, and delete projects', allowedRoles: ['Super Admin', 'Admin'] },
+      { action: 'manage_billing', description: 'Manage project progress billing and retention', allowedRoles: ['Super Admin', 'Accountant'] },
+    ],
+  },
+  {
     feature: 'Landlords',
     description: 'Manage landlord profiles and their associated contracts.',
     actions: [

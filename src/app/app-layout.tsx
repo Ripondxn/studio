@@ -147,6 +147,11 @@ const navLinks = [
         icon: <CarFront />,
     },
     {
+        label: 'Project Management',
+        href: '/project-management/projects',
+        icon: <Briefcase />,
+    },
+    {
         label: 'Asset Management',
         href: '/assets',
         icon: <Briefcase />,

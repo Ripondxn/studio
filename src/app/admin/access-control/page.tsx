@@ -3,7 +3,7 @@ import { getPermissions, getRoles } from './actions';
 import { AccessControlClient } from './access-control-client';
 import { featurePermissions } from './permissions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CarFront } from 'lucide-react';
+import { CarFront, Briefcase } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -42,8 +42,23 @@ export default async function AccessControlPage() {
             <CardTitle>Module Management</CardTitle>
             <CardDescription>Enable or disable major application modules.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
+                    <Briefcase className="h-6 w-6 text-primary" />
+                    <div className="space-y-0.5">
+                        <Label htmlFor="project-management-module" className="text-base">Project Management Module</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Enable or disable the entire Project Management module.
+                        </p>
+                    </div>
+                </div>
+                <Switch
+                    id="project-management-module"
+                    defaultChecked={true} 
+                />
+            </div>
+             <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="flex items-center gap-4">
                     <CarFront className="h-6 w-6 text-primary" />
                     <div className="space-y-0.5">
@@ -55,8 +70,6 @@ export default async function AccessControlPage() {
                 </div>
                 <Switch
                     id="rent-a-car-module"
-                    // In a real app, this would come from a settings file.
-                    // For now, it's just a visual placeholder.
                     defaultChecked={true} 
                 />
             </div>
