@@ -27,7 +27,9 @@ import { Switch } from '@/components/ui/switch';
 import { Combobox } from '@/components/ui/combobox';
 import { getLookups } from '@/app/lookups/actions';
 
-const formSchema = rentalSchema.omit({ id: true, partyName: true });
+const formSchema = rentalSchema.omit({ id: true, partyName: true }).extend({
+    rentalAmount: z.coerce.number().min(0, "Rental amount must be a positive number.")
+});
 
 type RentalFormData = z.infer<typeof formSchema>;
 
