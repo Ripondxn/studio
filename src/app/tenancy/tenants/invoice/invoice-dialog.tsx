@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -71,8 +72,6 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   });
 
   const watchedItems = watch('items');
-  const watchedTaxRate = watch('taxRate');
-  const watchedTaxType = watch('taxType');
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
   
@@ -89,35 +88,14 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   useEffect(() => {
     if (!watchedItems) return;
     
-    // First update the total for each item
-    watchedItems.forEach((item, index) => {
-        const total = item.quantity * item.unitPrice;
-        if (item.total !== total) {
-            setValue(`items.${index}.total`, total);
-        }
-    });
-    
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const taxRate = watchedTaxRate || 0;
-    
-    let taxAmount = 0;
-    let totalAmount = subTotal;
-    let finalSubTotal = subTotal;
+    setValue('subTotal', subTotal);
+    setValue('total', subTotal);
+    setValue('tax', 0);
+    setValue('taxRate', 0);
+    setValue('taxType', 'exclusive');
 
-    if (watchedTaxType === 'exclusive') {
-        taxAmount = subTotal * (taxRate / 100);
-        totalAmount = subTotal + taxAmount;
-    } else { // inclusive
-        taxAmount = subTotal - (subTotal / (1 + (taxRate / 100)));
-        finalSubTotal = subTotal - taxAmount;
-        totalAmount = subTotal;
-    }
-
-    setValue('subTotal', finalSubTotal);
-    setValue('tax', taxAmount);
-    setValue('total', totalAmount);
-
-  }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
+  }, [watchedItems, setValue]);
   
   useEffect(() => {
     const initializeForm = async () => {
@@ -138,7 +116,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                 roomCode: tenant.roomCode || '',
                 invoiceDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
-                items: [{ id: `item-${Date.now()}`, description: `${tenant.subscriptionStatus || 'Monthly'} Subscription`, quantity: 1, unitPrice: tenant.subscriptionAmount || 0, total: tenant.subscriptionAmount || 0 }],
+                items: [{ id: `item-${Date.now()}`, description: `${tenant.subscriptionStatus || 'Monthly'} Subscription`, quantity: 1, unitPrice: tenant.subscriptionAmount || 0, total: tenant.subscriptionAmount || 0, expenseAccountId: '' }],
                 subTotal: tenant.subscriptionAmount || 0,
                 tax: 0,
                 taxRate: 0,
@@ -298,7 +276,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                   ))}
               </TableBody>
             </Table>
-            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
+            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0, expenseAccountId: '' })}>
               <Plus className="mr-2 h-4 w-4" /> Add Item
             </Button>
 

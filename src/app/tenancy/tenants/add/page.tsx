@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -114,7 +113,6 @@ export default function TenantPage() {
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
-  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
 
@@ -239,7 +237,6 @@ export default function TenantPage() {
 
   const handleEditClick = () => {
     setIsEditing(true);
-    setIsSubscriptionEditing(true);
   }
 
   const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
@@ -295,7 +292,6 @@ export default function TenantPage() {
             });
             if (!isAttachmentSave) {
                 setIsEditing(false);
-                setIsSubscriptionEditing(false);
             }
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
@@ -331,7 +327,6 @@ export default function TenantPage() {
         reset();
         setAttachments(getValues().attachments || []);
         setIsEditing(false);
-        setIsSubscriptionEditing(false);
      }
   }
 
@@ -564,25 +559,8 @@ export default function TenantPage() {
                                 )}
                             />
                         </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="subscription">
-                    <InvoiceList
-                        tenant={tenantData}
-                        invoices={invoices}
-                        isLoading={isLoadingInvoices}
-                        onRefresh={() => fetchInvoices(tenantCode)}
-                        isSubscriptionEditing={isEditing}
-                        onCreateInvoice={handleOpenSubscriptionDialog}
-                    />
-                </TabsContent>
-                <TabsContent value="attachments">
-                    <Card>
-                        <CardHeader>
+                        <div className="space-y-4 pt-6 border-t">
                             <CardTitle>Attachments</CardTitle>
-                        </CardHeader>
-                        <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -626,20 +604,9 @@ export default function TenantPage() {
                                                     </Button>
                                                 </div>
                                                  <div className="mt-1">
-                                                    {item.url && !item.isLink && (
-                                                        <a href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                            View Uploaded File
-                                                        </a>
-                                                    )}
-                                                    {item.file && typeof item.file === 'string' && (
-                                                        item.isLink && item.file.startsWith('http') ? (
-                                                            <a href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                                Open Link
-                                                            </a>
-                                                        ) : (
-                                                            !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                                        )
-                                                    )}
+                                                     <a href={getViewLink(item)} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                        View
+                                                    </a>
                                                  </div>
                                             </TableCell>
                                             <TableCell>
@@ -659,8 +626,22 @@ export default function TenantPage() {
                             <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                                 <Plus className="mr-2 h-4 w-4"/> Add Attachment
                             </Button>
+                        </div>
                         </CardContent>
                     </Card>
+                </TabsContent>
+                 <TabsContent value="subscription">
+                    <InvoiceList
+                        tenant={tenantData}
+                        invoices={invoices}
+                        isLoading={isLoadingInvoices}
+                        onRefresh={() => fetchInvoices(tenantCode)}
+                        isSubscriptionEditing={isEditing}
+                        control={control}
+                        setValue={setValue}
+                        watch={watch}
+                        onCreateInvoice={handleOpenSubscriptionDialog}
+                    />
                 </TabsContent>
               </Tabs>
         </form>
@@ -670,9 +651,11 @@ export default function TenantPage() {
         setIsOpen={setIsSubInvoiceOpen}
         invoice={null}
         tenant={tenantData}
-        onSuccess={() => fetchInvoices(tenantCode)}
+        onSuccess={() => {
+            fetchInvoices(tenantCode);
+            onSave(getValues());
+        }}
       />
     </div>
   );
 }
-

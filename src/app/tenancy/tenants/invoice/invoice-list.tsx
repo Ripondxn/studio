@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -38,10 +39,13 @@ interface InvoiceListProps {
     isLoading: boolean;
     onRefresh: () => void;
     isSubscriptionEditing: boolean;
+    control: Control<Tenant>;
+    watch: (name: keyof Tenant) => any;
+    setValue: (name: keyof Tenant, value: any) => void;
     onCreateInvoice: () => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, onCreateInvoice }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, control, watch, setValue, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
@@ -49,7 +53,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
     const { formatCurrency } = useCurrency();
-    const { control, watch, setValue } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<{
         properties: { value: string; label: string }[];
@@ -323,11 +326,11 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     </CardContent>
                     <CardFooter>
                          <div className="flex items-center gap-2">
-                            <Button type="button" onClick={() => handleRecordPayment()}>
+                            <Button onClick={() => handleRecordPayment()}>
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                             </Button>
-                            <Button type="button" variant="outline" onClick={onCreateInvoice}>
-                                <Plus className="mr-2 h-4 w-4" /> + Create Subs Invoice
+                            <Button variant="outline" onClick={onCreateInvoice}>
+                                <Plus className="mr-2 h-4 w-4" /> Create Invoice
                             </Button>
                         </div>
                     </CardFooter>
