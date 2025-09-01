@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote, UserSquare, FileSignature, Car } from 'lucide-react';
+import { Loader2, Save, CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote, UserSquare, FileSignature, Car, Settings } from 'lucide-react';
 import { type ModuleSettings } from './schema';
 import { saveModuleSettings } from './module-actions';
 
@@ -28,6 +28,7 @@ const moduleIcons: { [key: string]: React.ReactNode } = {
   'workflow': <Route className="h-6 w-6 text-primary" />,
   'data-processing': <ScanLine className="h-6 w-6 text-primary" />,
   'utilities': <Lightbulb className="h-6 w-6 text-primary" />,
+  'settings': <Settings className="h-6 w-6 text-primary" />,
 };
 
 const moduleDescriptions: { [key: string]: string } = {
@@ -81,22 +82,25 @@ export function ModuleManagement({ initialSettings }: { initialSettings: ModuleS
                 <CardDescription>Enable or disable major application modules. This will hide the modules from the sidebar for all users.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                 {Object.values(settings).filter(module => module.id !== 'settings').map(module => (
-                     <div key={module.id} className="flex items-center justify-between rounded-lg border p-4">
-                        <div className="flex items-center gap-4">
+                 {Object.values(settings).map(module => (
+                     <div key={module.id} className="flex flex-col justify-between rounded-lg border p-4">
+                        <div className="flex items-start gap-4">
                             {moduleIcons[module.id] || <Home className="h-6 w-6 text-primary" />}
-                            <div className="space-y-0.5">
-                                <Label htmlFor={module.id} className="text-base">{module.name}</Label>
+                            <div className="flex-1 space-y-1">
+                                <Label htmlFor={module.id} className="text-base font-semibold">{module.name}</Label>
                                 <p className="text-sm text-muted-foreground">
                                     {moduleDescriptions[module.id] || `Enable or disable the ${module.name}.`}
                                 </p>
                             </div>
                         </div>
-                        <Switch
-                            id={module.id}
-                            checked={module.enabled}
-                            onCheckedChange={(checked) => handleToggle(module.id, checked)}
-                        />
+                        <div className="flex items-center justify-end mt-4">
+                            <Switch
+                                id={module.id}
+                                checked={module.enabled}
+                                onCheckedChange={(checked) => handleToggle(module.id, checked)}
+                                disabled={module.id === 'settings'}
+                            />
+                        </div>
                     </div>
                 ))}
             </CardContent>
