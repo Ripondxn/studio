@@ -17,8 +17,8 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription, saveSubscriptionSettings } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { useFormContext, Controller } from 'react-hook-form';
-import { FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
+import { useFormContext, type Control } from 'react-hook-form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,7 +33,6 @@ import { type Unit } from '@/app/property/units/schema';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
 
 interface InvoiceListProps {
-    tenant: Tenant;
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
@@ -44,7 +43,7 @@ interface InvoiceListProps {
     onCreateInvoice: () => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, handleSaveSubscription, isSavingSub, onCreateInvoice }: InvoiceListProps) {
+export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, handleSaveSubscription, isSavingSub, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
@@ -53,7 +52,9 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const router = useRouter();
     const { formatCurrency } = useCurrency();
     
-    const { control, watch, setValue } = useFormContext<Tenant>();
+    const { control, watch, setValue, getValues } = useFormContext<Tenant>();
+    const tenant = watch();
+
 
     const [lookups, setLookups] = useState<{
         properties: { value: string; label: string }[];
@@ -95,7 +96,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
-        if (!tenant) return;
         const openInvoices = invoice ? [invoice] : invoices.filter(inv => inv.status !== 'Paid' && inv.status !== 'Cancelled');
         
         setPaymentDefaultValues({
@@ -131,7 +131,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const { toast } = useToast();
 
     const handleCancelSubscription = async () => {
-        if (!tenant) return;
         setIsCancellingSub(true);
         const result = await cancelSubscription(tenant.code);
         if (result.success) {
@@ -154,6 +153,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         
         return <Badge variant={config.variant as any} className={cn('gap-1', config.color, 'border-transparent')}>{config.icon} {occupancyStatus}</Badge>;
     };
+
+    if (!tenant) {
+      return <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />;
+    }
 
     return (
         <Card>
