@@ -132,6 +132,12 @@ const navLinks = [
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
     },
+    {
+        id: 'human-resource',
+        label: 'Human Resource',
+        href: '/human-resource/employees',
+        icon: <Users />,
+    },
      { 
         id: 'utilities',
         label: 'Utilities', 
