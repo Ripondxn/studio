@@ -51,8 +51,9 @@ import {
   KeyRound,
   Eraser,
   ScanLine,
-  Database,
   Lightbulb,
+  CarFront,
+  Car,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -86,12 +87,19 @@ const navLinks = [
         ]
     },
     { 
-      label: 'Tenant', 
+      label: 'Tenants', 
       icon: <Users />,
       subItems: [
-          { href: '/tenancy/tenants', label: 'Tenant' },
+          { href: '/tenancy/tenants', label: 'Tenants' },
           { href: '/tenancy/customer', label: 'Customer' },
           { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
+      ]
+    },
+     { 
+      label: 'Customers', 
+      icon: <Users className="text-blue-400" />,
+      subItems: [
+          { href: '/tenancy/customer', label: 'Customers' },
       ]
     },
     { 
@@ -139,6 +147,21 @@ const navLinks = [
         label: 'Vaults & Stores',
         href: '/stores',
         icon: <Warehouse />,
+    },
+     {
+        label: 'Car Sales',
+        href: '/car-sales',
+        icon: <Car />,
+    },
+     {
+        label: 'Rent-A-Car',
+        href: '/rent-a-car',
+        icon: <CarFront />,
+    },
+    {
+        label: 'Project Management',
+        href: '/project-management/projects',
+        icon: <Briefcase />,
     },
     {
         label: 'Asset Management',

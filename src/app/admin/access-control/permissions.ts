@@ -38,6 +38,14 @@ export const featurePermissions: FeaturePermission[] = [
       { action: 'manage', description: 'Add/Edit/Delete rental agreements', allowedRoles: ['Super Admin', 'Admin'] },
     ],
   },
+   {
+    feature: 'Car Sales',
+    description: 'Manage vehicle buying and selling operations.',
+    actions: [
+      { action: 'view', description: 'View vehicle inventory and sales', allowedRoles: ['Super Admin', 'Admin', 'User'] },
+      { action: 'manage', description: 'Add, edit, and delete vehicle records', allowedRoles: ['Super Admin', 'Admin'] },
+    ],
+  },
   {
     feature: 'Lease Contracts',
     description: 'Manage lease agreements with landlords.',
