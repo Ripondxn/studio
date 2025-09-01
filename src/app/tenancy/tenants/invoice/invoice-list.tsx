@@ -17,8 +17,8 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
+import { FormProvider, useForm, useFormContext, type Control } from 'react-hook-form';
 import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
-import { type Control, useFormContext } from 'react-hook-form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,13 +37,10 @@ interface InvoiceListProps {
     isLoading: boolean;
     onRefresh: () => void;
     isSubscriptionEditing: boolean;
-    control: Control<Tenant>;
-    watch: (name: keyof Tenant) => any;
-    setValue: (name: keyof Tenant, value: any) => void;
     onCreateInvoice: () => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, control, watch, setValue, onCreateInvoice }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
@@ -51,6 +48,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
     const { formatCurrency } = useCurrency();
+    const { control, watch, setValue } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<{
         properties: { value: string; label: string }[];
@@ -324,7 +322,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                             </Button>
                             <Button type="button" variant="outline" onClick={onCreateInvoice}>
-                                <Plus className="mr-2 h-4 w-4" /> + Create Subs Invoice
+                                <Plus className="mr-2 h-4 w-4" /> Create Subs Invoice
                             </Button>
                         </div>
                     </CardFooter>
