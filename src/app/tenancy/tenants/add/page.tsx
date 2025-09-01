@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -89,6 +90,7 @@ const initialTenantData: Tenant = {
     subscriptionAmount: 0,
 };
 
+// Helper function to read a file as a Base64 string on the client
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -446,7 +448,6 @@ export default function TenantPage() {
                 <TabsList>
                     <TabsTrigger value="info">Tenant Information</TabsTrigger>
                     <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
-                    <TabsTrigger value="attachments">Attachments</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info">
                     <Card>
@@ -558,25 +559,8 @@ export default function TenantPage() {
                                 )}
                             />
                         </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                <TabsContent value="subscription">
-                     <InvoiceList
-                        tenant={tenantData}
-                        invoices={invoices}
-                        isLoading={isLoadingInvoices}
-                        onRefresh={() => fetchInvoices(tenantCode)}
-                        isSubscriptionEditing={isEditing}
-                        onCreateInvoice={handleOpenSubscriptionDialog}
-                    />
-                </TabsContent>
-                <TabsContent value="attachments">
-                    <Card>
-                        <CardHeader>
+                         <div className="space-y-4 pt-6 border-t">
                             <CardTitle>Attachments</CardTitle>
-                        </CardHeader>
-                        <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -653,20 +637,31 @@ export default function TenantPage() {
                             <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                                 <Plus className="mr-2 h-4 w-4"/> Add Attachment
                             </Button>
+                        </div>
                         </CardContent>
                     </Card>
+                </TabsContent>
+                <TabsContent value="subscription">
+                    <InvoiceList
+                        tenant={tenantData}
+                        invoices={invoices}
+                        isLoading={isLoadingInvoices}
+                        onRefresh={() => fetchInvoices(tenantCode)}
+                        isSubscriptionEditing={isEditing}
+                        onCreateInvoice={handleOpenSubscriptionDialog}
+                    />
                 </TabsContent>
               </Tabs>
             </form>
           </FormProvider>
      
-      <SubscriptionInvoiceDialog
-        isOpen={isSubInvoiceOpen}
-        setIsOpen={setIsSubInvoiceOpen}
-        invoice={null}
-        tenant={tenantData}
-        onSuccess={handleFindClick}
-      />
+        <SubscriptionInvoiceDialog
+            isOpen={isSubInvoiceOpen}
+            setIsOpen={setIsSubInvoiceOpen}
+            invoice={null}
+            tenant={tenantData}
+            onSuccess={() => fetchInvoices(tenantCode)}
+        />
     </div>
   );
 }
