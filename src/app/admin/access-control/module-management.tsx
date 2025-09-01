@@ -8,7 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote, UserSquare, FileSignature, Car } from 'lucide-react';
-import { type ModuleSettings, saveModuleSettings } from './module-actions';
+import { type ModuleSettings } from './schema';
+import { saveModuleSettings } from './module-actions';
 
 
 const moduleIcons: { [key: string]: React.ReactNode } = {

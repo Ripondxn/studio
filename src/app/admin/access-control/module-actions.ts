@@ -5,14 +5,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-
-export const moduleSettingsSchema = z.record(z.object({
-    id: z.string(),
-    name: z.string(),
-    enabled: z.boolean(),
-}));
-
-export type ModuleSettings = z.infer<typeof moduleSettingsSchema>;
+import { moduleSettingsSchema, type ModuleSettings } from './schema';
 
 const settingsFilePath = path.join(process.cwd(), 'src/app/admin/access-control/module-settings.json');
 
