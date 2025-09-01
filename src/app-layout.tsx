@@ -64,7 +64,8 @@ import { checkLicenseStatus, type LicenseStatus } from '@/lib/license';
 import { TrialExpiredPage } from '@/components/trial-expired-page';
 import { Loader2 } from 'lucide-react';
 import { AuthorizationProvider, useAuthorization } from '@/context/permission-context';
-import { type ModuleSettings } from './admin/access-control/schema';
+import { getModuleSettings } from '@/app/admin/access-control/module-actions';
+import { type ModuleSettings } from '@/app/admin/access-control/schema';
 
 
 // A type for the user profile stored in session storage
@@ -383,90 +384,90 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
   }
   
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[auto_1fr]">
-        <div data-collapsed={isCollapsed} className="hidden border-r bg-sidebar md:flex md:flex-col group transition-[width] duration-300 ease-in-out">
-            <div className="flex h-16 items-center justify-between px-4">
-                 <Link
-                    href="/"
-                    className={cn(
-                        "flex items-center gap-2 text-lg font-semibold",
-                        isCollapsed && "justify-center"
-                    )}
-                    >
-                    {companyProfile.logo ? <img src={companyProfile.logo} alt="Company Logo" className="h-8 w-8 object-contain"/> : <Building2 className="h-6 w-6 text-sidebar-primary" />}
-                    {!isCollapsed && <span className="font-headline text-sidebar-foreground">{companyProfile.name}</span>}
-                </Link>
-                 <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(prev => !prev)} className="md:hidden">
-                    <PanelLeft />
-                </Button>
+        <div className="grid min-h-screen w-full md:grid-cols-[auto_1fr]">
+            <div data-collapsed={isCollapsed} className="hidden border-r bg-sidebar md:flex md:flex-col group transition-[width] duration-300 ease-in-out">
+                <div className="flex h-16 items-center justify-between px-4">
+                    <Link
+                        href="/"
+                        className={cn(
+                            "flex items-center gap-2 text-lg font-semibold",
+                            isCollapsed && "justify-center"
+                        )}
+                        >
+                        {companyProfile.logo ? <img src={companyProfile.logo} alt="Company Logo" className="h-8 w-8 object-contain"/> : <Building2 className="h-6 w-6 text-sidebar-primary" />}
+                        {!isCollapsed && <span className="font-headline text-sidebar-foreground">{companyProfile.name}</span>}
+                    </Link>
+                    <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(prev => !prev)} className="md:hidden">
+                        <PanelLeft />
+                    </Button>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                    <SidebarNav isCollapsed={isCollapsed} pathname={pathname} moduleSettings={moduleSettings}/>
+                </div>
             </div>
-            <div className="flex-1 overflow-y-auto">
-                <SidebarNav isCollapsed={isCollapsed} pathname={pathname} moduleSettings={moduleSettings}/>
-            </div>
-        </div>
-        <div className="flex flex-col">
-             <header className="sticky top-0 z-40">
-                <TrialBanner licenseStatus={licenseStatus} />
-                <div className="flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-                 <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(prev => !prev)} className="hidden md:flex">
-                    <PanelLeft />
-                </Button>
-                <Breadcrumbs />
-                <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-                    <div className="ml-auto flex-1 sm:flex-initial">
-                        <Select defaultValue="property_management">
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Select Company" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="property_management">Property Management</SelectItem>
-                                <SelectItem value="trading">Trading</SelectItem>
-                                <SelectItem value="payroll">Payroll</SelectItem>
-                            </SelectContent>
-                        </Select>
+            <div className="flex flex-col">
+                <header className="sticky top-0 z-40">
+                    <TrialBanner licenseStatus={licenseStatus} />
+                    <div className="flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+                    <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(prev => !prev)} className="hidden md:flex">
+                        <PanelLeft />
+                    </Button>
+                    <Breadcrumbs />
+                    <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+                        <div className="ml-auto flex-1 sm:flex-initial">
+                            <Select defaultValue="property_management">
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select Company" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="property_management">Property Management</SelectItem>
+                                    <SelectItem value="trading">Trading</SelectItem>
+                                    <SelectItem value="payroll">Payroll</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="secondary" size="icon" className="rounded-full">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage
+                                    src={userProfile?.avatar || undefined}
+                                    alt={userProfile.name}
+                                    />
+                                    <AvatarFallback>{userProfile.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                                </Avatar>
+                                <span className="sr-only">Toggle user menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel className="font-normal">
+                                <div className="flex flex-col space-y-1">
+                                    <p className="text-sm font-medium leading-none">
+                                    {userProfile.name}
+                                    </p>
+                                    <p className="text-xs leading-none text-muted-foreground">
+                                    {userProfile.email}
+                                    </p>
+                                </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild><Link href="/admin/profile">Profile</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/admin/company-profile">Company Profile</Link></DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleLogout}>
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Log out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="secondary" size="icon" className="rounded-full">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                src={userProfile?.avatar || undefined}
-                                alt={userProfile.name}
-                                />
-                                <AvatarFallback>{userProfile.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                            </Avatar>
-                            <span className="sr-only">Toggle user menu</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel className="font-normal">
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">
-                                {userProfile.name}
-                                </p>
-                                <p className="text-xs leading-none text-muted-foreground">
-                                {userProfile.email}
-                                </p>
-                            </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild><Link href="/admin/profile">Profile</Link></DropdownMenuItem>
-                            <DropdownMenuItem asChild><Link href="/admin/company-profile">Company Profile</Link></DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleLogout}>
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Log out
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-                </div>
-            </header>
-            <main className="flex flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
-            {children}
-            </main>
+                    </div>
+                </header>
+                <main className="flex flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
+                {children}
+                </main>
+            </div>
         </div>
-    </div>
   );
 }
 
