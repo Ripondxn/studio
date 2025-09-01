@@ -82,8 +82,8 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         fetchLookups();
     }, [fetchLookups]);
     
-    const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
-    const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
+    const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty && u.occupancyStatus !== 'Occupied'), [lookups.units, watchedProperty]);
+    const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit && r.occupancyStatus !== 'Occupied'), [lookups.rooms, watchedProperty, watchedUnit]);
     
     const handleCreateClick = () => {
         setSelectedInvoice(null);
@@ -170,7 +170,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {tenantName}.</CardDescription>
+                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -297,7 +297,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                          <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-base font-semibold">Assigned Property</h3>
-                                {tenant.property && <OccupancyBadge/>}
+                                <OccupancyBadge/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <FormField
