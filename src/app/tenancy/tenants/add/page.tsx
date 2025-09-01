@@ -48,7 +48,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData, saveSubscriptionSettings } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
@@ -114,7 +114,6 @@ export default function TenantPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
-  const [isSavingSub, setIsSavingSub] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
 
@@ -176,7 +175,12 @@ export default function TenantPage() {
           title: 'Not Found',
           description: `No record found for Tenant Code: ${code}. You can create a new one.`,
         });
-        handleFindClick('new');
+        const newPropertyResponse = await findTenantData('new');
+        if (newPropertyResponse.success && newPropertyResponse.data) {
+          reset({ ...initialTenantData, code: newPropertyResponse.data.tenantData.code });
+        }
+        setIsNewRecord(true);
+        setIsEditing(true);
       }
     } catch (error) {
       toast({
@@ -240,27 +244,36 @@ export default function TenantPage() {
     setIsEditing(true);
   }
 
-  const onSave = async (data: Tenant) => {
+ const onSave = async (data: Tenant) => {
     setIsSaving(true);
     try {
+        // Process attachments only when saving the main form, not for individual attachment saves.
+        const processedAttachments = await Promise.all(
+            attachments.map(async (att) => {
+                if (att.file && att.file instanceof File) {
+                    const base64 = await fileToBase64(att.file);
+                    const savedPath = await handleFileUpload(base64, att.file.name);
+                    return { ...att, file: savedPath, url: undefined };
+                }
+                return { ...att, url: undefined };
+            })
+        );
+
         const dataToSave = {
             tenantData: data,
-            attachments: attachments.map(a => ({...a, url: undefined, file: typeof a.file === 'string' ? a.file : null})), // Only save filename
+            attachments: processedAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
         };
 
         const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
         if (result.success && result.data) {
-            toast({
-                title: "Success",
-                description: `Tenant "${data.name}" saved successfully.`,
-            });
+            toast({ title: "Success", description: `Tenant "${data.name}" saved successfully.` });
             setIsEditing(false);
             setIsSubscriptionEditing(false);
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
                  reset(data);
-                 setAttachments(attachments.map(a => ({...a, url: undefined})));
+                 setAttachments(processedAttachments);
             }
         } else {
             throw new Error(result.error || 'An unknown error occurred');
@@ -274,54 +287,13 @@ export default function TenantPage() {
     } finally {
       setIsSaving(false);
     }
-  }
+  };
+
 
   const onSaveAttachment = async (id: number) => {
     setSavingAttachmentId(id);
-    const attachmentToSave = attachments.find(a => a.id === id);
-    if (!attachmentToSave || !attachmentToSave.file) {
-        setSavingAttachmentId(null);
-        return;
-    }
-    
-    let fileData: string | null = null;
-    if (attachmentToSave.isLink) {
-        fileData = typeof attachmentToSave.file === 'string' ? attachmentToSave.file : null;
-    } else if (attachmentToSave.file instanceof File) {
-        const base64 = await fileToBase64(attachmentToSave.file);
-        fileData = await handleFileUpload(base64, attachmentToSave.file.name);
-    } else {
-        fileData = attachmentToSave.file;
-    }
-    
-    const updatedAttachments = attachments.map(att => att.id === id ? {...att, file: fileData} : att);
-
-    const dataToSave = {
-        tenantData: getValues(),
-        attachments: updatedAttachments.map(a => ({...a, url: undefined, file: typeof a.file === 'string' ? a.file : null})),
-    };
-    
-    const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
-    if (result.success) {
-      toast({ title: "Success", description: "Attachment saved." });
-      setAttachments(updatedAttachments);
-    } else {
-      toast({ variant: "destructive", title: "Error", description: result.error || "Failed to save attachment." });
-    }
+    await handleSubmit((data) => onSave(data, true, id))();
     setSavingAttachmentId(null);
-  };
-  
-  const handleSaveSubscription = async () => {
-    setIsSavingSub(true);
-    const data = getValues();
-    const result = await saveSubscriptionSettings(data.code, data);
-    if (result.success) {
-      toast({ title: 'Subscription Updated', description: 'The subscription settings have been saved.' });
-      setIsSubscriptionEditing(false);
-    } else {
-      toast({ variant: 'destructive', title: 'Error', description: result.error });
-    }
-    setIsSavingSub(false);
   };
 
 
@@ -369,7 +341,6 @@ export default function TenantPage() {
         return item.url;
     }
     if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
-        // Note: gdrive links aren't directly viewable and would need a download route
         return item.file;
     }
     return '#';
@@ -382,7 +353,7 @@ export default function TenantPage() {
 
   return (
     <div className="container mx-auto p-4 bg-background">
-      <FormProvider {...formMethods}>
+     <FormProvider {...formMethods}>
       <form onSubmit={handleSubmit(onSave)}>
         <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-primary font-headline">
@@ -619,7 +590,7 @@ export default function TenantPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                            <Button size="icon" type="button" onClick={() => handleSubmit((data) => onSave(data, true, item.id))()} disabled={savingAttachmentId === item.id || !isEditing}>
                                                 {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
                                             </Button>
                                             <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
@@ -639,14 +610,14 @@ export default function TenantPage() {
             </Card>
         </TabsContent>
         <TabsContent value="subscription">
-            <InvoiceList
-                tenant={tenantData}
+             <InvoiceList
+                tenant={getValues()}
                 invoices={invoices}
                 isLoading={isLoadingInvoices}
                 onRefresh={() => fetchInvoices(tenantCode)}
                 isSubscriptionEditing={isSubscriptionEditing}
                 setIsSubscriptionEditing={setIsSubscriptionEditing}
-                handleSaveSubscription={handleSubmit(onSave)}
+                handleSaveSubscription={() => handleSubmit(onSave)()}
                 isSavingSub={isSaving}
                 onCreateInvoice={handleOpenSubscriptionDialog}
             />
@@ -654,14 +625,15 @@ export default function TenantPage() {
       </Tabs>
       </form>
     </FormProvider>
-    <SubscriptionInvoiceDialog
+     <SubscriptionInvoiceDialog
       isOpen={isSubInvoiceOpen}
       setIsOpen={setIsSubInvoiceOpen}
       invoice={null}
-      tenant={tenantData}
+      tenant={getValues()}
       onSuccess={() => fetchInvoices(tenantCode)}
     />
   </div>
   );
 }
 
+    
