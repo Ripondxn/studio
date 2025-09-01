@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -15,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
 import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { cancelSubscription, saveSubscriptionSettings } from '../actions';
+import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
 import { useFormContext, type Control } from 'react-hook-form';
@@ -33,6 +34,7 @@ import { type Unit } from '@/app/property/units/schema';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
 
 interface InvoiceListProps {
+    tenant: Tenant;
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
@@ -43,7 +45,7 @@ interface InvoiceListProps {
     onCreateInvoice: () => void;
 }
 
-export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, handleSaveSubscription, isSavingSub, onCreateInvoice }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, handleSaveSubscription, isSavingSub, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
@@ -52,10 +54,8 @@ export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEdit
     const router = useRouter();
     const { formatCurrency } = useCurrency();
     
-    const { control, watch, setValue, getValues } = useFormContext<Tenant>();
-    const tenant = watch();
-
-
+    const { control, watch, setValue } = useFormContext<Tenant>();
+    
     const [lookups, setLookups] = useState<{
         properties: { value: string; label: string }[];
         units: (Unit & { value: string; label: string })[];
@@ -155,7 +155,7 @@ export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEdit
     };
 
     if (!tenant) {
-      return <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />;
+      return <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
     }
 
     return (
