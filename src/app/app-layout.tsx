@@ -90,6 +90,7 @@ const navLinks = [
       icon: <Users />,
       subItems: [
           { href: '/tenancy/tenants', label: 'Tenants' },
+          { href: '/tenancy/customer', label: 'Customer' },
           { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
       ]
     },
