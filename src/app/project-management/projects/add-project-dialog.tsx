@@ -19,7 +19,7 @@ import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { projectSchema, type Project, type ProgressBilling } from './schema';
+import { projectSchema, type Project, type ProgressBilling, progressBillingSchema } from './schema';
 import { saveProject } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
