@@ -113,7 +113,6 @@ export default function TenantPage() {
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
-  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
 
@@ -163,13 +162,11 @@ export default function TenantPage() {
         if (code !== 'new') {
             setIsNewRecord(false);
             setIsEditing(false);
-            setIsSubscriptionEditing(false);
             setIsAutoCode(false);
             fetchInvoices(result.data.tenantData.code);
         } else {
             setIsNewRecord(true);
             setIsEditing(true);
-            setIsSubscriptionEditing(true);
             setIsAutoCode(true);
         }
       } else {
@@ -240,7 +237,6 @@ export default function TenantPage() {
 
   const handleEditClick = () => {
     setIsEditing(true);
-    setIsSubscriptionEditing(true);
   }
 
   const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
@@ -296,7 +292,6 @@ export default function TenantPage() {
             });
             if (!isAttachmentSave) {
                 setIsEditing(false);
-                setIsSubscriptionEditing(false);
             }
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
@@ -332,7 +327,6 @@ export default function TenantPage() {
         reset();
         setAttachments(getValues().attachments || []);
         setIsEditing(false);
-        setIsSubscriptionEditing(false);
      }
   }
 
@@ -382,7 +376,7 @@ export default function TenantPage() {
 
   return (
     <div className="container mx-auto p-4 bg-background">
-      <FormProvider {...formMethods}>
+     <FormProvider {...formMethods}>
         <form onSubmit={handleSubmit(onSave)}>
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold text-primary font-headline">
@@ -449,7 +443,7 @@ export default function TenantPage() {
                     </Button>
                 </div>
             </div>
-          
+        
             <Tabs defaultValue="info">
                 <TabsList>
                     <TabsTrigger value="info">Tenant Information</TabsTrigger>
@@ -464,16 +458,16 @@ export default function TenantPage() {
                         <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <FormField
-                              control={control}
-                              name="code"
-                              render={({ field }) => (
+                            control={control}
+                            name="code"
+                            render={({ field }) => (
                                 <FormItem>
-                                   <Label htmlFor="code">Code</Label>
-                                   <div className="flex items-end gap-2">
+                                <Label htmlFor="code">Code</Label>
+                                <div className="flex items-end gap-2">
                                         <FormControl>
                                             <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
                                         </FormControl>
-                                         <div className="flex items-center space-x-2 pt-6">
+                                        <div className="flex items-center space-x-2 pt-6">
                                             <Switch
                                                 id="auto-code-switch"
                                                 checked={isAutoCode}
@@ -482,78 +476,78 @@ export default function TenantPage() {
                                             />
                                             <Label htmlFor="auto-code-switch">Auto</Label>
                                         </div>
-                                   </div>
-                                  <FormMessage />
+                                </div>
+                                <FormMessage />
                                 </FormItem>
-                              )}
+                            )}
                             />
                             <FormField
-                              control={control}
-                              name="name"
-                              render={({ field }) => (
+                            control={control}
+                            name="name"
+                            render={({ field }) => (
                                 <FormItem className="md:col-span-2">
-                                   <Label htmlFor="name">Name</Label>
-                                   <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                                  <FormMessage />
+                                <Label htmlFor="name">Name</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
                                 </FormItem>
-                              )}
+                            )}
                             />
                             <FormField
-                              control={control}
-                              name="mobile"
-                              render={({ field }) => (
+                            control={control}
+                            name="mobile"
+                            render={({ field }) => (
                                 <FormItem>
-                                   <Label htmlFor="mobile">Mobile No</Label>
+                                <Label htmlFor="mobile">Mobile No</Label>
                                     <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                                  <FormMessage />
+                                <FormMessage />
                                 </FormItem>
-                              )}
+                            )}
                             />
-                             <FormField
-                              control={control}
-                              name="email"
-                              render={({ field }) => (
+                            <FormField
+                            control={control}
+                            name="email"
+                            render={({ field }) => (
                                 <FormItem>
-                                   <Label htmlFor="email">Email</Label>
-                                   <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
-                                  <FormMessage />
+                                <Label htmlFor="email">Email</Label>
+                                <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
+                                <FormMessage />
                                 </FormItem>
-                              )}
+                            )}
                             />
-                             <FormField
-                              control={control}
-                              name="address"
-                              render={({ field }) => (
+                            <FormField
+                            control={control}
+                            name="address"
+                            render={({ field }) => (
                                 <FormItem className="md:col-span-2">
-                                   <Label htmlFor="address">Address</Label>
-                                   <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                                  <FormMessage />
+                                <Label htmlFor="address">Address</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
                                 </FormItem>
-                              )}
+                            )}
                             />
                             <FormField
-                              control={control}
-                              name="eid"
-                              render={({ field }) => (
+                            control={control}
+                            name="eid"
+                            render={({ field }) => (
                                 <FormItem>
-                                   <Label htmlFor="eid">EID/Passport/Visa</Label>
-                                   <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                                  <FormMessage />
+                                <Label htmlFor="eid">EID/Passport/Visa</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
                                 </FormItem>
-                              )}
+                            )}
                             />
                             <FormField
-                              control={control}
-                              name="occupation"
-                              render={({ field }) => (
+                            control={control}
+                            name="occupation"
+                            render={({ field }) => (
                                 <FormItem>
-                                   <Label htmlFor="occupation">Occupation</Label>
-                                   <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                                  <FormMessage />
+                                <Label htmlFor="occupation">Occupation</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
                                 </FormItem>
-                              )}
+                            )}
                             />
-                             <FormField
+                            <FormField
                                 control={control}
                                 name="contractNo"
                                 render={({ field }) => (
@@ -565,7 +559,7 @@ export default function TenantPage() {
                                 )}
                             />
                         </div>
-                         <div className="space-y-4 pt-6 border-t">
+                        <div className="space-y-4 pt-6 border-t">
                             <CardTitle>Attachments</CardTitle>
                             <Table>
                                 <TableHeader>
@@ -609,11 +603,11 @@ export default function TenantPage() {
                                                         {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                                     </Button>
                                                 </div>
-                                                 <div className="mt-1">
-                                                     <a href={getViewLink(item)} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                <div className="mt-1">
+                                                    <a href={getViewLink(item)} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
                                                         View
                                                     </a>
-                                                 </div>
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
@@ -637,7 +631,7 @@ export default function TenantPage() {
                     </Card>
                 </TabsContent>
                 <TabsContent value="subscription">
-                     <InvoiceList
+                    <InvoiceList
                         tenant={tenantData}
                         invoices={invoices}
                         isLoading={isLoadingInvoices}
@@ -646,18 +640,18 @@ export default function TenantPage() {
                         onCreateInvoice={handleOpenSubscriptionDialog}
                     />
                 </TabsContent>
-              </Tabs>
+            </Tabs>
         </form>
       </FormProvider>
-      <SubscriptionInvoiceDialog
+      {tenantData && <SubscriptionInvoiceDialog
         isOpen={isSubInvoiceOpen}
         setIsOpen={setIsSubInvoiceOpen}
         invoice={null}
         tenant={tenantData}
         onSuccess={() => {
-            fetchInvoices(tenantCode);
+            fetchInvoices(tenantData.code);
         }}
-      />
+      />}
     </div>
   );
 }
