@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -81,12 +80,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit && r.occupancyStatus !== 'Occupied'), [lookups.rooms, watchedProperty, watchedUnit]);
     
     const handleEditClick = (invoice: Invoice) => {
-        // This functionality needs to be implemented within SubscriptionInvoiceDialog if needed
         toast({ title: "Info", description: "Editing subscription invoices from this view is not yet supported." });
     }
     
     const handleViewClick = (invoice: Invoice) => {
-        // This functionality needs to be implemented within SubscriptionInvoiceDialog if needed
         toast({ title: "Info", description: "Viewing invoices from this view is not yet supported." });
     }
     
@@ -323,11 +320,11 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     </CardContent>
                     <CardFooter>
                          <div className="flex items-center gap-2">
-                            <Button onClick={() => handleRecordPayment()}>
+                            <Button type="button" onClick={() => handleRecordPayment()}>
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                             </Button>
-                            <Button variant="outline" onClick={onCreateInvoice}>
-                                <Plus className="mr-2 h-4 w-4" /> Create Invoice
+                            <Button type="button" variant="outline" onClick={onCreateInvoice}>
+                                <Plus className="mr-2 h-4 w-4" /> + Create Subs Invoice
                             </Button>
                         </div>
                     </CardFooter>
