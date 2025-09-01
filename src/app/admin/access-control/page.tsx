@@ -3,7 +3,7 @@ import { getPermissions, getRoles } from './actions';
 import { AccessControlClient } from './access-control-client';
 import { featurePermissions } from './permissions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CarFront, Briefcase, Users, Package, Home, Warehouse } from 'lucide-react';
+import { CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -100,6 +100,21 @@ export default async function AccessControlPage() {
                 </div>
                 <Switch
                     id="asset-management-module"
+                    defaultChecked={true} 
+                />
+            </div>
+             <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
+                    <Wrench className="h-6 w-6 text-primary" />
+                    <div className="space-y-0.5">
+                        <Label htmlFor="maintenance-module" className="text-base">Maintenance Module</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Manage maintenance tickets and service contracts.
+                        </p>
+                    </div>
+                </div>
+                <Switch
+                    id="maintenance-module"
                     defaultChecked={true} 
                 />
             </div>

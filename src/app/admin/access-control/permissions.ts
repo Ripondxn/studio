@@ -74,6 +74,16 @@ export const featurePermissions: FeaturePermission[] = [
     ],
   },
   {
+    feature: 'Maintenance',
+    description: 'Manage maintenance tickets and service contracts.',
+    actions: [
+      { action: 'view_tickets', description: 'View maintenance tickets', allowedRoles: ['Super Admin', 'Admin', 'User'] },
+      { action: 'manage_tickets', description: 'Create, edit, and update tickets', allowedRoles: ['Super Admin', 'Admin'] },
+      { action: 'view_contracts', description: 'View service contracts', allowedRoles: ['Super Admin', 'Admin', 'Accountant'] },
+      { action: 'manage_contracts', description: 'Manage service contracts', allowedRoles: ['Super Admin', 'Admin'] },
+    ],
+  },
+  {
     feature: 'Landlords',
     description: 'Manage landlord profiles and their associated contracts.',
     actions: [
