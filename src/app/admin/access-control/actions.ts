@@ -4,11 +4,13 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { revalidatePath } from 'next/cache';
-import { type FeaturePermission } from './permissions';
+import { type FeaturePermission, featurePermissions } from './permissions';
 import { type UserRole } from '../user-roles/schema';
+import { type ModuleSettings } from './schema';
 
 const permissionsFilePath = path.join(process.cwd(), 'src/app/admin/access-control/permissions.json');
 const usersFilePath = path.join(process.cwd(), 'src/app/admin/user-roles/users.json');
+const moduleSettingsFilePath = path.join(process.cwd(), 'src/app/admin/access-control/module-settings.json');
 
 async function readData(filePath: string) {
     try {
@@ -24,7 +26,23 @@ async function readData(filePath: string) {
 }
 
 export async function getPermissions(): Promise<FeaturePermission[]> {
-    return await readData(permissionsFilePath);
+     const savedPermissions = await readData(permissionsFilePath);
+     // Merge saved permissions with the default structure to ensure all features are listed
+    const allPermissions = featurePermissions.map(feature => {
+        const savedFeature = savedPermissions.find((p: any) => p.feature === feature.feature);
+        const actions = feature.actions.map(action => {
+        const savedAction = savedFeature?.actions.find((a: any) => a.action === action.action);
+        return {
+            ...action,
+            allowedRoles: savedAction ? savedAction.allowedRoles : action.allowedRoles,
+        };
+        });
+        return {
+        ...feature,
+        actions,
+        };
+    });
+    return allPermissions;
 }
 
 export async function savePermissions(permissions: FeaturePermission[]) {
@@ -43,11 +61,23 @@ export async function getRoles(): Promise<string[]> {
         const users: UserRole[] = await readData(usersFilePath);
         const allRoles = users.map(u => u.role);
         // Add default roles that might not be in use yet
-        const defaultRoles = ['Super Admin', 'Admin', 'Property Manager', 'Accountant', 'User'];
+        const defaultRoles = ['Super Admin', 'Admin', 'Property Manager', 'Accountant', 'User', 'Developer'];
         const uniqueRoles = Array.from(new Set([...allRoles, ...defaultRoles]));
         return uniqueRoles;
     } catch (error) {
         console.error("Failed to read user roles", error);
-        return ['Super Admin', 'Admin', 'Property Manager', 'Accountant', 'User'];
+        return ['Super Admin', 'Admin', 'Property Manager', 'Accountant', 'User', 'Developer'];
+    }
+}
+
+export async function getCombinedAccessControlData() {
+    try {
+        const [permissions, moduleSettings] = await Promise.all([
+            getPermissions(),
+            readData(moduleSettingsFilePath) as Promise<ModuleSettings>
+        ]);
+        return { success: true, permissions, moduleSettings };
+    } catch(error) {
+        return { success: false, error: (error as Error).message };
     }
 }

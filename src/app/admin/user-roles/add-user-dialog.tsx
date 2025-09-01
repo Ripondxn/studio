@@ -27,6 +27,7 @@ import { Plus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuthorization } from '@/context/permission-context';
 
 import { userRoleSchema, type UserRole } from './schema';
 import { addUser } from './actions';
@@ -44,6 +45,8 @@ export function AddUserDialog() {
   const { toast } = useToast();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<{name: string} | null>(null);
+  const { can } = useAuthorization();
+
 
   useEffect(() => {
     const storedProfile = sessionStorage.getItem('userProfile');
@@ -98,7 +101,7 @@ export function AddUserDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={!can('User Management', 'add_user')}>
           <Plus className="mr-2 h-4 w-4" /> Add New User
         </Button>
       </DialogTrigger>

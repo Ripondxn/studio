@@ -7,8 +7,8 @@ import { getProblematicContracts, getMovementHistory, getVacantPeriods } from '.
 import { ContinuityClient } from './client';
 import { type Contract } from '@/app/tenancy/contract/schema';
 import { type MovementHistoryItem, type VacantPeriod } from './actions';
-import { type UserRole } from '@/app/admin/user-roles/schema';
 import { Loader2 } from 'lucide-react';
+import { useAuthorization } from '@/context/permission-context';
 
 type ContinuityData = {
     problematicContracts: Contract[],
@@ -19,33 +19,36 @@ type ContinuityData = {
 export default function ContractContinuityPage() {
   const [data, setData] = useState<ContinuityData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
+  const { isAuthorized, isLoading: isAuthLoading } = useAuthorization();
 
    useEffect(() => {
-    const checkAuthAndFetchData = async () => {
-        const storedProfile = sessionStorage.getItem('userProfile');
-        if (storedProfile) {
-            const profile: { role: UserRole['role'] } = JSON.parse(storedProfile);
-            if (profile.role === 'Super Admin') {
-                setIsAuthorized(true);
-                const problematicContracts = await getProblematicContracts();
-                const movementHistory = await getMovementHistory();
-                const vacantPeriods = await getVacantPeriods();
-                setData({ problematicContracts, movementHistory, vacantPeriods });
-            } else {
-                router.push('/');
-            }
-        } else {
-            router.push('/login');
+    if (isAuthLoading) return;
+
+    const fetchData = async () => {
+        if (!isAuthorized('Settings', 'contract_continuity')) {
+            router.push('/');
+            return;
         }
-        setIsLoading(false);
+        
+        try {
+            const [problematicContracts, movementHistory, vacantPeriods] = await Promise.all([
+                getProblematicContracts(),
+                getMovementHistory(),
+                getVacantPeriods()
+            ]);
+            setData({ problematicContracts, movementHistory, vacantPeriods });
+        } catch (error) {
+            console.error("Failed to fetch continuity data:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    checkAuthAndFetchData();
-  }, [router]);
+    fetchData();
+  }, [isAuthLoading, isAuthorized, router]);
 
-  if (isLoading || !isAuthorized) {
+  if (isAuthLoading || isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center p-10">
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -54,6 +57,14 @@ export default function ContractContinuityPage() {
         </div>
       </div>
     );
+  }
+  
+  if (!isAuthorized('Settings', 'contract_continuity')) {
+      return (
+          <div className="text-center text-muted-foreground">
+              <p>You are not authorized to view this page.</p>
+          </div>
+      )
   }
 
   const { problematicContracts, movementHistory, vacantPeriods } = data!;

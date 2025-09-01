@@ -1,7 +1,7 @@
 
 import type { Metadata } from 'next';
 import './globals.css';
-import { AppLayout } from '@/app/app-layout';
+import { AppLayout } from '@/components/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 import { CurrencyProvider } from '@/context/currency-context';
 import { CompanyProfileProvider } from '@/context/company-profile-context';
