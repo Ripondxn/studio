@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -6,8 +7,9 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { utilityAccountSchema, type UtilityAccount } from './schema';
-import { addPayment } from '@/app/finance/payment/actions';
+import { addPayment, getNextPaymentVoucherNumber } from '../finance/payment/actions';
 import { type UserRole } from '@/app/admin/user-roles/schema';
+import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/utilities/accounts-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -48,7 +50,7 @@ export async function getAllUtilityAccounts(): Promise<UtilityAccount[]> {
 
     const paymentMap = new Map<string, number>();
     payments.forEach((p: any) => {
-        if (p.utilityAccountId) {
+        if (p.utilityAccountId && p.currentStatus === 'POSTED') {
             const currentTotal = paymentMap.get(p.utilityAccountId) || 0;
             paymentMap.set(p.utilityAccountId, currentTotal + p.amount);
         }
@@ -77,7 +79,7 @@ export async function saveUtilityAccount(
     }
 
     const allAccounts = await readAccounts();
-    const validatedData = validation.data;
+    const { recordFirstBill, billAmount, billDate, ...validatedData } = validation.data;
     let savedAccount: UtilityAccount;
 
     if (data.id) { // Update
@@ -93,8 +95,8 @@ export async function saveUtilityAccount(
     await writeAccounts(allAccounts);
 
     // If an initial bill is included, record it.
-    if (validatedData.recordFirstBill && validatedData.billAmount && validatedData.billAmount > 0 && validatedData.billDate) {
-        await recordBillPayment(savedAccount.id, validatedData.billAmount, validatedData.billDate, currentUser);
+    if (recordFirstBill && billAmount && billAmount > 0 && billDate) {
+        await recordBillPayment(savedAccount.id, billAmount, billDate, currentUser);
     }
 
     revalidatePath('/utilities');
@@ -119,6 +121,11 @@ export async function recordBillPayment(accountId: string, amount: number, billD
         return { success: false, error: 'Utility account not found.' };
     }
 
+    const workflowSettings = await getWorkflowSettings();
+    const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
+    
+    // We call addPayment from the finance module which will handle creating the voucher
+    // and applying financial impact upon final approval.
     const paymentResult = await addPayment({
         type: 'Payment',
         date: billDate,
@@ -131,18 +138,24 @@ export async function recordBillPayment(accountId: string, amount: number, billD
         remarks: `Utility bill payment for ${account.propertyCode}`,
         status: 'Paid',
         createdByUser: currentUser.name,
-        currentStatus: 'POSTED',
+        currentStatus: initialStatus,
         property: account.propertyCode,
         unitCode: account.unitCode,
         utilityAccountId: account.id, // Link payment to utility account
-        expenseAccountId: '5130' // Utilities expense account code
+        expenseAccountId: '5130', // Utilities expense account code
+        approvalHistory: initialStatus === 'DRAFT' ? [] : [{
+            action: 'Created & Auto-Posted',
+            actorId: currentUser.email,
+            actorRole: currentUser.role,
+            timestamp: new Date().toISOString(),
+            comments: 'Directly recorded utility transaction.'
+        }]
     });
 
     if (paymentResult.success) {
         revalidatePath('/utilities');
         revalidatePath('/finance/payment');
-        revalidatePath('/finance/banking');
-        revalidatePath('/finance/chart-of-accounts');
+        revalidatePath('/finance/workflow');
         return { success: true };
     } else {
         return { success: false, error: paymentResult.error || 'Failed to create payment voucher.' };

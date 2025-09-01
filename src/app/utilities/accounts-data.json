@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "utilityType": "Water & Electricity",
+    "provider": "ADDC",
+    "accountNumber": "24460789",
+    "propertyCode": "LT-C38",
+    "unitCode": "F102",
+    "status": "Active",
+    "notes": "",
+    "billAmount": 1000,
+    "billDate": "2025-09-01",
+    "recordFirstBill": true,
+    "id": "UTIL-1756733104362"
+  }
+]

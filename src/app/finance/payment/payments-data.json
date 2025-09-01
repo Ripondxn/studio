@@ -1,24 +1,27 @@
 [
   {
-    "type": "Receipt",
+    "type": "Payment",
     "date": "2025-09-01",
-    "partyType": "Tenant",
-    "partyName": "T0003",
-    "amount": 200,
-    "paymentMethod": "Cash",
+    "partyType": "Vendor",
+    "partyName": "ADDC",
+    "amount": 1000,
+    "paymentMethod": "Bank Transfer",
     "paymentFrom": "Bank",
-    "description": "",
-    "status": "Received",
+    "expenseAccountId": "5130",
+    "property": "LT-C38",
+    "unitCode": "F102",
+    "description": "Payment for Water & Electricity - Acc# 24460789",
+    "remarks": "Utility bill payment for LT-C38",
+    "status": "Paid",
     "createdByUser": "Super Admin",
-    "invoiceAllocations": [],
-    "id": "PAY-1756717020218",
     "currentStatus": "POSTED",
+    "id": "PAY-1756733125489",
     "approvalHistory": [
       {
         "action": "Created & Posted",
         "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-09-01T08:57:00.218Z",
+        "timestamp": "2025-09-01T13:25:25.489Z",
         "comments": "Directly recorded transaction."
       }
     ]

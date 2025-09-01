@@ -150,21 +150,28 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
                 return { success: false, error: `A payment for reference "${paymentData.referenceNo}" already exists.` };
             }
         }
+        
+        const workflowSettings = await getWorkflowSettings();
+        const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
+        const newId = paymentData.id || `PAY-${Date.now()}`;
 
         const newPayment: Payment = {
             ...paymentData,
-            id: `PAY-${Date.now()}`,
-            currentStatus: 'POSTED', // Always post directly from this function
-            approvalHistory: [
-              {
-                action: 'Created & Posted',
-                actorId: paymentData.createdByUser || 'System',
-                actorRole: 'User', // This can be refined later if needed
-                timestamp: new Date().toISOString(),
-                comments: `Directly recorded transaction.`,
-              },
-            ],
+            id: newId,
+            currentStatus: initialStatus,
         };
+        
+        // If it's a DRAFT, the approval history will be added upon submission.
+        if (initialStatus === 'POSTED') {
+            newPayment.approvalHistory = [{
+                action: 'Created & Auto-Posted',
+                actorId: paymentData.createdByUser || 'System',
+                actorRole: 'User',
+                timestamp: new Date().toISOString(),
+                comments: 'Directly recorded transaction.',
+            }];
+            await applyFinancialImpact(newPayment);
+        }
         
         if (newPayment.type === 'Receipt' && newPayment.invoiceAllocations && newPayment.invoiceAllocations.length > 0) {
             await applyPaymentToInvoices(newPayment.invoiceAllocations, newPayment.partyName);
@@ -177,9 +184,6 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
         if (newPayment.referenceType === 'Receipt Book' && newPayment.referenceNo) {
             await updateReceiptBookUsage(newPayment.referenceNo);
         }
-
-        // Apply financial impact since it's always posted now
-        await applyFinancialImpact(newPayment);
         
         allPayments.push(newPayment);
         await writePayments(allPayments);
