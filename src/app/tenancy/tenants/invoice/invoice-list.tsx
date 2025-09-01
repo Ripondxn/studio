@@ -17,8 +17,8 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { FormProvider, useForm, useFormContext, type Control } from 'react-hook-form';
 import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
+import { useFormContext, type Control } from 'react-hook-form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -30,6 +30,7 @@ import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type Unit } from '@/app/property/units/schema';
+import { SubscriptionInvoiceDialog } from './invoice-dialog';
 
 interface InvoiceListProps {
     tenant: Tenant;
@@ -78,11 +79,15 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit && r.occupancyStatus !== 'Occupied'), [lookups.rooms, watchedProperty, watchedUnit]);
     
     const handleEditClick = (invoice: Invoice) => {
-        toast({ title: "Info", description: "Editing subscription invoices from this view is not yet supported." });
+        setSelectedInvoice(invoice);
+        setIsViewMode(false);
+        setIsEditInvoiceOpen(true);
     }
     
     const handleViewClick = (invoice: Invoice) => {
-        toast({ title: "Info", description: "Viewing invoices from this view is not yet supported." });
+        setSelectedInvoice(invoice);
+        setIsViewMode(true);
+        setIsEditInvoiceOpen(true);
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
@@ -322,7 +327,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                             </Button>
                             <Button type="button" variant="outline" onClick={onCreateInvoice}>
-                                <Plus className="mr-2 h-4 w-4" /> Create Subs Invoice
+                                <Plus className="mr-2 h-4 w-4" /> Create Invoice
                             </Button>
                         </div>
                     </CardFooter>
@@ -345,6 +350,16 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled' && (i.remainingBalance || 0) > 0)}
                     onPaymentAdded={handleSuccess}
                 />
+                 {isEditInvoiceOpen && selectedInvoice && (
+                    <SubscriptionInvoiceDialog
+                        isOpen={isEditInvoiceOpen}
+                        setIsOpen={setIsEditInvoiceOpen}
+                        invoice={selectedInvoice}
+                        tenant={tenant}
+                        onSuccess={handleSuccess}
+                        isViewMode={isViewMode}
+                    />
+                )}
             </CardContent>
         </Card>
     )
