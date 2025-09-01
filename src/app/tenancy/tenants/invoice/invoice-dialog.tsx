@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -89,13 +90,14 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   useEffect(() => {
     if (!watchedItems) return;
     
+    // First update the total for each item
     watchedItems.forEach((item, index) => {
         const total = item.quantity * item.unitPrice;
         if (item.total !== total) {
             setValue(`items.${index}.total`, total);
         }
     });
-
+    
     const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const taxRate = watchedTaxRate || 0;
     
@@ -156,10 +158,6 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
         }
     };
     if (isOpen) {
-      getLookups().then(data => {
-        setProducts(data.products || []);
-        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms}));
-      });
       initializeForm();
     }
   }, [isOpen, invoice, reset, tenant]);

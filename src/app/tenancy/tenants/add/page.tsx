@@ -113,6 +113,7 @@ export default function TenantPage() {
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
 
@@ -162,11 +163,13 @@ export default function TenantPage() {
         if (code !== 'new') {
             setIsNewRecord(false);
             setIsEditing(false);
+            setIsSubscriptionEditing(false);
             setIsAutoCode(false);
             fetchInvoices(result.data.tenantData.code);
         } else {
             setIsNewRecord(true);
             setIsEditing(true);
+            setIsSubscriptionEditing(true);
             setIsAutoCode(true);
         }
       } else {
@@ -237,6 +240,7 @@ export default function TenantPage() {
 
   const handleEditClick = () => {
     setIsEditing(true);
+    setIsSubscriptionEditing(true);
   }
 
   const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
@@ -292,6 +296,7 @@ export default function TenantPage() {
             });
             if (!isAttachmentSave) {
                 setIsEditing(false);
+                setIsSubscriptionEditing(false);
             }
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
@@ -327,6 +332,7 @@ export default function TenantPage() {
         reset();
         setAttachments(getValues().attachments || []);
         setIsEditing(false);
+        setIsSubscriptionEditing(false);
      }
   }
 
@@ -559,7 +565,7 @@ export default function TenantPage() {
                                 )}
                             />
                         </div>
-                        <div className="space-y-4 pt-6 border-t">
+                         <div className="space-y-4 pt-6 border-t">
                             <CardTitle>Attachments</CardTitle>
                             <Table>
                                 <TableHeader>
@@ -630,16 +636,13 @@ export default function TenantPage() {
                         </CardContent>
                     </Card>
                 </TabsContent>
-                 <TabsContent value="subscription">
-                    <InvoiceList
+                <TabsContent value="subscription">
+                     <InvoiceList
                         tenant={tenantData}
                         invoices={invoices}
                         isLoading={isLoadingInvoices}
                         onRefresh={() => fetchInvoices(tenantCode)}
                         isSubscriptionEditing={isEditing}
-                        control={control}
-                        setValue={setValue}
-                        watch={watch}
                         onCreateInvoice={handleOpenSubscriptionDialog}
                     />
                 </TabsContent>
@@ -653,7 +656,6 @@ export default function TenantPage() {
         tenant={tenantData}
         onSuccess={() => {
             fetchInvoices(tenantCode);
-            onSave(getValues());
         }}
       />
     </div>
