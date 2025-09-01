@@ -3,7 +3,7 @@ import { getPermissions, getRoles } from './actions';
 import { AccessControlClient } from './access-control-client';
 import { featurePermissions } from './permissions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb } from 'lucide-react';
+import { CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -43,6 +43,21 @@ export default async function AccessControlPage() {
             <CardDescription>Enable or disable major application modules.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
+                    <Banknote className="h-6 w-6 text-primary" />
+                    <div className="space-y-0.5">
+                        <Label htmlFor="finance-module" className="text-base">Finance Module</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Manage all financial transactions and accounts.
+                        </p>
+                    </div>
+                </div>
+                <Switch
+                    id="finance-module"
+                    defaultChecked={true} 
+                />
+            </div>
              <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="flex items-center gap-4">
                     <Users className="h-6 w-6 text-primary" />
