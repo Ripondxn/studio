@@ -63,6 +63,8 @@ import { useCompanyProfile } from '@/context/company-profile-context';
 import { checkLicenseStatus, type LicenseStatus } from '@/lib/license';
 import { TrialExpiredPage } from '@/components/trial-expired-page';
 import { Loader2 } from 'lucide-react';
+import { AuthorizationProvider, useAuthorization } from '@/context/permission-context';
+import { type ModuleSettings } from './admin/access-control/schema';
 
 
 // A type for the user profile stored in session storage
@@ -70,11 +72,13 @@ type UserProfile = Omit<UserRole, 'password' | 'lastLogin' | 'status'>;
 
 const navLinks = [
     {
+        id: 'dashboard',
         label: 'Dashboard',
         href: '/',
         icon: <LayoutDashboard />,
     },
     { 
+        id: 'lease',
         label: 'Leases', 
         icon: <FileSignature />,
         subItems: [
@@ -87,15 +91,16 @@ const navLinks = [
         ]
     },
     { 
+      id: 'tenant',
       label: 'Tenants', 
       icon: <Users />,
       subItems: [
           { href: '/tenancy/tenants', label: 'Tenants' },
-          { href: '/tenancy/customer', label: 'Customer' },
           { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
       ]
     },
      { 
+      id: 'customer',
       label: 'Customers', 
       icon: <Users className="text-blue-400" />,
       subItems: [
@@ -103,6 +108,7 @@ const navLinks = [
       ]
     },
     { 
+      id: 'vendor',
       label: 'Vendor / Supplier', 
       icon: <UserSquare />,
       subItems: [
@@ -111,6 +117,7 @@ const navLinks = [
       ]
     },
     { 
+        id: 'finance',
         label: 'Finance', 
         icon: <Banknote />,
         subItems: [
@@ -124,12 +131,20 @@ const navLinks = [
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
     },
+    {
+        id: 'human-resource',
+        label: 'Human Resource',
+        href: '/human-resource/employees',
+        icon: <Users />,
+    },
      { 
+        id: 'utilities',
         label: 'Utilities', 
         href: '/utilities',
         icon: <Lightbulb />,
     },
     {
+        id: 'data-processing',
         label: 'Data Processing',
         icon: <ScanLine />,
         subItems: [
@@ -139,36 +154,43 @@ const navLinks = [
         ]
     },
      {
+        id: 'products',
         label: 'Products & Services',
         href: '/products',
         icon: <Package />,
     },
      {
+        id: 'stores',
         label: 'Vaults & Stores',
         href: '/stores',
         icon: <Warehouse />,
     },
      {
+        id: 'car-sales',
         label: 'Car Sales',
         href: '/car-sales',
         icon: <Car />,
     },
      {
+        id: 'rent-a-car',
         label: 'Rent-A-Car',
         href: '/rent-a-car',
         icon: <CarFront />,
     },
     {
+        id: 'project-management',
         label: 'Project Management',
         href: '/project-management/projects',
         icon: <Briefcase />,
     },
     {
+        id: 'asset-management',
         label: 'Asset Management',
         href: '/assets',
         icon: <Briefcase />,
     },
     {
+        id: 'maintenance',
         label: 'Maintenance',
         icon: <Wrench />,
         subItems: [
@@ -177,16 +199,19 @@ const navLinks = [
         ]
     },
     {
+        id: 'reports',
         label: 'Reports',
         href: '/reports',
         icon: <ReportIcon />,
     },
     {
+        id: 'workflow',
         label: 'Workflow',
         href: '/workflow',
         icon: <LineChart />,
     },
     { 
+        id: 'settings',
         label: 'Settings', 
         icon: <Settings />,
         subItems: [
@@ -210,10 +235,18 @@ const navLinks = [
 ];
 
 
-function SidebarNav({ isCollapsed, pathname }: { isCollapsed: boolean, pathname: string }) {
+function SidebarNav({ isCollapsed, pathname, moduleSettings }: { isCollapsed: boolean, pathname: string, moduleSettings: ModuleSettings }) {
+    
+    const { isModuleEnabled } = useAuthorization();
+
+    const visibleNavLinks = navLinks.filter(link => {
+        if (!link.id) return true;
+        return isModuleEnabled(link.id);
+    })
+    
     return (
         <nav className="grid gap-1 px-2 text-sm font-medium text-sidebar-foreground group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
-            {navLinks.map((link, index) => {
+            {visibleNavLinks.map((link, index) => {
                 const hasSubItems = link.subItems && link.subItems.length > 0;
                 const isActive = hasSubItems ? link.subItems.some(sub => pathname.startsWith(sub.href)) : link.href ? pathname.startsWith(link.href) : false;
 
@@ -278,11 +311,14 @@ const TrialBanner = ({ licenseStatus }: { licenseStatus: LicenseStatus }) => {
     )
 }
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+function MainAppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
   const [licenseStatus, setLicenseStatus] = React.useState<LicenseStatus | null>(null);
+  const [moduleSettings, setModuleSettings] = React.useState<ModuleSettings | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = React.useState(true);
+
   const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { profile: companyProfile } = useCompanyProfile();
@@ -296,20 +332,29 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     async function checkUserAndLicense() {
-        if (pathname === '/login' || pathname.startsWith('/pay')) return;
+        if (pathname === '/login' || pathname.startsWith('/pay')) {
+            setIsLoadingSettings(false);
+            return;
+        };
 
         try {
           const storedProfile = sessionStorage.getItem('userProfile');
           if (storedProfile) {
             setUserProfile(JSON.parse(storedProfile));
-             const status = await checkLicenseStatus();
+             const [status, modules] = await Promise.all([
+                 checkLicenseStatus(),
+                 getModuleSettings()
+             ]);
              setLicenseStatus(status);
+             setModuleSettings(modules);
           } else {
             router.push('/login');
           }
         } catch (error) {
-          console.error('Could not parse user profile from session storage:', error);
+          console.error('Initialization Error:', error);
           router.push('/login');
+        } finally {
+            setIsLoadingSettings(false);
         }
     }
     checkUserAndLicense();
@@ -321,11 +366,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile) {
+  if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile || isLoadingSettings) {
     return <>{children}</>;
   }
 
-  if (!licenseStatus) {
+  if (!licenseStatus || !moduleSettings) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -356,7 +401,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
-                <SidebarNav isCollapsed={isCollapsed} pathname={pathname} />
+                <SidebarNav isCollapsed={isCollapsed} pathname={pathname} moduleSettings={moduleSettings}/>
             </div>
         </div>
         <div className="flex flex-col">
@@ -385,7 +430,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             <Button variant="secondary" size="icon" className="rounded-full">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage
-                                src=""
+                                src={userProfile?.avatar || undefined}
                                 alt={userProfile.name}
                                 />
                                 <AvatarFallback>{userProfile.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
@@ -423,4 +468,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
     </div>
   );
+}
+
+export function AppLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <AuthorizationProvider>
+            <MainAppLayout>{children}</MainAppLayout>
+        </AuthorizationProvider>
+    )
 }
