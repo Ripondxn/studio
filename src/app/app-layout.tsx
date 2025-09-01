@@ -40,7 +40,6 @@ import {
   UserSquare,
   PanelLeft,
   ChevronRight,
-  BadgeDollarSign,
   Briefcase,
   Package,
   Route,
@@ -53,6 +52,7 @@ import {
   Eraser,
   ScanLine,
   Database,
+  Lightbulb,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -115,6 +115,11 @@ const navLinks = [
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
+    },
+     { 
+        label: 'Utility Management', 
+        href: '/utilities',
+        icon: <Lightbulb />,
     },
     {
         label: 'Data Processing',
