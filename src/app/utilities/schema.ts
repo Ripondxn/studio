@@ -8,6 +8,7 @@ export const utilityAccountSchema = z.object({
   accountNumber: z.string().min(1, 'Account number is required.'),
   propertyCode: z.string().min(1, 'A property must be linked.'),
   unitCode: z.string().optional(),
+  vendorCode: z.string().optional(),
   status: z.enum(['Active', 'Inactive']),
   notes: z.string().optional(),
   totalPaid: z.number().optional().default(0),

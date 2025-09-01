@@ -112,7 +112,7 @@
     "name": "Accounts Payable",
     "type": "Liability",
     "status": "Active",
-    "balance": -1000,
+    "balance": -50000,
     "isGroup": false,
     "parentCode": "2100"
   },
@@ -274,7 +274,7 @@
     "name": "Utilities",
     "type": "Expense",
     "status": "Active",
-    "balance": 1000,
+    "balance": 50000,
     "isGroup": false,
     "parentCode": "5100"
   },

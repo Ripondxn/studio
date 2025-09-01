@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -7,9 +6,9 @@ import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { utilityAccountSchema, type UtilityAccount } from './schema';
-import { addPayment, getNextPaymentVoucherNumber } from '../finance/payment/actions';
+import { type Payment } from '../finance/payment/schema';
 import { type UserRole } from '@/app/admin/user-roles/schema';
-import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
+import { saveBill } from '../vendors/bill/actions';
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/utilities/accounts-data.json');
 const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
@@ -96,7 +95,14 @@ export async function saveUtilityAccount(
 
     // If an initial bill is included, record it.
     if (recordFirstBill && billAmount && billAmount > 0 && billDate) {
-        await recordBillPayment(savedAccount.id, billAmount, billDate, currentUser);
+        await recordBillForAccount({
+            accountId: savedAccount.id,
+            amount: billAmount,
+            billDate: billDate,
+            dueDate: billDate,
+            billNo: `BILL-${savedAccount.accountNumber}-${billDate}`,
+            notes: 'Initial bill recorded with account creation.'
+        });
     }
 
     revalidatePath('/utilities');
@@ -114,50 +120,48 @@ export async function deleteUtilityAccount(id: string) {
     return { success: true };
 }
 
-export async function recordBillPayment(accountId: string, amount: number, billDate: string, currentUser: UserRole) {
+export async function recordBillForAccount(data: { accountId: string; amount: number; billDate: string; dueDate?: string; billNo: string; notes?: string }) {
     const accounts = await readAccounts();
-    const account = accounts.find(a => a.id === accountId);
+    const account = accounts.find(a => a.id === data.accountId);
     if (!account) {
         return { success: false, error: 'Utility account not found.' };
     }
 
-    const workflowSettings = await getWorkflowSettings();
-    const initialStatus = workflowSettings.approvalProcessEnabled ? 'DRAFT' : 'POSTED';
+    if (!account.vendorCode) {
+        return { success: false, error: `Utility account is not linked to a vendor. Please edit the account to link a vendor first.`};
+    }
     
-    // We call addPayment from the finance module which will handle creating the voucher
-    // and applying financial impact upon final approval.
-    const paymentResult = await addPayment({
-        type: 'Payment',
-        date: billDate,
-        partyType: 'Vendor',
-        partyName: account.provider,
-        amount: amount,
-        paymentMethod: 'Bank Transfer',
-        paymentFrom: 'Bank',
-        description: `Payment for ${account.utilityType} - Acc# ${account.accountNumber}`,
-        remarks: `Utility bill payment for ${account.propertyCode}`,
-        status: 'Paid',
-        createdByUser: currentUser.name,
-        currentStatus: initialStatus,
-        property: account.propertyCode,
-        unitCode: account.unitCode,
-        utilityAccountId: account.id, // Link payment to utility account
-        expenseAccountId: '5130', // Utilities expense account code
-        approvalHistory: initialStatus === 'DRAFT' ? [] : [{
-            action: 'Created & Auto-Posted',
-            actorId: currentUser.email,
-            actorRole: currentUser.role,
-            timestamp: new Date().toISOString(),
-            comments: 'Directly recorded utility transaction.'
-        }]
-    });
+    const billData = {
+      vendorCode: account.vendorCode,
+      vendorName: account.provider,
+      billNo: data.billNo,
+      billDate: data.billDate,
+      dueDate: data.dueDate || data.billDate,
+      status: 'Sent' as const,
+      property: account.propertyCode,
+      unitCode: account.unitCode,
+      notes: data.notes,
+      items: [{
+          id: `item-${Date.now()}`,
+          description: `${account.utilityType} bill for account ${account.accountNumber}`,
+          quantity: 1,
+          unitPrice: data.amount,
+          total: data.amount,
+          expenseAccountId: '5130' // Utilities
+      }],
+      subTotal: data.amount,
+      tax: 0,
+      total: data.amount
+    };
 
-    if (paymentResult.success) {
+    const result = await saveBill(billData, false, false);
+
+    if (result.success) {
         revalidatePath('/utilities');
-        revalidatePath('/finance/payment');
-        revalidatePath('/finance/workflow');
+        revalidatePath('/vendors/add');
+        revalidatePath('/vendors');
         return { success: true };
     } else {
-        return { success: false, error: paymentResult.error || 'Failed to create payment voucher.' };
+        return { success: false, error: result.error || 'Failed to create bill.' };
     }
 }

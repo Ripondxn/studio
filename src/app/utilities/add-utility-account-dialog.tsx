@@ -51,7 +51,7 @@ interface AddUtilityAccountDialogProps {
 export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess, propertyCode, currentUser }: AddUtilityAccountDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const [lookups, setLookups] = useState<{properties: {value: string, label: string}[], units: Unit[]}>({properties: [], units: []});
+  const [lookups, setLookups] = useState<{properties: {value: string, label: string}[], units: Unit[], vendors: {value: string, label: string}[]}>({properties: [], units: [], vendors: []});
 
   const {
     register,
@@ -59,6 +59,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
     control,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -69,12 +70,13 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
 
   const watchedPropertyCode = watch('propertyCode', propertyCode);
   const recordFirstBill = watch('recordFirstBill');
+  const selectedVendorCode = watch('vendorCode');
 
   useEffect(() => {
     async function fetchLookups() {
         if(isOpen) {
             const data = await getGeneralLookups();
-            setLookups(prev => ({...prev, properties: data.properties || []}));
+            setLookups(prev => ({...prev, properties: data.properties || [], vendors: data.vendors || []}));
             
             if(propertyCode) {
                  const unitsResult = await getUnitsForProperty(propertyCode);
@@ -96,6 +98,15 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
       fetchUnits();
     }
   }, [watchedPropertyCode, propertyCode]);
+  
+  useEffect(() => {
+    if (selectedVendorCode) {
+        const vendor = lookups.vendors.find(v => v.value === selectedVendorCode);
+        if (vendor) {
+            setValue('provider', vendor.label);
+        }
+    }
+  }, [selectedVendorCode, lookups.vendors, setValue]);
 
   useEffect(() => {
     if (isOpen) {
@@ -105,6 +116,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
             accountNumber: '',
             propertyCode: propertyCode || '',
             unitCode: '',
+            vendorCode: '',
             status: 'Active',
             notes: '',
             recordFirstBill: false,
@@ -160,9 +172,15 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
                     )} />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="provider">Provider</Label>
-                    <Input id="provider" {...register('provider')} placeholder="e.g., DEWA, Etisalat" />
-                    {errors.provider && <p className="text-destructive text-xs mt-1">{errors.provider.message}</p>}
+                    <Label htmlFor="vendorCode">Provider (Vendor)</Label>
+                    <Controller name="vendorCode" control={control} render={({ field }) => (
+                        <Combobox options={lookups.vendors} value={field.value || ''} onSelect={field.onChange} placeholder="Select Vendor" />
+                    )} />
+                     {errors.vendorCode && <p className="text-destructive text-xs mt-1">{errors.vendorCode.message}</p>}
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="provider">Provider Name</Label>
+                    <Input id="provider" {...register('provider')} disabled />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="accountNumber">Account Number</Label>

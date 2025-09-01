@@ -70,7 +70,7 @@ export const columns = ({ onEdit, onRecordBill }: { onEdit: (account: UtilityAcc
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => onRecordBill(account)}>
-                            <DollarSign className="mr-2 h-4 w-4" /> Record Bill Payment
+                            <DollarSign className="mr-2 h-4 w-4" /> Record Bill
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => onEdit(account)}>
                             <Edit className="mr-2 h-4 w-4" /> Edit

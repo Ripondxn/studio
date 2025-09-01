@@ -4,7 +4,7 @@
     "date": "2025-09-01",
     "partyType": "Vendor",
     "partyName": "ADDC",
-    "amount": 1000,
+    "amount": 50000,
     "paymentMethod": "Bank Transfer",
     "paymentFrom": "Bank",
     "expenseAccountId": "5130",
@@ -20,10 +20,10 @@
         "action": "Created & Auto-Posted",
         "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-09-01T13:32:54.638Z",
+        "timestamp": "2025-09-01T13:38:52.657Z",
         "comments": "Directly recorded transaction."
       }
     ],
-    "id": "PAY-1756733574638"
+    "id": "PAY-1756733932657"
   }
 ]
