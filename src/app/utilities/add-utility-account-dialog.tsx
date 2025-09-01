@@ -48,7 +48,8 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
     handleSubmit,
     control,
     reset,
-    watch
+    watch,
+    formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
