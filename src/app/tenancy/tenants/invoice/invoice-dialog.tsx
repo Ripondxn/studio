@@ -72,6 +72,8 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   });
 
   const watchedItems = watch('items');
+  const watchedTaxRate = watch('taxRate');
+  const watchedTaxType = watch('taxType');
   const watchedProperty = watch('property');
   const watchedUnit = watch('unitCode');
   
@@ -88,23 +90,43 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   useEffect(() => {
     if (!watchedItems) return;
     
-    const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    setValue('subTotal', subTotal);
-    setValue('total', subTotal);
-    setValue('tax', 0);
-    setValue('taxRate', 0);
-    setValue('taxType', 'exclusive');
+    watchedItems.forEach((item, index) => {
+        const total = item.quantity * item.unitPrice;
+        if (item.total !== total) {
+            setValue(`items.${index}.total`, total);
+        }
+    });
 
-  }, [watchedItems, setValue]);
+    const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const taxRate = watchedTaxRate || 0;
+    
+    let taxAmount = 0;
+    let totalAmount = subTotal;
+    let finalSubTotal = subTotal;
+
+    if (watchedTaxType === 'exclusive') {
+        taxAmount = subTotal * (taxRate / 100);
+        totalAmount = subTotal + taxAmount;
+    } else { 
+        taxAmount = subTotal - (subTotal / (1 + (taxRate / 100)));
+        finalSubTotal = subTotal - taxAmount;
+        totalAmount = subTotal;
+    }
+
+    setValue('subTotal', finalSubTotal);
+    setValue('tax', taxAmount);
+    setValue('total', totalAmount);
+
+  }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
   
-  useEffect(() => {
+ useEffect(() => {
     const initializeForm = async () => {
         if (!tenant) return;
 
-        if (invoice) { // Editing existing invoice
+        if (invoice) {
             setIsAutoInvoiceNo(false);
             reset(invoice);
-        } else { // Creating new invoice
+        } else {
             const newInvoiceNo = await getNextSubscriptionInvoiceNumber();
             setIsAutoInvoiceNo(true);
             reset({
@@ -116,7 +138,14 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                 roomCode: tenant.roomCode || '',
                 invoiceDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
-                items: [{ id: `item-${Date.now()}`, description: `${tenant.subscriptionStatus || 'Monthly'} Subscription`, quantity: 1, unitPrice: tenant.subscriptionAmount || 0, total: tenant.subscriptionAmount || 0, expenseAccountId: '' }],
+                items: [{ 
+                    id: `item-${Date.now()}`, 
+                    description: `${tenant.subscriptionStatus || 'Monthly'} Subscription`, 
+                    quantity: 1, 
+                    unitPrice: tenant.subscriptionAmount || 0, 
+                    total: tenant.subscriptionAmount || 0,
+                    expenseAccountId: '' 
+                }],
                 subTotal: tenant.subscriptionAmount || 0,
                 tax: 0,
                 taxRate: 0,
@@ -128,15 +157,12 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
         }
     };
     if (isOpen) {
-      getLookups().then(data => {
-        setProducts(data.products || []);
-        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms}));
-      });
       initializeForm();
     }
   }, [isOpen, invoice, reset, tenant]);
 
-  const onSaveInvoice = async (data: InvoiceFormData) => {
+
+  const onSubmit = async (data: InvoiceFormData) => {
     const userProfile = sessionStorage.getItem('userProfile');
     if(!userProfile) {
         toast({variant: 'destructive', title: 'Error', description: 'Could not identify current user.'});
@@ -206,7 +232,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-xl">
-        <form onSubmit={handleSubmit(onSaveInvoice)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit' : 'Create'} Subscription Invoice</DialogTitle>
             <DialogDescription>
@@ -282,6 +308,38 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
 
               <div className="flex justify-end mt-4">
                   <div className="w-full max-w-xs space-y-2">
+                      <div className="flex justify-between">
+                          <Label>Subtotal</Label>
+                          <span className="font-medium">{formatCurrency(watch('subTotal') || 0)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                          <Label>Tax</Label>
+                          <div className="flex items-center gap-2">
+                              <Controller
+                                  name="taxType"
+                                  control={control}
+                                  render={({ field }) => (
+                                      <Select onValueChange={field.onChange} value={field.value}>
+                                          <SelectTrigger className="w-[120px] h-8">
+                                              <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                              <SelectItem value="exclusive">Exclusive</SelectItem>
+                                              <SelectItem value="inclusive">Inclusive</SelectItem>
+                                          </SelectContent>
+                                      </Select>
+                                  )}
+                              />
+                              <div className="flex items-center gap-1">
+                                  <Input type="number" className="w-[70px] h-8 text-right" {...register('taxRate', { valueAsNumber: true })} />
+                                  <span className="text-sm font-medium">%</span>
+                              </div>
+                          </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                          <Label>Tax Amount</Label>
+                          <span className="font-medium">{formatCurrency(watch('tax') || 0)}</span>
+                      </div>
                       <div className="flex justify-between border-t pt-2 mt-2">
                           <Label className="text-lg font-bold">Total</Label>
                           <span className="font-bold text-lg">{formatCurrency(watch('total') || 0)}</span>
