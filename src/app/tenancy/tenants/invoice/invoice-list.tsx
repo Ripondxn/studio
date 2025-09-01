@@ -99,13 +99,21 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(false);
-        setIsEditInvoiceOpen(true);
+        if (invoice.invoiceNo.startsWith('SUB-INV-')) {
+            setIsCreateSubInvoiceOpen(true);
+        } else {
+            setIsEditInvoiceOpen(true);
+        }
     }
     
     const handleViewClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(true);
-        setIsEditInvoiceOpen(true);
+         if (invoice.invoiceNo.startsWith('SUB-INV-')) {
+            setIsCreateSubInvoiceOpen(true);
+        } else {
+            setIsEditInvoiceOpen(true);
+        }
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
@@ -180,7 +188,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                         </Button>
                         <Button variant="outline" onClick={handleCreateClick}>
-                            <Plus className="mr-2 h-4 w-4" /> Create Invoice
+                            <Plus className="mr-2 h-4 w-4" /> {tenant.isSubscriptionActive ? 'Create Subs Invoice' : 'Create Invoice'}
                         </Button>
                     </div>
                 </div>
@@ -382,9 +390,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                  <SubscriptionInvoiceDialog
                     isOpen={isCreateSubInvoiceOpen}
                     setIsOpen={setIsCreateSubInvoiceOpen}
-                    invoice={null}
+                    invoice={selectedInvoice}
                     tenant={tenant}
                     onSuccess={handleSuccess}
+                    isViewMode={isViewMode}
                 />
                 <InvoiceDialog
                     isOpen={isEditInvoiceOpen}
