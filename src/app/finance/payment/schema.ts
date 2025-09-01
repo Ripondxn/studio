@@ -33,6 +33,7 @@ export const paymentSchema = z.object({
   bankAccountId: z.string().optional(),
   expenseAccountId: z.string().optional(),
   maintenanceTicketId: z.string().optional(),
+  utilityAccountId: z.string().optional(),
   property: z.string().optional(),
   unitCode: z.string().optional(),
   floor: z.string().optional(),
@@ -52,4 +53,3 @@ export const paymentSchema = z.object({
 });
 
 export type Payment = z.infer<typeof paymentSchema>;
-

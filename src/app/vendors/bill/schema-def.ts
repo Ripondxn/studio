@@ -19,6 +19,7 @@ export const billSchema = z.object({
   unitCode: z.string().optional(),
   roomCode: z.string().optional(),
   maintenanceTicketId: z.string().optional(),
+  utilityAccountId: z.string().optional(),
   billDate: z.string().min(1, 'Bill date is required.'),
   dueDate: z.string().min(1, 'Due date is required.'),
   vatRegNo: z.string().optional(),

@@ -1,31 +1,16 @@
 [
   {
-    "id": "V-1755669825846",
+    "id": "V-1756734910126",
     "vendorData": {
-      "code": "V001",
-      "name": "Md Ripon Ahmed",
-      "mobile": "0509231340",
-      "email": "ripondxn@gmail.com",
-      "address": "Village : Rahut Hati , Post office : Hasnabad",
-      "bankName": "ADDC",
-      "accountNumber": "24460789",
-      "iban": "AE01254"
+      "code": "V0002",
+      "name": "Abu Dhabi Distribution Company",
+      "mobile": "",
+      "email": "admin@gmail.com",
+      "address": "UAE",
+      "bankName": "",
+      "accountNumber": "",
+      "iban": ""
     },
-    "attachments": [
-      {
-        "id": 2,
-        "name": "Trade Lisences",
-        "file": "https://chat.deepseek.com/a/chat/s/962686bc-dd4d-444b-b6a0-444fe5af7c62",
-        "remarks": "",
-        "isLink": true
-      },
-      {
-        "id": 3,
-        "name": "Trade Lisences2",
-        "file": "Contract Expiry Report.jpg",
-        "remarks": "",
-        "isLink": false
-      }
-    ]
+    "attachments": []
   }
 ]

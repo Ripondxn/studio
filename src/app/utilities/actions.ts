@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { promises as fs } from 'fs';
@@ -7,7 +8,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { utilityAccountSchema, type UtilityAccount } from './schema';
 import { type Payment } from '../finance/payment/schema';
-import { type UserRole } from '@/app/admin/user-roles/schema';
+import { type UserRole } from '../admin/user-roles/schema';
 import { saveBill } from '../vendors/bill/actions';
 
 const accountsFilePath = path.join(process.cwd(), 'src/app/utilities/accounts-data.json');
@@ -140,6 +141,7 @@ export async function recordBillForAccount(data: { accountId: string; amount: nu
       status: 'Sent' as const,
       property: account.propertyCode,
       unitCode: account.unitCode,
+      utilityAccountId: account.id, // Pass the utility account ID here
       notes: data.notes,
       items: [{
           id: `item-${Date.now()}`,

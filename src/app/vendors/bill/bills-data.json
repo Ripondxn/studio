@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "billNo": "121445",
+    "vendorCode": "V0002",
+    "vendorName": "Abu Dhabi Distribution Company",
+    "property": "LT-C38",
+    "unitCode": "F102",
+    "billDate": "2025-09-01",
+    "dueDate": "2025-09-01",
+    "items": [
+      {
+        "id": "item-1756735023643-0.49906540713922154",
+        "description": "Water & Electricity bill for account 24460789",
+        "quantity": 1,
+        "unitPrice": 1800,
+        "total": 1800,
+        "expenseAccountId": "5130"
+      }
+    ],
+    "subTotal": 1800,
+    "taxType": "exclusive",
+    "taxRate": 0,
+    "tax": 0,
+    "total": 1800,
+    "status": "Paid",
+    "notes": "",
+    "id": "BILL-1756735023643",
+    "amountPaid": 1800
+  }
+]

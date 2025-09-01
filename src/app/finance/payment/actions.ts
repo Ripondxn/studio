@@ -70,6 +70,7 @@ async function writeBills(data: Bill[]) {
 async function applyPaymentToBills(billPayments: { billId: string; amount: number }[], vendorCode: string) {
     try {
         const allBills = await readBills();
+        let utilityAccountId: string | undefined;
 
         for (const payment of billPayments) {
             const index = allBills.findIndex(b => b.id === payment.billId);
@@ -82,12 +83,17 @@ async function applyPaymentToBills(billPayments: { billId: string; amount: numbe
                 } else if (allBills[index].status === 'Draft' || allBills[index].status === 'Overdue') {
                     allBills[index].status = 'Sent';
                 }
+                
+                // Carry over the utilityAccountId if it exists on the bill
+                if (allBills[index].utilityAccountId) {
+                    utilityAccountId = allBills[index].utilityAccountId;
+                }
             }
         }
 
         await writeBills(allBills);
         revalidatePath(`/vendors/add?code=${vendorCode}`);
-        return { success: true };
+        return { success: true, utilityAccountId };
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
@@ -161,6 +167,17 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
             currentStatus: initialStatus,
         };
         
+        if (newPayment.type === 'Receipt' && newPayment.invoiceAllocations && newPayment.invoiceAllocations.length > 0) {
+            await applyPaymentToInvoices(newPayment.invoiceAllocations, newPayment.partyName);
+        }
+
+        if (newPayment.type === 'Payment' && newPayment.billAllocations && newPayment.billAllocations.length > 0) {
+            const billResult = await applyPaymentToBills(newPayment.billAllocations, newPayment.partyName);
+            if (billResult.utilityAccountId) {
+                newPayment.utilityAccountId = billResult.utilityAccountId;
+            }
+        }
+        
         // If it's a DRAFT, the approval history will be added upon submission.
         if (initialStatus === 'POSTED') {
             newPayment.approvalHistory = [{
@@ -171,14 +188,6 @@ export async function addPayment(data: z.infer<typeof paymentSchema>) {
                 comments: 'Directly recorded transaction.',
             }];
             await applyFinancialImpact(newPayment);
-        }
-        
-        if (newPayment.type === 'Receipt' && newPayment.invoiceAllocations && newPayment.invoiceAllocations.length > 0) {
-            await applyPaymentToInvoices(newPayment.invoiceAllocations, newPayment.partyName);
-        }
-
-        if (newPayment.type === 'Payment' && newPayment.billAllocations && newPayment.billAllocations.length > 0) {
-            await applyPaymentToBills(newPayment.billAllocations, newPayment.partyName);
         }
         
         if (newPayment.referenceType === 'Receipt Book' && newPayment.referenceNo) {
