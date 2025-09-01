@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote, UserSquare, FileSignature, Car, Settings } from 'lucide-react';
+import { Loader2, Save, CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote, UserSquare, FileSignature, Car, Settings as SettingsIcon } from 'lucide-react';
 import { type ModuleSettings } from './schema';
 import { saveModuleSettings } from './module-actions';
 import { useRouter } from 'next/navigation';
+import { FinanceSettingsDialog } from './finance-settings-dialog';
 
 
 const moduleIcons: { [key: string]: React.ReactNode } = {
@@ -29,7 +30,7 @@ const moduleIcons: { [key: string]: React.ReactNode } = {
   'workflow': <Route className="h-6 w-6 text-primary" />,
   'data-processing': <ScanLine className="h-6 w-6 text-primary" />,
   'utilities': <Lightbulb className="h-6 w-6 text-primary" />,
-  'settings': <Settings className="h-6 w-6 text-primary" />,
+  'settings': <SettingsIcon className="h-6 w-6 text-primary" />,
 };
 
 const moduleDescriptions: { [key: string]: string } = {
@@ -54,6 +55,7 @@ const moduleDescriptions: { [key: string]: string } = {
 export function ModuleManagement({ initialSettings }: { initialSettings: ModuleSettings }) {
     const [settings, setSettings] = React.useState(initialSettings);
     const [isSaving, setIsSaving] = React.useState(false);
+    const [isFinanceDialogOpen, setIsFinanceDialogOpen] = React.useState(false);
     const { toast } = useToast();
     const router = useRouter();
 
@@ -69,12 +71,32 @@ export function ModuleManagement({ initialSettings }: { initialSettings: ModuleS
         const result = await saveModuleSettings(settings);
         if (result.success) {
             toast({ title: "Settings Saved", description: "Module visibility settings have been updated. The sidebar will update shortly."});
-            // Next.js will revalidate the layout, no need for a hard refresh
             router.refresh();
         } else {
              toast({ variant: 'destructive', title: "Error", description: result.error });
         }
         setIsSaving(false);
+    }
+    
+    const renderSettingsButton = (moduleId: string) => {
+        const moduleIsEnabled = settings[moduleId]?.enabled;
+        switch (moduleId) {
+            case 'finance':
+                return (
+                    <FinanceSettingsDialog
+                        isOpen={isFinanceDialogOpen}
+                        setIsOpen={setIsFinanceDialogOpen}
+                        onSave={() => { /* Logic to save finance settings */}}
+                    >
+                         <Button variant="outline" size="sm" disabled={!moduleIsEnabled}>
+                            <SettingsIcon className="mr-2 h-4 w-4" /> Settings
+                        </Button>
+                    </FinanceSettingsDialog>
+                );
+            // Add other cases for other modules here
+            default:
+                return <Button variant="outline" size="sm" disabled>No Settings</Button>;
+        }
     }
 
     return (
@@ -95,7 +117,8 @@ export function ModuleManagement({ initialSettings }: { initialSettings: ModuleS
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center justify-end mt-4">
+                        <div className="flex items-center justify-between mt-4">
+                             {renderSettingsButton(module.id)}
                             <Switch
                                 id={module.id}
                                 checked={module.enabled}
