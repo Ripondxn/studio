@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -18,7 +17,8 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription, saveSubscriptionSettings } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { FormField, FormItem, FormControl, FormLabel, useFormContext, type Control } from '@/components/ui/form';
+import { FormField, FormItem, FormControl, FormLabel, type Control } from '@/components/ui/form';
+import { useFormContext } from 'react-hook-form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -349,7 +349,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter className="justify-between">
+                     <CardFooter className="justify-between">
                          <div className="flex items-center gap-2">
                             <Button onClick={() => handleRecordPayment()}>
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
