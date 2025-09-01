@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -43,12 +42,9 @@ interface InvoiceListProps {
     handleSaveSubscription: () => void;
     isSavingSub: boolean;
     onCreateInvoice: () => void;
-    control: Control<Tenant>;
-    watch: (name: keyof Tenant) => any;
-    setValue: (name: keyof Tenant, value: any) => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, handleSaveSubscription, isSavingSub, onCreateInvoice, control, watch, setValue }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, handleSaveSubscription, isSavingSub, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
@@ -56,6 +52,8 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
     const { formatCurrency } = useCurrency();
+    
+    const { control, watch, setValue } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<{
         properties: { value: string; label: string }[];
@@ -155,9 +153,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         return <Badge variant={config.variant as any} className={cn('gap-1', config.color, 'border-transparent')}>{config.icon} {occupancyStatus}</Badge>;
     };
 
-    if (!tenant?.name) {
-      return <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-    }
 
     return (
         <Card>
