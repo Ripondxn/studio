@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X, UserCheck, UserX } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
-import { InvoiceDialog } from '@/app/tenancy/customer/invoice/invoice-dialog';
 import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
@@ -20,13 +19,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { FormField, FormItem, type Control, FormMessage, FormLabel } from '@/components/ui/form';
+import { useFormContext } from 'react-hook-form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
 import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
-import { useFormContext } from 'react-hook-form';
 import { Separator } from '@/components/ui/separator';
 import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
@@ -34,34 +33,31 @@ import { cn } from '@/lib/utils';
 import { type Unit } from '@/app/property/units/schema';
 import { SubscriptionInvoiceDialog } from './invoice-dialog';
 
-
 interface InvoiceListProps {
-    tenant: Tenant;
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
+    isSubscriptionEditing: boolean;
 }
 
-type Lookups = {
-    properties: { value: string; label: string }[];
-    units: (Unit & { value: string; label: string })[];
-    rooms: (Room & { value: string; label: string })[];
-}
-
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceListProps) {
+export function InvoiceList({ invoices, isLoading, onRefresh, isSubscriptionEditing }: InvoiceListProps) {
     const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
     const [isCreateSubInvoiceOpen, setIsCreateSubInvoiceOpen] = useState(false);
-    const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
     const { formatCurrency } = useCurrency();
-    const { watch, setValue, control } = useFormContext<Tenant>();
+    const { watch, setValue, control, getValues } = useFormContext<Tenant>();
     
-    const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [] });
+    const [lookups, setLookups] = useState<{
+        properties: { value: string; label: string }[];
+        units: (Unit & { value: string; label: string })[];
+        rooms: (Room & { value: string; label: string })[];
+    }>({ properties: [], units: [], rooms: [] });
 
+    const tenant = watch();
     const watchedProperty = watch('property');
     const watchedUnit = watch('unitCode');
     const occupancyStatus = watch('occupancyStatus');
@@ -96,21 +92,13 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
     const handleEditClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(false);
-        if (invoice.invoiceNo.startsWith('SUB-INV-')) {
-            setIsCreateSubInvoiceOpen(true);
-        } else {
-            setIsEditInvoiceOpen(true);
-        }
+        setIsCreateSubInvoiceOpen(true);
     }
     
     const handleViewClick = (invoice: Invoice) => {
         setSelectedInvoice(invoice);
         setIsViewMode(true);
-         if (invoice.invoiceNo.startsWith('SUB-INV-')) {
-            setIsCreateSubInvoiceOpen(true);
-        } else {
-            setIsEditInvoiceOpen(true);
-        }
+        setIsCreateSubInvoiceOpen(true);
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {
@@ -118,7 +106,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
         
         setPaymentDefaultValues({
             type: 'Receipt',
-            partyType: 'Customer',
+            partyType: 'Tenant',
             partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
@@ -221,6 +209,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                                         <Switch
                                             id="isSubscriptionActive"
                                             checked={field.value}
+                                            disabled={!isSubscriptionEditing}
                                             onCheckedChange={(checked) => {
                                                 field.onChange(checked);
                                                 if (!checked) {
@@ -240,7 +229,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                              {tenant.isSubscriptionActive && (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button type="button" variant="destructive" size="sm" disabled={isCancellingSub}>
+                                        <Button type="button" variant="destructive" size="sm" disabled={isCancellingSub || !isSubscriptionEditing}>
                                             {isCancellingSub && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                             Cancel Subscription
                                         </Button>
@@ -265,7 +254,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Subscription Type</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value} disabled={!watch('isSubscriptionActive')}>
+                                        <Select onValueChange={field.onChange} value={field.value} disabled={!watch('isSubscriptionActive') || !isSubscriptionEditing}>
                                             <SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="Yearly">Yearly</SelectItem>
@@ -281,7 +270,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Subscription Amount</FormLabel>
-                                        <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!watch('isSubscriptionActive')} />
+                                        <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!watch('isSubscriptionActive') || !isSubscriptionEditing} />
                                     </FormItem>
                                 )}
                             />
@@ -308,7 +297,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                                                     setValue('roomCode','');
                                                 }}
                                                 placeholder="Select Property"
-                                                disabled={!watch('isSubscriptionActive')}
+                                                disabled={!watch('isSubscriptionActive') || !isSubscriptionEditing}
                                             />
                                         </FormItem>
                                     )}
@@ -327,7 +316,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                                                     setValue('roomCode', '');
                                                 }}
                                                 placeholder="Select Unit"
-                                                disabled={!watch('property')}
+                                                disabled={!watch('property') || !isSubscriptionEditing}
                                             />
                                         </FormItem>
                                     )}
@@ -343,7 +332,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                                                 value={field.value || ''}
                                                 onSelect={field.onChange}
                                                 placeholder="Select Room"
-                                                disabled={!watch('unitCode')}
+                                                disabled={!watch('unitCode') || !isSubscriptionEditing}
                                             />
                                         </FormItem>
                                     )}
@@ -374,14 +363,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceL
                     setIsOpen={setIsCreateSubInvoiceOpen}
                     invoice={selectedInvoice}
                     tenant={tenant}
-                    onSuccess={handleSuccess}
-                    isViewMode={isViewMode}
-                />
-                <InvoiceDialog
-                    isOpen={isEditInvoiceOpen}
-                    setIsOpen={setIsEditInvoiceOpen}
-                    invoice={selectedInvoice}
-                    customer={{ code: tenant.code, name: tenant.name }}
                     onSuccess={handleSuccess}
                     isViewMode={isViewMode}
                 />
