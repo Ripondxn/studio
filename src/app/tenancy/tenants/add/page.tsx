@@ -22,10 +22,12 @@ import {
   Plus,
   Pencil,
   Loader2,
+  Search,
   X,
   FileUp,
   Link2,
   Move,
+  Eye
 } from 'lucide-react';
 import {
   Table,
@@ -120,7 +122,7 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const { reset, getValues, handleSubmit, watch, control } = formMethods;
+  const { control, handleSubmit, watch, setValue, reset, getValues } = formMethods;
 
   const tenantData = watch();
   const tenantCode = watch('code');
@@ -353,99 +355,114 @@ export default function TenantPage() {
   
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${watch('name')}`;
 
+  const getViewLink = (item: Attachment): string => {
+    if (item.isLink && typeof item.file === 'string') {
+        return item.file;
+    }
+    if (item.url) { // This is for new, unsaved file uploads
+        return item.url;
+    }
+    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
+        // Note: gdrive links aren't directly viewable and would need a download route
+        return item.file;
+    }
+    return '#';
+  };
+  
   const onRefreshInvoices = () => {
     if (tenantCode) {
         fetchInvoices(tenantCode);
     }
   };
-  
+
   const handleOpenSubscriptionDialog = () => {
     setIsSubInvoiceOpen(true);
   };
 
+
   return (
     <div className="container mx-auto p-4 bg-background">
       <FormProvider {...formMethods}>
-        <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-primary font-headline">
-            {pageTitle}
-            </h1>
-            <div className="flex items-center gap-2">
-                {!isEditing && !isNewRecord && getValues('contractId') && (
-                    <MoveTenantDialog
-                        contractId={getValues('contractId')!}
-                        currentLocation={{
-                            property: getValues('property') || 'N/A',
-                            unit: getValues('unitCode') || 'N/A',
-                            room: getValues('roomCode'),
-                        }}
-                    />
-                )}
-                {!isEditing && (
-                <Button type="button" onClick={handleEditClick}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                </Button>
-                )}
-                {isEditing && (
-                <>
-                    <Button type="button" onClick={handleSubmit(onSave)} disabled={isSaving}>
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save Tenant
-                    </Button>
-                    <Button type="button" variant="ghost" onClick={handleCancelClick}>
-                    <X className="mr-2 h-4 w-4" /> Cancel
-                    </Button>
-                </>
-                )}
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={isNewRecord || isEditing}
-                    >
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
-                    </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the
-                        tenant "{getValues('name')}".
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                        onClick={handleDelete}
-                        className="bg-destructive hover:bg-destructive/90"
-                        >
-                        Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-                <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
-                    <X className="mr-2 h-4 w-4" /> Close
-                </Button>
-            </div>
-        </div>
-      
-        <Tabs defaultValue="info">
+        <form onSubmit={handleSubmit(onSave)}>
+          <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold text-primary font-headline">
+              {pageTitle}
+              </h1>
+              <div className="flex items-center gap-2">
+                  {!isEditing && !isNewRecord && getValues('contractId') && (
+                      <MoveTenantDialog
+                          contractId={getValues('contractId')!}
+                          currentLocation={{
+                              property: getValues('property') || 'N/A',
+                              unit: getValues('unitCode') || 'N/A',
+                              room: getValues('roomCode'),
+                          }}
+                      />
+                  )}
+                  {!isEditing && (
+                  <Button type="button" onClick={handleEditClick}>
+                      <Pencil className="mr-2 h-4 w-4" /> Edit
+                  </Button>
+                  )}
+                  {isEditing && (
+                  <>
+                      <Button type="submit" disabled={isSaving}>
+                      {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                      Save
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={handleCancelClick}>
+                      <X className="mr-2 h-4 w-4" /> Cancel
+                      </Button>
+                  </>
+                  )}
+                  <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                      <Button
+                          type="button"
+                          variant="destructive"
+                          disabled={isNewRecord || isEditing}
+                      >
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
+                      </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                      <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the
+                          tenant "{getValues('name')}".
+                          </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                          onClick={handleDelete}
+                          className="bg-destructive hover:bg-destructive/90"
+                          >
+                          Delete
+                          </AlertDialogAction>
+                      </AlertDialogFooter>
+                      </AlertDialogContent>
+                  </AlertDialog>
+                  <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
+                      <X className="mr-2 h-4 w-4" /> Close
+                  </Button>
+              </div>
+          </div>
+        
+          <Tabs defaultValue="info">
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
                 <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
             </TabsList>
             <TabsContent value="info">
-              <form onSubmit={handleSubmit(onSave)}>
                 <Card>
                     <CardHeader>
                     <CardTitle>Tenant Information</CardTitle>
                     <CardDescription>Fill in the details of the tenant.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <FormField
                           control={control}
                           name="code"
@@ -547,101 +564,102 @@ export default function TenantPage() {
                             </FormItem>
                             )}
                         />
-                    </div>
-                     <div className="space-y-4 pt-6 border-t">
-                        <CardTitle>Attachments</CardTitle>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                <TableHead>Attachment Name</TableHead>
-                                <TableHead>File / Link</TableHead>
-                                <TableHead>Action</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {attachments.map((item, index) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <Input 
-                                                value={item.name} 
-                                                onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
-                                                disabled={!isEditing} 
-                                                placeholder="e.g. Passport Copy"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                {item.isLink ? (
-                                                    <Input
-                                                        type="text"
-                                                        placeholder="https://example.com"
-                                                        value={typeof item.file === 'string' ? item.file : ''}
-                                                        onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
-                                                        disabled={!isEditing}
-                                                    />
-                                                ) : (
-                                                    <Input 
-                                                        type="file" 
-                                                        className="text-sm w-full" 
-                                                        ref={(el) => (fileInputRefs.current[index] = el)}
-                                                        onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
-                                                        disabled={!isEditing}
-                                                    />
-                                                )}
-                                                <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
-                                                    {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                                                </Button>
-                                            </div>
-                                             <div className="mt-1">
-                                                 <a href={getViewLink(item)} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                    View
-                                                </a>
-                                             </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
-                                                    {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
-                                                </Button>
-                                                <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
-                            <Plus className="mr-2 h-4 w-4"/> Add Attachment
-                        </Button>
-                    </div>
+                      </div>
+                      <div className="space-y-4 pt-6 border-t">
+                          <CardTitle>Attachments</CardTitle>
+                          <Table>
+                              <TableHeader>
+                                  <TableRow>
+                                  <TableHead>Attachment Name</TableHead>
+                                  <TableHead>File / Link</TableHead>
+                                  <TableHead>Action</TableHead>
+                                  </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                  {attachments.map((item, index) => (
+                                      <TableRow key={item.id}>
+                                          <TableCell>
+                                              <Input 
+                                                  value={item.name} 
+                                                  onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                                  disabled={!isEditing} 
+                                                  placeholder="e.g. Passport Copy"
+                                              />
+                                          </TableCell>
+                                          <TableCell>
+                                              <div className="flex items-center gap-2">
+                                                  {item.isLink ? (
+                                                      <Input
+                                                          type="text"
+                                                          placeholder="https://example.com"
+                                                          value={typeof item.file === 'string' ? item.file : ''}
+                                                          onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                          disabled={!isEditing}
+                                                      />
+                                                  ) : (
+                                                      <Input 
+                                                          type="file" 
+                                                          className="text-sm w-full" 
+                                                          ref={(el) => (fileInputRefs.current[index] = el)}
+                                                          onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                          disabled={!isEditing}
+                                                      />
+                                                  )}
+                                                  <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                                      {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                                  </Button>
+                                              </div>
+                                              <div className="mt-1">
+                                                  <a href={getViewLink(item)} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                      View
+                                                  </a>
+                                              </div>
+                                          </TableCell>
+                                          <TableCell>
+                                              <div className="flex items-center gap-2">
+                                                  <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                                      {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
+                                                  </Button>
+                                                  <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                                      <Trash2 className="h-4 w-4" />
+                                                  </Button>
+                                              </div>
+                                          </TableCell>
+                                      </TableRow>
+                                  ))}
+                              </TableBody>
+                          </Table>
+                          <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                              <Plus className="mr-2 h-4 w-4"/> Add Attachment
+                          </Button>
+                      </div>
                     </CardContent>
                 </Card>
-              </form>
             </TabsContent>
             <TabsContent value="subscription">
-                 <InvoiceList
+                <InvoiceList
                     tenant={tenantData}
                     invoices={invoices}
                     isLoading={isLoadingInvoices}
-                    onRefresh={onRefreshInvoices}
+                    onRefresh={fetchInvoices}
                     isSubscriptionEditing={isEditing}
                     control={control}
                     watch={watch}
-                    setValue={formMethods.setValue}
+                    setValue={setValue}
                     onCreateInvoice={handleOpenSubscriptionDialog}
                 />
             </TabsContent>
           </Tabs>
+        </form>
       </FormProvider>
-    <SubscriptionInvoiceDialog
-      isOpen={isSubInvoiceOpen}
-      setIsOpen={setIsSubInvoiceOpen}
-      invoice={null}
-      tenant={tenantData}
-      onSuccess={onRefreshInvoices}
-    />
-  </div>
+      <SubscriptionInvoiceDialog
+        isOpen={isSubInvoiceOpen}
+        setIsOpen={setIsSubInvoiceOpen}
+        invoice={null}
+        tenant={tenantData}
+        onSuccess={fetchInvoices}
+      />
+    </div>
   );
 }
+```
