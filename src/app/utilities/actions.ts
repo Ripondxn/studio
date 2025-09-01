@@ -60,7 +60,7 @@ export async function getAllUtilityAccounts(): Promise<UtilityAccount[]> {
 }
 
 export async function saveUtilityAccount(
-    data: Omit<UtilityAccount, 'id'|'totalPaid'> & { id?: string, billAmount?: number, billDate?: string }, 
+    data: Omit<UtilityAccount, 'id'|'totalPaid'> & { id?: string, billAmount?: number, billDate?: string, recordFirstBill?: boolean }, 
     currentUser: UserRole
 ) {
     const validation = utilityAccountSchema.omit({ id: true, totalPaid: true }).safeParse(data);
@@ -84,7 +84,7 @@ export async function saveUtilityAccount(
     await writeAccounts(allAccounts);
 
     // If an initial bill is included, record it.
-    if (data.billAmount && data.billAmount > 0 && data.billDate) {
+    if (data.recordFirstBill && data.billAmount && data.billAmount > 0 && data.billDate) {
         await recordBillPayment(savedAccount.id, data.billAmount, data.billDate, currentUser);
     }
 
