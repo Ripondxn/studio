@@ -4,7 +4,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, DollarSign, Edit, Save, X } from 'lucide-react';
+import { Plus, Loader2, DollarSign, Edit, Save, X, UserCheck, UserX } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
 import { CreateInvoiceDialog } from '@/app/tenancy/customer/invoice/create-invoice-dialog';
@@ -66,6 +66,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const watchedProperty = watch('property');
     const watchedUnit = watch('unitCode');
     const watchedRoom = watch('roomCode');
+    const occupancyStatus = watch('occupancyStatus');
 
     const fetchLookups = useCallback(async () => {
         const data = await getContractLookups();
@@ -149,13 +150,27 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         setIsCancellingSub(false);
     };
 
+    const OccupancyBadge = () => {
+      if (!occupancyStatus) return null;
+      const variant = occupancyStatus === 'Occupied' ? 'destructive' : 'default';
+      const color = occupancyStatus === 'Vacant' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700';
+      const Icon = occupancyStatus === 'Occupied' ? UserX : UserCheck;
+
+      return (
+        <Badge variant={variant} className={cn('gap-1 text-xs', color, 'border-transparent')}>
+          <Icon className="h-3 w-3" />
+          {occupancyStatus}
+        </Badge>
+      )
+    };
+
     return (
         <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
+                        <CardDescription>Manage invoices for {tenantName}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -282,6 +297,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                          <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-base font-semibold">Assigned Property</h3>
+                                {tenant.property && <OccupancyBadge/>}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <FormField
@@ -299,7 +315,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                                     setValue('roomCode','');
                                                 }}
                                                 placeholder="Select Property"
-                                                disabled={!isSubscriptionEditing}
+                                                disabled={!isSubscriptionEditing || !watch('isSubscriptionActive')}
                                             />
                                         </FormItem>
                                     )}

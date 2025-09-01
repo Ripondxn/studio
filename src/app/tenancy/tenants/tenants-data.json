@@ -39,9 +39,13 @@
       "brokerMobile": "",
       "brokerEmail": "",
       "brokerCommission": 0,
-      "isSubscriptionActive": false,
-      "subscriptionAmount": 0,
-      "occupancyStatus": "Occupied"
+      "isSubscriptionActive": true,
+      "subscriptionAmount": 677,
+      "occupancyStatus": "Occupied",
+      "property": "LT-C38",
+      "unitCode": "F101",
+      "roomCode": "Room-1/A",
+      "subscriptionStatus": "Monthly"
     }
   },
   {
