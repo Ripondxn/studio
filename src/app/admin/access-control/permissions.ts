@@ -163,7 +163,7 @@ export const featurePermissions: FeaturePermission[] = [
     description: 'Access to financial modules like banking, payments, and chart of accounts.',
     actions: [
       { action: 'view_banking', description: 'View Banking and Petty Cash', allowedRoles: ['Super Admin', 'Admin', 'Accountant'] },
-      { action: 'manage_banking', description: 'Add/Edit/Delete bank accounts', allowedRoles: ['Super Admin', 'Admin'] },
+      { action: 'manage_banking', description: 'Add/Edit/Delete bank accounts', allowedRoles: ['Super Admin'] },
       { action: 'view_payments', description: 'View payment and receipt history', allowedRoles: ['Super Admin', 'Admin', 'Accountant'] },
       { action: 'record_payment', description: 'Record new payments or receipts', allowedRoles: ['Super Admin', 'Admin', 'Accountant'] },
       { action: 'delete_payment', description: 'Delete financial transactions', allowedRoles: ['Super Admin'] },

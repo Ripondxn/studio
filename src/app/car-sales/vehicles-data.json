@@ -1,2 +1,18 @@
-
-[]
+[
+  {
+    "stockNo": "001",
+    "make": "toyota",
+    "model": "japan",
+    "year": 2025,
+    "vin": "65656",
+    "purchaseDate": "2025-09-02",
+    "purchasePrice": 55000,
+    "sellerInfo": "",
+    "saleDate": "2025-10-11",
+    "salePrice": 70000,
+    "buyerInfo": "",
+    "status": "Sold",
+    "expenses": 500,
+    "id": "VEH-1756748352703"
+  }
+]

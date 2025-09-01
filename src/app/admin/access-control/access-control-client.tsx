@@ -20,14 +20,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronDown, Loader2, Save, CarFront } from 'lucide-react';
+import { ChevronDown, Loader2, Save } from 'lucide-react';
 import { type FeaturePermission } from './permissions';
 import { savePermissions } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 interface AccessControlClientProps {
   initialPermissions: FeaturePermission[];
