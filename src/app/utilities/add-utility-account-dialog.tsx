@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -24,7 +23,7 @@ import { utilityAccountSchema, type UtilityAccount } from './schema';
 import { saveUtilityAccount } from './actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getLookups as getGeneralLookups } from '@/app/lookups/actions';
-import { getUnitsForProperty } from '@/app/property/units/actions';
+import { getUnitsForProperty } from '@/app/tenancy/contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { type Unit } from '@/app/property/units/schema';
 
@@ -64,9 +63,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
             
             if(propertyCode) {
                  const unitsResult = await getUnitsForProperty(propertyCode);
-                 if (unitsResult.success) {
-                    setLookups(prev => ({...prev, units: unitsResult.data || []}));
-                 }
+                 setLookups(prev => ({...prev, units: unitsResult as Unit[] || []}));
             }
         }
     }
@@ -77,9 +74,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
     async function fetchUnits() {
         if (watchedPropertyCode) {
              const unitsResult = await getUnitsForProperty(watchedPropertyCode);
-             if (unitsResult.success) {
-                setLookups(prev => ({...prev, units: unitsResult.data || []}));
-             }
+             setLookups(prev => ({...prev, units: unitsResult as Unit[] || []}));
         }
     }
     if (watchedPropertyCode && watchedPropertyCode !== propertyCode) {
@@ -195,4 +190,3 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
     </Dialog>
   );
 }
-
