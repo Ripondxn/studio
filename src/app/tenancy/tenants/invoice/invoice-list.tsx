@@ -40,9 +40,6 @@ interface InvoiceListProps {
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
-    isSubscriptionEditing: boolean;
-    setIsSubscriptionEditing: (isEditing: boolean) => void;
-    formControl: Control<Tenant>;
 }
 
 type Lookups = {
@@ -51,7 +48,7 @@ type Lookups = {
     rooms: (Room & { value: string; label: string })[];
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, formControl }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh }: InvoiceListProps) {
     const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
     const [isCreateSubInvoiceOpen, setIsCreateSubInvoiceOpen] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
@@ -61,7 +58,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
     const { formatCurrency } = useCurrency();
-    const { watch, setValue } = useFormContext<Tenant>();
+    const { watch, setValue, control } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<Lookups>({ properties: [], units: [], rooms: [] });
 
@@ -187,7 +184,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         <Button type="button" onClick={() => handleRecordPayment()}>
                             <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                         </Button>
-                        <Button type="button" variant="outline" onClick={handleCreateClick}>
+                         <Button type="button" variant="outline" onClick={handleCreateClick}>
                             <Plus className="mr-2 h-4 w-4" /> {tenant.isSubscriptionActive ? 'Create Subs Invoice' : 'Create Invoice'}
                         </Button>
                     </div>
@@ -212,26 +209,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <CardTitle>Subscription Management</CardTitle>
-                             {!isSubscriptionEditing ? (
-                                <Button size="sm" variant="outline" onClick={() => setIsSubscriptionEditing(true)}>
-                                    <Edit className="mr-2 h-4 w-4" /> Edit Subscription
-                                </Button>
-                            ) : (
-                                <div className="flex gap-2">
-                                    <Button size="sm" type="button" onClick={() => {
-                                        setIsSubscriptionEditing(false);
-                                        onRefresh(); // To revert any unsaved changes
-                                    }}>
-                                        <X className="mr-2 h-4 w-4" /> Cancel
-                                    </Button>
-                                </div>
-                            )}
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center space-x-2">
                              <FormField
-                                control={formControl}
+                                control={control}
                                 name="isSubscriptionActive"
                                 render={({ field }) => (
                                     <FormItem className="flex items-center space-x-2 space-y-0">
@@ -247,7 +230,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                                     setLookups(prev => ({ ...prev, units: [], rooms: [] }));
                                                 }
                                             }}
-                                            disabled={!isSubscriptionEditing}
                                         />
                                         <Label htmlFor="isSubscriptionActive" className="!mt-0">
                                             Enable Subscription-Based Tenancy
@@ -258,7 +240,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                              {tenant.isSubscriptionActive && (
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button type="button" variant="destructive" size="sm" disabled={isCancellingSub || isSubscriptionEditing}>
+                                        <Button type="button" variant="destructive" size="sm" disabled={isCancellingSub}>
                                             {isCancellingSub && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                             Cancel Subscription
                                         </Button>
@@ -278,12 +260,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
-                                control={formControl}
+                                control={control}
                                 name="subscriptionStatus"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Subscription Type</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value} disabled={!isSubscriptionEditing || !watch('isSubscriptionActive')}>
+                                        <Select onValueChange={field.onChange} value={field.value} disabled={!watch('isSubscriptionActive')}>
                                             <SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="Yearly">Yearly</SelectItem>
@@ -294,12 +276,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 )}
                             />
                              <FormField
-                                control={formControl}
+                                control={control}
                                 name="subscriptionAmount"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Subscription Amount</FormLabel>
-                                        <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!isSubscriptionEditing || !watch('isSubscriptionActive')} />
+                                        <Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} disabled={!watch('isSubscriptionActive')} />
                                     </FormItem>
                                 )}
                             />
@@ -312,7 +294,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <FormField
-                                    control={formControl}
+                                    control={control}
                                     name="property"
                                     render={({ field }) => (
                                         <FormItem>
@@ -326,13 +308,13 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                                     setValue('roomCode','');
                                                 }}
                                                 placeholder="Select Property"
-                                                disabled={!isSubscriptionEditing || !watch('isSubscriptionActive')}
+                                                disabled={!watch('isSubscriptionActive')}
                                             />
                                         </FormItem>
                                     )}
                                 />
                                 <FormField
-                                    control={formControl}
+                                    control={control}
                                     name="unitCode"
                                     render={({ field }) => (
                                         <FormItem>
@@ -345,13 +327,13 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                                     setValue('roomCode', '');
                                                 }}
                                                 placeholder="Select Unit"
-                                                disabled={!isSubscriptionEditing || !watchedProperty}
+                                                disabled={!watch('property')}
                                             />
                                         </FormItem>
                                     )}
                                 />
                                  <FormField
-                                    control={formControl}
+                                    control={control}
                                     name="roomCode"
                                     render={({ field }) => (
                                         <FormItem>
@@ -361,7 +343,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                                 value={field.value || ''}
                                                 onSelect={field.onChange}
                                                 placeholder="Select Room"
-                                                disabled={!isSubscriptionEditing || !watchedUnit}
+                                                disabled={!watch('unitCode')}
                                             />
                                         </FormItem>
                                     )}
