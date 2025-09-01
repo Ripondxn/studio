@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -372,6 +373,7 @@ export default function TenantPage() {
     setIsSubInvoiceOpen(true);
   };
 
+
   return (
     <div className="container mx-auto p-4 bg-background">
       <FormProvider {...formMethods}>
@@ -446,7 +448,6 @@ export default function TenantPage() {
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
                 <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
-                <TabsTrigger value="attachments">Attachments</TabsTrigger>
             </TabsList>
             <TabsContent value="info">
                 <Card>
@@ -558,25 +559,8 @@ export default function TenantPage() {
                             )}
                         />
                     </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
-            <TabsContent value="subscription">
-                <InvoiceList
-                    tenant={tenantData}
-                    invoices={invoices}
-                    isLoading={isLoadingInvoices}
-                    onRefresh={() => fetchInvoices(tenantCode)}
-                    isSubscriptionEditing={isEditing}
-                    onCreateInvoice={handleOpenSubscriptionDialog}
-                />
-            </TabsContent>
-             <TabsContent value="attachments">
-                <Card>
-                    <CardHeader>
+                     <div className="space-y-4 pt-6 border-t">
                         <CardTitle>Attachments</CardTitle>
-                    </CardHeader>
-                    <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -653,8 +637,22 @@ export default function TenantPage() {
                         <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                             <Plus className="mr-2 h-4 w-4"/> Add Attachment
                         </Button>
+                    </div>
                     </CardContent>
                 </Card>
+            </TabsContent>
+            <TabsContent value="subscription">
+                 <InvoiceList
+                    tenant={tenantData}
+                    invoices={invoices}
+                    isLoading={isLoadingInvoices}
+                    onRefresh={() => fetchInvoices(tenantCode)}
+                    isSubscriptionEditing={isEditing}
+                    control={control}
+                    setValue={setValue}
+                    watch={watch}
+                    onCreateInvoice={handleOpenSubscriptionDialog}
+                />
             </TabsContent>
           </Tabs>
         </form>
@@ -666,9 +664,10 @@ export default function TenantPage() {
         tenant={tenantData}
         onSuccess={() => {
             fetchInvoices(tenantCode);
-            onSuccess();
+            handleFindClick(tenantCode);
         }}
       />
     </div>
   );
 }
+
