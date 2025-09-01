@@ -84,6 +84,14 @@ export const featurePermissions: FeaturePermission[] = [
     ],
   },
   {
+    feature: 'Workflow',
+    description: 'Manage document approval workflows.',
+    actions: [
+      { action: 'view', description: 'View workflow queue', allowedRoles: ['Super Admin', 'Admin'] },
+      { action: 'manage', description: 'Approve or reject transactions', allowedRoles: ['Super Admin', 'Admin'] },
+    ],
+  },
+  {
     feature: 'Landlords',
     description: 'Manage landlord profiles and their associated contracts.',
     actions: [
