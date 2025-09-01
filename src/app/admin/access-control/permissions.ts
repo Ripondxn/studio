@@ -39,6 +39,14 @@ export const featurePermissions: FeaturePermission[] = [
     ],
   },
   {
+    feature: 'Lease Contracts',
+    description: 'Manage lease agreements with landlords.',
+    actions: [
+      { action: 'view', description: 'View lease agreements', allowedRoles: ['Super Admin', 'Admin', 'Property Manager'] },
+      { action: 'manage', description: 'Create, edit, and delete lease agreements', allowedRoles: ['Super Admin', 'Admin'] },
+    ]
+  },
+  {
     feature: 'Project Management',
     description: 'Manage all aspects of projects, including billing, sub-contractors, and resource allocation.',
     actions: [
