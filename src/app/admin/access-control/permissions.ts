@@ -92,6 +92,13 @@ export const featurePermissions: FeaturePermission[] = [
     ],
   },
   {
+    feature: 'Data Processing',
+    description: 'Extract data from documents using AI.',
+    actions: [
+      { action: 'access', description: 'Access document processing and data extraction features', allowedRoles: ['Super Admin', 'Admin', 'User'] },
+    ],
+  },
+  {
     feature: 'Landlords',
     description: 'Manage landlord profiles and their associated contracts.',
     actions: [
