@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -22,7 +23,6 @@ import {
   Plus,
   Pencil,
   Loader2,
-  Search,
   X,
   FileUp,
   Link2,
@@ -48,7 +48,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
+import { saveTenantData, findTenantData, deleteTenantData, saveSubscriptionSettings } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
@@ -113,6 +113,7 @@ export default function TenantPage() {
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
 
@@ -292,6 +293,7 @@ export default function TenantPage() {
             });
             if (!isAttachmentSave) {
                 setIsEditing(false);
+                setIsSubscriptionEditing(false);
             }
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
@@ -327,6 +329,7 @@ export default function TenantPage() {
         reset();
         setAttachments(getValues().attachments || []);
         setIsEditing(false);
+        setIsSubscriptionEditing(false);
      }
   }
 
@@ -637,21 +640,23 @@ export default function TenantPage() {
                         isLoading={isLoadingInvoices}
                         onRefresh={() => fetchInvoices(tenantCode)}
                         isSubscriptionEditing={isEditing}
+                        setIsSubscriptionEditing={setIsSubscriptionEditing}
                         onCreateInvoice={handleOpenSubscriptionDialog}
                     />
                 </TabsContent>
             </Tabs>
         </form>
       </FormProvider>
-      {tenantData && <SubscriptionInvoiceDialog
-        isOpen={isSubInvoiceOpen}
-        setIsOpen={setIsSubInvoiceOpen}
-        invoice={null}
-        tenant={tenantData}
-        onSuccess={() => {
-            fetchInvoices(tenantData.code);
-        }}
-      />}
+    <SubscriptionInvoiceDialog
+      isOpen={isSubInvoiceOpen}
+      setIsOpen={setIsSubInvoiceOpen}
+      invoice={null}
+      tenant={tenantData}
+      onSuccess={() => {
+        handleFindClick(tenantCode);
+      }}
+    />
     </div>
   );
 }
+
