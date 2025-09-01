@@ -211,7 +211,7 @@
     "name": "Rental Income",
     "type": "Revenue",
     "status": "Active",
-    "balance": 0,
+    "balance": 200,
     "isGroup": false,
     "parentCode": "4100"
   },

@@ -71,16 +71,54 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   });
 
   const watchedItems = watch('items');
+  const watchedTaxRate = watch('taxRate');
+  const watchedTaxType = watch('taxType');
+  const watchedProperty = watch('property');
+  const watchedUnit = watch('unitCode');
   
   useEffect(() => {
-    if (!watchedItems) return;
-    const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    setValue('subTotal', subTotal);
-    setValue('total', subTotal);
-    setValue('tax', 0);
-  }, [watchedItems, setValue]);
+    getLookups().then(data => {
+        setProducts(data.products || []);
+        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms}));
+    });
+  }, []);
   
+  const filteredUnits = useMemo(() => lookups.units.filter(u => u.propertyCode === watchedProperty), [lookups.units, watchedProperty]);
+  const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit), [lookups.rooms, watchedProperty, watchedUnit]);
 
+  useEffect(() => {
+    if (!watchedItems) return;
+    
+    // First update the total for each item
+    watchedItems.forEach((item, index) => {
+        const total = item.quantity * item.unitPrice;
+        if (item.total !== total) {
+            setValue(`items.${index}.total`, total);
+        }
+    });
+    
+    const subTotal = watchedItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const taxRate = watchedTaxRate || 0;
+    
+    let taxAmount = 0;
+    let totalAmount = subTotal;
+    let finalSubTotal = subTotal;
+
+    if (watchedTaxType === 'exclusive') {
+        taxAmount = subTotal * (taxRate / 100);
+        totalAmount = subTotal + taxAmount;
+    } else { // inclusive
+        taxAmount = subTotal - (subTotal / (1 + (taxRate / 100)));
+        finalSubTotal = subTotal - taxAmount;
+        totalAmount = subTotal;
+    }
+
+    setValue('subTotal', finalSubTotal);
+    setValue('tax', taxAmount);
+    setValue('total', totalAmount);
+
+  }, [watchedItems, watchedTaxRate, watchedTaxType, setValue]);
+  
   useEffect(() => {
     const initializeForm = async () => {
         if (!tenant) return;

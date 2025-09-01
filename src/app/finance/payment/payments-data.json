@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "type": "Receipt",
+    "date": "2025-09-01",
+    "partyType": "Tenant",
+    "partyName": "T0003",
+    "amount": 200,
+    "paymentMethod": "Cash",
+    "paymentFrom": "Bank",
+    "description": "",
+    "status": "Received",
+    "createdByUser": "Super Admin",
+    "invoiceAllocations": [],
+    "id": "PAY-1756717020218",
+    "currentStatus": "POSTED",
+    "approvalHistory": [
+      {
+        "action": "Created & Posted",
+        "actorId": "Super Admin",
+        "actorRole": "User",
+        "timestamp": "2025-09-01T08:57:00.218Z",
+        "comments": "Directly recorded transaction."
+      }
+    ]
+  }
+]
