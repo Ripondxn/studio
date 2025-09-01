@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2, DollarSign, Edit, Save, X, UserCheck, UserX } from 'lucide-react';
 import { columns } from '@/app/tenancy/customer/invoice/columns';
 import { DataTable } from '@/app/tenancy/customer/invoice/data-table';
-import { InvoiceDialog } from './invoice-dialog';
-import { CreateInvoiceDialog } from './create-invoice-dialog';
 import { type Invoice } from './schema';
 import { AddPaymentDialog } from '@/app/finance/payment/add-payment-dialog';
 import { type Payment } from '@/app/finance/payment/schema';
@@ -32,9 +30,10 @@ import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { type Unit } from '@/app/property/units/schema';
+import { SubscriptionInvoiceDialog } from './invoice-dialog';
 
 interface InvoiceListProps {
-    tenant: Tenant;
+    tenant?: Tenant;
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
@@ -97,7 +96,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         setPaymentDefaultValues({
             type: 'Receipt',
             partyType: 'Customer',
-            partyName: tenant.code,
+            partyName: tenant?.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
             amount: invoice ? (invoice.remainingBalance || 0) : 0,
@@ -127,6 +126,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const { toast } = useToast();
 
     const handleCancelSubscription = async () => {
+        if (!tenant) return;
         setIsCancellingSub(true);
         const result = await cancelSubscription(tenant.code);
         if (result.success) {
@@ -149,6 +149,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         
         return <Badge variant={config.variant as any} className={cn('gap-1', config.color, 'border-transparent')}>{config.icon} {occupancyStatus}</Badge>;
     };
+
+    if (!tenant) {
+        return <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+    }
 
     return (
         <Card>
@@ -324,10 +328,10 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     </CardContent>
                     <CardFooter>
                          <div className="flex items-center gap-2">
-                            <Button type="button" onClick={() => handleRecordPayment()}>
+                            <Button onClick={() => handleRecordPayment()}>
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                             </Button>
-                            <Button type="button" variant="outline" onClick={onCreateInvoice}>
+                            <Button variant="outline" onClick={onCreateInvoice}>
                                 <Plus className="mr-2 h-4 w-4" /> Create Invoice
                             </Button>
                         </div>
