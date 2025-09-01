@@ -51,7 +51,7 @@ const reportList = [
     {
         title: "Tenant Movement History",
         description: "A log of all tenant relocations between properties or units.",
-        href: "/admin/contract-continuity",
+        href: "/tenancy/movement-history",
         icon: <Shuffle className="h-8 w-8 text-primary" />,
     },
     {

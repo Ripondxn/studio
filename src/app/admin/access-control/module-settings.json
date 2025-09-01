@@ -1,9 +1,8 @@
-
 {
   "lease": {
     "id": "lease",
     "name": "Lease Management Module",
-    "enabled": true
+    "enabled": false
   },
   "finance": {
     "id": "finance",
@@ -13,7 +12,7 @@
   "tenant": {
     "id": "tenant",
     "name": "Tenant Module",
-    "enabled": true
+    "enabled": false
   },
   "customer": {
     "id": "customer",

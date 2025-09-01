@@ -19,6 +19,7 @@ const defaultSettings: ModuleSettings = {
     'asset-management': { id: 'asset-management', name: 'Asset Management Module', enabled: true },
     'maintenance': { id: 'maintenance', name: 'Maintenance Module', enabled: true },
     'project-management': { id: 'project-management', name: 'Project Management Module', enabled: true },
+    'human-resource': { id: 'human-resource', name: 'Human Resource Module', enabled: true },
     'rent-a-car': { id: 'rent-a-car', name: 'Rent-A-Car Module', enabled: true },
     'car-sales': { id: 'car-sales', name: 'Car Sales Module', enabled: true },
     'stores': { id: 'stores', name: 'Vaults & Stores Module', enabled: true },

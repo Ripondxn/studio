@@ -64,6 +64,8 @@ import { checkLicenseStatus, type LicenseStatus } from '@/lib/license';
 import { TrialExpiredPage } from '@/components/trial-expired-page';
 import { Loader2 } from 'lucide-react';
 import { AuthorizationProvider, useAuthorization } from '@/context/permission-context';
+import { getModuleSettings } from '@/app/admin/access-control/module-actions';
+import { type ModuleSettings } from '@/app/admin/access-control/schema';
 
 
 // A type for the user profile stored in session storage
@@ -129,6 +131,12 @@ const navLinks = [
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
         ]
+    },
+     {
+        id: 'human-resource',
+        label: 'Human Resource',
+        href: '/human-resource/employees',
+        icon: <Users />,
     },
      { 
         id: 'utilities',
@@ -228,11 +236,15 @@ const navLinks = [
 ];
 
 
-function SidebarNav({ isCollapsed, pathname }: { isCollapsed: boolean, pathname: string }) {
-    const { isModuleEnabled } = useAuthorization();
+function SidebarNav({ isCollapsed, pathname, moduleSettings }: { isCollapsed: boolean, pathname: string, moduleSettings: ModuleSettings }) {
+    
+    const isModuleEnabled = (moduleId: string): boolean => {
+        // If a module has no setting, it's enabled by default.
+        return moduleSettings[moduleId]?.enabled ?? true;
+    }
 
     const visibleNavLinks = navLinks.filter(link => {
-        if (!link.id) return true; // Always show links without an ID (like Dashboard, Reports)
+        if (!link.id) return true;
         return isModuleEnabled(link.id);
     })
     
@@ -308,6 +320,9 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
   const [licenseStatus, setLicenseStatus] = React.useState<LicenseStatus | null>(null);
+  const [moduleSettings, setModuleSettings] = React.useState<ModuleSettings | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = React.useState(true);
+
   const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { profile: companyProfile } = useCompanyProfile();
@@ -321,20 +336,29 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     async function checkUserAndLicense() {
-        if (pathname === '/login' || pathname.startsWith('/pay')) return;
+        if (pathname === '/login' || pathname.startsWith('/pay')) {
+            setIsLoadingSettings(false);
+            return;
+        };
 
         try {
           const storedProfile = sessionStorage.getItem('userProfile');
           if (storedProfile) {
             setUserProfile(JSON.parse(storedProfile));
-             const status = await checkLicenseStatus();
+             const [status, modules] = await Promise.all([
+                 checkLicenseStatus(),
+                 getModuleSettings()
+             ]);
              setLicenseStatus(status);
+             setModuleSettings(modules);
           } else {
             router.push('/login');
           }
         } catch (error) {
           console.error('Initialization Error:', error);
           router.push('/login');
+        } finally {
+            setIsLoadingSettings(false);
         }
     }
     checkUserAndLicense();
@@ -346,11 +370,11 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile) {
+  if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile || isLoadingSettings) {
     return <>{children}</>;
   }
 
-  if (!licenseStatus) {
+  if (!licenseStatus || !moduleSettings) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -381,7 +405,7 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
                 </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
-                <SidebarNav isCollapsed={isCollapsed} pathname={pathname} />
+                <SidebarNav isCollapsed={isCollapsed} pathname={pathname} moduleSettings={moduleSettings}/>
             </div>
         </div>
         <div className="flex flex-col">
