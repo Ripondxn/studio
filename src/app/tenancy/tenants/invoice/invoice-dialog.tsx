@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -107,7 +106,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     if (watchedTaxType === 'exclusive') {
         taxAmount = subTotal * (taxRate / 100);
         totalAmount = subTotal + taxAmount;
-    } else { 
+    } else { // inclusive
         taxAmount = subTotal - (subTotal / (1 + (taxRate / 100)));
         finalSubTotal = subTotal - taxAmount;
         totalAmount = subTotal;
@@ -123,10 +122,10 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     const initializeForm = async () => {
         if (!tenant) return;
 
-        if (invoice) {
+        if (invoice) { // Editing existing invoice
             setIsAutoInvoiceNo(false);
             reset(invoice);
-        } else {
+        } else { // Creating new invoice
             const newInvoiceNo = await getNextSubscriptionInvoiceNumber();
             setIsAutoInvoiceNo(true);
             reset({
@@ -157,6 +156,10 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
         }
     };
     if (isOpen) {
+      getLookups().then(data => {
+        setProducts(data.products || []);
+        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms}));
+      });
       initializeForm();
     }
   }, [isOpen, invoice, reset, tenant]);
@@ -302,13 +305,13 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                   ))}
               </TableBody>
             </Table>
-            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0, expenseAccountId: '' })}>
+            <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => append({ id: `item-${Date.now()}`, description: '', quantity: 1, unitPrice: 0, total: 0 })}>
               <Plus className="mr-2 h-4 w-4" /> Add Item
             </Button>
 
               <div className="flex justify-end mt-4">
                   <div className="w-full max-w-xs space-y-2">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                           <Label>Subtotal</Label>
                           <span className="font-medium">{formatCurrency(watch('subTotal') || 0)}</span>
                       </div>
@@ -356,7 +359,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>
             </DialogClose>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 Save Subs Invoice
             </Button>
