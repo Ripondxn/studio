@@ -40,7 +40,6 @@ import {
   UserSquare,
   PanelLeft,
   ChevronRight,
-  BadgeDollarSign,
   Briefcase,
   Package,
   Route,
@@ -48,12 +47,21 @@ import {
   Code,
   Receipt,
   FileText as ReportIcon,
+  AlertTriangle,
+  KeyRound,
+  Eraser,
+  ScanLine,
+  Lightbulb,
+  CarFront,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCompanyProfile } from '@/context/company-profile-context';
+import { checkLicenseStatus, type LicenseStatus } from '@/lib/license';
+import { TrialExpiredPage } from '@/components/trial-expired-page';
+import { Loader2 } from 'lucide-react';
 
 
 // A type for the user profile stored in session storage
@@ -78,12 +86,19 @@ const navLinks = [
         ]
     },
     { 
-      label: 'Tenant', 
+      label: 'Tenants', 
       icon: <Users />,
       subItems: [
-          { href: '/tenancy/tenants', label: 'Tenant' },
+          { href: '/tenancy/tenants', label: 'Tenants' },
           { href: '/tenancy/customer', label: 'Customer' },
           { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
+      ]
+    },
+     { 
+      label: 'Customers', 
+      icon: <Users className="text-blue-400" />,
+      subItems: [
+          { href: '/tenancy/customer', label: 'Customers' },
       ]
     },
     { 
@@ -102,10 +117,24 @@ const navLinks = [
             { href: '/finance/banking', label: 'Banking' },
             { href: '/finance/cheque-management', label: 'Cheque Management' },
             { href: '/finance/receipt-vouchers', label: 'Receipt Vouchers' },
-            { href: '/finance/payment', label: 'Payment' },
+            { href: '/finance/payment', label: 'Payment Vouchers' },
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
+        ]
+    },
+     { 
+        label: 'Utilities', 
+        href: '/utilities',
+        icon: <Lightbulb />,
+    },
+    {
+        label: 'Data Processing',
+        icon: <ScanLine />,
+        subItems: [
+            { href: '/document-processor', label: 'Document Processor' },
+            { href: '/data-processing/single-data-extractor', label: 'Single Data Extractor' },
+            { href: '/data-processing/batch-data-extractor', label: 'Batch Data Extractor' },
         ]
     },
      {
@@ -117,6 +146,16 @@ const navLinks = [
         label: 'Vaults & Stores',
         href: '/stores',
         icon: <Warehouse />,
+    },
+     {
+        label: 'Rent-A-Car',
+        href: '/rent-a-car',
+        icon: <CarFront />,
+    },
+    {
+        label: 'Project Management',
+        href: '/project-management/projects',
+        icon: <Briefcase />,
     },
     {
         label: 'Asset Management',
@@ -156,7 +195,10 @@ const navLinks = [
             { href: '/admin/access-control', label: 'Access Control' },
             { href: '/admin/workflow-settings', label: 'Workflow Settings' },
             { href: '/admin/contract-continuity', label: 'Contract Continuity' },
+            { href: '/admin/external-storage', label: 'External Storage' },
+            { href: '/admin/license', label: 'License Settings' },
             { href: '/admin/developer-credit', label: 'Developer Credit' },
+            { href: '/admin/reset-data', label: 'Reset Data' },
         ]
     },
 ];
@@ -216,10 +258,25 @@ function SidebarNav({ isCollapsed, pathname }: { isCollapsed: boolean, pathname:
     )
 }
 
+const TrialBanner = ({ licenseStatus }: { licenseStatus: LicenseStatus }) => {
+    if (!licenseStatus.isTrial || licenseStatus.daysRemaining > 7) {
+        return null;
+    }
+    
+    return (
+        <div className="bg-accent text-accent-foreground text-center py-2 text-sm font-medium">
+            <AlertTriangle className="inline-block h-4 w-4 mr-2" />
+            Your trial expires in {licenseStatus.daysRemaining} {licenseStatus.daysRemaining === 1 ? 'day' : 'days'}. 
+            <Button variant="link" className="p-0 h-auto ml-1 text-accent-foreground underline">Upgrade Now</Button>
+        </div>
+    )
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
+  const [licenseStatus, setLicenseStatus] = React.useState<LicenseStatus | null>(null);
   const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { profile: companyProfile } = useCompanyProfile();
@@ -232,19 +289,24 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isMobile]);
 
   React.useEffect(() => {
-    if (pathname === '/login' || pathname.startsWith('/pay')) return;
+    async function checkUserAndLicense() {
+        if (pathname === '/login' || pathname.startsWith('/pay')) return;
 
-    try {
-      const storedProfile = sessionStorage.getItem('userProfile');
-      if (storedProfile) {
-        setUserProfile(JSON.parse(storedProfile));
-      } else {
-        router.push('/login');
-      }
-    } catch (error) {
-      console.error('Could not parse user profile from session storage:', error);
-      router.push('/login');
+        try {
+          const storedProfile = sessionStorage.getItem('userProfile');
+          if (storedProfile) {
+            setUserProfile(JSON.parse(storedProfile));
+             const status = await checkLicenseStatus();
+             setLicenseStatus(status);
+          } else {
+            router.push('/login');
+          }
+        } catch (error) {
+          console.error('Could not parse user profile from session storage:', error);
+          router.push('/login');
+        }
     }
+    checkUserAndLicense();
   }, [pathname, router]);
   
   const handleLogout = () => {
@@ -255,6 +317,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   
   if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile) {
     return <>{children}</>;
+  }
+
+  if (!licenseStatus) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    )
+  }
+
+  if (!licenseStatus.isActive) {
+    return <TrialExpiredPage daysRemaining={licenseStatus.daysRemaining} expiryDate={licenseStatus.expiryDate} />;
   }
   
   return (
@@ -280,7 +354,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
         </div>
         <div className="flex flex-col">
-             <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-40">
+             <header className="sticky top-0 z-40">
+                <TrialBanner licenseStatus={licenseStatus} />
+                <div className="flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
                  <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(prev => !prev)} className="hidden md:flex">
                     <PanelLeft />
                 </Button>
@@ -332,6 +408,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                </div>
                 </div>
             </header>
             <main className="flex flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
