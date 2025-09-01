@@ -87,12 +87,18 @@ const navLinks = [
         ]
     },
     { 
-      label: 'Tenant', 
+      label: 'Tenants', 
       icon: <Users />,
       subItems: [
-          { href: '/tenancy/tenants', label: 'Tenant' },
-          { href: '/tenancy/customer', label: 'Customer' },
+          { href: '/tenancy/tenants', label: 'Tenants' },
           { href: '/tenancy/contracts', label: 'Tenancy Contracts' },
+      ]
+    },
+     { 
+      label: 'Customers', 
+      icon: <Users className="text-blue-400" />,
+      subItems: [
+          { href: '/tenancy/customer', label: 'Customers' },
       ]
     },
     { 

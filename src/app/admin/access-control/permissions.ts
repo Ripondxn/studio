@@ -66,6 +66,15 @@ export const featurePermissions: FeaturePermission[] = [
     ],
   },
   {
+    feature: 'Customers',
+    description: 'Manage general customers for non-rental services.',
+    actions: [
+      { action: 'view', description: 'View customer list and details', allowedRoles: ['Super Admin', 'Admin', 'Accountant', 'User'] },
+      { action: 'edit', description: 'Edit customer information', allowedRoles: ['Super Admin', 'Admin'] },
+      { action: 'delete', description: 'Delete a customer', allowedRoles: ['Super Admin'] },
+    ],
+  },
+  {
     feature: 'Finance',
     description: 'Access to financial modules like banking, payments, and chart of accounts.',
     actions: [

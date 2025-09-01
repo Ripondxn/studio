@@ -3,7 +3,7 @@ import { getPermissions, getRoles } from './actions';
 import { AccessControlClient } from './access-control-client';
 import { featurePermissions } from './permissions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CarFront, Briefcase } from 'lucide-react';
+import { CarFront, Briefcase, Users } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -42,7 +42,37 @@ export default async function AccessControlPage() {
             <CardTitle>Module Management</CardTitle>
             <CardDescription>Enable or disable major application modules.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
+                    <Users className="h-6 w-6 text-primary" />
+                    <div className="space-y-0.5">
+                        <Label htmlFor="tenant-module" className="text-base">Tenant Module</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Manage tenants and their contracts.
+                        </p>
+                    </div>
+                </div>
+                <Switch
+                    id="tenant-module"
+                    defaultChecked={true} 
+                />
+            </div>
+             <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
+                    <Users className="h-6 w-6 text-blue-400" />
+                    <div className="space-y-0.5">
+                        <Label htmlFor="customer-module" className="text-base">Customer Module</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Manage general customers and service invoicing.
+                        </p>
+                    </div>
+                </div>
+                <Switch
+                    id="customer-module"
+                    defaultChecked={true} 
+                />
+            </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="flex items-center gap-4">
                     <Briefcase className="h-6 w-6 text-primary" />

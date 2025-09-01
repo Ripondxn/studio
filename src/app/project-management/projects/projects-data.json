@@ -4,14 +4,24 @@
     "projectName": "Dubai Mall",
     "projectType": "Main Contractor",
     "partyType": "Customer",
-    "partyCode": "C002",
-    "partyName": "Md Ripon Ahmed",
+    "partyCode": "C001",
+    "partyName": "General Customer",
     "status": "In Progress",
     "startDate": "2025-09-01",
     "endDate": "2025-09-01",
     "contractValue": 150000,
-    "retentionPercentage": 0,
+    "retentionPercentage": 10,
     "notes": "",
-    "id": "PROJ-1756743393682"
+    "progressBillings": [
+      {
+        "id": "BILL-1756743916805-0",
+        "date": "2025-09-01",
+        "description": "Progress Billing 1",
+        "percentage": 50,
+        "amount": 150000,
+        "status": "Submitted"
+      }
+    ],
+    "id": "PROJ-1756743843689"
   }
 ]
