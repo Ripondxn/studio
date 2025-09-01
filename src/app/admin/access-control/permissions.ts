@@ -98,6 +98,14 @@ export const featurePermissions: FeaturePermission[] = [
       { action: 'access', description: 'Access document processing and data extraction features', allowedRoles: ['Super Admin', 'Admin', 'User'] },
     ],
   },
+   {
+    feature: 'Utilities',
+    description: 'Manage utility accounts and bill payments.',
+    actions: [
+      { action: 'view', description: 'View utility accounts', allowedRoles: ['Super Admin', 'Admin', 'Accountant', 'User'] },
+      { action: 'manage', description: 'Add, edit, and delete utility accounts', allowedRoles: ['Super Admin', 'Admin'] },
+    ],
+  },
   {
     feature: 'Landlords',
     description: 'Manage landlord profiles and their associated contracts.',

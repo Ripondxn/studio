@@ -3,7 +3,7 @@ import { getPermissions, getRoles } from './actions';
 import { AccessControlClient } from './access-control-client';
 import { featurePermissions } from './permissions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine } from 'lucide-react';
+import { CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -190,6 +190,21 @@ export default async function AccessControlPage() {
                 </div>
                 <Switch
                     id="data-processing-module"
+                    defaultChecked={true} 
+                />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex items-center gap-4">
+                    <Lightbulb className="h-6 w-6 text-primary" />
+                    <div className="space-y-0.5">
+                        <Label htmlFor="utilities-module" className="text-base">Utilities Module</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Manage utility accounts and bill payments.
+                        </p>
+                    </div>
+                </div>
+                <Switch
+                    id="utilities-module"
                     defaultChecked={true} 
                 />
             </div>
