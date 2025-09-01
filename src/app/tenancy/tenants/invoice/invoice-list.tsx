@@ -17,13 +17,14 @@ import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { FormField, FormItem, FormControl, FormLabel, useFormContext } from '@/components/ui/form';
+import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
+import { useFormContext, type Control } from 'react-hook-form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
+import { getContractLookups } from '../../contract/actions';
 import { Separator } from '@/components/ui/separator';
 import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
@@ -77,15 +78,13 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const filteredRooms = useMemo(() => lookups.rooms.filter(r => r.propertyCode === watchedProperty && r.unitCode === watchedUnit && r.occupancyStatus !== 'Occupied'), [lookups.rooms, watchedProperty, watchedUnit]);
     
     const handleEditClick = (invoice: Invoice) => {
-        setSelectedInvoice(invoice);
-        setIsViewMode(false);
-        setIsEditInvoiceOpen(true);
+        // This functionality needs to be implemented within SubscriptionInvoiceDialog if needed
+        toast({ title: "Info", description: "Editing subscription invoices from this view is not yet supported." });
     }
     
     const handleViewClick = (invoice: Invoice) => {
-        setSelectedInvoice(invoice);
-        setIsViewMode(true);
-        setIsEditInvoiceOpen(true);
+        // This functionality needs to be implemented within SubscriptionInvoiceDialog if needed
+        toast({ title: "Info", description: "Viewing invoices from this view is not yet supported." });
     }
     
     const handleRecordPayment = (invoice?: Invoice) => {

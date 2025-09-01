@@ -25,7 +25,7 @@ import {
   X,
   FileUp,
   Link2,
-  Move
+  Move,
 } from 'lucide-react';
 import {
   Table,
@@ -111,16 +111,16 @@ export default function TenantPage() {
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
-  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
+
 
   const formMethods = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
     defaultValues: initialTenantData,
   });
 
-  const { control, handleSubmit, watch, setValue, reset, getValues } = formMethods;
+  const { reset, getValues, handleSubmit, watch } = formMethods;
 
   const tenantData = watch();
   const tenantCode = watch('code');
@@ -192,6 +192,7 @@ export default function TenantPage() {
       handleFindClick('new');
     }
   }, [searchParams, handleFindClick]);
+
   
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
@@ -234,14 +235,19 @@ export default function TenantPage() {
 
   const handleEditClick = () => {
     setIsEditing(true);
-    setIsSubscriptionEditing(true);
   }
 
-  const onSave = async (data: Tenant) => {
-    setIsSaving(true);
+  const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
+    if (!isAttachmentSave) setIsSaving(true);
+    if (isAttachmentSave && attachmentId) setSavingAttachmentId(attachmentId);
+
     try {
+        const attachmentsToProcess = isAttachmentSave
+            ? attachments.filter(a => a.id === attachmentId)
+            : attachments;
+
         const processedAttachments = await Promise.all(
-            attachments.map(async (att) => {
+            attachmentsToProcess.map(async (att) => {
                 let fileData: string | null = null;
                  if (att.isLink) {
                     fileData = typeof att.file === 'string' ? att.file : null;
@@ -261,24 +267,37 @@ export default function TenantPage() {
             })
         );
         
+        let finalAttachments = [...attachments];
+        if (isAttachmentSave && processedAttachments.length > 0) {
+            finalAttachments = attachments.map(att => {
+                const saved = processedAttachments.find(p => p.id === att.id);
+                return saved ? { ...att, file: saved.file } : att;
+            });
+             setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
+        }
+
+
         const dataToSave = {
             tenantData: data,
-            attachments: processedAttachments,
+            attachments: finalAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
         };
 
         const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
         if (result.success && result.data) {
             toast({
                 title: "Success",
-                description: `Tenant "${data.name}" saved successfully.`,
+                description: isAttachmentSave ? `Attachment saved.` : `Tenant "${data.name}" saved successfully.`,
             });
-            setIsEditing(false);
-            setIsSubscriptionEditing(false);
+            if (!isAttachmentSave) {
+                setIsEditing(false);
+            }
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
                  reset(data);
-                 setAttachments(processedAttachments.map(a => ({...a, url: undefined})));
+                 if (!isAttachmentSave) {
+                    setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
+                 }
             }
         } else {
             throw new Error(result.error || 'An unknown error occurred');
@@ -290,9 +309,14 @@ export default function TenantPage() {
         description: (error as Error).message || "Failed to save data.",
       });
     } finally {
-        setIsSaving(false);
+        if (!isAttachmentSave) setIsSaving(false);
+        if (isAttachmentSave) setSavingAttachmentId(null);
     }
   }
+
+  const onSaveAttachment = (id: number) => {
+    handleSubmit((data) => onSave(data, true, id))();
+  };
 
   const handleCancelClick = () => {
      if (isNewRecord) {
@@ -301,7 +325,6 @@ export default function TenantPage() {
         reset();
         setAttachments(getValues().attachments || []);
         setIsEditing(false);
-        setIsSubscriptionEditing(false);
      }
   }
 
@@ -330,87 +353,92 @@ export default function TenantPage() {
   
   const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${watch('name')}`;
 
+  const onRefreshInvoices = () => {
+    if (tenantCode) {
+        fetchInvoices(tenantCode);
+    }
+  };
+  
   const handleOpenSubscriptionDialog = () => {
     setIsSubInvoiceOpen(true);
   };
 
-
   return (
     <div className="container mx-auto p-4 bg-background">
-      <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-primary font-headline">
-          {pageTitle}
-          </h1>
-          <div className="flex items-center gap-2">
-              {!isEditing && !isNewRecord && getValues('contractId') && (
-                  <MoveTenantDialog
-                      contractId={getValues('contractId')!}
-                      currentLocation={{
-                          property: getValues('property') || 'N/A',
-                          unit: getValues('unitCode') || 'N/A',
-                          room: getValues('roomCode'),
-                      }}
-                  />
-              )}
-              {!isEditing && (
-              <Button type="button" onClick={handleEditClick}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Button>
-              )}
-              {isEditing && (
-              <>
-                  <Button type="button" onClick={handleSubmit(onSave)} disabled={isSaving}>
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Save
-                  </Button>
-                  <Button type="button" variant="ghost" onClick={handleCancelClick}>
-                  <X className="mr-2 h-4 w-4" /> Cancel
-                  </Button>
-              </>
-              )}
-              <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                  <Button
-                      type="button"
-                      variant="destructive"
-                      disabled={isNewRecord || isEditing}
-                  >
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
-                  </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                  <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the
-                      tenant "{getValues('name')}".
-                      </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-destructive hover:bg-destructive/90"
-                      >
-                      Delete
-                      </AlertDialogAction>
-                  </AlertDialogFooter>
-                  </AlertDialogContent>
-              </AlertDialog>
-              <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
-                  <X className="mr-2 h-4 w-4" /> Close
-              </Button>
-          </div>
-      </div>
-      
       <FormProvider {...formMethods}>
-        <form onSubmit={handleSubmit(onSave)}>
-          <Tabs defaultValue="info">
+        <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-primary font-headline">
+            {pageTitle}
+            </h1>
+            <div className="flex items-center gap-2">
+                {!isEditing && !isNewRecord && getValues('contractId') && (
+                    <MoveTenantDialog
+                        contractId={getValues('contractId')!}
+                        currentLocation={{
+                            property: getValues('property') || 'N/A',
+                            unit: getValues('unitCode') || 'N/A',
+                            room: getValues('roomCode'),
+                        }}
+                    />
+                )}
+                {!isEditing && (
+                <Button type="button" onClick={handleEditClick}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                </Button>
+                )}
+                {isEditing && (
+                <>
+                    <Button type="button" onClick={handleSubmit(onSave)} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Save Tenant
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={handleCancelClick}>
+                    <X className="mr-2 h-4 w-4" /> Cancel
+                    </Button>
+                </>
+                )}
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={isNewRecord || isEditing}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
+                    </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the
+                        tenant "{getValues('name')}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive hover:bg-destructive/90"
+                        >
+                        Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
+                    <X className="mr-2 h-4 w-4" /> Close
+                </Button>
+            </div>
+        </div>
+      
+        <Tabs defaultValue="info">
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
                 <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
             </TabsList>
             <TabsContent value="info">
+              <form onSubmit={handleSubmit(onSave)}>
                 <Card>
                     <CardHeader>
                     <CardTitle>Tenant Information</CardTitle>
@@ -583,6 +611,9 @@ export default function TenantPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
+                                                <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
+                                                    {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
+                                                </Button>
                                                 <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -598,40 +629,28 @@ export default function TenantPage() {
                     </div>
                     </CardContent>
                 </Card>
+              </form>
             </TabsContent>
-          </Tabs>
-        </form>
-      </FormProvider>
-      <div className="mt-6">
-        <Tabs defaultValue="subscription">
-             <TabsList className="hidden">
-                 <TabsTrigger value="subscription">Subscription & Invoices</TabsTrigger>
-             </TabsList>
             <TabsContent value="subscription">
-                <InvoiceList
+                 <InvoiceList
                     tenant={tenantData}
                     invoices={invoices}
                     isLoading={isLoadingInvoices}
-                    onRefresh={() => fetchInvoices(tenantCode)}
+                    onRefresh={onRefresh}
                     isSubscriptionEditing={isEditing}
                     onCreateInvoice={handleOpenSubscriptionDialog}
                 />
             </TabsContent>
-        </Tabs>
-      </div>
-    <SubscriptionInvoiceDialog
-      isOpen={isSubInvoiceOpen}
-      setIsOpen={setIsSubInvoiceOpen}
-      invoice={null}
-      tenant={tenantData}
-      onSuccess={onRefresh}
-    />
-  </div>
+          </Tabs>
+        </FormProvider>
+      
+        <SubscriptionInvoiceDialog
+            isOpen={isSubInvoiceOpen}
+            setIsOpen={setIsSubInvoiceOpen}
+            invoice={null}
+            tenant={tenantData}
+            onSuccess={onRefresh}
+        />
+    </div>
   );
 }
-
-const onRefresh = () => {
-    // A placeholder that could be used to refresh parent data
-};
-
-```
