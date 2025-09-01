@@ -120,7 +120,7 @@ export default function TenantPage() {
     defaultValues: initialTenantData,
   });
 
-  const { reset, getValues, handleSubmit, watch } = formMethods;
+  const { reset, getValues, handleSubmit, watch, control } = formMethods;
 
   const tenantData = watch();
   const tenantCode = watch('code');
@@ -593,20 +593,9 @@ export default function TenantPage() {
                                                 </Button>
                                             </div>
                                              <div className="mt-1">
-                                                {item.url && !item.isLink && (
-                                                    <a href={item.url} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                        View Uploaded File
-                                                    </a>
-                                                )}
-                                                {item.file && typeof item.file === 'string' && (
-                                                    item.isLink && item.file.startsWith('http') ? (
-                                                        <a href={item.file} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                            Open Link
-                                                        </a>
-                                                    ) : (
-                                                        !item.isLink && <span className="text-sm text-muted-foreground italic truncate">{item.file}</span>
-                                                    )
-                                                )}
+                                                 <a href={getViewLink(item)} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                    View
+                                                </a>
                                              </div>
                                         </TableCell>
                                         <TableCell>
@@ -636,21 +625,23 @@ export default function TenantPage() {
                     tenant={tenantData}
                     invoices={invoices}
                     isLoading={isLoadingInvoices}
-                    onRefresh={onRefresh}
+                    onRefresh={onRefreshInvoices}
                     isSubscriptionEditing={isEditing}
+                    control={control}
+                    watch={watch}
+                    setValue={formMethods.setValue}
                     onCreateInvoice={handleOpenSubscriptionDialog}
                 />
             </TabsContent>
           </Tabs>
-        </FormProvider>
-      
-        <SubscriptionInvoiceDialog
-            isOpen={isSubInvoiceOpen}
-            setIsOpen={setIsSubInvoiceOpen}
-            invoice={null}
-            tenant={tenantData}
-            onSuccess={onRefresh}
-        />
-    </div>
+      </FormProvider>
+    <SubscriptionInvoiceDialog
+      isOpen={isSubInvoiceOpen}
+      setIsOpen={setIsSubInvoiceOpen}
+      invoice={null}
+      tenant={tenantData}
+      onSuccess={onRefreshInvoices}
+    />
+  </div>
   );
 }
