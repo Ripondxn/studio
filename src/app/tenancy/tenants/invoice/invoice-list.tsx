@@ -154,6 +154,18 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         }
         setIsCancellingSub(false);
     };
+    
+    const OccupancyStatusBadge = () => {
+        if (!occupancyStatus) return null;
+        
+        const config = {
+            'Vacant': { variant: 'default', color: 'bg-green-500/20 text-green-700', icon: <UserCheck className="h-3 w-3" /> },
+            'Occupied': { variant: 'destructive', color: 'bg-red-500/20 text-red-700', icon: <UserX className="h-3 w-3" /> },
+            'Partially Occupied': { variant: 'secondary', color: 'bg-yellow-500/20 text-yellow-700', icon: <UserX className="h-3 w-3" /> }
+        }[occupancyStatus] || { variant: 'secondary', color: '', icon: null };
+        
+        return <Badge variant={config.variant as any} className={cn('gap-1', config.color, 'border-transparent')}>{config.icon} {occupancyStatus}</Badge>;
+    };
 
     return (
         <Card>
@@ -288,7 +300,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                          <div>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-base font-semibold">Assigned Property</h3>
-                                {/* Occupancy badge logic can be added here if needed */}
+                                <OccupancyStatusBadge />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <FormField
