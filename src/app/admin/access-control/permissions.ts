@@ -47,6 +47,14 @@ export const featurePermissions: FeaturePermission[] = [
       { action: 'manage_billing', description: 'Manage project progress billing and retention', allowedRoles: ['Super Admin', 'Accountant'] },
     ],
   },
+   {
+    feature: 'Vaults & Stores',
+    description: 'Manage inventory, stock levels, and store locations.',
+    actions: [
+      { action: 'view', description: 'View stores and stock levels', allowedRoles: ['Super Admin', 'Admin', 'User'] },
+      { action: 'manage', description: 'Add/Edit/Delete stores and manage stock transactions', allowedRoles: ['Super Admin', 'Admin'] },
+    ],
+  },
     {
     feature: 'Products & Services',
     description: 'Manage the catalog of products and services offered.',
