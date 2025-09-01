@@ -4,12 +4,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { type FeaturePermission } from '@/app/admin/access-control/permissions';
-import { getPermissions } from '@/app/admin/access-control/actions';
+import { getCombinedAccessControlData } from '@/app/admin/access-control/actions';
+import { type ModuleSettings } from '@/app/admin/access-control/schema';
+import { Loader2 } from 'lucide-react';
 
 interface AuthorizationContextType {
   can: (feature: string, action: string) => boolean;
+  isModuleEnabled: (moduleId: string) => boolean;
   isLoading: boolean;
-  isAuthorized: (feature: string, action: string) => boolean;
   userRole: UserRole['role'] | null;
 }
 
@@ -17,6 +19,7 @@ const AuthorizationContext = createContext<AuthorizationContextType | undefined>
 
 export const AuthorizationProvider = ({ children }: { children: ReactNode }) => {
     const [permissions, setPermissions] = useState<FeaturePermission[]>([]);
+    const [moduleSettings, setModuleSettings] = useState<ModuleSettings>({});
     const [userRole, setUserRole] = useState<UserRole['role'] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -29,8 +32,13 @@ export const AuthorizationProvider = ({ children }: { children: ReactNode }) => 
                     setUserRole(profile.role);
                 }
                 
-                const permissionsData = await getPermissions();
-                setPermissions(permissionsData);
+                const accessData = await getCombinedAccessControlData();
+                if (accessData.success) {
+                    setPermissions(accessData.permissions || []);
+                    setModuleSettings(accessData.moduleSettings || {});
+                } else {
+                     console.error("Failed to load access control data:", accessData.error);
+                }
             } catch (error) {
                  console.error("Error loading access control data:", error);
             } finally {
@@ -54,11 +62,25 @@ export const AuthorizationProvider = ({ children }: { children: ReactNode }) => 
         return actionPermission.allowedRoles.includes(userRole);
     }, [permissions, userRole, isLoading]);
     
-    // Alias for `can` for semantic clarity in some components
-    const isAuthorized = can;
+    const isModuleEnabled = useCallback((moduleId: string): boolean => {
+        if(isLoading) return false;
+        if(userRole === 'Super Admin' || userRole === 'Developer') return true;
+        return moduleSettings[moduleId]?.enabled ?? true;
+    }, [moduleSettings, isLoading, userRole]);
 
-    const value = { can, isLoading, isAuthorized, userRole };
+    const value = { can, isModuleEnabled, isLoading, userRole };
 
+    if (isLoading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span>Loading Permissions...</span>
+                </div>
+            </div>
+        );
+    }
+    
     return (
         <AuthorizationContext.Provider value={value}>
             {children}

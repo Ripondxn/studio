@@ -63,8 +63,9 @@ import { useCompanyProfile } from '@/context/company-profile-context';
 import { checkLicenseStatus, type LicenseStatus } from '@/lib/license';
 import { TrialExpiredPage } from '@/components/trial-expired-page';
 import { Loader2 } from 'lucide-react';
-import { getModuleSettings } from '@/app/admin/access-control/module-actions';
-import { type ModuleSettings } from '@/app/admin/access-control/schema';
+import { AuthorizationProvider, useAuthorization } from '@/context/permission-context';
+import { getModuleSettings } from './admin/access-control/module-actions';
+import { type ModuleSettings } from './admin/access-control/schema';
 
 
 // A type for the user profile stored in session storage
@@ -232,6 +233,7 @@ const navLinks = [
 function SidebarNav({ isCollapsed, pathname, moduleSettings }: { isCollapsed: boolean, pathname: string, moduleSettings: ModuleSettings }) {
     
     const isModuleEnabled = (moduleId: string): boolean => {
+        // If a module has no setting, it's enabled by default.
         return moduleSettings[moduleId]?.enabled ?? true;
     }
 
@@ -307,12 +309,12 @@ const TrialBanner = ({ licenseStatus }: { licenseStatus: LicenseStatus }) => {
     )
 }
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+function MainAppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
   const [licenseStatus, setLicenseStatus] = React.useState<LicenseStatus | null>(null);
-  const [moduleSettings, setModuleSettings] = React.useState<ModuleSettings>({});
+  const [moduleSettings, setModuleSettings] = React.useState<ModuleSettings | null>(null);
   const [isLoadingSettings, setIsLoadingSettings] = React.useState(true);
 
   const isMobile = useIsMobile();
@@ -366,7 +368,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  if (!licenseStatus) {
+  if (!licenseStatus || !moduleSettings) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -397,7 +399,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
-                <SidebarNav isCollapsed={isCollapsed} pathname={pathname} moduleSettings={moduleSettings} />
+                <SidebarNav isCollapsed={isCollapsed} pathname={pathname} moduleSettings={moduleSettings}/>
             </div>
         </div>
         <div className="flex flex-col">
@@ -464,4 +466,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
     </div>
   );
+}
+
+export function AppLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <AuthorizationProvider>
+            <MainAppLayout>{children}</MainAppLayout>
+        </AuthorizationProvider>
+    )
 }
