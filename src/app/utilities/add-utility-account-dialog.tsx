@@ -26,6 +26,7 @@ import { getLookups as getGeneralLookups } from '@/app/lookups/actions';
 import { getUnitsForProperty } from '@/app/tenancy/contract/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { type Unit } from '@/app/property/units/schema';
+import { Textarea } from '@/components/ui/textarea';
 
 type FormData = Omit<UtilityAccount, 'id' | 'totalPaid'>;
 const formSchema = utilityAccountSchema.omit({ id: true, totalPaid: true });
