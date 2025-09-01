@@ -63,7 +63,7 @@ import { useCompanyProfile } from '@/context/company-profile-context';
 import { checkLicenseStatus, type LicenseStatus } from '@/lib/license';
 import { TrialExpiredPage } from '@/components/trial-expired-page';
 import { Loader2 } from 'lucide-react';
-import { useAuthorization } from '@/context/permission-context';
+import { AuthorizationProvider, useAuthorization } from '@/context/permission-context';
 import { getModuleSettings } from '@/app/admin/access-control/module-actions';
 import { type ModuleSettings } from '@/app/admin/access-control/schema';
 
