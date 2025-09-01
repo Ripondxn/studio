@@ -14,6 +14,8 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { FileText, FileSpreadsheet, Printer } from 'lucide-react';
+
 import {
   Table,
   TableBody,
@@ -24,19 +26,27 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FileText, FileSpreadsheet, Printer } from 'lucide-react';
+import { useCurrency } from '@/context/currency-context';
+import { type UtilityAccount } from './schema';
 
-interface DataTableProps<TData, TValue> {
+declare module 'jspdf' {
+    interface jsPDF {
+      autoTable: (options: any) => jsPDF;
+    }
+}
+
+interface DataTableProps<TData extends UtilityAccount, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends UtilityAccount, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-    const printRef = React.useRef<HTMLDivElement>(null);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const printRef = React.useRef<HTMLDivElement>(null);
+  const { formatCurrency } = useCurrency();
 
   const table = useReactTable({
     data,
@@ -59,7 +69,7 @@ export function DataTable<TData, TValue>({
             printWindow.document.write('<style>body { font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ddd; padding: 8px; } h1 { text-align: center; } .no-print { display: none; } </style>');
             printWindow.document.write('</head><body>');
             printWindow.document.write('<h1>Utility Accounts</h1>');
-            printWindow.document.write(printContent.innerHTML);
+            printWindow.document.write(printContent);
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.print();
@@ -67,7 +77,28 @@ export function DataTable<TData, TValue>({
     }
   };
 
-    const handleExportExcel = () => {
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableData = table.getFilteredRowModel().rows.map(row => row.original);
+
+    doc.text("Utility Accounts Report", 14, 16);
+    (doc as any).autoTable({
+        head: [['Utility Type', 'Provider', 'Account Number', 'Property', 'Unit', 'Total Paid', 'Status']],
+        body: tableData.map(acc => [
+            acc.utilityType,
+            acc.provider,
+            acc.accountNumber,
+            acc.propertyCode,
+            acc.unitCode || 'N/A',
+            formatCurrency(acc.totalPaid || 0),
+            acc.status,
+        ]),
+        startY: 20,
+    });
+    doc.save('utility-accounts.pdf');
+  };
+
+  const handleExportExcel = () => {
     const dataToExport = table.getFilteredRowModel().rows.map(row => {
         const acc = row.original as any;
         return {
@@ -87,11 +118,11 @@ export function DataTable<TData, TValue>({
     XLSX.writeFile(wb, "utility-accounts.xlsx");
   };
 
-
   return (
     <div>
         <div className="flex justify-end mb-4 no-print gap-2">
             <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print</Button>
+            <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
             <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
         </div>
         <div ref={printRef}>
@@ -145,7 +176,7 @@ export function DataTable<TData, TValue>({
                 </TableBody>
             </Table>
             </div>
-        </div>
+      </div>
         <div className="flex items-center justify-end space-x-2 py-4 no-print">
             <Button
             variant="outline"
