@@ -19,7 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { cancelSubscription } from '../actions';
 import { useToast } from '@/hooks/use-toast';
 import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
-import { useFormContext, type Control } from 'react-hook-form';
+import { type Control } from 'react-hook-form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -154,7 +154,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         return <Badge variant={config.variant as any} className={cn('gap-1', config.color, 'border-transparent')}>{config.icon} {occupancyStatus}</Badge>;
     };
 
-    if (!tenant) {
+    if (!tenant?.name) {
       return <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
     }
 
