@@ -145,40 +145,40 @@ export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAcc
                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <div className="space-y-2">
                         <Label>Utility Type</Label>
-                        <Select value={filters.utilityType} onValueChange={(value) => handleFilterChange('utilityType', value)}>
+                        <Select value={filters.utilityType} onValueChange={(value) => handleFilterChange('utilityType', value === 'all' ? '' : value)}>
                             <SelectTrigger><SelectValue placeholder="All Types"/></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All Types</SelectItem>
+                                <SelectItem value="all">All Types</SelectItem>
                                 {uniqueUtilityTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
                      <div className="space-y-2">
                         <Label>Provider</Label>
-                        <Select value={filters.provider} onValueChange={(value) => handleFilterChange('provider', value)}>
+                        <Select value={filters.provider} onValueChange={(value) => handleFilterChange('provider', value === 'all' ? '' : value)}>
                             <SelectTrigger><SelectValue placeholder="All Providers"/></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All Providers</SelectItem>
+                                <SelectItem value="all">All Providers</SelectItem>
                                 {uniqueProviders.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
                         <Label>Property</Label>
-                         <Select value={filters.propertyCode} onValueChange={(value) => handleFilterChange('propertyCode', value)}>
+                         <Select value={filters.propertyCode} onValueChange={(value) => handleFilterChange('propertyCode', value === 'all' ? '' : value)}>
                             <SelectTrigger><SelectValue placeholder="All Properties"/></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All Properties</SelectItem>
+                                <SelectItem value="all">All Properties</SelectItem>
                                 {lookups.properties.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
                         <Label>Unit</Label>
-                         <Select value={filters.unitCode} onValueChange={(value) => handleFilterChange('unitCode', value)} disabled={!filters.propertyCode}>
+                         <Select value={filters.unitCode} onValueChange={(value) => handleFilterChange('unitCode', value === 'all' ? '' : value)} disabled={!filters.propertyCode}>
                             <SelectTrigger><SelectValue placeholder="All Units"/></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All Units</SelectItem>
+                                <SelectItem value="all">All Units</SelectItem>
                                 {lookups.units.filter(u => u.propertyCode === filters.propertyCode).map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
                             </SelectContent>
                         </Select>
