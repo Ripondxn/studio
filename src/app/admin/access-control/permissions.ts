@@ -47,6 +47,15 @@ export const featurePermissions: FeaturePermission[] = [
       { action: 'manage_billing', description: 'Manage project progress billing and retention', allowedRoles: ['Super Admin', 'Accountant'] },
     ],
   },
+    {
+    feature: 'Products & Services',
+    description: 'Manage the catalog of products and services offered.',
+    actions: [
+      { action: 'view', description: 'View products and services', allowedRoles: ['Super Admin', 'Admin', 'User'] },
+      { action: 'manage', description: 'Add/Edit/Delete products and services', allowedRoles: ['Super Admin', 'Admin'] },
+      { action: 'view_pricing', description: 'View cost and sale prices', allowedRoles: ['Super Admin', 'Admin', 'Accountant'] },
+    ],
+  },
   {
     feature: 'Landlords',
     description: 'Manage landlord profiles and their associated contracts.',
