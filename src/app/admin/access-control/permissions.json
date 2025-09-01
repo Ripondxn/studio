@@ -1,4 +1,3 @@
-
 [
   {
     "feature": "Properties",
@@ -67,6 +66,292 @@
     ]
   },
   {
+    "feature": "Rent-A-Car",
+    "description": "Manage vehicle rental agreements.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View rental agreements",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "User"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Add/Edit/Delete rental agreements",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Car Sales",
+    "description": "Manage vehicle buying and selling operations.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View vehicle inventory and sales",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "User"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Add, edit, and delete vehicle records",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Lease Contracts",
+    "description": "Manage lease agreements with landlords.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View lease agreements",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Property Manager"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Create, edit, and delete lease agreements",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Project Management",
+    "description": "Manage all aspects of projects, including billing, sub-contractors, and resource allocation.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View project list and details",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Property Manager"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Create, edit, and delete projects",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      },
+      {
+        "action": "manage_billing",
+        "description": "Manage project progress billing and retention",
+        "allowedRoles": [
+          "Super Admin",
+          "Accountant"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Vaults & Stores",
+    "description": "Manage inventory, stock levels, and store locations.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View stores and stock levels",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "User"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Add/Edit/Delete stores and manage stock transactions",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Products & Services",
+    "description": "Manage the catalog of products and services offered.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View products and services",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "User"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Add/Edit/Delete products and services",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      },
+      {
+        "action": "view_pricing",
+        "description": "View cost and sale prices",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Accountant"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Asset Management",
+    "description": "Manage company assets, depreciation, and assignments.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View asset list",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Accountant"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Add, edit, and assign assets",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      },
+      {
+        "action": "delete",
+        "description": "Delete assets from the register",
+        "allowedRoles": [
+          "Super Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Maintenance",
+    "description": "Manage maintenance tickets and service contracts.",
+    "actions": [
+      {
+        "action": "view_tickets",
+        "description": "View maintenance tickets",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "User"
+        ]
+      },
+      {
+        "action": "manage_tickets",
+        "description": "Create, edit, and update tickets",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      },
+      {
+        "action": "view_contracts",
+        "description": "View service contracts",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Accountant"
+        ]
+      },
+      {
+        "action": "manage_contracts",
+        "description": "Manage service contracts",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Workflow",
+    "description": "Manage document approval workflows.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View workflow queue",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Approve or reject transactions",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Data Processing",
+    "description": "Extract data from documents using AI.",
+    "actions": [
+      {
+        "action": "access",
+        "description": "Access document processing and data extraction features",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "User"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Utilities",
+    "description": "Manage utility accounts and bill payments.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View utility accounts",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Accountant",
+          "User"
+        ]
+      },
+      {
+        "action": "manage",
+        "description": "Add, edit, and delete utility accounts",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      }
+    ]
+  },
+  {
     "feature": "Landlords",
     "description": "Manage landlord profiles and their associated contracts.",
     "actions": [
@@ -92,6 +377,39 @@
       {
         "action": "delete",
         "description": "Delete a landlord",
+        "allowedRoles": [
+          "Super Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Vendors",
+    "description": "Manage supplier and vendor profiles.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View vendor list and details",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Property Manager",
+          "Accountant",
+          "User"
+        ]
+      },
+      {
+        "action": "edit",
+        "description": "Edit vendor information",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Property Manager"
+        ]
+      },
+      {
+        "action": "delete",
+        "description": "Delete a vendor",
         "allowedRoles": [
           "Super Admin"
         ]
@@ -125,6 +443,37 @@
       {
         "action": "delete",
         "description": "Delete a tenant",
+        "allowedRoles": [
+          "Super Admin"
+        ]
+      }
+    ]
+  },
+  {
+    "feature": "Customers",
+    "description": "Manage general customers for non-rental services.",
+    "actions": [
+      {
+        "action": "view",
+        "description": "View customer list and details",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin",
+          "Accountant",
+          "User"
+        ]
+      },
+      {
+        "action": "edit",
+        "description": "Edit customer information",
+        "allowedRoles": [
+          "Super Admin",
+          "Admin"
+        ]
+      },
+      {
+        "action": "delete",
+        "description": "Delete a customer",
         "allowedRoles": [
           "Super Admin"
         ]
@@ -239,6 +588,13 @@
         "description": "Manage data backup and restore",
         "allowedRoles": [
           "Super Admin"
+        ]
+      },
+      {
+        "action": "external_storage",
+        "description": "Configure external storage (e.g., Google Drive)",
+        "allowedRoles": [
+          "Developer"
         ]
       },
       {

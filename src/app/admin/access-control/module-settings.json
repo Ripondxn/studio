@@ -1,0 +1,83 @@
+
+{
+  "lease": {
+    "id": "lease",
+    "name": "Lease Management Module",
+    "enabled": true
+  },
+  "finance": {
+    "id": "finance",
+    "name": "Finance Module",
+    "enabled": true
+  },
+  "tenant": {
+    "id": "tenant",
+    "name": "Tenant Module",
+    "enabled": true
+  },
+  "customer": {
+    "id": "customer",
+    "name": "Customer Module",
+    "enabled": true
+  },
+  "vendor": {
+    "id": "vendor",
+    "name": "Vendor / Supplier Module",
+    "enabled": true
+  },
+  "products": {
+    "id": "products",
+    "name": "Products & Services Module",
+    "enabled": true
+  },
+  "asset-management": {
+    "id": "asset-management",
+    "name": "Asset Management Module",
+    "enabled": true
+  },
+  "maintenance": {
+    "id": "maintenance",
+    "name": "Maintenance Module",
+    "enabled": true
+  },
+  "project-management": {
+    "id": "project-management",
+    "name": "Project Management Module",
+    "enabled": true
+  },
+  "rent-a-car": {
+    "id": "rent-a-car",
+    "name": "Rent-A-Car Module",
+    "enabled": true
+  },
+  "car-sales": {
+    "id": "car-sales",
+    "name": "Car Sales Module",
+    "enabled": true
+  },
+  "stores": {
+    "id": "stores",
+    "name": "Vaults & Stores Module",
+    "enabled": true
+  },
+  "workflow": {
+    "id": "workflow",
+    "name": "Workflow Module",
+    "enabled": true
+  },
+  "data-processing": {
+    "id": "data-processing",
+    "name": "Data Processing Module",
+    "enabled": true
+  },
+  "utilities": {
+    "id": "utilities",
+    "name": "Utilities Module",
+    "enabled": true
+  },
+  "settings": {
+    "id": "settings",
+    "name": "Settings",
+    "enabled": true
+  }
+}
