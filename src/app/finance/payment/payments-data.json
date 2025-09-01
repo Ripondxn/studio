@@ -15,15 +15,15 @@
     "status": "Paid",
     "createdByUser": "Super Admin",
     "currentStatus": "POSTED",
-    "id": "PAY-1756733125489",
     "approvalHistory": [
       {
-        "action": "Created & Posted",
+        "action": "Created & Auto-Posted",
         "actorId": "Super Admin",
         "actorRole": "User",
-        "timestamp": "2025-09-01T13:25:25.489Z",
+        "timestamp": "2025-09-01T13:32:54.638Z",
         "comments": "Directly recorded transaction."
       }
-    ]
+    ],
+    "id": "PAY-1756733574638"
   }
 ]
