@@ -36,7 +36,6 @@ export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAcc
     accountNumber: '',
   });
   const [lookups, setLookups] = useState<{properties: {value: string, label: string}[], units: {value: string, label: string, propertyCode: string}[]}>({properties: [], units: []});
-  const { formatCurrency } = useCurrency();
 
    useEffect(() => {
     const userProfile = sessionStorage.getItem('userProfile');
@@ -88,41 +87,6 @@ export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAcc
   const uniqueUtilityTypes = [...new Set(accounts.map(a => a.utilityType).filter(Boolean))];
 
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Utility Accounts Report", 14, 16);
-    (doc as any).autoTable({
-        head: [['Utility', 'Provider', 'Account #', 'Property', 'Unit', 'Total Paid']],
-        body: filteredAccounts.map(acc => [
-            acc.utilityType,
-            acc.provider,
-            acc.accountNumber,
-            acc.propertyCode,
-            acc.unitCode || 'N/A',
-            formatCurrency(acc.totalPaid || 0)
-        ]),
-        startY: 20,
-    });
-    doc.save('utility-accounts-report.pdf');
-  };
-
-  const handleExportExcel = () => {
-    const dataToExport = filteredAccounts.map(acc => ({
-        'Utility Type': acc.utilityType,
-        'Provider': acc.provider,
-        'Account Number': acc.accountNumber,
-        'Property': acc.propertyCode,
-        'Unit': acc.unitCode,
-        'Status': acc.status,
-        'Total Paid': acc.totalPaid
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Utility Accounts");
-    XLSX.writeFile(wb, "utility-accounts.xlsx");
-  };
-
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
@@ -137,7 +101,7 @@ export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAcc
         </Button>
       </div>
 
-       <Card className="mb-6">
+       <Card className="mb-6 no-print">
             <CardHeader>
                 <CardTitle>Filters & Actions</CardTitle>
             </CardHeader>
@@ -187,10 +151,6 @@ export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAcc
                         <Label>Account Number</Label>
                         <Input placeholder="Filter by account..." value={filters.accountNumber} onChange={e => handleFilterChange('accountNumber', e.target.value)} />
                     </div>
-                 </div>
-                 <div className="flex justify-end gap-2 pt-4 border-t">
-                    <Button variant="outline" size="sm" onClick={handleExportPDF}><FileText className="mr-2 h-4 w-4" /> PDF</Button>
-                    <Button variant="outline" size="sm" onClick={handleExportExcel}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
                  </div>
             </CardContent>
         </Card>
