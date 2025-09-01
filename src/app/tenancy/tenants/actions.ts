@@ -274,3 +274,28 @@ export async function cancelSubscription(tenantCode: string) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
+
+export async function saveSubscriptionSettings(tenantCode: string, settings: Partial<Tenant>) {
+    try {
+        const allTenants = await getTenants();
+        const index = allTenants.findIndex((t: any) => t.tenantData.code === tenantCode);
+
+        if (index === -1) {
+            return { success: false, error: 'Tenant not found.' };
+        }
+
+        allTenants[index].tenantData = {
+            ...allTenants[index].tenantData,
+            ...settings
+        };
+        
+        await writeTenants(allTenants);
+        revalidatePath(`/tenancy/tenants/add?code=${tenantCode}`);
+        return { success: true };
+
+    } catch (error) {
+         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+

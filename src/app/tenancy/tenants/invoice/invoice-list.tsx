@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -15,10 +16,9 @@ import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
 import { type Tenant } from '../../schema';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { cancelSubscription } from '../actions';
+import { cancelSubscription, saveSubscriptionSettings } from '../actions';
 import { useToast } from '@/hooks/use-toast';
-import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
-import { useFormContext, type Control } from 'react-hook-form';
+import { FormField, FormItem, FormControl, FormLabel, useFormContext, type Control } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,18 +38,20 @@ interface InvoiceListProps {
     isLoading: boolean;
     onRefresh: () => void;
     isSubscriptionEditing: boolean;
+    setIsSubscriptionEditing: (isEditing: boolean) => void;
     onCreateInvoice: () => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, onCreateInvoice }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, setIsSubscriptionEditing, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
+    const [isSavingSub, setIsSavingSub] = useState(false);
     const router = useRouter();
     const { formatCurrency } = useCurrency();
-    const { control, watch, setValue } = useFormContext<Tenant>();
+    const { control, watch, setValue, getValues, formState: {isDirty} } = useFormContext<Tenant>();
 
     const [lookups, setLookups] = useState<{
         properties: { value: string; label: string }[];
@@ -136,6 +138,27 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         }
         setIsCancellingSub(false);
     };
+
+    const handleSaveSubscription = async () => {
+        setIsSavingSub(true);
+        const settings = {
+            isSubscriptionActive: getValues('isSubscriptionActive'),
+            subscriptionStatus: getValues('subscriptionStatus'),
+            subscriptionAmount: getValues('subscriptionAmount'),
+            property: getValues('property'),
+            unitCode: getValues('unitCode'),
+            roomCode: getValues('roomCode'),
+        };
+        const result = await saveSubscriptionSettings(tenant.code, settings);
+        if (result.success) {
+            toast({ title: "Subscription Updated", description: "Settings have been saved." });
+            setIsSubscriptionEditing(false);
+            onRefresh();
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        }
+        setIsSavingSub(false);
+    };
     
     const OccupancyStatusBadge = () => {
         if (!occupancyStatus) return null;
@@ -148,10 +171,6 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         
         return <Badge variant={config.variant as any} className={cn('gap-1', config.color, 'border-transparent')}>{config.icon} {occupancyStatus}</Badge>;
     };
-
-    if (!tenant) {
-        return <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-    }
 
     return (
         <Card>
@@ -182,6 +201,11 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <CardTitle>Subscription Management</CardTitle>
+                             {!isSubscriptionEditing && (
+                                <Button size="sm" variant="outline" onClick={() => setIsSubscriptionEditing(true)}>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit Subscription
+                                </Button>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -325,15 +349,24 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="justify-between">
                          <div className="flex items-center gap-2">
                             <Button onClick={() => handleRecordPayment()}>
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                             </Button>
-                            <Button variant="outline" onClick={onCreateInvoice}>
+                            <Button variant="outline" onClick={onCreateInvoice} disabled={!watch('isSubscriptionActive')}>
                                 <Plus className="mr-2 h-4 w-4" /> Create Invoice
                             </Button>
                         </div>
+                        {isSubscriptionEditing && (
+                            <div className="flex items-center gap-2">
+                                <Button type="button" variant="ghost" onClick={() => setIsSubscriptionEditing(false)}>Cancel</Button>
+                                <Button type="button" onClick={handleSaveSubscription} disabled={isSavingSub}>
+                                     {isSavingSub && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                     Save Subscription
+                                </Button>
+                            </div>
+                        )}
                     </CardFooter>
                 </Card>
 
