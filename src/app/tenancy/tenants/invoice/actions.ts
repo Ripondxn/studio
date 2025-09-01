@@ -4,27 +4,33 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { saveInvoice } from '@/app/tenancy/customer/invoice/actions';
 import { type Invoice, subscriptionInvoiceSchema } from './schema';
 import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
 
-const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+const subscriptionInvoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/invoice/subscription-invoices-data.json');
 
-async function readInvoices(): Promise<Invoice[]> {
+async function readSubscriptionInvoices(): Promise<Invoice[]> {
     try {
-        await fs.access(invoicesFilePath);
-        const data = await fs.readFile(invoicesFilePath, 'utf-8');
+        await fs.access(subscriptionInvoicesFilePath);
+        const data = await fs.readFile(subscriptionInvoicesFilePath, 'utf-8');
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            await writeSubscriptionInvoices([]);
             return [];
         }
         throw error;
     }
 }
 
+async function writeSubscriptionInvoices(data: Invoice[]) {
+    await fs.writeFile(subscriptionInvoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+
 export async function getNextSubscriptionInvoiceNumber() {
-    const allInvoices = await readInvoices();
+    const allInvoices = await readSubscriptionInvoices();
     let maxNum = 0;
     allInvoices.forEach(i => {
         const match = i.invoiceNo.match(/^SUB-INV-(\d+)$/);
@@ -39,7 +45,56 @@ export async function getNextSubscriptionInvoiceNumber() {
 }
 
 
-export async function saveSubscriptionInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & {id?: string, isAutoInvoiceNo?: boolean}, createdBy: string) {
+export async function saveSubscriptionInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingBalance'> & {id?: string, isAutoInvoiceNo?: boolean}, createdBy: string) {
     const { isAutoInvoiceNo, ...invoiceData } = data;
-    return saveInvoice({ ...invoiceData, isAutoInvoiceNo: isAutoInvoiceNo }, createdBy);
+    const validation = subscriptionInvoiceSchema.safeParse(invoiceData);
+    
+    if (!validation.success) {
+        console.error("Subscription Invoice Validation Error:", validation.error.format());
+        return { success: false, error: 'Invalid subscription invoice data format.' };
+    }
+
+    try {
+        const allInvoices = await readSubscriptionInvoices();
+        const isNewRecord = !data.id;
+        const validatedData = validation.data;
+        let savedInvoice: Invoice;
+
+        if (isNewRecord) {
+             let newInvoiceNo = validatedData.invoiceNo;
+             if (isAutoInvoiceNo) {
+                newInvoiceNo = await getNextSubscriptionInvoiceNumber();
+             } else {
+                 const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
+                 if (invoiceExists) {
+                    return { success: false, error: `An invoice with number "${newInvoiceNo}" already exists.`};
+                 }
+             }
+
+            const newInvoice: Invoice = {
+                ...validatedData,
+                invoiceNo: newInvoiceNo,
+                id: `SUB-INV-${Date.now()}`,
+                amountPaid: 0,
+                 items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`}))
+            };
+            allInvoices.push(newInvoice);
+            savedInvoice = newInvoice;
+            
+        } else {
+            const index = allInvoices.findIndex(inv => inv.id === data.id);
+            if (index === -1) {
+                return { success: false, error: 'Subscription Invoice not found.' };
+            }
+            allInvoices[index] = { ...allInvoices[index], ...validatedData, items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`})) };
+            savedInvoice = allInvoices[index];
+        }
+
+        await writeSubscriptionInvoices(allInvoices);
+        revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
+        return { success: true, data: savedInvoice };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
 }

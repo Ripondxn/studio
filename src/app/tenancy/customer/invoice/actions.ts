@@ -11,6 +11,7 @@ import { addPayment } from '@/app/finance/payment/actions';
 import { type Contract } from '../../contract/schema';
 
 const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+const subscriptionInvoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/invoice/subscription-invoices-data.json');
 const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
 
 async function readInvoices(): Promise<Invoice[]> {
@@ -49,8 +50,26 @@ async function readContracts(): Promise<Contract[]> {
     }
 }
 
+async function readSubscriptionInvoices(): Promise<Invoice[]> {
+    try {
+        await fs.access(subscriptionInvoicesFilePath);
+        const data = await fs.readFile(subscriptionInvoicesFilePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            await fs.writeFile(subscriptionInvoicesFilePath, JSON.stringify([], null, 2), 'utf-8');
+            return [];
+        }
+        throw error;
+    }
+}
+
 export async function getInvoicesForCustomer(customerCode: string) {
-    const allInvoices = await readInvoices();
+    const generalInvoices = await readInvoices();
+    const subscriptionInvoices = await readSubscriptionInvoices();
+    
+    const allInvoices = [...generalInvoices, ...subscriptionInvoices];
+    
     // Invoices for a tenant are those where the customerCode matches the tenantCode
     const tenantInvoices = allInvoices.filter(inv => inv.customerCode === customerCode);
     return tenantInvoices.map(inv => ({
@@ -59,21 +78,6 @@ export async function getInvoicesForCustomer(customerCode: string) {
     }));
 }
 
-
-export async function getNextSubscriptionInvoiceNumber() {
-    const allInvoices = await readInvoices();
-    let maxNum = 0;
-    allInvoices.forEach(i => {
-        const match = i.invoiceNo.match(/^SUB-INV-(\d+)$/);
-        if (match) {
-            const num = parseInt(match[1], 10);
-            if (num > maxNum) {
-                maxNum = num;
-            }
-        }
-    });
-    return `SUB-INV-${(maxNum + 1).toString().padStart(4, '0')}`;
-}
 
 export async function getNextGeneralInvoiceNumber() {
     const allInvoices = await readInvoices();
@@ -109,11 +113,7 @@ export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingB
         if (isNewRecord) {
              let newInvoiceNo = validatedData.invoiceNo;
              if (isAutoInvoiceNo) {
-                if(newInvoiceNo.startsWith('SUB-INV-')) {
-                    newInvoiceNo = await getNextSubscriptionInvoiceNumber();
-                } else {
-                    newInvoiceNo = await getNextGeneralInvoiceNumber();
-                }
+                newInvoiceNo = await getNextGeneralInvoiceNumber();
              } else {
                  const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
                  if (invoiceExists) {
@@ -188,23 +188,40 @@ export async function updateInvoiceStatus(invoiceId: string, status: Invoice['st
 
 export async function applyPaymentToInvoices(invoicePayments: { invoiceId: string; amount: number }[], customerCode: string) {
     try {
-        const allInvoices = await readInvoices();
+        const generalInvoices = await readInvoices();
+        const subscriptionInvoices = await readSubscriptionInvoices();
+        let generalInvoicesModified = false;
+        let subscriptionInvoicesModified = false;
 
         for (const payment of invoicePayments) {
-            const index = allInvoices.findIndex(inv => inv.id === payment.invoiceId);
+            let index = generalInvoices.findIndex(inv => inv.id === payment.invoiceId);
             if (index !== -1) {
-                allInvoices[index].amountPaid = (allInvoices[index].amountPaid || 0) + payment.amount;
-                const remainingBalance = allInvoices[index].total - allInvoices[index].amountPaid;
-                
-                if (remainingBalance <= 0.001) { // Use a small epsilon for float comparison
-                    allInvoices[index].status = 'Paid';
-                } else if (allInvoices[index].status === 'Draft' || allInvoices[index].status === 'Overdue') {
-                    allInvoices[index].status = 'Sent'; // Or 'Partially Paid' if you add that status
+                generalInvoices[index].amountPaid = (generalInvoices[index].amountPaid || 0) + payment.amount;
+                const remainingBalance = generalInvoices[index].total - generalInvoices[index].amountPaid;
+                if (remainingBalance <= 0.001) {
+                    generalInvoices[index].status = 'Paid';
+                }
+                generalInvoicesModified = true;
+            } else {
+                index = subscriptionInvoices.findIndex(inv => inv.id === payment.invoiceId);
+                if (index !== -1) {
+                    subscriptionInvoices[index].amountPaid = (subscriptionInvoices[index].amountPaid || 0) + payment.amount;
+                    const remainingBalance = subscriptionInvoices[index].total - subscriptionInvoices[index].amountPaid;
+                    if (remainingBalance <= 0.001) {
+                        subscriptionInvoices[index].status = 'Paid';
+                    }
+                    subscriptionInvoicesModified = true;
                 }
             }
         }
 
-        await writeInvoices(allInvoices);
+        if (generalInvoicesModified) {
+            await writeInvoices(generalInvoices);
+        }
+        if (subscriptionInvoicesModified) {
+            await fs.writeFile(subscriptionInvoicesFilePath, JSON.stringify(subscriptionInvoices, null, 2), 'utf-8');
+        }
+
         revalidatePath(`/tenancy/customer/add?code=${customerCode}`);
         revalidatePath(`/tenancy/tenants/add?code=${customerCode}`);
         return { success: true };

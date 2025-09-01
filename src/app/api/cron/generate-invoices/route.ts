@@ -1,15 +1,16 @@
 
+
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO, addMonths, getMonth, getYear, getDate } from 'date-fns';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
-import { saveInvoice } from '@/app/tenancy/customer/invoice/actions';
+import { saveSubscriptionInvoice } from '@/app/tenancy/tenants/invoice/actions';
 import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
 
 const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
-const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
+const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/invoice/subscription-invoices-data.json');
 
 async function readData<T>(filePath: string): Promise<T[]> {
     try {
@@ -83,7 +84,7 @@ export async function generateInvoices(forceRun = false) {
                     status: 'Sent', // Assume invoices are sent immediately
                 };
 
-                await saveInvoice({ ...newInvoiceData, isAutoInvoiceNo: true }, 'Cron Job');
+                await saveSubscriptionInvoice({ ...newInvoiceData, isAutoInvoiceNo: true }, 'Cron Job');
                 createdFor.push(`${tenantData.name} (for ${format(targetMonthDate, 'MMM yyyy')})`);
             }
         }
