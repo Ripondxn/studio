@@ -402,7 +402,7 @@ export default function TenantPage() {
                 <>
                     <Button type="submit" disabled={isSaving}>
                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save
+                    Save Tenant
                     </Button>
                     <Button type="button" variant="ghost" onClick={handleCancelClick}>
                     <X className="mr-2 h-4 w-4" /> Cancel
@@ -648,21 +648,19 @@ export default function TenantPage() {
                     isLoading={isLoadingInvoices}
                     onRefresh={() => fetchInvoices(tenantCode)}
                     isSubscriptionEditing={isEditing}
-                    control={control}
-                    watch={watch}
-                    setValue={setValue}
                     onCreateInvoice={handleOpenSubscriptionDialog}
                 />
             </TabsContent>
           </Tabs>
         </form>
       </FormProvider>
+     
       <SubscriptionInvoiceDialog
         isOpen={isSubInvoiceOpen}
         setIsOpen={setIsSubInvoiceOpen}
         invoice={null}
         tenant={tenantData}
-        onSuccess={() => handleFindClick(tenantCode)}
+        onSuccess={handleFindClick}
       />
     </div>
   );

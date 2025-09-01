@@ -327,7 +327,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                             </Button>
                             <Button type="button" variant="outline" onClick={onCreateInvoice}>
-                                <Plus className="mr-2 h-4 w-4" /> Create Invoice
+                                <Plus className="mr-2 h-4 w-4" /> + Create Subs Invoice
                             </Button>
                         </div>
                     </CardFooter>
