@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -44,7 +43,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveEmployeeData, findEmployeeData, deleteEmployeeData } from '../actions';
@@ -115,8 +113,6 @@ export default function EmployeeAddPage() {
 
   const { control, handleSubmit, watch, setValue, reset, getValues } = formMethods;
 
-  const currentEmployee = watch();
-  
   const handleFindClick = useCallback(async (id: string) => {
     try {
       const result = await findEmployeeData(id);
@@ -140,7 +136,13 @@ export default function EmployeeAddPage() {
           title: 'Not Found',
           description: `No record found for Employee ID: ${id}. You can create a new one.`,
         });
-        handleFindClick('new');
+        const newEmployeeResult = await findEmployeeData('new');
+        if (newEmployeeResult.success && newEmployeeResult.data) {
+          reset({ ...initialEmployeeData, employeeId: newEmployeeResult.data.employeeId });
+        }
+        setIsNewRecord(true);
+        setIsEditing(true);
+        setIsAutoCode(true);
       }
     } catch (error) {
       toast({
@@ -293,8 +295,19 @@ export default function EmployeeAddPage() {
     }
   };
 
-  const pageTitle = isNewRecord ? 'Add New Employee' : `Edit Employee: ${watch('name')}`;
-
+  const getViewLink = (item: Attachment): string => {
+    if (item.isLink && typeof item.file === 'string') {
+        return item.file;
+    }
+    if (item.url) { // This is for new, unsaved file uploads
+        return item.url;
+    }
+    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) {
+        return item.file;
+    }
+    return '#';
+  };
+  
   return (
     <div className="container mx-auto p-4 bg-background">
       <FormProvider {...formMethods}>
@@ -358,7 +371,105 @@ export default function EmployeeAddPage() {
                   </div>
                   <Separator />
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Form fields here */}
+                     <FormField
+                      control={control}
+                      name="employeeId"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label>Employee ID</Label>
+                            <FormControl><Input {...field} disabled /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                           <Label>Full Name</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label>Date of Birth</Label>
+                            <FormControl><Input type="date" {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={control}
+                      name="mobile"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label>Mobile</Label>
+                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label>Email</Label>
+                           <FormControl><Input type="email" {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-3">
+                           <Label>Address</Label>
+                            <FormControl><Textarea {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={control}
+                      name="profession"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label>Profession</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={control}
+                      name="department"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label>Department</Label>
+                           <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={control}
+                      name="joiningDate"
+                      render={({ field }) => (
+                        <FormItem>
+                           <Label>Joining Date</Label>
+                            <FormControl><Input type="date" {...field} disabled={!isEditing} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -367,7 +478,45 @@ export default function EmployeeAddPage() {
                 <Card>
                     <CardHeader><CardTitle>Official Documents</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
-                        {/* Document fields here */}
+                        <div className="p-4 border rounded-md">
+                           <h4 className="font-semibold mb-4">National ID / Emirates ID</h4>
+                           <div className="grid grid-cols-2 gap-4">
+                                <FormField control={control} name="nationalId" render={({field}) => (<FormItem><Label>Number</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="nationalIdExpiry" render={({field}) => (<FormItem><Label>Expiry Date</Label><FormControl><Input type="date" {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                           </div>
+                        </div>
+                        <div className="p-4 border rounded-md">
+                           <h4 className="font-semibold mb-4">Passport</h4>
+                           <div className="grid grid-cols-2 gap-4">
+                                <FormField control={control} name="passportNo" render={({field}) => (<FormItem><Label>Number</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="passportExpiry" render={({field}) => (<FormItem><Label>Expiry Date</Label><FormControl><Input type="date" {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                           </div>
+                        </div>
+                         <div className="p-4 border rounded-md">
+                           <h4 className="font-semibold mb-4">Visa Details</h4>
+                           <div className="grid grid-cols-3 gap-4">
+                                <FormField control={control} name="visaDetails.number" render={({field}) => (<FormItem><Label>Number</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="visaDetails.type" render={({field}) => (<FormItem><Label>Type</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="visaDetails.expiryDate" render={({field}) => (<FormItem><Label>Expiry Date</Label><FormControl><Input type="date" {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                           </div>
+                        </div>
+                         <div className="p-4 border rounded-md">
+                           <h4 className="font-semibold mb-4">Medical Card</h4>
+                           <div className="grid grid-cols-3 gap-4">
+                                <FormField control={control} name="medicalCard.number" render={({field}) => (<FormItem><Label>Number</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="medicalCard.provider" render={({field}) => (<FormItem><Label>Provider</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="medicalCard.expiryDate" render={({field}) => (<FormItem><Label>Expiry Date</Label><FormControl><Input type="date" {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                           </div>
+                        </div>
+                         <div className="p-4 border rounded-md">
+                           <h4 className="font-semibold mb-4">Insurance Details</h4>
+                           <div className="grid grid-cols-3 gap-4">
+                                <FormField control={control} name="insuranceDetails.policyNumber" render={({field}) => (<FormItem><Label>Policy Number</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="insuranceDetails.provider" render={({field}) => (<FormItem><Label>Provider</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="insuranceDetails.expiryDate" render={({field}) => (<FormItem><Label>Expiry Date</Label><FormControl><Input type="date" {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                           </div>
+                           <div className="mt-4"><FormField control={control} name="insuranceDetails.coverageDetails" render={({field}) => (<FormItem><Label>Coverage Details</Label><FormControl><Textarea {...field} disabled={!isEditing} /></FormControl></FormItem>)} /></div>
+                        </div>
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -375,7 +524,14 @@ export default function EmployeeAddPage() {
                 <Card>
                     <CardHeader><CardTitle>Compensation Details</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
-                        {/* Compensation fields here */}
+                       <div className="p-4 border rounded-md">
+                           <h4 className="font-semibold mb-4">Salary Scale</h4>
+                           <div className="grid grid-cols-3 gap-4">
+                                <FormField control={control} name="salaryScale.grade" render={({field}) => (<FormItem><Label>Grade</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="salaryScale.level" render={({field}) => (<FormItem><Label>Level</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="salaryScale.amount" render={({field}) => (<FormItem><Label>Basic Salary</Label><FormControl><Input type="number" {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                           </div>
+                        </div>
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -383,7 +539,68 @@ export default function EmployeeAddPage() {
               <Card>
                 <CardHeader><CardTitle>Attachments</CardTitle></CardHeader>
                 <CardContent>
-                    {/* Attachments table here */}
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Attachment Name</TableHead>
+                            <TableHead>File / Link</TableHead>
+                            <TableHead>Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {attachments.map((item, index) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>
+                                        <Input 
+                                            value={item.name} 
+                                            onChange={(e) => handleAttachmentChange(item.id, 'name', e.target.value)} 
+                                            disabled={!isEditing} 
+                                            placeholder="e.g. Passport Copy"
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            {item.isLink ? (
+                                                <Input
+                                                    type="text"
+                                                    placeholder="https://example.com"
+                                                    value={typeof item.file === 'string' ? item.file : ''}
+                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.value)}
+                                                    disabled={!isEditing}
+                                                />
+                                            ) : (
+                                                <Input 
+                                                    type="file" 
+                                                    className="text-sm w-full" 
+                                                    ref={(el) => (fileInputRefs.current[index] = el)}
+                                                    onChange={(e) => handleAttachmentChange(item.id, 'file', e.target.files ? e.target.files[0] : null)}
+                                                    disabled={!isEditing}
+                                                />
+                                            )}
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => handleAttachmentChange(item.id, 'isLink', !item.isLink)} disabled={!isEditing}>
+                                                {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                                            </Button>
+                                        </div>
+                                         <div className="mt-1">
+                                            <a href={getViewLink(item)} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
+                                                <Button type="button" variant="link" size="sm" className="p-0 h-auto" disabled={!item.file}>
+                                                    <Eye className="mr-1 h-3 w-3"/> View
+                                                </Button>
+                                            </a>
+                                         </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
+                        <Plus className="mr-2 h-4 w-4"/> Add Attachment
+                    </Button>
                 </CardContent>
               </Card>
             </TabsContent>
