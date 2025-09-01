@@ -114,6 +114,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     if (isOpen) {
       getLookups().then(data => {
         setProducts(data.products || []);
+        setLookups(prev => ({...prev, properties: data.properties, units: data.units, rooms: data.rooms}));
       });
       initializeForm();
     }
@@ -128,7 +129,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     const currentUser = JSON.parse(userProfile);
 
     setIsSaving(true);
-    const result = await saveSubscriptionInvoice({ ...data, id: invoice?.id }, currentUser.name);
+    const result = await saveSubscriptionInvoice({ ...data, id: invoice?.id, isAutoInvoiceNo: isAutoInvoiceNo }, currentUser.name);
     if(result.success) {
         toast({ title: 'Success', description: 'Invoice saved successfully.'});
         onSuccess();
@@ -212,6 +213,20 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                     disabled={!!invoice}
                 />
                 <Label htmlFor="auto-invoice-no-switch-sub">Auto-generate Invoice No</Label>
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <Label>Property</Label>
+                    <Input value={watch('property') || ''} disabled/>
+                </div>
+                <div>
+                    <Label>Unit</Label>
+                    <Input value={watch('unitCode') || ''} disabled/>
+                </div>
+                <div>
+                    <Label>Room</Label>
+                    <Input value={watch('roomCode') || ''} disabled/>
+                </div>
             </div>
             
             <Table>
