@@ -114,6 +114,7 @@ export default function TenantPage() {
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
 
@@ -238,6 +239,7 @@ export default function TenantPage() {
 
   const handleEditClick = () => {
     setIsEditing(true);
+    setIsSubscriptionEditing(true);
   }
 
   const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
@@ -293,6 +295,7 @@ export default function TenantPage() {
             });
             if (!isAttachmentSave) {
                 setIsEditing(false);
+                setIsSubscriptionEditing(false);
             }
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
@@ -328,6 +331,7 @@ export default function TenantPage() {
         reset();
         setAttachments(getValues().attachments || []);
         setIsEditing(false);
+        setIsSubscriptionEditing(false);
      }
   }
 
@@ -448,7 +452,7 @@ export default function TenantPage() {
             <Tabs defaultValue="info">
                 <TabsList>
                     <TabsTrigger value="info">Tenant Information</TabsTrigger>
-                    <TabsTrigger value="invoices" disabled={isNewRecord}>Invoices</TabsTrigger>
+                    <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info">
                     <Card>
@@ -560,8 +564,25 @@ export default function TenantPage() {
                                 )}
                             />
                         </div>
-                         <div className="space-y-4 pt-6 border-t">
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="subscription">
+                    <InvoiceList
+                        tenant={tenantData}
+                        invoices={invoices}
+                        isLoading={isLoadingInvoices}
+                        onRefresh={() => fetchInvoices(tenantCode)}
+                        isSubscriptionEditing={isEditing}
+                        onCreateInvoice={handleOpenSubscriptionDialog}
+                    />
+                </TabsContent>
+                <TabsContent value="attachments">
+                    <Card>
+                        <CardHeader>
                             <CardTitle>Attachments</CardTitle>
+                        </CardHeader>
+                        <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -638,34 +659,19 @@ export default function TenantPage() {
                             <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                                 <Plus className="mr-2 h-4 w-4"/> Add Attachment
                             </Button>
-                        </div>
                         </CardContent>
                     </Card>
-                </TabsContent>
-                <TabsContent value="subscription">
-                    <InvoiceList
-                        tenant={tenantData}
-                        invoices={invoices}
-                        isLoading={isLoadingInvoices}
-                        onRefresh={() => fetchInvoices(tenantCode)}
-                        isSubscriptionEditing={isEditing}
-                        control={control}
-                        watch={watch}
-                        setValue={setValue}
-                        onCreateInvoice={handleOpenSubscriptionDialog}
-                    />
                 </TabsContent>
               </Tabs>
         </form>
       </FormProvider>
-     
-        <SubscriptionInvoiceDialog
-            isOpen={isSubInvoiceOpen}
-            setIsOpen={setIsSubInvoiceOpen}
-            invoice={null}
-            tenant={tenantData}
-            onSuccess={() => fetchInvoices(tenantCode)}
-        />
+      <SubscriptionInvoiceDialog
+        isOpen={isSubInvoiceOpen}
+        setIsOpen={setIsSubInvoiceOpen}
+        invoice={null}
+        tenant={tenantData}
+        onSuccess={() => fetchInvoices(tenantCode)}
+      />
     </div>
   );
 }

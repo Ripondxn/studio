@@ -26,8 +26,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
-import { getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
-import { getLookups } from '@/app/lookups/actions';
+import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
 import { Separator } from '@/components/ui/separator';
 import { type Room } from '@/app/property/rooms/schema';
 import { Badge } from '@/components/ui/badge';
@@ -40,13 +39,10 @@ interface InvoiceListProps {
     isLoading: boolean;
     onRefresh: () => void;
     isSubscriptionEditing: boolean;
-    control: Control<Tenant>;
-    watch: (name: keyof Tenant) => any;
-    setValue: (name: keyof Tenant, value: any) => void;
     onCreateInvoice: () => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, control, watch, setValue, onCreateInvoice }: InvoiceListProps) {
+export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
@@ -54,6 +50,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const [paymentDefaultValues, setPaymentDefaultValues] = useState<Partial<Omit<Payment, 'id'>>>();
     const router = useRouter();
     const { formatCurrency } = useCurrency();
+    const { control, watch, setValue } = useFormContext<Tenant>();
     
     const [lookups, setLookups] = useState<{
         properties: { value: string; label: string }[];
@@ -66,7 +63,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
     const occupancyStatus = watch('occupancyStatus');
 
     const fetchLookups = useCallback(async () => {
-        const data = await getLookups();
+        const data = await getContractLookups();
         setLookups(prev => ({
             ...prev,
             properties: data.properties || [],
@@ -99,7 +96,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         
         setPaymentDefaultValues({
             type: 'Receipt',
-            partyType: 'Tenant',
+            partyType: 'Customer',
             partyName: tenant.code,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
@@ -327,11 +324,11 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     </CardContent>
                     <CardFooter>
                          <div className="flex items-center gap-2">
-                            <Button onClick={() => handleRecordPayment()}>
+                            <Button type="button" onClick={() => handleRecordPayment()}>
                                 <DollarSign className="mr-2 h-4 w-4" /> Receive Payment
                             </Button>
-                            <Button variant="outline" onClick={onCreateInvoice}>
-                                <Plus className="mr-2 h-4 w-4" /> Create Subs Invoice
+                            <Button type="button" variant="outline" onClick={onCreateInvoice}>
+                                <Plus className="mr-2 h-4 w-4" /> Create Invoice
                             </Button>
                         </div>
                     </CardFooter>
