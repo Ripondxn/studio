@@ -4,7 +4,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, DollarSign, Edit, Save, X, UserCheck, UserX } from 'lucide-react';
+import { Plus, Loader2, DollarSign } from 'lucide-react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { type Invoice } from './schema';
@@ -13,35 +13,18 @@ import { type Payment } from '@/app/finance/payment/schema';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
-import { type Tenant } from '../../tenants/schema';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { cancelSubscription } from '@/app/tenancy/tenants/actions';
-import { useToast } from '@/hooks/use-toast';
-import { FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
-import { useFormContext, type Control } from 'react-hook-form';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Combobox } from '@/components/ui/combobox';
-import { getContractLookups, getUnitsForProperty, getRoomsForUnit } from '../../contract/actions';
-import { Separator } from '@/components/ui/separator';
-import { type Room } from '@/app/property/rooms/schema';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { type Unit } from '@/app/property/units/schema';
 import { InvoiceDialog } from './invoice-dialog';
 
 interface InvoiceListProps {
-    tenant: Tenant;
+    customerCode: string;
+    customerName: string;
     invoices: Invoice[];
     isLoading: boolean;
     onRefresh: () => void;
-    isSubscriptionEditing: boolean;
     onCreateInvoice: () => void;
 }
 
-export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscriptionEditing, onCreateInvoice }: InvoiceListProps) {
+export function InvoiceList({ customerCode, customerName, invoices, isLoading, onRefresh, onCreateInvoice }: InvoiceListProps) {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isViewMode, setIsViewMode] = useState(false);
     const [isEditInvoiceOpen, setIsEditInvoiceOpen] = useState(false);
@@ -68,7 +51,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         setPaymentDefaultValues({
             type: 'Receipt',
             partyType: 'Customer',
-            partyName: tenant.code,
+            partyName: customerCode,
             date: format(new Date(), 'yyyy-MM-dd'),
             status: 'Received',
             amount: invoice ? (invoice.remainingBalance || 0) : 0,
@@ -94,7 +77,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
         }, { totalBilled: 0, totalPaid: 0 });
     }, [invoices]);
 
-    if (!tenant) {
+    if (!customerName) {
         return <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
     }
 
@@ -104,7 +87,7 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle>Invoices</CardTitle>
-                        <CardDescription>Manage invoices for {tenant.name}.</CardDescription>
+                        <CardDescription>Manage invoices for {customerName}.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button onClick={() => handleRecordPayment()}>
@@ -148,12 +131,12 @@ export function InvoiceList({ tenant, invoices, isLoading, onRefresh, isSubscrip
                     customerInvoices={invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled' && (i.remainingBalance || 0) > 0)}
                     onPaymentAdded={handleSuccess}
                 />
-                 {isEditInvoiceOpen && (
+                 {isEditInvoiceOpen && selectedInvoice && (
                     <InvoiceDialog
                         isOpen={isEditInvoiceOpen}
                         setIsOpen={setIsEditInvoiceOpen}
                         invoice={selectedInvoice}
-                        customer={{code: tenant.code, name: tenant.name}}
+                        customer={{code: customerCode, name: customerName}}
                         onSuccess={handleSuccess}
                         isViewMode={isViewMode}
                     />
