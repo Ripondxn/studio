@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -35,6 +36,7 @@ import {
   Package,
   LineChart as FinanceIcon,
   Shuffle,
+  DoorOpen,
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -47,6 +49,8 @@ import { type BankAccount } from '@/app/finance/banking/schema';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { ReportCenterWidget } from './reports/report-center-widget';
+import { useAuthorization } from '@/context/permission-context';
+import { type ModuleSettings } from './admin/access-control/schema';
 
 
 type DashboardClientProps = {
@@ -154,6 +158,7 @@ const WorkflowDiagram = ({ title, description, icon, steps }: WorkflowDiagramPro
 
 export function DashboardClient({ initialDashboardData, initialExpiringContracts, initialBankAccounts, initialMovementHistoryCount }: DashboardClientProps) {
   const { formatCurrency } = useCurrency();
+  const { isModuleEnabled } = useAuthorization();
 
   if (!initialDashboardData) {
     return <div>Loading...</div>;
@@ -162,6 +167,8 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
   const {
     vacantUnitsCount,
     totalUnits,
+    vacantRoomsCount,
+    totalRooms,
     expiringSoonCount,
     leaseExpiringSoonCount,
     totalTenants,
@@ -169,52 +176,19 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
   } = initialDashboardData;
   
   const totalBalance = initialBankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
-  
-  const kpiData = [
-     {
-      title: 'Total Properties',
-      value: totalProperties,
-      change: 'buildings and lands',
-      icon: <Home className="h-6 w-6 text-muted-foreground" />,
-      href: '/property/properties/list',
-    },
-    {
-      title: 'Total Tenants',
-      value: totalTenants,
-      change: 'currently active tenants',
-      icon: <Users className="h-6 w-6 text-muted-foreground" />,
-      href: '/tenancy/tenants',
-    },
-    {
-      title: 'Vacant Units',
-      value: `${vacantUnitsCount} / ${totalUnits}`,
-      change: 'View all vacant units',
-      icon: <Home className="h-6 w-6 text-muted-foreground" />,
-      href: '/property/units/vacant',
-    },
-    {
-      title: 'Tenancy Expiring (30d)',
-      value: expiringSoonCount,
-      change: 'View tenancy contracts',
-      icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
-      href: '/tenancy/contracts',
-    },
-     {
-      title: 'Lease Expiring (30d)',
-      value: leaseExpiringSoonCount,
-      change: 'View lease contracts',
-      icon: <FileClock className="h-6 w-6 text-muted-foreground" />,
-      href: '/lease/contracts',
-    },
-    {
-      title: 'Tenant Movements',
-      value: initialMovementHistoryCount,
-      change: 'Total recorded relocations',
-      icon: <Shuffle className="h-6 w-6 text-muted-foreground" />,
-      href: '/admin/contract-continuity',
-    },
+
+  const allKPIs = [
+    { module: 'lease', title: 'Total Properties', value: totalProperties, change: 'buildings and lands', icon: <Home className="h-6 w-6 text-muted-foreground" />, href: '/property/properties/list' },
+    { module: 'tenant', title: 'Total Tenants', value: totalTenants, change: 'currently active tenants', icon: <Users className="h-6 w-6 text-muted-foreground" />, href: '/tenancy/tenants' },
+    { module: 'lease', title: 'Vacant Units', value: `${vacantUnitsCount} / ${totalUnits}`, change: 'View all vacant units', icon: <Home className="h-6 w-6 text-muted-foreground" />, href: '/property/units/vacant' },
+    { module: 'lease', title: 'Vacant Rooms', value: `${vacantRoomsCount} / ${totalRooms}`, change: 'View all vacant rooms', icon: <DoorOpen className="h-6 w-6 text-muted-foreground" />, href: '/property/rooms/list' },
+    { module: 'tenant', title: 'Tenancy Expiring (30d)', value: expiringSoonCount, change: 'View tenancy contracts', icon: <FileClock className="h-6 w-6 text-muted-foreground" />, href: '/tenancy/contracts' },
+    { module: 'lease', title: 'Lease Expiring (30d)', value: leaseExpiringSoonCount, change: 'View lease contracts', icon: <FileClock className="h-6 w-6 text-muted-foreground" />, href: '/lease/contracts' },
+    { module: 'workflow', title: 'Tenant Movements', value: initialMovementHistoryCount, change: 'Total recorded relocations', icon: <Shuffle className="h-6 w-6 text-muted-foreground" />, href: '/admin/contract-continuity' }
   ];
 
+  const visibleKpis = allKPIs.filter(kpi => isModuleEnabled(kpi.module));
+  
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -228,8 +202,8 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       </div>
       
       {/* Key Metrics Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {kpiData.map((kpi) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+        {visibleKpis.map((kpi) => (
           <Card key={kpi.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>

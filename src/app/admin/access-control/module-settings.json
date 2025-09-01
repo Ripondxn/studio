@@ -2,7 +2,7 @@
   "lease": {
     "id": "lease",
     "name": "Lease Management Module",
-    "enabled": false
+    "enabled": true
   },
   "finance": {
     "id": "finance",
@@ -12,7 +12,7 @@
   "tenant": {
     "id": "tenant",
     "name": "Tenant Module",
-    "enabled": false
+    "enabled": true
   },
   "customer": {
     "id": "customer",
@@ -42,6 +42,11 @@
   "project-management": {
     "id": "project-management",
     "name": "Project Management Module",
+    "enabled": true
+  },
+  "human-resource": {
+    "id": "human-resource",
+    "name": "Human Resource Module",
     "enabled": true
   },
   "rent-a-car": {

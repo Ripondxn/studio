@@ -1,11 +1,12 @@
 
 import type { Metadata } from 'next';
 import './globals.css';
-import { AppLayout } from './app-layout';
+import { AppLayout } from '@/components/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 import { CurrencyProvider } from '@/context/currency-context';
 import { CompanyProfileProvider } from '@/context/company-profile-context';
 import { getCompanyProfile } from './admin/company-profile/actions';
+import { AuthorizationProvider } from '@/context/permission-context';
 
 export async function generateMetadata(): Promise<Metadata> {
   const profile = await getCompanyProfile();
@@ -31,9 +32,11 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <CompanyProfileProvider>
+          <AuthorizationProvider>
             <CurrencyProvider>
                 <AppLayout>{children}</AppLayout>
             </CurrencyProvider>
+          </AuthorizationProvider>
         </CompanyProfileProvider>
         <Toaster />
       </body>
