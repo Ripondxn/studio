@@ -61,7 +61,6 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { MoveTenantDialog } from './move-tenant-dialog';
 import { handleFileUpload } from '@/app/services/attachment-service';
 
-
 type Attachment = {
   id: number;
   name: string;
@@ -243,18 +242,20 @@ export default function TenantPage() {
   const onSave = async (data: Tenant) => {
     setIsSaving(true);
     try {
-      const attachmentsToSave = [...attachments];
-      for (let i = 0; i < attachmentsToSave.length; i++) {
-        const att = attachmentsToSave[i];
-        if (att.file && att.file instanceof File) {
-           const base64 = await fileToBase64(att.file);
-           const savedPath = await handleFileUpload(base64, att.file.name);
-           attachmentsToSave[i].file = savedPath;
-        }
-      }
-      
+      const processedAttachments = await Promise.all(
+        attachments.map(async (att) => {
+          if (att.file && att.file instanceof File) {
+            const base64 = await fileToBase64(att.file);
+            const savedPath = await handleFileUpload(base64, att.file.name);
+            return { ...att, file: savedPath, url: undefined }; // Use saved path
+          }
+          return { ...att, file: typeof att.file === 'string' ? att.file : null };
+        })
+      );
+
       const dataToSave = {
-        tenantData: { ...data, attachments: attachmentsToSave.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null, url: undefined })) },
+        tenantData: data,
+        attachments: processedAttachments,
       };
 
       const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
@@ -266,10 +267,10 @@ export default function TenantPage() {
         setIsEditing(false);
         setIsSubscriptionEditing(false);
         if (isNewRecord) {
-            router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
+          router.push(`/tenancy/tenants/add?code=${result.data.code}`);
         } else {
-            reset({...data, attachments: attachmentsToSave});
-            setAttachments(attachmentsToSave.map(a => ({...a, url: undefined})));
+          reset(data);
+          setAttachments(processedAttachments);
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -283,7 +284,7 @@ export default function TenantPage() {
     } finally {
       setIsSaving(false);
     }
-  }
+  };
 
   const handleCancelClick = () => {
      if (isNewRecord) {
@@ -334,89 +335,88 @@ export default function TenantPage() {
     return '#';
   };
 
-
   return (
     <div className="container mx-auto p-4 bg-background">
-     <FormProvider {...formMethods}>
-      <form onSubmit={handleSubmit(onSave)}>
-        <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-primary font-headline">
-            {pageTitle}
-            </h1>
-            <div className="flex items-center gap-2">
-                {!isEditing && !isNewRecord && getValues('contractId') && (
-                    <MoveTenantDialog
-                        contractId={getValues('contractId')!}
-                        currentLocation={{
-                            property: getValues('property') || 'N/A',
-                            unit: getValues('unitCode') || 'N/A',
-                            room: getValues('roomCode'),
-                        }}
-                    />
-                )}
-                {!isEditing && (
-                <Button type="button" onClick={handleEditClick}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                </Button>
-                )}
-                {isEditing && (
-                <>
-                    <Button type="submit" disabled={isSaving}>
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save Tenant
-                    </Button>
-                    <Button type="button" variant="ghost" onClick={handleCancelClick}>
-                    <X className="mr-2 h-4 w-4" /> Cancel
-                    </Button>
-                </>
-                )}
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={isNewRecord || isEditing}
-                    >
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
-                    </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the
-                        tenant "{getValues('name')}".
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                        onClick={handleDelete}
-                        className="bg-destructive hover:bg-destructive/90"
-                        >
-                        Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-                <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
-                    <X className="mr-2 h-4 w-4" /> Close
-                </Button>
-            </div>
-        </div>
+      <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold text-primary font-headline">
+          {pageTitle}
+          </h1>
+          <div className="flex items-center gap-2">
+              {!isEditing && !isNewRecord && getValues('contractId') && (
+                  <MoveTenantDialog
+                      contractId={getValues('contractId')!}
+                      currentLocation={{
+                          property: getValues('property') || 'N/A',
+                          unit: getValues('unitCode') || 'N/A',
+                          room: getValues('roomCode'),
+                      }}
+                  />
+              )}
+              {!isEditing && (
+              <Button type="button" onClick={handleEditClick}>
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+              )}
+              {isEditing && (
+              <>
+                  <Button type="button" onClick={handleSubmit(onSave)} disabled={isSaving}>
+                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Save
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={handleCancelClick}>
+                  <X className="mr-2 h-4 w-4" /> Cancel
+                  </Button>
+              </>
+              )}
+              <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                  <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={isNewRecord || isEditing}
+                  >
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
+                  </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the
+                      tenant "{getValues('name')}".
+                      </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-destructive hover:bg-destructive/90"
+                      >
+                      Delete
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+                  </AlertDialogContent>
+              </AlertDialog>
+              <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
+                  <X className="mr-2 h-4 w-4" /> Close
+              </Button>
+          </div>
+      </div>
       
-      <Tabs defaultValue="info">
-        <TabsList>
-            <TabsTrigger value="info">Tenant Information</TabsTrigger>
-            <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
-        </TabsList>
-        <TabsContent value="info">
-            <Card>
-                <CardHeader>
-                <CardTitle>Tenant Information</CardTitle>
-                <CardDescription>Fill in the details of the tenant.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
+      <FormProvider {...formMethods}>
+        <Tabs defaultValue="info">
+            <TabsList>
+                <TabsTrigger value="info">Tenant Information</TabsTrigger>
+                <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
+            </TabsList>
+            <TabsContent value="info">
+                <form onSubmit={handleSubmit(onSave)}>
+                <Card>
+                    <CardHeader>
+                    <CardTitle>Tenant Information</CardTitle>
+                    <CardDescription>Fill in the details of the tenant.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <FormField
                         control={control}
@@ -520,7 +520,7 @@ export default function TenantPage() {
                             )}
                         />
                     </div>
-                     <div className="mt-6 pt-6 border-t">
+                    <div className="mt-6 pt-6 border-t">
                         <CardTitle className="mb-4">Attachments</CardTitle>
                         <Table>
                             <TableHeader>
@@ -564,7 +564,7 @@ export default function TenantPage() {
                                                     {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                                 </Button>
                                             </div>
-                                            {item.file && (
+                                             {item.file && (
                                                 <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs mt-1 inline-block">
                                                     View
                                                 </a>
@@ -582,24 +582,24 @@ export default function TenantPage() {
                         <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                             <Plus className="mr-2 h-4 w-4"/> Add Attachment
                         </Button>
-                     </div>
-                </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="subscription">
-            <InvoiceList 
-                tenant={getValues()}
-                invoices={invoices}
-                isLoading={isLoadingInvoices}
-                onRefresh={() => fetchInvoices(getValues('code'))}
-                isSubscriptionEditing={isEditing}
-                setIsSubscriptionEditing={setIsEditing}
-                formControl={control}
-            />
-        </TabsContent>
-      </Tabs>
-      </form>
-    </FormProvider>
+                    </div>
+                    </CardContent>
+                </Card>
+                </form>
+            </TabsContent>
+            <TabsContent value="subscription">
+                <InvoiceList 
+                    tenant={getValues()}
+                    invoices={invoices}
+                    isLoading={isLoadingInvoices}
+                    onRefresh={() => fetchInvoices(getValues('code'))}
+                    isSubscriptionEditing={isEditing}
+                    setIsSubscriptionEditing={setIsEditing}
+                    formControl={control}
+                />
+            </TabsContent>
+        </Tabs>
+      </FormProvider>
     </div>
   );
 }
