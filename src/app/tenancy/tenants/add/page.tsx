@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -54,12 +55,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceList } from '../invoice/invoice-list';
 import { getInvoicesForCustomer } from '@/app/tenancy/customer/invoice/actions';
 import { type Invoice } from '../invoice/schema';
-import { PaymentReceiptList } from '@/app/tenancy/customer/payment-receipt-list';
 import { Switch } from '@/components/ui/switch';
 import { type Tenant, tenantSchema } from '../schema';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { MoveTenantDialog } from './move-tenant-dialog';
 import { handleFileUpload } from '@/app/services/attachment-service';
+import { Separator } from '@/components/ui/separator';
 
 type Attachment = {
   id: number;
@@ -91,6 +92,7 @@ const initialTenantData: Tenant = {
     subscriptionAmount: 0,
 };
 
+// Helper function to read a file as a Base64 string on the client
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -113,8 +115,8 @@ export default function TenantPage() {
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
-  const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
+  const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
 
   const formMethods = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
@@ -238,17 +240,12 @@ export default function TenantPage() {
     setIsEditing(true);
   }
 
-  const onSave = async (data: Tenant, isAttachmentSave = false, attachmentId?: number) => {
-    if (!isAttachmentSave) setIsSaving(true);
-    if (isAttachmentSave && attachmentId) setSavingAttachmentId(attachmentId);
-
+  const onSave = async (data: Tenant) => {
+    setIsSaving(true);
+    
     try {
-        const attachmentsToProcess = isAttachmentSave
-            ? attachments.filter(a => a.id === attachmentId)
-            : attachments;
-
         const processedAttachments = await Promise.all(
-            attachmentsToProcess.map(async (att) => {
+            attachments.map(async (att) => {
                 let fileData: string | null = null;
                  if (att.isLink) {
                     fileData = typeof att.file === 'string' ? att.file : null;
@@ -267,39 +264,25 @@ export default function TenantPage() {
                 }
             })
         );
-        
-        let finalAttachments = [...attachments];
-        if (isAttachmentSave && processedAttachments.length > 0) {
-            finalAttachments = attachments.map(att => {
-                const saved = processedAttachments.find(p => p.id === att.id);
-                return saved ? { ...att, file: saved.file } : att;
-            });
-             setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
-        }
-
 
         const dataToSave = {
             tenantData: data,
-            attachments: finalAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
+            attachments: processedAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
         };
 
         const result = await saveTenantData(dataToSave, isNewRecord, isAutoCode);
         if (result.success && result.data) {
             toast({
                 title: "Success",
-                description: isAttachmentSave ? `Attachment saved.` : `Tenant "${data.name}" saved successfully.`,
+                description: `Tenant "${data.name}" saved successfully.`,
             });
-            if (!isAttachmentSave) {
-                setIsEditing(false);
-                setIsSubscriptionEditing(false);
-            }
+            setIsEditing(false);
+            setIsSubscriptionEditing(false);
             if (isNewRecord) {
                 router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
             } else {
-                 reset(data);
-                 if (!isAttachmentSave) {
-                    setAttachments(finalAttachments.map(a => ({...a, url: undefined})));
-                 }
+                 form.reset(data);
+                 setAttachments(processedAttachments.map(a => ({...a, url: undefined})));
             }
         } else {
             throw new Error(result.error || 'An unknown error occurred');
@@ -311,14 +294,10 @@ export default function TenantPage() {
         description: (error as Error).message || "Failed to save data.",
       });
     } finally {
-        if (!isAttachmentSave) setIsSaving(false);
-        if (isAttachmentSave) setSavingAttachmentId(null);
+        setIsSaving(false);
     }
   }
 
-  const onSaveAttachment = (id: number) => {
-    handleSubmit((data) => onSave(data, true, id))();
-  };
 
   const handleCancelClick = () => {
      if (isNewRecord) {
@@ -360,224 +339,203 @@ export default function TenantPage() {
     if (item.isLink && typeof item.file === 'string') {
         return item.file;
     }
-    if (item.url) { 
+    if (item.url) { // This is for new, unsaved file uploads
         return item.url;
     }
-    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) {
+    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
+        // Note: gdrive links aren't directly viewable and would need a download route
         return item.file;
     }
     return '#';
   };
 
-
   return (
     <div className="container mx-auto p-4 bg-background">
-        <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-primary font-headline">
-            {pageTitle}
-            </h1>
-            <div className="flex items-center gap-2">
-                {!isEditing && !isNewRecord && getValues('contractId') && (
-                    <MoveTenantDialog
-                        contractId={getValues('contractId')!}
-                        currentLocation={{
-                            property: getValues('property') || 'N/A',
-                            unit: getValues('unitCode') || 'N/A',
-                            room: getValues('roomCode'),
-                        }}
-                    />
-                )}
-                {!isEditing && (
-                <Button type="button" onClick={handleEditClick}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                </Button>
-                )}
-                {isEditing && (
-                <>
-                    <Button type="button" onClick={handleSubmit(onSave)} disabled={isSaving}>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-primary font-headline">
+          {pageTitle}
+        </h1>
+        <div className="flex items-center gap-2">
+            {!isEditing && !isNewRecord && getValues('contractId') && (
+                <MoveTenantDialog
+                    contractId={getValues('contractId')!}
+                    currentLocation={{
+                        property: getValues('property') || 'N/A',
+                        unit: getValues('unitCode') || 'N/A',
+                        room: getValues('roomCode'),
+                    }}
+                />
+            )}
+            {!isEditing && (
+            <Button type="button" onClick={handleEditClick}>
+                <Pencil className="mr-2 h-4 w-4" /> Edit
+            </Button>
+            )}
+            {isEditing && (
+            <>
+                <Button type="button" onClick={handleSubmit(onSave)} disabled={isSaving}>
                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    Save Tenant
-                    </Button>
-                    <Button type="button" variant="ghost" onClick={handleCancelClick}>
-                    <X className="mr-2 h-4 w-4" /> Cancel
-                    </Button>
-                </>
-                )}
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        disabled={isNewRecord || isEditing}
-                    >
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
-                    </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the
-                        tenant "{getValues('name')}".
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                        onClick={handleDelete}
-                        className="bg-destructive hover:bg-destructive/90"
-                        >
-                        Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-                <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
-                    <X className="mr-2 h-4 w-4" /> Close
+                    Save
                 </Button>
-            </div>
+                <Button type="button" variant="ghost" onClick={handleCancelClick}>
+                <X className="mr-2 h-4 w-4" /> Cancel
+                </Button>
+            </>
+            )}
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={isNewRecord || isEditing}
+                >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete Tenant
+                </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    tenant "{getValues('name')}".
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive hover:bg-destructive/90"
+                    >
+                    Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <Button type="button" variant="outline" onClick={() => router.push('/tenancy/tenants')}>
+                <X className="mr-2 h-4 w-4" /> Close
+            </Button>
         </div>
+      </div>
       
+      <FormProvider {...formMethods}>
         <Tabs defaultValue="info">
             <TabsList>
                 <TabsTrigger value="info">Tenant Information</TabsTrigger>
-                <TabsTrigger value="subscription" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
-                <TabsTrigger value="attachments">Attachments</TabsTrigger>
+                <TabsTrigger value="invoices" disabled={isNewRecord}>Subscription & Invoices</TabsTrigger>
             </TabsList>
-             <TabsContent value="info">
-                <FormProvider {...formMethods}>
+            <TabsContent value="info">
                 <form onSubmit={handleSubmit(onSave)}>
-                <Card>
-                    <CardHeader>
-                    <CardTitle>Tenant Information</CardTitle>
-                    <CardDescription>Fill in the details of the tenant.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField
-                        control={control}
-                        name="code"
-                        render={({ field }) => (
-                            <FormItem>
-                            <Label htmlFor="code">Code</Label>
-                            <div className="flex items-end gap-2">
-                                    <FormControl>
-                                        <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
-                                    </FormControl>
-                                    <div className="flex items-center space-x-2 pt-6">
-                                        <Switch
-                                            id="auto-code-switch"
-                                            checked={isAutoCode}
-                                            onCheckedChange={setIsAutoCode}
-                                            disabled={!isNewRecord || !isEditing}
-                                        />
-                                        <Label htmlFor="auto-code-switch">Auto</Label>
-                                    </div>
-                            </div>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem className="md:col-span-2">
-                            <Label htmlFor="name">Name</Label>
-                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={control}
-                        name="mobile"
-                        render={({ field }) => (
-                            <FormItem>
-                            <Label htmlFor="mobile">Mobile No</Label>
-                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={control}
-                        name="email"
-                        render={({ field }) => (
-                            <FormItem>
-                            <Label htmlFor="email">Email</Label>
-                            <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={control}
-                        name="address"
-                        render={({ field }) => (
-                            <FormItem className="md:col-span-2">
-                            <Label htmlFor="address">Address</Label>
-                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={control}
-                        name="eid"
-                        render={({ field }) => (
-                            <FormItem>
-                            <Label htmlFor="eid">EID/Passport/Visa</Label>
-                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={control}
-                        name="occupation"
-                        render={({ field }) => (
-                            <FormItem>
-                            <Label htmlFor="occupation">Occupation</Label>
-                            <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
+                    <Card>
+                        <CardHeader>
+                        <CardTitle>Tenant Information</CardTitle>
+                        <CardDescription>Fill in the details of the tenant.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <FormField
                             control={control}
-                            name="contractNo"
+                            name="code"
                             render={({ field }) => (
-                            <FormItem>
-                                <Label htmlFor="contractNo">Associated Contract No</Label>
-                                <FormControl><Input {...field} disabled /></FormControl>
+                                <FormItem>
+                                <Label htmlFor="code">Code</Label>
+                                <div className="flex items-end gap-2">
+                                        <FormControl>
+                                            <Input {...field} disabled={isAutoCode || !isNewRecord || !isEditing} />
+                                        </FormControl>
+                                        <div className="flex items-center space-x-2 pt-6">
+                                            <Switch
+                                                id="auto-code-switch"
+                                                checked={isAutoCode}
+                                                onCheckedChange={setIsAutoCode}
+                                                disabled={!isNewRecord || !isEditing}
+                                            />
+                                            <Label htmlFor="auto-code-switch">Auto</Label>
+                                        </div>
+                                </div>
                                 <FormMessage />
-                            </FormItem>
+                                </FormItem>
                             )}
-                        />
-                    </div>
-                    </CardContent>
-                </Card>
-                </form>
-                 </FormProvider>
-            </TabsContent>
-            <TabsContent value="subscription">
-                 <FormProvider {...formMethods}>
-                    <InvoiceList 
-                        tenant={tenantData}
-                        invoices={invoices}
-                        isLoading={isLoadingInvoices}
-                        onRefresh={() => fetchInvoices(tenantCode)}
-                        isSubscriptionEditing={isEditing}
-                    />
-                 </FormProvider>
-            </TabsContent>
-            <TabsContent value="attachments">
-                <Card>
-                    <CardHeader>
+                            />
+                            <FormField
+                            control={control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem className="md:col-span-2">
+                                <Label htmlFor="name">Name</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={control}
+                            name="mobile"
+                            render={({ field }) => (
+                                <FormItem>
+                                <Label htmlFor="mobile">Mobile No</Label>
+                                    <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                <Label htmlFor="email">Email</Label>
+                                <FormControl><Input {...field} type="email" disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={control}
+                            name="address"
+                            render={({ field }) => (
+                                <FormItem className="md:col-span-2">
+                                <Label htmlFor="address">Address</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={control}
+                            name="eid"
+                            render={({ field }) => (
+                                <FormItem>
+                                <Label htmlFor="eid">EID/Passport/Visa</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={control}
+                            name="occupation"
+                            render={({ field }) => (
+                                <FormItem>
+                                <Label htmlFor="occupation">Occupation</Label>
+                                <FormControl><Input {...field} disabled={!isEditing} /></FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                                control={control}
+                                name="contractNo"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <Label htmlFor="contractNo">Associated Contract No</Label>
+                                    <FormControl><Input {...field} disabled /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+                        <Separator className="my-6" />
                         <CardTitle>Attachments</CardTitle>
-                    </CardHeader>
-                    <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -620,16 +578,13 @@ export default function TenantPage() {
                                                     {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                                 </Button>
                                             </div>
-                                            {item.file && (
-                                                <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs mt-1 inline-block">
-                                                    View
-                                                </a>
-                                            )}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
-                                                <Button size="icon" type="button" onClick={() => onSaveAttachment(item.id)} disabled={savingAttachmentId === item.id || !isEditing}>
-                                                    {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
+                                                <Button asChild variant="outline" size="icon" disabled={!item.file}>
+                                                    <a href={getViewLink(item)} target="_blank" rel="noopener noreferrer">
+                                                        <Eye className="h-4 w-4" />
+                                                    </a>
                                                 </Button>
                                                 <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                                     <Trash2 className="h-4 w-4" />
@@ -643,10 +598,21 @@ export default function TenantPage() {
                         <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addAttachmentRow} disabled={!isEditing}>
                             <Plus className="mr-2 h-4 w-4"/> Add Attachment
                         </Button>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </form>
+            </TabsContent>
+            <TabsContent value="invoices">
+                <InvoiceList 
+                    tenant={tenantData}
+                    invoices={invoices}
+                    isLoading={isLoadingInvoices}
+                    onRefresh={() => fetchInvoices(tenantCode)}
+                    isSubscriptionEditing={isEditing}
+                />
             </TabsContent>
         </Tabs>
+      </FormProvider>
     </div>
   );
 }
