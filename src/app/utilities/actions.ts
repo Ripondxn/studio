@@ -63,29 +63,37 @@ export async function saveUtilityAccount(
     data: Omit<UtilityAccount, 'id'|'totalPaid'> & { id?: string, billAmount?: number, billDate?: string, recordFirstBill?: boolean }, 
     currentUser: UserRole
 ) {
-    const validation = utilityAccountSchema.omit({ id: true, totalPaid: true }).safeParse(data);
+    const validationSchema = utilityAccountSchema.omit({ id: true, totalPaid: true }).extend({
+        billAmount: z.coerce.number().optional(),
+        billDate: z.string().optional(),
+        recordFirstBill: z.boolean().optional(),
+    });
+
+    const validation = validationSchema.safeParse(data);
     if (!validation.success) {
+        console.error("Validation Error:", validation.error.format());
         return { success: false, error: 'Invalid data format.' };
     }
 
     const allAccounts = await readAccounts();
+    const validatedData = validation.data;
     let savedAccount: UtilityAccount;
 
     if (data.id) { // Update
         const index = allAccounts.findIndex(a => a.id === data.id);
         if (index === -1) return { success: false, error: 'Account not found.' };
-        allAccounts[index] = { ...allAccounts[index], ...validation.data };
+        allAccounts[index] = { ...allAccounts[index], ...validatedData };
         savedAccount = allAccounts[index];
     } else { // Create
-        const newAccount: UtilityAccount = { ...validation.data, id: `UTIL-${Date.now()}` };
+        const newAccount: UtilityAccount = { ...validatedData, id: `UTIL-${Date.now()}` };
         allAccounts.push(newAccount);
         savedAccount = newAccount;
     }
     await writeAccounts(allAccounts);
 
     // If an initial bill is included, record it.
-    if (data.recordFirstBill && data.billAmount && data.billAmount > 0 && data.billDate) {
-        await recordBillPayment(savedAccount.id, data.billAmount, data.billDate, currentUser);
+    if (validatedData.recordFirstBill && validatedData.billAmount && validatedData.billAmount > 0 && validatedData.billDate) {
+        await recordBillPayment(savedAccount.id, validatedData.billAmount, validatedData.billDate, currentUser);
     }
 
     revalidatePath('/utilities');

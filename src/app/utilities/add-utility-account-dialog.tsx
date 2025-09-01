@@ -33,7 +33,7 @@ import type { UserRole } from '@/app/admin/user-roles/schema';
 
 const formSchema = utilityAccountSchema.omit({ id: true, totalPaid: true }).extend({
     recordFirstBill: z.boolean().optional(),
-    billAmount: z.number().optional(),
+    billAmount: z.coerce.number().optional(),
     billDate: z.string().optional(),
 });
 
@@ -63,7 +63,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      recordFirstBill: false
+      recordFirstBill: false,
     }
   });
 
@@ -173,7 +173,7 @@ export function AddUtilityAccountDialog({ isOpen, setIsOpen, account, onSuccess,
                     <div className="space-y-2">
                         <Label>Property</Label>
                         <Controller name="propertyCode" control={control} render={({ field }) => (
-                            <Combobox options={lookups.properties} value={field.value} onSelect={field.onChange} placeholder="Select Property" disabled={!!propertyCode} />
+                            <Combobox options={lookups.properties} value={field.value || ''} onSelect={field.onChange} placeholder="Select Property" disabled={!!propertyCode} />
                         )} />
                         {errors.propertyCode && <p className="text-destructive text-xs mt-1">{errors.propertyCode.message}</p>}
                     </div>
