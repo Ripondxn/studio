@@ -51,7 +51,6 @@ import {
   KeyRound,
   Eraser,
   ScanLine,
-  Database,
   Lightbulb,
   CarFront,
 } from 'lucide-react';

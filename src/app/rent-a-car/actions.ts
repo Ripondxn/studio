@@ -36,7 +36,7 @@ async function getNextContractNumber(type: 'Hired' | 'Rented') {
     const prefix = type === 'Hired' ? 'RAC-H' : 'RAC-R';
     let maxNum = 0;
     allRentals.forEach(r => {
-        const match = r.contractNo.match(new RegExp(`^${prefix}-(\\d+)$`));
+        const match = r.contractNo.match(new RegExp(`^${prefix}-(\d+)$`));
         if (match) {
             const num = parseInt(match[1], 10);
             if (num > maxNum) {

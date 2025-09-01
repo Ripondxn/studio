@@ -147,4 +147,3 @@ export const columns = ({ onEdit, onUpdate }: { onEdit: (rental: Rental) => void
         cell: ({ row }) => <ActionsCell row={row} onEdit={onEdit} onUpdate={onUpdate} />,
     }
 ];
-
