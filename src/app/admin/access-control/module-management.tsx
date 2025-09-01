@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, CarFront, Briefcase, Users, Package, Home, Warehouse, Wrench, Route, ScanLine, Lightbulb, Banknote, UserSquare, FileSignature, Car, Settings } from 'lucide-react';
 import { type ModuleSettings } from './schema';
 import { saveModuleSettings } from './module-actions';
+import { useRouter } from 'next/navigation';
 
 
 const moduleIcons: { [key: string]: React.ReactNode } = {
@@ -54,6 +55,7 @@ export function ModuleManagement({ initialSettings }: { initialSettings: ModuleS
     const [settings, setSettings] = React.useState(initialSettings);
     const [isSaving, setIsSaving] = React.useState(false);
     const { toast } = useToast();
+    const router = useRouter();
 
     const handleToggle = (moduleId: string, checked: boolean) => {
         setSettings(prev => ({
@@ -66,9 +68,9 @@ export function ModuleManagement({ initialSettings }: { initialSettings: ModuleS
         setIsSaving(true);
         const result = await saveModuleSettings(settings);
         if (result.success) {
-            toast({ title: "Settings Saved", description: "Module visibility settings have been updated."});
-            // Optional: force a reload to see sidebar changes immediately
-            window.location.reload();
+            toast({ title: "Settings Saved", description: "Module visibility settings have been updated. The sidebar will update shortly."});
+            // Next.js will revalidate the layout, no need for a hard refresh
+            router.refresh();
         } else {
              toast({ variant: 'destructive', title: "Error", description: result.error });
         }
