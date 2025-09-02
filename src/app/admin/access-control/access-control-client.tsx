@@ -25,7 +25,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { ChevronDown, Loader2, Save, FileText, FileSpreadsheet } from 'lucide-react';
 import { type FeaturePermission } from './permissions';
-import { savePermissions } from './actions';
+import { savePermissions, type UserOverride } from './actions';
+import { type UserRole } from '../user-roles/schema';
 import { useToast } from '@/hooks/use-toast';
 import React from 'react';
 import { cn } from '@/lib/utils';
@@ -40,9 +41,11 @@ declare module 'jspdf' {
 interface AccessControlClientProps {
   initialPermissions: FeaturePermission[];
   roles: string[];
+  users: UserRole[];
+  userOverrides: UserOverride[];
 }
 
-export function AccessControlClient({ initialPermissions, roles }: AccessControlClientProps) {
+export function AccessControlClient({ initialPermissions, roles, users, userOverrides }: AccessControlClientProps) {
   const [permissions, setPermissions] = useState<FeaturePermission[]>(initialPermissions);
   const [isSaving, setIsSaving] = useState(false);
   const [openFeatures, setOpenFeatures] = useState<Record<string, boolean>>(() => {
@@ -105,11 +108,35 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
         styles: { fontSize: 8 },
         headStyles: { fillColor: [42, 63, 84] }
     });
-    doc.save('role_permissions.pdf');
+
+    if (userOverrides.length > 0) {
+        const overrideHead = [['User', 'Allowed Modules']];
+        const overrideBody = userOverrides.map(override => {
+            const user = users.find(u => u.email === override.email);
+            return [
+                user ? `${user.name} (${user.email})` : override.email,
+                override.allowedModules.join(', ')
+            ];
+        });
+        doc.addPage();
+        doc.text("User Permission Overrides", 14, 10);
+        doc.autoTable({
+            head: overrideHead,
+            body: overrideBody,
+            startY: 15,
+            theme: 'grid',
+            headStyles: { fillColor: [42, 63, 84] }
+        });
+    }
+    
+    doc.save('access_control_report.pdf');
   };
 
   const handleExportExcel = () => {
-    const dataToExport = permissions.flatMap(feature => 
+    const wb = XLSX.utils.book_new();
+
+    // Role Permissions Sheet
+    const roleDataToExport = permissions.flatMap(feature => 
         feature.actions.map(action => {
             const row: {[key: string]: string} = {
                 'Feature': feature.feature,
@@ -121,10 +148,24 @@ export function AccessControlClient({ initialPermissions, roles }: AccessControl
             return row;
         })
     );
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Permissions');
-    XLSX.writeFile(wb, 'role_permissions.xlsx');
+    const wsRoles = XLSX.utils.json_to_sheet(roleDataToExport);
+    XLSX.utils.book_append_sheet(wb, wsRoles, 'Role Permissions');
+
+    // User Overrides Sheet
+    if (userOverrides.length > 0) {
+        const overrideDataToExport = userOverrides.map(override => {
+            const user = users.find(u => u.email === override.email);
+            return {
+                'User Name': user?.name || override.email,
+                'User Email': override.email,
+                'Allowed Modules': override.allowedModules.join(', ')
+            };
+        });
+        const wsOverrides = XLSX.utils.json_to_sheet(overrideDataToExport);
+        XLSX.utils.book_append_sheet(wb, wsOverrides, 'User Overrides');
+    }
+
+    XLSX.writeFile(wb, 'access_control_report.xlsx');
   };
 
   return (

@@ -51,8 +51,11 @@ export default async function AccessControlPage() {
         <AccessControlClient
             initialPermissions={permissions}
             roles={roles}
+            users={users}
+            userOverrides={userOverrides}
         />
       </Card>
     </div>
   );
 }
+
