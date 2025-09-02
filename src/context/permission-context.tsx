@@ -17,6 +17,29 @@ interface AuthorizationContextType {
 
 const AuthorizationContext = createContext<AuthorizationContextType | undefined>(undefined);
 
+const featureToModuleMap: Record<string, string> = {
+  'Properties': 'lease',
+  'Units': 'lease',
+  'Landlords': 'lease',
+  'Lease Contracts': 'lease',
+  'Tenants': 'tenant',
+  'Customers': 'customer',
+  'Rent-A-Car': 'rent-a-car',
+  'Car Sales': 'car-sales',
+  'Finance': 'finance',
+  'Products & Services': 'products',
+  'Vaults & Stores': 'stores',
+  'Asset Management': 'asset-management',
+  'Maintenance': 'maintenance',
+  'Project Management': 'project-management',
+  'Workflow': 'workflow',
+  'Data Processing': 'data-processing',
+  'Utilities': 'utilities',
+  'User Management': 'settings',
+  'Settings': 'settings',
+};
+
+
 export const AuthorizationProvider = ({ children }: { children: ReactNode }) => {
     const [permissions, setPermissions] = useState<FeaturePermission[]>([]);
     const [moduleSettings, setModuleSettings] = useState<ModuleSettings>({});
@@ -25,6 +48,7 @@ export const AuthorizationProvider = ({ children }: { children: ReactNode }) => 
 
     useEffect(() => {
         const loadPermissions = async () => {
+            setIsLoading(true);
             try {
                 const storedProfile = sessionStorage.getItem('userProfile');
                 if (storedProfile) {
@@ -63,27 +87,46 @@ export const AuthorizationProvider = ({ children }: { children: ReactNode }) => 
     }, [permissions, userRole, isLoading]);
     
     const isModuleEnabled = useCallback((moduleId: string): boolean => {
-        if(isLoading) return false;
-        if(userRole === 'Super Admin' || userRole === 'Developer') return true;
-        return moduleSettings[moduleId]?.enabled ?? true;
-    }, [moduleSettings, isLoading, userRole]);
+        if (isLoading) return false;
+        if (userRole === 'Super Admin' || userRole === 'Developer') return true;
+
+        const isGloballyEnabled = moduleSettings[moduleId]?.enabled ?? false;
+        if (!isGloballyEnabled) {
+            return false;
+        }
+
+        // Find all features associated with this module
+        const featuresInModule = Object.keys(featureToModuleMap).filter(
+            feature => featureToModuleMap[feature] === moduleId
+        );
+        
+        if (featuresInModule.length === 0) {
+            return true; // No specific permissions tied, so allow if globally enabled
+        }
+
+        // Check if the user has permission for at least one action in any of the module's features
+        return featuresInModule.some(featureName => {
+            const featurePermission = permissions.find(p => p.feature === featureName);
+            if (!featurePermission) return false;
+            return featurePermission.actions.some(action => 
+                action.allowedRoles.includes(userRole!)
+            );
+        });
+
+    }, [moduleSettings, permissions, userRole, isLoading]);
 
     const value = { can, isModuleEnabled, isLoading, userRole };
-
-    if (isLoading) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                    <span>Loading Permissions...</span>
-                </div>
-            </div>
-        );
-    }
     
     return (
         <AuthorizationContext.Provider value={value}>
-            {children}
+            {isLoading ? (
+                 <div className="flex h-screen w-full items-center justify-center">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                        <span>Loading Permissions...</span>
+                    </div>
+                </div>
+            ) : children}
         </AuthorizationContext.Provider>
     );
 };

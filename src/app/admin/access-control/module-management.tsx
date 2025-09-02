@@ -51,6 +51,7 @@ const moduleDescriptions: { [key: string]: string } = {
     'workflow': 'Manage document approval workflows.',
     'data-processing': 'Extract data from uploaded documents.',
     'utilities': 'Manage utility accounts and bill payments.',
+    'settings': 'Manage global application settings.'
 };
 
 
@@ -73,7 +74,8 @@ export function ModuleManagement({ initialSettings }: { initialSettings: ModuleS
         const result = await saveModuleSettings(settings);
         if (result.success) {
             toast({ title: "Settings Saved", description: "Module visibility settings have been updated. The sidebar will update shortly."});
-            router.refresh();
+            // Hard reload to make sure context is re-evaluated everywhere
+            window.location.reload();
         } else {
              toast({ variant: 'destructive', title: "Error", description: result.error });
         }
@@ -105,7 +107,9 @@ export function ModuleManagement({ initialSettings }: { initialSettings: ModuleS
         <Card>
             <CardHeader>
                 <CardTitle>Module Management</CardTitle>
-                <CardDescription>Enable or disable major application modules. This will hide the modules from the sidebar for all users.</CardDescription>
+                <CardDescription>
+                  Globally enable or disable major application modules. Disabling a module here will hide it from the sidebar and block access for ALL users, regardless of their role.
+                </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                  {Object.values(settings).map(module => (

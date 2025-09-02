@@ -64,9 +64,6 @@ import { checkLicenseStatus, type LicenseStatus } from '@/lib/license';
 import { TrialExpiredPage } from '@/components/trial-expired-page';
 import { Loader2 } from 'lucide-react';
 import { AuthorizationProvider, useAuthorization } from '@/context/permission-context';
-import { getModuleSettings } from '@/app/admin/access-control/module-actions';
-import { type ModuleSettings } from '@/app/admin/access-control/schema';
-
 
 // A type for the user profile stored in session storage
 type UserProfile = Omit<UserRole, 'password' | 'lastLogin' | 'status'>;
@@ -236,7 +233,7 @@ const navLinks = [
 ];
 
 
-function SidebarNav({ isCollapsed, pathname, moduleSettings }: { isCollapsed: boolean, pathname: string, moduleSettings: ModuleSettings }) {
+function SidebarNav({ isCollapsed, pathname }: { isCollapsed: boolean, pathname: string }) {
     
     const { isModuleEnabled } = useAuthorization();
 
@@ -317,12 +314,10 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
   const [licenseStatus, setLicenseStatus] = React.useState<LicenseStatus | null>(null);
-  const [moduleSettings, setModuleSettings] = React.useState<ModuleSettings | null>(null);
-  const [isLoadingSettings, setIsLoadingSettings] = React.useState(true);
-
   const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { profile: companyProfile } = useCompanyProfile();
+  const { isLoading: isLoadingPermissions } = useAuthorization();
 
 
   React.useEffect(() => {
@@ -333,29 +328,20 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     async function checkUserAndLicense() {
-        if (pathname === '/login' || pathname.startsWith('/pay')) {
-            setIsLoadingSettings(false);
-            return;
-        };
+        if (pathname === '/login' || pathname.startsWith('/pay')) return;
 
         try {
           const storedProfile = sessionStorage.getItem('userProfile');
           if (storedProfile) {
             setUserProfile(JSON.parse(storedProfile));
-             const [status, modules] = await Promise.all([
-                 checkLicenseStatus(),
-                 getModuleSettings()
-             ]);
+             const status = await checkLicenseStatus()
              setLicenseStatus(status);
-             setModuleSettings(modules);
           } else {
             router.push('/login');
           }
         } catch (error) {
           console.error('Initialization Error:', error);
           router.push('/login');
-        } finally {
-            setIsLoadingSettings(false);
         }
     }
     checkUserAndLicense();
@@ -367,11 +353,11 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile || isLoadingSettings) {
+  if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile || isLoadingPermissions) {
     return <>{children}</>;
   }
 
-  if (!licenseStatus || !moduleSettings) {
+  if (!licenseStatus) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -402,7 +388,7 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
                     </Button>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                    <SidebarNav isCollapsed={isCollapsed} pathname={pathname} moduleSettings={moduleSettings}/>
+                    <SidebarNav isCollapsed={isCollapsed} pathname={pathname} />
                 </div>
             </div>
             <div className="flex flex-col">

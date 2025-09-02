@@ -15,7 +15,7 @@ export default async function AccessControlPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold font-headline">Access Control Management</h1>
         <p className="text-muted-foreground">
-          Define which user roles can access specific features and perform key actions across the application.
+          Control which user roles can access specific application features and modules.
         </p>
       </div>
       
