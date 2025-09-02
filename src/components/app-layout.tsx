@@ -237,8 +237,9 @@ const navLinks = [
 
 
 function SidebarNav({ isCollapsed, pathname, moduleSettings }: { isCollapsed: boolean, pathname: string, moduleSettings: ModuleSettings }) {
-    const { isModuleEnabled } = useAuthorization();
     
+    const { isModuleEnabled } = useAuthorization();
+
     const visibleNavLinks = navLinks.filter(link => {
         if (!link.id) return true;
         return isModuleEnabled(link.id);
@@ -311,7 +312,7 @@ const TrialBanner = ({ licenseStatus }: { licenseStatus: LicenseStatus }) => {
     )
 }
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+function MainAppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
@@ -383,7 +384,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
   
   return (
-    <AuthorizationProvider>
         <div className="grid min-h-screen w-full md:grid-cols-[auto_1fr]">
             <div data-collapsed={isCollapsed} className="hidden border-r bg-sidebar md:flex md:flex-col group transition-[width] duration-300 ease-in-out">
                 <div className="flex h-16 items-center justify-between px-4">
@@ -468,6 +468,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </main>
             </div>
         </div>
-    </AuthorizationProvider>
   );
+}
+
+
+export function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthorizationProvider>
+        <MainAppLayout>{children}</MainAppLayout>
+    </AuthorizationProvider>
+  )
 }
