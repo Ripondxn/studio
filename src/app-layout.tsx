@@ -150,6 +150,8 @@ const navLinks = [
         icon: <ScanLine />,
         subItems: [
             { href: '/document-processor', label: 'Document Processor' },
+            { href: '/data-processing/single-data-extractor', label: 'Single Data Extractor' },
+            { href: '/data-processing/batch-data-extractor', label: 'Batch Data Extractor' },
         ]
     },
      {
