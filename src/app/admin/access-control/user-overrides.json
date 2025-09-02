@@ -1,9 +1,10 @@
-
 [
   {
     "email": "admin@admin.com",
     "allowedModules": [
-      "stores"
+      "stores",
+      "tenant",
+      "lease"
     ]
   }
 ]
