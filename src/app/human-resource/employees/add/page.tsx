@@ -383,7 +383,18 @@ export default function EmployeeAddPage() {
                       render={({ field }) => (
                         <FormItem>
                            <Label>Employee ID</Label>
-                            <FormControl><Input {...field} disabled /></FormControl>
+                            <div className="flex items-end gap-2">
+                                <FormControl><Input {...field} disabled={isAutoCode || !isEditing} /></FormControl>
+                                <div className="flex items-center space-x-2 pb-1">
+                                    <Switch
+                                        id="auto-code-switch"
+                                        checked={isAutoCode}
+                                        onCheckedChange={setIsAutoCode}
+                                        disabled={!isNewRecord || !isEditing}
+                                    />
+                                    <Label htmlFor="auto-code-switch">Auto</Label>
+                                </div>
+                            </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -535,7 +546,7 @@ export default function EmployeeAddPage() {
                            <div className="grid grid-cols-3 gap-4">
                                 <FormField control={control} name="salaryScale.grade" render={({field}) => (<FormItem><Label>Grade</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
                                 <FormField control={control} name="salaryScale.level" render={({field}) => (<FormItem><Label>Level</Label><FormControl><Input {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
-                                <FormField control={control} name="salaryScale.amount" render={({field}) => (<FormItem><Label>Basic Salary</Label><FormControl><Input type="number" {...field} disabled={!isEditing} /></FormControl></FormItem>)} />
+                                <FormField control={control} name="salaryScale.amount" render={({field}) => (<FormItem><Label>Basic Salary</Label><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} disabled={!isEditing} /></FormControl></FormItem>)} />
                            </div>
                         </div>
                     </CardContent>
@@ -616,4 +627,3 @@ export default function EmployeeAddPage() {
     </div>
   );
 }
-
