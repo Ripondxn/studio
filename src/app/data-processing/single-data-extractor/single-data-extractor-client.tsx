@@ -4,7 +4,7 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FileUp, Loader2, X, AlertCircle } from 'lucide-react';
-import { extractDataFromDocument } from '@/app/document-processor/actions';
+import { extractDataFromDocument } from '@/app/data-processing/actions';
 import { DataExtractorResults } from './data-extractor-results';
 import { Button } from '@/components/ui/button';
 

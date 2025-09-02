@@ -1,42 +1,13 @@
 
-
 'use server';
 
-import { processDocument, type ProcessDocumentInput } from '@/ai/flows/process-document-flow';
-import { getAllVendors } from '@/app/vendors/actions';
-import { getAllTenants } from '@/app/tenancy/tenants/actions';
-import { getAllCustomers } from '@/app/tenancy/customer/actions';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { saveBill, getNextBillNumber as getNextVendorBillNumber } from '../vendors/bill/actions';
 import { saveInvoice } from '../tenancy/customer/invoice/actions';
 import { type UserRole } from '../admin/user-roles/schema';
 import { addPayment } from '../finance/payment/actions';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-
-export async function extractDataFromDocument(input: ProcessDocumentInput) {
-  try {
-    const result = await processDocument(input);
-    return { success: true, data: result };
-  } catch (error) {
-    console.error('Error processing document:', error);
-    return { success: false, error: 'Failed to process document with AI.' };
-  }
-}
-
-export async function getPartyLookups() {
-    const [vendors, tenants, customers] = await Promise.all([
-        getAllVendors(),
-        getAllTenants(),
-        getAllCustomers(),
-    ]);
-
-    return {
-        vendors: vendors.map((v: any) => ({ value: v.code, label: v.name })),
-        tenants: tenants.map((t: any) => ({ value: t.code, label: t.name })),
-        customers: customers.map((c: any) => ({ value: c.code, label: c.name })),
-    };
-}
+import { getLookups as getPartyLookups } from '@/app/lookups/actions';
 
 async function readVendors() {
     try {
@@ -51,6 +22,8 @@ async function readVendors() {
         throw error;
     }
 }
+
+export { getPartyLookups };
 
 
 export async function createBillFromDocument(data: any, isAutoBillNo: boolean, currentUser: UserRole) {
@@ -93,6 +66,7 @@ export async function createBillFromDocument(data: any, isAutoBillNo: boolean, c
             property: savedBill.property,
             unitCode: savedBill.unitCode,
             roomCode: savedBill.roomCode,
+            utilityAccountId: savedBill.utilityAccountId,
              approvalHistory: [{
                 action: 'Created & Auto-Posted via Document Processor',
                 actorId: currentUser.email,

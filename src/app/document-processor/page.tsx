@@ -4,11 +4,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FileUp, Loader2, X, AlertCircle } from 'lucide-react';
-import { extractDataFromDocument, getPartyLookups } from './actions';
+import { extractDataFromDocument } from '@/app/data-processing/actions';
 import { type ProcessedDocument } from '@/ai/flows/process-document-flow';
 import { DocumentProcessorForm } from './document-processor-form';
 import { type UserRole } from '../admin/user-roles/schema';
 import { Button } from '@/components/ui/button';
+import { getPartyLookups } from './actions';
 
 type PartyLookups = {
     vendors: { value: string, label: string }[];
@@ -88,7 +89,7 @@ export default function DocumentProcessorPage() {
     <div className="container mx-auto py-10">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold font-headline">Document Processor</h1>
-        <p className="text-muted-foreground">Upload an invoice, receipt, or bill to automatically extract the data.</p>
+        <p className="text-muted-foreground">Upload an invoice, receipt, or bill to automatically extract data and create a financial record.</p>
       </div>
       
       {!filePreview && (
