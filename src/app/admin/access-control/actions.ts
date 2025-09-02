@@ -11,6 +11,7 @@ import { type ModuleSettings } from './schema';
 const permissionsFilePath = path.join(process.cwd(), 'src/app/admin/access-control/permissions.json');
 const usersFilePath = path.join(process.cwd(), 'src/app/admin/user-roles/users.json');
 const moduleSettingsFilePath = path.join(process.cwd(), 'src/app/admin/access-control/module-settings.json');
+const userOverridesFilePath = path.join(process.cwd(), 'src/app/admin/access-control/user-overrides.json');
 
 async function readData(filePath: string) {
     try {
@@ -70,13 +71,35 @@ export async function getRoles(): Promise<string[]> {
     }
 }
 
+export type UserOverride = {
+    email: string;
+    allowedModules: string[];
+}
+
+export async function getUserOverrides(): Promise<UserOverride[]> {
+    return (await readData(userOverridesFilePath)) as UserOverride[];
+}
+
+export async function saveUserOverrides(overrides: UserOverride[]) {
+     try {
+        await fs.writeFile(userOverridesFilePath, JSON.stringify(overrides, null, 2), 'utf-8');
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to save user overrides:', error);
+        return { success: false, error: 'Failed to save user overrides.' };
+    }
+}
+
+
 export async function getCombinedAccessControlData() {
     try {
-        const [permissions, moduleSettings] = await Promise.all([
+        const [permissions, moduleSettings, userOverrides] = await Promise.all([
             getPermissions(),
-            readData(moduleSettingsFilePath) as Promise<ModuleSettings>
+            readData(moduleSettingsFilePath) as Promise<ModuleSettings>,
+            getUserOverrides()
         ]);
-        return { success: true, permissions, moduleSettings };
+        return { success: true, permissions, moduleSettings, userOverrides };
     } catch(error) {
         return { success: false, error: (error as Error).message };
     }

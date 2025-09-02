@@ -1,14 +1,18 @@
 
-import { getPermissions, getRoles } from './actions';
+import { getPermissions, getRoles, getUserOverrides } from './actions';
 import { AccessControlClient } from './access-control-client';
 import { getModuleSettings } from './module-actions';
 import { ModuleManagement } from './module-management';
+import { UserPermissionOverrides } from './user-permission-overrides';
+import { getUsers } from '../user-roles/actions';
 
 
 export default async function AccessControlPage() {
   const permissions = await getPermissions();
   const roles = await getRoles();
   const moduleSettings = await getModuleSettings();
+  const users = await getUsers();
+  const userOverrides = await getUserOverrides();
 
   return (
     <div className="container mx-auto py-10 space-y-8">
@@ -20,6 +24,12 @@ export default async function AccessControlPage() {
       </div>
       
       <ModuleManagement initialSettings={moduleSettings} />
+      
+      <UserPermissionOverrides 
+        initialUsers={users}
+        initialModules={moduleSettings}
+        initialOverrides={userOverrides}
+      />
       
       <AccessControlClient
         initialPermissions={permissions}

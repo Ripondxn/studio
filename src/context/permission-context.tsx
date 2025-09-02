@@ -6,6 +6,7 @@ import { type UserRole } from '@/app/admin/user-roles/schema';
 import { type FeaturePermission } from '@/app/admin/access-control/permissions';
 import { getCombinedAccessControlData } from '@/app/admin/access-control/actions';
 import { type ModuleSettings } from '@/app/admin/access-control/schema';
+import { type UserOverride } from '@/app/admin/access-control/actions';
 import { Loader2 } from 'lucide-react';
 
 interface AuthorizationContextType {
@@ -13,6 +14,7 @@ interface AuthorizationContextType {
   isModuleEnabled: (moduleId: string) => boolean;
   isLoading: boolean;
   userRole: UserRole['role'] | null;
+  userEmail: string | null;
 }
 
 const AuthorizationContext = createContext<AuthorizationContextType | undefined>(undefined);
@@ -43,7 +45,9 @@ const featureToModuleMap: Record<string, string> = {
 export const AuthorizationProvider = ({ children }: { children: ReactNode }) => {
     const [permissions, setPermissions] = useState<FeaturePermission[]>([]);
     const [moduleSettings, setModuleSettings] = useState<ModuleSettings>({});
+    const [userOverrides, setUserOverrides] = useState<UserOverride[]>([]);
     const [userRole, setUserRole] = useState<UserRole['role'] | null>(null);
+    const [userEmail, setUserEmail] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -54,12 +58,14 @@ export const AuthorizationProvider = ({ children }: { children: ReactNode }) => 
                 if (storedProfile) {
                     const profile = JSON.parse(storedProfile);
                     setUserRole(profile.role);
+                    setUserEmail(profile.email);
                 }
                 
                 const accessData = await getCombinedAccessControlData();
                 if (accessData.success) {
                     setPermissions(accessData.permissions || []);
                     setModuleSettings(accessData.moduleSettings || {});
+                    setUserOverrides(accessData.userOverrides || []);
                 } else {
                      console.error("Failed to load access control data:", accessData.error);
                 }
@@ -88,23 +94,31 @@ export const AuthorizationProvider = ({ children }: { children: ReactNode }) => 
     
     const isModuleEnabled = useCallback((moduleId: string): boolean => {
         if (isLoading) return false;
+        
+        // Super Admin and Developer see all modules
         if (userRole === 'Super Admin' || userRole === 'Developer') return true;
+        if (!userRole || !userEmail) return false;
 
+        // Check for user-specific overrides first
+        const userOverride = userOverrides.find(o => o.email === userEmail);
+        if (userOverride) {
+            return userOverride.allowedModules.includes(moduleId);
+        }
+
+        // If no override, fall back to role-based permissions
         const isGloballyEnabled = moduleSettings[moduleId]?.enabled ?? false;
         if (!isGloballyEnabled) {
             return false;
         }
 
-        // Find all features associated with this module
         const featuresInModule = Object.keys(featureToModuleMap).filter(
             feature => featureToModuleMap[feature] === moduleId
         );
         
         if (featuresInModule.length === 0) {
-            return true; // No specific permissions tied, so allow if globally enabled
+            return true;
         }
 
-        // Check if the user has permission for at least one action in any of the module's features
         return featuresInModule.some(featureName => {
             const featurePermission = permissions.find(p => p.feature === featureName);
             if (!featurePermission) return false;
@@ -113,9 +127,9 @@ export const AuthorizationProvider = ({ children }: { children: ReactNode }) => 
             );
         });
 
-    }, [moduleSettings, permissions, userRole, isLoading]);
+    }, [moduleSettings, permissions, userRole, userEmail, userOverrides, isLoading]);
 
-    const value = { can, isModuleEnabled, isLoading, userRole };
+    const value = { can, isModuleEnabled, isLoading, userRole, userEmail };
     
     return (
         <AuthorizationContext.Provider value={value}>

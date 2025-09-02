@@ -1,0 +1,9 @@
+
+[
+  {
+    "email": "tanvir@example.com",
+    "allowedModules": [
+      "stores"
+    ]
+  }
+]
