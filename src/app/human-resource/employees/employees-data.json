@@ -1,2 +1,41 @@
-
-[]
+[
+  {
+    "employeeId": "AA-788",
+    "name": "Md Ripon Ahmed",
+    "dateOfBirth": "1983-05-25",
+    "nationalId": "",
+    "nationalIdExpiry": "",
+    "passportNo": "",
+    "passportExpiry": "",
+    "visaDetails": {
+      "number": "",
+      "type": "",
+      "expiryDate": ""
+    },
+    "medicalCard": {
+      "number": "",
+      "provider": "",
+      "expiryDate": ""
+    },
+    "insuranceDetails": {
+      "policyNumber": "",
+      "provider": "",
+      "expiryDate": "",
+      "coverageDetails": ""
+    },
+    "profession": "",
+    "department": "",
+    "joiningDate": "2025-04-05",
+    "mobile": "0509231340",
+    "email": "ripondxn@gmail.com",
+    "address": "Village : Rahut Hati , Post office : Hasnabad\nPolice Station : Nababgonj",
+    "salaryScale": {
+      "grade": "",
+      "level": "",
+      "amount": 0
+    },
+    "attachments": [],
+    "photo": null,
+    "id": "EMP-1756786763528"
+  }
+]
