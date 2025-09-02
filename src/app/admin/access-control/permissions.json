@@ -1,3 +1,4 @@
+
 [
   {
     "feature": "Properties",
@@ -10,8 +11,7 @@
           "Super Admin",
           "Admin",
           "Property Manager",
-          "Accountant",
-          "User"
+          "Accountant"
         ]
       },
       {
@@ -43,8 +43,7 @@
           "Super Admin",
           "Admin",
           "Property Manager",
-          "Accountant",
-          "User"
+          "Accountant"
         ]
       },
       {
@@ -74,8 +73,7 @@
         "description": "View rental agreements",
         "allowedRoles": [
           "Super Admin",
-          "Admin",
-          "User"
+          "Admin"
         ]
       },
       {
@@ -97,8 +95,7 @@
         "description": "View vehicle inventory and sales",
         "allowedRoles": [
           "Super Admin",
-          "Admin",
-          "User"
+          "Admin"
         ]
       },
       {
@@ -183,7 +180,8 @@
         "description": "Add/Edit/Delete stores and manage stock transactions",
         "allowedRoles": [
           "Super Admin",
-          "Admin"
+          "Admin",
+          "User"
         ]
       }
     ]
@@ -259,8 +257,7 @@
         "description": "View maintenance tickets",
         "allowedRoles": [
           "Super Admin",
-          "Admin",
-          "User"
+          "Admin"
         ]
       },
       {
@@ -321,8 +318,7 @@
         "description": "Access document processing and data extraction features",
         "allowedRoles": [
           "Super Admin",
-          "Admin",
-          "User"
+          "Admin"
         ]
       }
     ]
@@ -337,8 +333,7 @@
         "allowedRoles": [
           "Super Admin",
           "Admin",
-          "Accountant",
-          "User"
+          "Accountant"
         ]
       },
       {
@@ -394,8 +389,7 @@
           "Super Admin",
           "Admin",
           "Property Manager",
-          "Accountant",
-          "User"
+          "Accountant"
         ]
       },
       {
@@ -427,8 +421,7 @@
           "Super Admin",
           "Admin",
           "Property Manager",
-          "Accountant",
-          "User"
+          "Accountant"
         ]
       },
       {
@@ -459,8 +452,7 @@
         "allowedRoles": [
           "Super Admin",
           "Admin",
-          "Accountant",
-          "User"
+          "Accountant"
         ]
       },
       {
@@ -615,3 +607,5 @@
     ]
   }
 ]
+
+    
