@@ -2,9 +2,14 @@
   {
     "email": "admin@admin.com",
     "allowedModules": [
-      "stores",
-      "tenant",
-      "lease"
+      "stores"
+    ]
+  },
+  {
+    "email": "sagar@gmail.com",
+    "allowedModules": [
+      "lease",
+      "tenant"
     ]
   }
 ]
