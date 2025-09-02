@@ -527,7 +527,8 @@
         "description": "View user list",
         "allowedRoles": [
           "Super Admin",
-          "Admin"
+          "Admin",
+          "User"
         ]
       },
       {
