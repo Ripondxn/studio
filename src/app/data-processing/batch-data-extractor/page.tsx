@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useCallback } from 'react';
@@ -42,41 +43,49 @@ export default function BatchDataExtractorPage() {
 
   const handleStartProcessing = async () => {
     setIsProcessing(true);
+    // Mark pending files as processing
     setFiles(prev => prev.map(f => f.status === 'pending' ? { ...f, status: 'processing' } : f));
-
+  
+    // Sequentially process each file marked for processing
     for (let i = 0; i < files.length; i++) {
-        if (files[i].status !== 'processing') continue;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(files[i].file);
-
-        await new Promise<void>((resolve) => {
-            reader.onload = async (readEvent) => {
-                const fileDataUri = readEvent.target?.result as string;
-                const result = await processDocument({ documentDataUri: fileDataUri });
-                
-                setFiles(prev => {
-                    const newFiles = [...prev];
-                    if (result.success) {
-                        newFiles[i] = { ...newFiles[i], status: 'success', data: result.data };
-                    } else {
-                        newFiles[i] = { ...newFiles[i], status: 'error', error: result.error || 'An unknown error occurred.' };
-                    }
-                    return newFiles;
-                });
-                resolve();
-            };
-             reader.onerror = () => {
-                setFiles(prev => {
-                    const newFiles = [...prev];
-                    newFiles[i] = { ...newFiles[i], status: 'error', error: 'Failed to read the file.' };
-                    return newFiles;
-                });
-                resolve();
-            };
-        });
+      // Re-check the status from the state in each iteration
+      // This is important because the state updates are async
+      if (files[i].status !== 'processing' && files[i].status !== 'pending') continue;
+  
+      const reader = new FileReader();
+      reader.readAsDataURL(files[i].file);
+  
+      await new Promise<void>((resolve) => {
+        reader.onload = async (readEvent) => {
+          try {
+            const fileDataUri = readEvent.target?.result as string;
+            const result = await processDocument({ documentDataUri: fileDataUri });
+            setFiles(prev => {
+                const newFiles = [...prev];
+                newFiles[i] = { ...newFiles[i], status: 'success', data: result };
+                return newFiles;
+            });
+          } catch(e: any) {
+              setFiles(prev => {
+                const newFiles = [...prev];
+                newFiles[i] = { ...newFiles[i], status: 'error', error: e.message || 'An unknown error occurred.' };
+                return newFiles;
+            });
+          } finally {
+            resolve();
+          }
+        };
+        reader.onerror = () => {
+          setFiles(prev => {
+              const newFiles = [...prev];
+              newFiles[i] = { ...newFiles[i], status: 'error', error: 'Failed to read the file.' };
+              return newFiles;
+          });
+          resolve();
+        };
+      });
     }
-
+  
     setIsProcessing(false);
   };
   
