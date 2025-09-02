@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -22,6 +23,7 @@ import {
   Plus,
   Pencil,
   Loader2,
+  Search,
   X,
   FileUp,
   Link2,
@@ -327,7 +329,8 @@ export default function EmployeeAddPage() {
               {isEditing && (
                 <>
                   <Button type="submit" disabled={isSaving}>
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Save
+                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                    Save
                   </Button>
                   <Button type="button" variant="ghost" onClick={handleCancelClick}><X className="mr-2 h-4 w-4" /> Cancel</Button>
                 </>

@@ -1,9 +1,8 @@
 
+
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { Readable } from 'stream';
-import path from 'path';
-import fs from 'fs/promises';
 
 // This forces the route to use the Node.js runtime instead of the Edge runtime.
 export const runtime = 'nodejs';
@@ -11,19 +10,22 @@ export const runtime = 'nodejs';
 // Define the required scopes for Google Drive
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 // The ID of the folder in your Google Drive where files will be uploaded.
-// You need to create a folder in your Drive and share it with your service account's email address.
-const GDRIVE_FOLDER_ID = 'YOUR_GOOGLE_DRIVE_FOLDER_ID'; // IMPORTANT: Replace with your actual folder ID
+const GDRIVE_FOLDER_ID = process.env.GDRIVE_FOLDER_ID;
 
+// Function to get authenticated Google API client from environment variables
 async function getAuthenticatedClient() {
-    const keyFilePath = path.join(process.cwd(), 'google-credentials.json');
-    try {
-        await fs.access(keyFilePath);
-    } catch (error) {
-        throw new Error('Google credentials file not found. Please place "google-credentials.json" in the root directory.');
+    const privateKey = process.env.GDRIVE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const clientEmail = process.env.GDRIVE_CLIENT_EMAIL;
+    
+    if (!privateKey || !clientEmail || !GDRIVE_FOLDER_ID) {
+        throw new Error('Google Drive environment variables (GDRIVE_PRIVATE_KEY, GDRIVE_CLIENT_EMAIL, GDRIVE_FOLDER_ID) are not properly set.');
     }
 
     const auth = new google.auth.GoogleAuth({
-        keyFile: keyFilePath,
+        credentials: {
+            private_key: privateKey,
+            client_email: clientEmail,
+        },
         scopes: SCOPES,
     });
     return auth.getClient();
@@ -42,10 +44,10 @@ export async function POST(request: Request) {
 
         const fileMetadata = {
             name: fileName,
-            parents: [GDRIVE_FOLDER_ID],
+            parents: [GDRIVE_FOLDER_ID!], // The exclamation mark asserts that it's defined (checked above)
         };
 
-        // Convert base64 to a readable stream
+        // Convert base64 data URI to a readable stream
         const base64Data = fileDataUri.split(',')[1];
         const buffer = Buffer.from(base64Data, 'base64');
         const stream = Readable.from(buffer);
@@ -74,6 +76,4 @@ export async function POST(request: Request) {
 
     } catch (error: any) {
         console.error('Upload API Error:', error);
-        return NextResponse.json({ error: error.message || 'Failed to upload file to Google Drive.' }, { status: 500 });
-    }
-}
+        return NextResponse.json({ error: error.message || 'Failed to upload file to Google Drive.' },
