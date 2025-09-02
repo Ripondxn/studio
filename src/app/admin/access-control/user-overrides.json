@@ -1,7 +1,12 @@
-
 [
   {
     "email": "tanvir@example.com",
+    "allowedModules": [
+      "stores"
+    ]
+  },
+  {
+    "email": "admin@admin.com",
     "allowedModules": [
       "stores"
     ]

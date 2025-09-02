@@ -5,6 +5,13 @@ import { getModuleSettings } from './module-actions';
 import { ModuleManagement } from './module-management';
 import { UserPermissionOverrides } from './user-permission-overrides';
 import { getUsers } from '../user-roles/actions';
+import { AccessControlGuide } from './access-control-guide';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 
 
 export default async function AccessControlPage() {
@@ -31,10 +38,21 @@ export default async function AccessControlPage() {
         initialOverrides={userOverrides}
       />
       
-      <AccessControlClient
-        initialPermissions={permissions}
-        roles={roles}
-      />
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                 <CardTitle>Role-Based Feature Permissions</CardTitle>
+                <CardDescription>
+                    Assign specific feature access to user roles. This is the primary permission layer.
+                </CardDescription>
+            </div>
+            <AccessControlGuide />
+        </CardHeader>
+        <AccessControlClient
+            initialPermissions={permissions}
+            roles={roles}
+        />
+      </Card>
     </div>
   );
 }
