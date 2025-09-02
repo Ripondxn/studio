@@ -43,8 +43,6 @@ export async function handleLogin(credentials: z.infer<typeof loginSchema>) {
     if (user) {
       if (user.password === password) {
         if(user.status === 'Active') {
-          // WARNING: In a real app, do not send sensitive data like this.
-          // This is simplified for demonstration purposes.
           const { password, ...userProfile } = user;
           return { success: true, data: userProfile };
         } else {
