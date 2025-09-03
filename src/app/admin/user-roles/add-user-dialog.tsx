@@ -27,7 +27,7 @@ import { Plus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuthorization } from '@/hooks/useAuthorization';
+import { useAuthorization } from '@/context/permission-context';
 
 import { userRoleSchema, type UserRole } from './schema';
 import { addUser } from './actions';

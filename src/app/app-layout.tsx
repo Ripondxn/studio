@@ -321,7 +321,7 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = React.useState<UserProfile | null>(null);
   const [licenseStatus, setLicenseStatus] = React.useState<LicenseStatus | null>(null);
   const [moduleSettings, setModuleSettings] = React.useState<ModuleSettings | null>(null);
-  const [isLoadingSettings, setIsLoadingSettings] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
@@ -337,7 +337,7 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     async function checkUserAndLicense() {
         if (pathname === '/login' || pathname.startsWith('/pay')) {
-            setIsLoadingSettings(false);
+            setIsLoading(false);
             return;
         };
 
@@ -358,7 +358,7 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
           console.error('Initialization Error:', error);
           router.push('/login');
         } finally {
-            setIsLoadingSettings(false);
+            setIsLoading(false);
         }
     }
     checkUserAndLicense();
@@ -370,10 +370,23 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  if (pathname === '/login' || pathname.startsWith('/pay') || !userProfile || isLoadingSettings) {
-    return <>{children}</>;
+  // Render login/pay pages, or a loader while we check the session
+    if (pathname === '/login' || pathname.startsWith('/pay') || isLoading) {
+        return <>{children}</>;
+    }
+
+  // After loading, if there's no user profile, redirect to login
+  if (!userProfile) {
+      // Note: The useEffect above will redirect, so this is a fallback.
+      // You might want to show a more specific "Redirecting..." message here.
+      return (
+          <div className="flex h-screen w-full items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+      );
   }
 
+  // If settings are still loading, show a loader
   if (!licenseStatus || !moduleSettings) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
@@ -382,10 +395,12 @@ function MainAppLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
+  // If the license is inactive, show the expired page
   if (!licenseStatus.isActive) {
     return <TrialExpiredPage daysRemaining={licenseStatus.daysRemaining} expiryDate={licenseStatus.expiryDate} />;
   }
   
+  // Finally, render the main application layout
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[auto_1fr]">
         <div data-collapsed={isCollapsed} className="hidden border-r bg-sidebar md:flex md:flex-col group transition-[width] duration-300 ease-in-out">
