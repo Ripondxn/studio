@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useFieldArray, FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -140,7 +140,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
                 invoiceDate: format(new Date(), 'yyyy-MM-dd'),
                 dueDate: format(new Date(), 'yyyy-MM-dd'),
                 items: [{ 
-                    id: `item-${Date.now()}`, 
+                    id: `item-${Date.now()}`,
                     description: `${tenant.subscriptionStatus || 'Monthly'} Subscription`, 
                     quantity: 1, 
                     unitPrice: tenant.subscriptionAmount || 0, 
@@ -182,6 +182,15 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     }
     setIsSaving(false);
   }
+
+  const onValidationError = (errors: FieldErrors<InvoiceFormData>) => {
+    console.error("Validation Error:", errors);
+    toast({
+      variant: "destructive",
+      title: "Validation Error",
+      description: "Please check the console for details.",
+    });
+  };
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -233,7 +242,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, onValidationError)}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit' : 'Create'} Subscription Invoice</DialogTitle>
             <DialogDescription>
@@ -357,7 +366,7 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
             <DialogClose asChild>
                 <Button type="button" variant="outline">Close</Button>
             </DialogClose>
-            <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
+            <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 Save Subs Invoice
             </Button>

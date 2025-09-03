@@ -8,7 +8,7 @@ import { ContinuityClient } from './client';
 import { type Contract } from '@/app/tenancy/contract/schema';
 import { type MovementHistoryItem, type VacantPeriod } from './actions';
 import { Loader2 } from 'lucide-react';
-import { useAuthorization } from '@/hooks/useAuthorization';
+import { useAuthorization } from '@/context/permission-context';
 
 type ContinuityData = {
     problematicContracts: Contract[],
@@ -20,13 +20,13 @@ export default function ContractContinuityPage() {
   const [data, setData] = useState<ContinuityData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { isAuthorized, isLoading: isAuthLoading } = useAuthorization();
+  const { can, isLoading: isAuthLoading } = useAuthorization();
 
    useEffect(() => {
     if (isAuthLoading) return;
 
     const fetchData = async () => {
-        if (!isAuthorized('Settings', 'contract_continuity')) {
+        if (!can('Settings', 'contract_continuity')) {
             router.push('/');
             return;
         }
@@ -46,7 +46,7 @@ export default function ContractContinuityPage() {
     };
 
     fetchData();
-  }, [isAuthLoading, isAuthorized, router]);
+  }, [isAuthLoading, can, router]);
 
   if (isAuthLoading || isLoading) {
     return (
@@ -59,7 +59,7 @@ export default function ContractContinuityPage() {
     );
   }
   
-  if (!isAuthorized('Settings', 'contract_continuity')) {
+  if (!can('Settings', 'contract_continuity')) {
       return (
           <div className="text-center text-muted-foreground">
               <p>You are not authorized to view this page.</p>

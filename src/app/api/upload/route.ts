@@ -76,4 +76,6 @@ export async function POST(request: Request) {
 
     } catch (error: any) {
         console.error('Upload API Error:', error);
-        return NextResponse.json({ error: error.message || 'Failed to upload file to Google Drive.' },
+        return NextResponse.json({ error: error.message || 'Failed to upload file to Google Drive.' }, { status: 500 });
+    }
+}

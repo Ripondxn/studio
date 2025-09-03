@@ -359,6 +359,19 @@ export async function getSummary() {
     return summary;
 }
 
+export async function getNextPaymentVoucherNumber() {
+    const payments = await readPayments();
+    const paymentVouchers = payments.filter(p => p.type === 'Payment');
+    if (paymentVouchers.length === 0) {
+        return 'PV-00001';
+    }
+    const lastVoucherNo = paymentVouchers.reduce((max, p) => {
+        const currentNum = parseInt(p.voucherNo.split('-')[1], 10);
+        return currentNum > max ? currentNum : max;
+    }, 0);
+    return `PV-${(lastVoucherNo + 1).toString().padStart(5, '0')}`;
+}
+
 export async function getReferences(partyType: string, partyName: string, referenceType: string, paymentType: string, collectorName?: string) {
     if (!partyType || !partyName || !referenceType) return [];
     

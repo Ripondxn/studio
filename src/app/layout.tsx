@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { CurrencyProvider } from '@/context/currency-context';
 import { CompanyProfileProvider } from '@/context/company-profile-context';
 import { getCompanyProfile } from './admin/company-profile/actions';
+import { AuthChecker } from './auth-checker';
 
 export async function generateMetadata(): Promise<Metadata> {
   const profile = await getCompanyProfile();
@@ -32,7 +33,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <CompanyProfileProvider>
             <CurrencyProvider>
-                <AppLayout>{children}</AppLayout>
+                <AuthChecker>
+                    <AppLayout>{children}</AppLayout>
+                </AuthChecker>
             </CurrencyProvider>
         </CompanyProfileProvider>
         <Toaster />

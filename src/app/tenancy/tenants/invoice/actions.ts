@@ -45,8 +45,8 @@ export async function getNextSubscriptionInvoiceNumber() {
 }
 
 
-export async function saveSubscriptionInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingBalance'> & {id?: string, isAutoInvoiceNo?: boolean}, createdBy: string) {
-    const { isAutoInvoiceNo, ...invoiceData } = data;
+export async function saveSubscriptionInvoice(data: Omit<Invoice, 'id' | 'amountPaid' | 'remainingBalance'> & {id?: string, isAutoInvoiceNo?: boolean}, createdBy: string) {
+    const { isAutoInvoiceNo, id, ...invoiceData } = data;
     const validation = subscriptionInvoiceSchema.safeParse(invoiceData);
     
     if (!validation.success) {
@@ -56,7 +56,7 @@ export async function saveSubscriptionInvoice(data: Omit<Invoice, 'amountPaid' |
 
     try {
         const allInvoices = await readSubscriptionInvoices();
-        const isNewRecord = !data.id;
+        const isNewRecord = !id;
         const validatedData = validation.data;
         let savedInvoice: Invoice;
 
@@ -76,25 +76,29 @@ export async function saveSubscriptionInvoice(data: Omit<Invoice, 'amountPaid' |
                 invoiceNo: newInvoiceNo,
                 id: `SUB-INV-${Date.now()}`,
                 amountPaid: 0,
+                remainingBalance: validatedData.total,
                  items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`}))
             };
             allInvoices.push(newInvoice);
             savedInvoice = newInvoice;
             
         } else {
-            const index = allInvoices.findIndex(inv => inv.id === data.id);
+            const index = allInvoices.findIndex(inv => inv.id === id);
             if (index === -1) {
                 return { success: false, error: 'Subscription Invoice not found.' };
             }
-            allInvoices[index] = { ...allInvoices[index], ...validatedData, items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`})) };
+            const existingInvoice = allInvoices[index];
+            allInvoices[index] = { ...existingInvoice, ...validatedData, items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`})) };
+            allInvoices[index].remainingBalance = allInvoices[index].total - allInvoices[index].amountPaid;
             savedInvoice = allInvoices[index];
         }
 
         await writeSubscriptionInvoices(allInvoices);
-        revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${validatedData.customerCode}`);
         return { success: true, data: savedInvoice };
 
     } catch (error) {
+        console.error("Error in saveSubscriptionInvoice:", error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }

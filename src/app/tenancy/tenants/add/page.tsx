@@ -273,7 +273,7 @@ export default function TenantPage() {
       if (result.success && result.data) {
         toast({
           title: "Success",
-          description: `Tenant "${data.name}" saved successfully.`,
+          description: `Tenant "${data.name}" successfully saved.`,
         });
         setIsEditing(false);
         setIsSubscriptionEditing(false);
