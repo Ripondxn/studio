@@ -1,12 +1,14 @@
 [
   {
     "id": "USR-001",
-    "name": "Admin",
+    "name": "Ripon Ahmed",
     "email": "admin@atlaspm.com",
     "password": "admin",
-    "role": "Administrator",
+    "role": "Admin",
     "status": "Active",
-    "lastLogin": "2024-07-28T10:00:00Z"
+    "lastLogin": "2024-07-28T10:00:00Z",
+    "modifiedAt": "2025-09-04T08:54:56.968Z",
+    "modifiedBy": "Super Admin"
   },
   {
     "id": "USR-002",
@@ -53,6 +55,50 @@
     "id": "USR-1756967943664",
     "lastLogin": "2025-09-04T06:39:03.664Z",
     "createdAt": "2025-09-04T06:39:03.664Z",
+    "createdBy": "Super Admin"
+  },
+  {
+    "name": "Al Mamun",
+    "email": "almamun@atlaspm.com",
+    "password": "superadmin",
+    "role": "Super Admin",
+    "status": "Active",
+    "id": "USR-1756975312828",
+    "lastLogin": "2025-09-04T08:41:52.828Z",
+    "createdAt": "2025-09-04T08:41:52.828Z",
+    "createdBy": "Super Admin"
+  },
+  {
+    "name": "Sagar Hossain",
+    "email": "Sagar@atlaspm.com",
+    "password": "Sagar@U",
+    "role": "User",
+    "status": "Active",
+    "id": "USR-1756975402858",
+    "lastLogin": "2025-09-04T08:43:22.858Z",
+    "createdAt": "2025-09-04T08:43:22.858Z",
+    "createdBy": "Super Admin"
+  },
+  {
+    "name": "Tanvir",
+    "email": "Tanvir@atlaspm.com",
+    "password": "Tanvir@U",
+    "role": "User",
+    "status": "Active",
+    "id": "USR-1756975453051",
+    "lastLogin": "2025-09-04T08:44:13.051Z",
+    "createdAt": "2025-09-04T08:44:13.051Z",
+    "createdBy": "Super Admin"
+  },
+  {
+    "name": "Joynal Abedin",
+    "email": "Joynal@atlaspm.com",
+    "password": "Joynal@adm",
+    "role": "Admin",
+    "status": "Active",
+    "id": "USR-1756975728805",
+    "lastLogin": "2025-09-04T08:48:48.805Z",
+    "createdAt": "2025-09-04T08:48:48.805Z",
     "createdBy": "Super Admin"
   }
 ]

@@ -33,6 +33,8 @@ const userHasPermission = (item: any) => {
   switch(item.href) {
     case "/finance/book-management": 
       return userRoles.includes('accountant') || userRoles.includes('admin');
+    case "/vault":
+        return true;
     // Add other specific checks here
     default: 
       return true; // Default to show if no specific rule

@@ -23,6 +23,12 @@ export const navItems: NavItem[] = [
     ]
   },
   {
+    title: "Vault",
+    href: "/vault",
+    icon: "shieldCheck",
+    label: "Vault",
+  },
+  {
     title: "Access Control",
     href: "/admin/access-control",
     icon: "userLock",
