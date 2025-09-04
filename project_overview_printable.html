@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printable Project Overview</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #222;
+            line-height: 1.2;
+        }
+        h1 {
+            font-size: 2.5em;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 1.8em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+        h3 {
+            font-size: 1.4em;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f7f7f7;
+            font-weight: bold;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+        .print-button {
+            display: block;
+            width: 150px;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ccc;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #555;
+        }
+        footer div {
+            padding-top: 40px; /* Space for signature */
+            border-top: 1px solid #aaa;
+        }
+        @media print {
+            .print-button {
+                display: none;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-button" onclick="window.print()">Print this Page</button>
+
+    <h1>Project Overview: Business Management System</h1>
+
+    <h2>1. Project Overview & Architectural Design</h2>
+    <p>This is a modern, web-based Enterprise Resource Planning (ERP) system designed to manage a wide range of business operations. At its core, it helps a company manage everything from properties and finances to employees and inventory. A key feature is its AI-powered document analysis, which can automatically extract data from invoices and other documents, saving significant manual effort.</p>
+    
+    <h3>Architectural Design:</h3>
+    <ul>
+        <li><strong>Framework:</strong> The project is built using <strong>Next.js</strong>, a popular <strong>React</strong> framework. This is evident from the <code>.tsx</code> file extensions and the <code>src/app</code> directory structure.</li>
+        <li><strong>Language:</strong> The entire codebase is written in <strong>TypeScript</strong>, which adds strong type-checking to JavaScript, reducing bugs and improving code quality.</li>
+        <li><strong>Backend & AI:</strong> The backend logic and AI features are handled by <strong>Genkit</strong>, an open-source framework connecting to Google's <strong>Gemini Pro Vision</strong> model to perform tasks like document analysis.</li>
+        <li><strong>Authentication & Database:</strong> The system uses <strong>Firebase</strong> for user authentication and likely a cloud database like <strong>Firestore</strong> or <strong>Cloud SQL</strong>.</li>
+        <li><strong>Frontend (UI):</strong> The user interface is a Single Page Application (SPA) built with React components, providing a fast and responsive user experience.</li>
+    </ul>
+
+    <h2>2. User Roles & Permissions</h2>
+    <p>The system uses a flexible and secure <strong>Role-Based Access Control (RBAC)</strong> model. Instead of assigning permissions to each individual user, permissions are assigned to a Role, and users are assigned one or more roles. The UI is built dynamically based on the logged-in user's role.</p>
+    
+    <h3>Defined User Roles (Examples):</h3>
+    <ul>
+        <li><strong>Admin:</strong> Has full access to all modules and can manage user roles and permissions in the "Access Control" settings.</li>
+        <li><strong>Accountant:</strong> Has access to the <code>Finance</code>, <code>Vendor</code>, and <code>Customer</code> modules. Can <code>view</code> all financial data but may only have <code>edit</code> permissions for certain actions.</li>
+        <li><strong>User (e.g., Property Manager):</strong> Might only have access to the <code>Lease</code> and <code>Tenant</code> modules to manage properties and tenant information. They cannot see financial or HR data.</li>
+    </ul>
+
+    <h2>3. Dashboard Layout & UX/UI</h2>
+    <p>The application uses a classic and user-friendly dashboard layout.</p>
+    <ul>
+        <li><strong>Side Navigation Bar:</strong> A persistent vertical menu on the left for primary navigation.</li>
+        <li><strong>Content Area:</strong> The main area to the right of the navigation where all forms, tables, and data are displayed.</li>
+        <li><strong>Dynamic Menus:</strong> The items in the side navigation are dynamically generated based on user roles, decluttering the interface.</li>
+        <li><strong>Forms & Dialogs:</strong> Data entry is handled through clear forms and pop-up dialogs to keep the user in the context of their current page.</li>
+    </ul>
+
+    <h2>4. Side Navigation: Modules & Features</h2>
+    <p>The following table outlines all the modules that can appear in the side navigation bar, based on the application's structure.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Main Menu Item</th>
+                <th>Sub-Menu Items (Potential)</th>
+                <th>Functionality</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Dashboard</strong></td><td>- Overview<br>- Analytics</td><td>Main landing page with key metrics and summaries.</td></tr>
+            <tr><td><strong>Lease</strong></td><td>- Properties<br>- Landlords<br>- Lease Contracts</td><td>Manage rental properties, owner details, and lease agreements.</td></tr>
+            <tr><td><strong>Finance</strong></td><td>- Invoices<br>- Bills<br>- Payments<br>- Chart of Accounts</td><td>The core financial hub for managing all transactions.</td></tr>
+            <tr><td><strong>Tenant</strong></td><td>- Tenant Directory<br>- Tenant Contracts</td><td>Manage tenant information, communication, and lease status.</td></tr>
+            <tr><td><strong>Customer</strong></td><td>- Customer List<br>- Service Invoices</td><td>Manage general customers who are not tenants.</td></tr>
+            <tr><td><strong>Vendor</strong></td><td>- Vendor List<br>- Vendor Bills</td><td>Manage suppliers, contact information, and bills to be paid.</td></tr>
+            <tr><td><strong>Products</strong></td><td>- Item Catalog<br>- Service Catalog</td><td>A list of all products and services the company sells.</td></tr>
+            <tr><td><strong>Asset Management</strong></td><td>- Asset List<br>- Depreciation Schedules</td><td>Track company-owned assets and their value over time.</td></tr>
+            <tr><td><strong>Maintenance</strong></td><td>- Maintenance Tickets<br>- Service Contracts</td><td>Manage repair/maintenance requests and contracts.</td></tr>
+            <tr><td><strong>Project Management</strong></td><td>- Projects<br>- Tasks<br>- Gantt Chart</td><td>A module for planning and tracking projects.</td></tr>
+            <tr><td><strong>Human Resource</strong></td><td>- Employees<br>- Leave Management<br>- Compensation</td><td>Manage employee profiles, documents, time off, and payroll.</td></tr>
+            <tr><td><strong>Stores</strong></td><td>- Inventory<br>- Stock Locations<br>- Purchase Orders</td><td>Manage physical inventory and stock levels.</td></tr>
+            <tr><td><strong>Rent-A-Car</strong></td><td>- Vehicle Fleet<br>- Bookings<br>- Rental Agreements</td><td>A specialized module for managing a car rental business.</td></tr>
+            <tr><td><strong>Car Sales</strong></td><td>- Vehicle Inventory<br>- Sales<br>- Purchase Agreements</td><td>A specialized module for managing vehicle sales.</td></tr>
+            <tr><td><strong>Admin</strong></td><td>- Access Control<br>- Company Profile</td><td>For Admin roles only. Manage user roles, permissions, and company settings.</td></tr>
+        </tbody>
+    </table>
+
+    <footer>
+        <div>Prepared By</div>
+        <div>Checked By</div>
+        <div>Approved By</div>
+    </footer>
+
+</body>
+</html>

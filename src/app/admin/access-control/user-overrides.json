@@ -11,5 +11,59 @@
       "lease",
       "tenant"
     ]
+  },
+  {
+    "email": "superadmin@atlaspm.com",
+    "allowedModules": [
+      "lease",
+      "vendor",
+      "project-management",
+      "stores",
+      "settings",
+      "finance",
+      "products",
+      "human-resource",
+      "workflow",
+      "tenant",
+      "asset-management",
+      "rent-a-car",
+      "customer",
+      "maintenance",
+      "car-sales",
+      "utilities"
+    ]
+  },
+  {
+    "email": "developer@atlaspm.com",
+    "allowedModules": [
+      "lease",
+      "vendor",
+      "project-management",
+      "stores",
+      "settings",
+      "finance",
+      "products",
+      "human-resource",
+      "workflow",
+      "tenant",
+      "asset-management",
+      "rent-a-car",
+      "data-processing",
+      "customer",
+      "maintenance",
+      "car-sales",
+      "utilities"
+    ]
+  },
+  {
+    "email": "admin@atlaspm.com",
+    "allowedModules": [
+      "lease",
+      "finance",
+      "tenant",
+      "workflow",
+      "asset-management",
+      "utilities"
+    ]
   }
 ]

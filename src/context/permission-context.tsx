@@ -1,154 +1,111 @@
 
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { type UserRole } from '@/app/admin/user-roles/schema';
-import { type FeaturePermission } from '@/app/admin/access-control/permissions';
-import { getCombinedAccessControlData } from '@/app/admin/access-control/actions';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { getCombinedAccessControlData, type UserOverride } from '@/app/admin/access-control/actions';
 import { type ModuleSettings } from '@/app/admin/access-control/schema';
-import { type UserOverride } from '@/app/admin/access-control/actions';
-import { Loader2 } from 'lucide-react';
+import { type FeaturePermission } from '@/app/admin/access-control/permissions';
+import { type UserRole } from '@/app/admin/user-roles/schema';
+import { usePathname } from 'next/navigation';
+
+interface UserProfile {
+  name: string;
+  email: string;
+  role: UserRole['role'];
+}
 
 interface AuthorizationContextType {
-  can: (feature: string, action: string) => boolean;
+  userRole: UserRole['role'] | null;
+  can: (action: string, feature: string) => boolean;
   isModuleEnabled: (moduleId: string) => boolean;
   isLoading: boolean;
-  userRole: UserRole['role'] | null;
-  userEmail: string | null;
+  profile: UserProfile | null;
 }
 
 const AuthorizationContext = createContext<AuthorizationContextType | undefined>(undefined);
 
-const featureToModuleMap: Record<string, string> = {
-  'Properties': 'lease',
-  'Units': 'lease',
-  'Landlords': 'lease',
-  'Lease Contracts': 'lease',
-  'Tenants': 'tenant',
-  'Customers': 'customer',
-  'Rent-A-Car': 'rent-a-car',
-  'Car Sales': 'car-sales',
-  'Finance': 'finance',
-  'Products & Services': 'products',
-  'Vaults & Stores': 'stores',
-  'Asset Management': 'asset-management',
-  'Maintenance': 'maintenance',
-  'Project Management': 'project-management',
-  'Workflow': 'workflow',
-  'Data Processing': 'data-processing',
-  'Utilities': 'utilities',
-  'User Management': 'settings',
-  'Settings': 'settings',
-};
+export function AuthorizationProvider({ children }: { children: ReactNode }) {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [permissions, setPermissions] = useState<FeaturePermission[]>([]);
+  const [moduleSettings, setModuleSettings] = useState<ModuleSettings>({});
+  const [userOverrides, setUserOverrides] = useState<UserOverride[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
 
+  useEffect(() => {
+    const userProfileStr = sessionStorage.getItem('userProfile');
+    if (userProfileStr) {
+      const parsedProfile = JSON.parse(userProfileStr) as UserProfile;
+      setProfile(parsedProfile);
+    } else {
+      setIsLoading(false);
+    }
+  }, [pathname]); // Rerun on path change to ensure profile is loaded
 
-export const AuthorizationProvider = ({ children }: { children: ReactNode }) => {
-    const [permissions, setPermissions] = useState<FeaturePermission[]>([]);
-    const [moduleSettings, setModuleSettings] = useState<ModuleSettings>({});
-    const [userOverrides, setUserOverrides] = useState<UserOverride[]>([]);
-    const [userRole, setUserRole] = useState<UserRole['role'] | null>(null);
-    const [userEmail, setUserEmail] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    if (profile) {
+      setIsLoading(true);
+      getCombinedAccessControlData()
+        .then(data => {
+          if (data.success) {
+            setPermissions(data.permissions || []);
+            setModuleSettings(data.moduleSettings || {});
+            setUserOverrides(data.userOverrides || []);
+          } else {
+            console.error("Failed to load access control data:", data.error);
+          }
+        })
+        .finally(() => setIsLoading(false));
+    }
+  }, [profile]);
 
-    useEffect(() => {
-        const loadPermissions = async () => {
-            setIsLoading(true);
-            try {
-                const storedProfile = sessionStorage.getItem('userProfile');
-                if (storedProfile) {
-                    const profile = JSON.parse(storedProfile);
-                    setUserRole(profile.role);
-                    setUserEmail(profile.email);
-                }
-                
-                const accessData = await getCombinedAccessControlData();
-                if (accessData.success) {
-                    setPermissions(accessData.permissions || []);
-                    setModuleSettings(accessData.moduleSettings || {});
-                    setUserOverrides(accessData.userOverrides || []);
-                } else {
-                     console.error("Failed to load access control data:", accessData.error);
-                }
-            } catch (error) {
-                 console.error("Error loading access control data:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        loadPermissions();
-    }, []);
+  const isModuleEnabled = useCallback((moduleId: string): boolean => {
+    if (isLoading) return false; // Don't allow access while loading
+    const module = moduleSettings[moduleId];
+    return module ? module.enabled : true; // Default to enabled if not in settings
+  }, [moduleSettings, isLoading]);
 
-    const can = useCallback((feature: string, action: string): boolean => {
-        if (isLoading) return false;
-        if (userRole === 'Super Admin') return true;
-        if (!userRole) return false;
+  const can = useCallback((action: string, feature: string): boolean => {
+    if (isLoading || !profile) return false;
+    if (profile.role === 'Super Admin') return true;
 
-        const featurePermission = permissions.find(p => p.feature === feature);
-        if (!featurePermission) return false;
-
-        const actionPermission = featurePermission.actions.find(a => a.action === action);
-        if (!actionPermission) return false;
-
-        return actionPermission.allowedRoles.includes(userRole);
-    }, [permissions, userRole, isLoading]);
+    const featureId = feature.toLowerCase().replace(/\s/g, '_');
     
-    const isModuleEnabled = useCallback((moduleId: string): boolean => {
-        if (isLoading) return false;
-        
-        // Super Admin and Developer see all modules
-        if (userRole === 'Super Admin' || userRole === 'Developer') return true;
-        if (!userRole || !userEmail) return false;
+    // 1. Check Module-level enable/disable state
+    if (!isModuleEnabled(featureId)) return false;
 
-        // Check for user-specific overrides first
-        const userOverride = userOverrides.find(o => o.email === userEmail);
-        if (userOverride) {
-            return userOverride.allowedModules.includes(moduleId);
-        }
+    // 2. Check User-specific overrides
+    const userOverride = userOverrides.find(o => o.email === profile.email);
+    if (userOverride) {
+      if(userOverride.allowedModules.includes('all_modules') || userOverride.allowedModules.includes(featureId)) {
+          // If an override exists, it grants blanket access to the module's features for now.
+          // A more granular check could be implemented here if overrides become more detailed.
+          return true;
+      }
+    }
 
-        // If no override, fall back to role-based permissions
-        const isGloballyEnabled = moduleSettings[moduleId]?.enabled ?? false;
-        if (!isGloballyEnabled) {
-            return false;
-        }
+    // 3. Check Role-based permissions
+    const featurePermission = permissions.find(p => p.feature.toLowerCase().replace(/\s/g, '_') === featureId);
+    if (!featurePermission) return false; 
 
-        const featuresInModule = Object.keys(featureToModuleMap).filter(
-            feature => featureToModuleMap[feature] === moduleId
-        );
-        
-        if (featuresInModule.length === 0) {
-            return true;
-        }
+    const actionPermission = featurePermission.actions.find(a => a.action === action);
+    if (!actionPermission) return false;
 
-        return featuresInModule.some(featureName => {
-            const featurePermission = permissions.find(p => p.feature === featureName);
-            if (!featurePermission) return false;
-            return featurePermission.actions.some(action => 
-                action.allowedRoles.includes(userRole!)
-            );
-        });
+    return actionPermission.allowedRoles.includes(profile.role);
 
-    }, [moduleSettings, permissions, userRole, userEmail, userOverrides, isLoading]);
+  }, [profile, permissions, moduleSettings, userOverrides, isLoading, isModuleEnabled]);
 
-    const value = { can, isModuleEnabled, isLoading, userRole, userEmail };
-    
-    return (
-        <AuthorizationContext.Provider value={value}>
-            {isLoading ? (
-                 <div className="flex h-screen w-full items-center justify-center">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                        <span>Loading Permissions...</span>
-                    </div>
-                </div>
-            ) : children}
-        </AuthorizationContext.Provider>
-    );
-};
+  return (
+    <AuthorizationContext.Provider value={{ userRole: profile?.role ?? null, can, isModuleEnabled, isLoading, profile }}>
+      {children}
+    </AuthorizationContext.Provider>
+  );
+}
 
-export const useAuthorization = () => {
+export function useAuthorization() {
   const context = useContext(AuthorizationContext);
   if (context === undefined) {
     throw new Error('useAuthorization must be used within an AuthorizationProvider');
   }
   return context;
-};
+}

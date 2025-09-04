@@ -49,6 +49,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { type UserRole } from '@/app/admin/user-roles/schema';
 import { useCurrency } from '@/context/currency-context';
 import { type BankAccount } from '../banking/schema';
+import { useAuthorization } from '@/context/permission-context';
 
 
 const statusConfig: {
@@ -77,6 +78,7 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
     const { toast } = useToast();
     const router = useRouter();
     const [currentUser, setCurrentUser] = useState<{ email: string; name: string; role: UserRole['role'] } | null>(null);
+    const { can } = useAuthorization();
 
     useEffect(() => {
         const storedProfile = sessionStorage.getItem('userProfile');
@@ -91,6 +93,10 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
     const handleUpdate = async () => {
         if (!currentUser) {
             toast({ variant: 'destructive', title: 'Error', description: 'Could not identify current user. Please log in again.'});
+            return;
+        }
+        if (!can('update', 'cheque_management')) {
+            toast({ variant: 'destructive', title: 'Unauthorized', description: 'You do not have permission to update cheque status.' });
             return;
         }
         if ((status === 'Deposited' || status === 'Cleared' || status === 'Returned with Cash') && !bankAccountId) {
@@ -118,7 +124,7 @@ const UpdateStatusDialog = ({ cheque, onUpdate }: { cheque: Cheque, onUpdate: ()
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={!can('update', 'cheque_management')}>
                 <DialogTrigger asChild><div className="w-full flex items-center"><Pencil className="mr-2 h-4 w-4" /> Update Status</div></DialogTrigger>
             </DropdownMenuItem>
             <DialogContent>
@@ -177,8 +183,13 @@ const ActionsCell = ({ row }: { row: { original: Cheque } }) => {
     const { toast } = useToast();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const { can } = useAuthorization();
 
     const handleDelete = async () => {
+        if (!can('delete', 'cheque_management')) {
+            toast({ variant: 'destructive', title: 'Unauthorized', description: 'You do not have permission to delete cheques.' });
+            return;
+        }
         setIsDeleting(true);
         const result = await deleteCheque(cheque.id);
         if (result.success) {
@@ -228,7 +239,7 @@ const ActionsCell = ({ row }: { row: { original: Cheque } }) => {
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <UpdateStatusDialog cheque={row.original} onUpdate={() => router.refresh()} />
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)}>
+            <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)} disabled={!can('delete', 'cheque_management')}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Cheque
             </DropdownMenuItem>

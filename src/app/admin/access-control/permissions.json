@@ -1,3 +1,4 @@
+
 [
   {
     "feature": "Properties",
@@ -564,7 +565,8 @@
         "action": "access_control",
         "description": "Manage user roles and permissions",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin"
         ]
       },
       {
@@ -579,7 +581,8 @@
         "action": "backup",
         "description": "Manage data backup and restore",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin"
         ]
       },
       {
@@ -601,7 +604,8 @@
         "action": "contract_continuity",
         "description": "Review and fix contract data issues",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin"
         ]
       }
     ]

@@ -208,7 +208,7 @@ export function EditUserDialog({ user, isOpen, setIsOpen }: { user: UserRole, is
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSaving || !isDirty}>
+                <Button type="submit" disabled={isSaving}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Save Changes
                 </Button>

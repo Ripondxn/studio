@@ -80,9 +80,49 @@ export function AccessControlClient({ initialPermissions, roles, users, userOver
   
   const handleSaveChanges = async () => {
     setIsSaving(true);
+    
+    const getChangedRoles = (initial: FeaturePermission[], current: FeaturePermission[]): Set<string> => {
+        const changedRoles = new Set<string>();
+        const initialMap = new Map<string, FeaturePermission>();
+        initial.forEach(fp => initialMap.set(fp.feature, fp));
+
+        current.forEach(currentFeature => {
+            const initialFeature = initialMap.get(currentFeature.feature);
+            if (initialFeature) {
+                const initialActionMap = new Map<string, typeof initialFeature.actions[0]>();
+                initialFeature.actions.forEach(a => initialActionMap.set(a.action, a));
+
+                currentFeature.actions.forEach(currentAction => {
+                    const initialAction = initialActionMap.get(currentAction.action);
+                    if (initialAction) {
+                        const initialRoles = new Set(initialAction.allowedRoles);
+                        const currentRoles = new Set(currentAction.allowedRoles);
+                        const allRoles = new Set([...initialRoles, ...currentRoles]);
+
+                        allRoles.forEach(role => {
+                            if (initialRoles.has(role) !== currentRoles.has(role)) {
+                                changedRoles.add(role);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        return changedRoles;
+    };
+
+    const changedRoles = getChangedRoles(initialPermissions, permissions);
+    const targetRoles = ['Super Admin', 'Admin', 'Accountant', 'User'];
+    const affectedTargetRoles = Array.from(changedRoles).filter(role => targetRoles.includes(role));
+
     const result = await savePermissions(permissions);
     if(result.success) {
-        toast({ title: "Permissions Saved", description: "Access control settings have been updated."});
+        let description = "Access control settings have been updated.";
+        if (affectedTargetRoles.length > 0) {
+            description += ` Permissions changed for: ${affectedTargetRoles.join(', ')}.`;
+        }
+        toast({ title: "Permissions Saved", description: description});
     } else {
         toast({ variant: 'destructive', title: "Error", description: result.error });
     }

@@ -7,6 +7,7 @@ import { CurrencyProvider } from '@/context/currency-context';
 import { CompanyProfileProvider } from '@/context/company-profile-context';
 import { getCompanyProfile } from './admin/company-profile/actions';
 import { AuthChecker } from './auth-checker';
+import { AuthorizationProvider } from '@/context/permission-context';
 
 export async function generateMetadata(): Promise<Metadata> {
   const profile = await getCompanyProfile();
@@ -32,11 +33,13 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <CompanyProfileProvider>
-            <CurrencyProvider>
-                <AuthChecker>
-                    <AppLayout>{children}</AppLayout>
-                </AuthChecker>
-            </CurrencyProvider>
+          <CurrencyProvider>
+            <AuthorizationProvider>
+              <AuthChecker>
+                <AppLayout>{children}</AppLayout>
+              </AuthChecker>
+            </AuthorizationProvider>
+          </CurrencyProvider>
         </CompanyProfileProvider>
         <Toaster />
       </body>

@@ -58,7 +58,7 @@ Analyze the document provided and extract the following information. Be as accur
 - Registration Numbers: Look for a VAT or Tax Registration Number.
 
 Document to process:
-{{media url=documentDataUri}}
+{{media url=input.documentDataUri}}
 `,
 });
 

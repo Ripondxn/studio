@@ -54,6 +54,7 @@ import {
   Lightbulb,
   CarFront,
   Car,
+  Book, // Added Book Icon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserRole } from '@/app/admin/user-roles/schema';
@@ -119,6 +120,7 @@ const navLinks = [
         label: 'Finance', 
         icon: <Banknote />,
         subItems: [
+            { href: '/finance/book-management', label: 'Book Management' },
             { href: '/finance/chart-of-accounts', label: 'Chart of Accounts' },
             { href: '/finance/banking', label: 'Banking' },
             { href: '/finance/cheque-management', label: 'Cheque Management' },

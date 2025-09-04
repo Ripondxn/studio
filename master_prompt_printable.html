@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printable Master Prompt</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 850px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        h1, h2, h3, h4 {
+            color: #222;
+            line-height: 1.3;
+            margin-top: 1.5em;
+        }
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 1.6em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+        h3 {
+            font-size: 1.3em;
+            margin-top: 30px;
+        }
+        h4 {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 25px;
+        }
+        ul, ol {
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.9em;
+        }
+        .print-button {
+            display: block;
+            width: 200px;
+            margin: 20px 0 30px 0;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        @media print {
+            @page { size: A4; margin: 1.5cm; }
+            .print-button {
+                display: none;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                max-width: 100%;
+                font-size: 10pt;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-button" onclick="window.print()">Save as PDF / Print</button>
+
+    <h1>Master Prompt: Replicating the Business Management System</h1>
+
+    <p><strong>Project Title:</strong> Comprehensive Business Management System (ERP)</p>
+    <p><strong>High-Level Goal:</strong>
+    Develop a full-stack, enterprise-grade web application to serve as a comprehensive Business Management System. The application must be scalable, secure, and feature-rich, with a modern, responsive user interface. The primary goal is to create a fully functional prototype with a complete codebase, including a key feature for AI-powered data extraction from documents.
+    </p>
+
+    <h4>Core Technologies:</h4>
+    <ul>
+        <li><strong>Framework:</strong> Next.js (with App Router)</li>
+        <li><strong>Language:</strong> TypeScript</li>
+        <li><strong>Styling:</strong> Tailwind CSS</li>
+        <li><strong>UI Components:</strong> Shadcn/UI (or a similar modern component library)</li>
+        <li><strong>Authentication:</strong> Firebase Authentication (Email/Password and Google Sign-In)</li>
+        <li><strong>Database:</strong> Firestore (for all application data)</li>
+        <li><strong>AI Backend:</strong> Genkit (running on a serverless environment)</li>
+        <li><strong>AI Model:</strong> Google's Gemini Pro Vision</li>
+    </ul>
+
+    <h2>Part 1: Foundational Setup & Architecture</h2>
+    <ol>
+        <li><strong>Initialize Next.js Project:</strong> Create a new Next.js project with TypeScript and Tailwind CSS. Set up the <code>src/</code> directory structure.</li>
+        <li><strong>Firebase Integration:</strong>
+            <ul>
+                <li>Create a <code>src/lib/firebase/config.ts</code> file to initialize the Firebase app. Use environment variables for all Firebase configuration keys (<code>NEXT_PUBLIC_FIREBASE_*</code>).</li>
+                <li>Set up Firestore rules to be secure by default (deny all reads/writes), which will be opened up on a per-collection basis later.</li>
+            </ul>
+        </li>
+        <li><strong>UI & Layout:</strong>
+            <ul>
+                <li>Integrate Shadcn/UI by initializing it in the project.</li>
+                <li>Create a primary layout in <code>src/app/admin/layout.tsx</code>. This layout must include a persistent, collapsible <strong>Side Navigation Bar</strong>, a <strong>Header Bar</strong>, and a main <strong>Content Area</strong>.</li>
+                <li>The navigation items must be dynamically generated based on the user's role.</li>
+            </ul>
+        </li>
+    </ol>
+    
+    <h2>Part 2: Authentication & Role-Based Access Control (RBAC)</h2>
+    <ol>
+        <li><strong>Authentication Logic:</strong> Implement user sign-up, sign-in, and sign-out using Firebase Authentication. Use React Context or a state management library to provide authentication status.</li>
+        <li><strong>RBAC Data Model:</strong> In Firestore, create two collections: <code>users</code> (stores roles array) and <code>roles</code> (stores permissions map).</li>
+        <li><strong>Middleware for Route Protection:</strong> Create <code>src/middleware.ts</code> to protect all routes under <code>/admin</code>.</li>
+        <li><strong>"Access Control" Admin Module:</strong> Create a page at <code>/admin/access-control</code> (visible only to 'admin' role) to manage users, roles, and permissions.</li>
+    </ol>
+    
+    <h2>Part 3: AI-Powered Document Processor (Genkit & Gemini)</h2>
+    <ol>
+        <li><strong>Genkit Setup:</strong> In <code>src/ai</code>, initialize Genkit and configure it to use the Google AI plugin with the Gemini Pro Vision model, sourcing the API key from environment variables.</li>
+        <li><strong>Document Processing Flow:</strong>
+            <ul>
+                <li>Create <code>src/ai/flows/process-document-flow.ts</code>.</li>
+                <li>Define Zod schemas: <code>ProcessDocumentInputSchema</code> for the base64 URI and <code>ProcessedDocumentSchema</code> for the structured output (vendor, date, items, total, etc.).</li>
+                <li>Create a Genkit Prompt (<code>documentProcessorPrompt</code>) engineered to be precise, and wrap it in a Genkit Flow (<code>processDocumentFlow</code>).</li>
+            </ul>
+        </li>
+        <li><strong>Frontend UI for Document Upload:</strong> Create a component for file upload that converts the file to a data URI, calls the Genkit flow, and displays the returned JSON data.</li>
+    </ol>
+    
+    <h2>Part 4: Core Module Implementation</h2>
+    <p>For each module listed below, implement the full CRUD (Create, Read, Update, Delete) functionality, respecting the RBAC permissions at every step.</p>
+    <h4>Instructions for each module:</h4>
+    <ul>
+        <li><strong>Data Schema:</strong> Define the Firestore data structure.</li>
+        <li><strong>UI (Table View):</strong> Use Shadcn/UI's Table component for a list view with sorting, filtering, and pagination.</li>
+        <li><strong>UI (Forms & Dialogs):</strong> Use Shadcn/UI's Dialog for creating/editing records. Use Zod for validation.</li>
+        <li><strong>API Endpoints:</strong> Use Next.js Server Actions or API routes for database operations.</li>
+        <li><strong>RBAC Integration:</strong> Conditionally render UI and protect actions based on user permissions.</li>
+    </ul>
+    <h4>Modules to Implement:</h4>
+    <ul>
+        <li>Finance (Invoices, Bills, Payments)</li>
+        <li>Lease (Properties, Landlords, Leases)</li>
+        <li>Tenant (Tenant Directory, Contracts)</li>
+        <li>Vendor (Vendor List, Vendor Bills)</li>
+        <li>Human Resource (Employees, Leave, Compensation)</li>
+        <li>Project Management (Projects, Tasks)</li>
+        <li>Stores / Inventory (Products, Stock Locations, Purchase Orders)</li>
+        <li>Specialized Modules (Optional): Rent-A-Car, Car Sales</li>
+    </ul>
+
+    <h2>Final Instruction:</h2>
+    <p>Begin with <strong>Part 1</strong> and confirm completion before moving to the next part. Work iteratively and generate code that is clean, well-commented, and follows modern TypeScript/React best practices. The final output should be a complete, runnable project that can be cloned from a repository and run with minimal setup.</p>
+</body>
+</html>

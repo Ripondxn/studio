@@ -1,5 +1,5 @@
 {
-  "approvalProcessEnabled": false,
+  "approvalProcessEnabled": true,
   "automaticInvoiceGenerationEnabled": true,
   "invoiceGenerationDay": 1,
   "monthsToGenerate": 1
