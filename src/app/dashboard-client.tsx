@@ -22,6 +22,7 @@ import {
   FileSignature,
   Shuffle,
   DoorOpen,
+  Lock
 } from 'lucide-react';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -85,7 +86,8 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
       { id: 'lease', title: 'Vacant Rooms', value: `${vacantRoomsCount} / ${totalRooms}`, change: 'View all vacant rooms', icon: <DoorOpen className="h-6 w-6 text-muted-foreground" />, href: '/property/rooms/list' },
       { id: 'tenant', title: 'Tenancy Expiring (30d)', value: expiringSoonCount, change: 'View tenancy contracts', icon: <FileClock className="h-6 w-6 text-muted-foreground" />, href: '/tenancy/contracts' },
       { id: 'lease', title: 'Lease Expiring (30d)', value: leaseExpiringSoonCount, change: 'View lease contracts', icon: <FileClock className="h-6 w-6 text-muted-foreground" />, href: '/lease/contracts' },
-      { id: 'workflow', title: 'Tenant Movements', value: initialMovementHistoryCount, change: 'Total recorded relocations', icon: <Shuffle className="h-6 w-6 text-muted-foreground" />, href: '/admin/contract-continuity' }
+      { id: 'workflow', title: 'Tenant Movements', value: initialMovementHistoryCount, change: 'Total recorded relocations', icon: <Shuffle className="h-6 w-6 text-muted-foreground" />, href: '/admin/contract-continuity' },
+      { id: 'vault', title: 'Vault', value: 'Securely store and manage your credentials', change: 'Go to Vault', icon: <Lock className="h-6 w-6 text-muted-foreground" />, href: '/vault' }
     ];
 
     return allKPIs.filter(kpi => isModuleEnabled(kpi.id));
