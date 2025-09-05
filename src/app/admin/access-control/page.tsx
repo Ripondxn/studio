@@ -1,17 +1,26 @@
 
-import { getModuleSettings } from './module-actions';
-import ModuleManagement from './module-management';
-import PermissionManagement from './permission-management'; // Correctly named component
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { promises as fs } from 'fs';
+import path from 'path';
+import AccessControlClient from './access-control-client';
+import { type ModuleSettings, type Permission } from './schema';
 
+async function getPermissions(): Promise<Permission[]> {
+  const filePath = path.join(process.cwd(), 'src', 'app', 'admin', 'access-control', 'permissions.json');
+  const fileContent = await fs.readFile(filePath, 'utf-8');
+  return JSON.parse(fileContent);
+}
+
+async function getModuleSettings(): Promise<ModuleSettings> {
+  const filePath = path.join(process.cwd(), 'src', 'app', 'admin', 'access-control', 'module-settings.json');
+  const fileContent = await fs.readFile(filePath, 'utf-8');
+  return JSON.parse(fileContent);
+}
 
 export default async function AccessControlPage() {
-  const moduleSettings = await getModuleSettings();
+  const [moduleSettings, permissions] = await Promise.all([
+    getModuleSettings(),
+    getPermissions(),
+  ]);
 
   return (
     <div className="container mx-auto py-10 space-y-8">
@@ -22,13 +31,7 @@ export default async function AccessControlPage() {
         </p>
       </div>
       
-      {/* Component to Enable/Disable entire modules */}
-      <ModuleManagement initialSettings={moduleSettings} />
-      
-      {/* Component to manage granular, role-based permissions */}
-      <PermissionManagement />
-
+      <AccessControlClient initialSettings={moduleSettings} permissions={permissions} />
     </div>
   );
 }
-

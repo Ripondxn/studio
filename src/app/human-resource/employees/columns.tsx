@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2, History } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -83,6 +83,9 @@ const ActionsCell = ({ row }: { row: { original: Employee } }) => {
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
               <Link href={`/human-resource/employees/add?id=${employee.id}`}><Pencil className="mr-2 h-4 w-4" /> Edit</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/human-resource/employees/history?id=${employee.id}`}><History className="mr-2 h-4 w-4" /> View History</Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)}>
               <Trash2 className="mr-2 h-4 w-4" /> Delete

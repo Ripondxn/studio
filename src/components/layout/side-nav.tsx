@@ -33,7 +33,7 @@ const userHasPermission = (item: any) => {
   switch(item.href) {
     case "/finance/book-management": 
       return userRoles.includes('accountant') || userRoles.includes('admin');
-    case "/expense":
+    case "/finance/expense":
         return true;
     case "/vault":
         return true;
@@ -48,7 +48,7 @@ export function SideNav({ isCollapsed, setIsCollapsed }: SideNavProps) {
   const pathname = usePathname();
 
   // Filter nav items based on user permissions
-  // const filteredNavItems = navItems.filter(item => userHasPermission(item));
+  const filteredNavItems = navItems.filter(item => userHasPermission(item));
 
   return (
     <div className={cn(
@@ -68,7 +68,7 @@ export function SideNav({ isCollapsed, setIsCollapsed }: SideNavProps) {
       )}
       <Nav
         isCollapsed={isCollapsed}
-        links={navItems.map((item) => ({
+        links={filteredNavItems.map((item) => ({
           ...item,
           variant: pathname.startsWith(item.href) ? "default" : "ghost",
           subLinks: item.subLinks?.map((sub:any) => ({

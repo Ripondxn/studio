@@ -52,12 +52,24 @@ export function Nav({ links, isCollapsed }: NavProps) {
                     <span className="sr-only">{link.title}</span>
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="flex items-center gap-4">
-                  {link.title}
-                  {link.label && (
-                    <span className="ml-auto text-muted-foreground">
-                      {link.label}
-                    </span>
+                <TooltipContent side="right" className="flex flex-col items-start gap-2 p-2">
+                  <div className="font-bold">{link.title}</div>
+                  {link.subLinks && (
+                    <div className="grid gap-1">
+                      {link.subLinks.map((subLink, subIndex) => (
+                        <Link
+                          key={subIndex}
+                          href={subLink.href}
+                          className={cn(
+                            buttonVariants({ variant: subLink.variant, size: "sm" }),
+                            "justify-start"
+                          )}
+                        >
+                          <subLink.icon className="mr-2 h-4 w-4" />
+                          {subLink.title}
+                        </Link>
+                      ))}
+                    </div>
                   )}
                 </TooltipContent>
               </Tooltip>

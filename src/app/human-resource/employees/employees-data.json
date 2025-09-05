@@ -23,7 +23,7 @@
       "expiryDate": "",
       "coverageDetails": ""
     },
-    "profession": "",
+    "profession": "dfsfsdfsd",
     "department": "",
     "joiningDate": "2025-04-05",
     "mobile": "0509231340",
@@ -37,5 +37,23 @@
     "attachments": [],
     "photo": null,
     "id": "EMP-1756786763528"
+  },
+  {
+    "employeeId": "EMP-0001",
+    "name": "Md Ripon Ahmed",
+    "profession": "dfsfsdfsd",
+    "mobile": "0509231340",
+    "email": "ripondxn@gmail.com",
+    "photo": "",
+    "id": "emp-1757083993522-28in973"
+  },
+  {
+    "employeeId": "EMP-0002",
+    "name": "Tanvir Ahmed",
+    "profession": "4343434343",
+    "mobile": "01731627179",
+    "email": "ripondxn@gmail.com",
+    "photo": "",
+    "id": "emp-1757084101624-7vu1y7b"
   }
 ]

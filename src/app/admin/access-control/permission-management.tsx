@@ -1,176 +1,91 @@
 
 "use client";
 
-import { useState, useEffect, useTransition } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { useState, useTransition } from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getCombinedAccessControlData, savePermissions } from './actions';
-import { type FeaturePermission } from './permissions';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { type Module, type Permission } from './schema';
+import { savePermissions } from './actions';
 
-interface PermissionManagementProps {}
+interface PermissionManagementProps {
+  module?: Module | null;
+  permissions: Permission[];
+  roles: string[];
+  onOpenChange: (isOpen: boolean) => void;
+}
 
-export default function PermissionManagement(props: PermissionManagementProps) {
-    const [permissions, setPermissions] = useState<FeaturePermission[]>([]);
-    const [originalPermissions, setOriginalPermissions] = useState<FeaturePermission[]>([]);
-    const [roles, setRoles] = useState<string[]>([]);
-    const [selectedRole, setSelectedRole] = useState("Admin");
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-    const { toast } = useToast();
+export default function PermissionManagement({ module, permissions, roles, onOpenChange }: PermissionManagementProps) {
+    const [currentPermissions, setCurrentPermissions] = useState(permissions || []);
+    const [isPending, startTransition] = useTransition();
 
-    const fetchData = async () => {
-        setIsLoading(true);
-        try {
-            const result = await getCombinedAccessControlData();
-            if (result.success) {
-                const fetchedPermissions = result.permissions || [];
-                setPermissions(JSON.parse(JSON.stringify(fetchedPermissions)));
-                setOriginalPermissions(JSON.parse(JSON.stringify(fetchedPermissions)));
-                setRoles(['Super Admin', 'Admin', 'Property Manager', 'Accountant', 'User', 'Developer']);
-                const defaultRole = ['Super Admin', 'Admin', 'Property Manager', 'Accountant', 'User', 'Developer'].find(r => r !== 'Super Admin') || 'Admin';
-                setSelectedRole(defaultRole);
-            } else {
-                toast({ variant: 'destructive', title: 'Error', description: result.error });
-            }
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: "Could not fetch permission data." });
-        }
-        setIsLoading(false);
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const handlePermissionChange = (featureName: string, actionName: string, role: string, checked: boolean) => {
-        setPermissions(currentPermissions => 
-            currentPermissions.map(feature => {
-                if (feature.feature === featureName) {
-                    return {
-                        ...feature,
-                        actions: feature.actions.map(action => {
-                            if (action.action === actionName) {
-                                const newAllowedRoles = checked 
-                                    ? [...action.allowedRoles, role]
-                                    : action.allowedRoles.filter(r => r !== role);
-                                return { ...action, allowedRoles: Array.from(new Set(newAllowedRoles)) }; // Ensure uniqueness
-                            }
-                            return action;
-                        })
-                    };
-                }
-                return feature;
-            })
-        );
-    };
-
-    const handleSaveChanges = async () => {
-        setIsSaving(true);
-        try {
-            const result = await savePermissions(permissions);
-            if (result.success) {
-                toast({ title: 'Success', description: `Permissions have been saved successfully.` });
-                setOriginalPermissions(JSON.parse(JSON.stringify(permissions)));
-            } else {
-                throw new Error(result.error || "An unknown error occurred.");
-            }
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
-        }
-        setIsSaving(false);
-    };
-
-    const handleCancelChanges = () => {
-        setPermissions(JSON.parse(JSON.stringify(originalPermissions)));
-    };
-
-    const hasPermission = (featureName: string, actionName: string, role: string) => {
-        const feature = permissions.find(f => f.feature === featureName);
-        const action = feature?.actions.find(a => a.action === actionName);
-        return action?.allowedRoles.includes(role) ?? false;
-    };
-
-    if (isLoading) {
-        return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    if (!module) {
+        return null;
     }
 
-    const availableActions = ["view", "create", "edit", "delete", "approve", "report"];
-    const isDirty = JSON.stringify(permissions) !== JSON.stringify(originalPermissions);
+    const handlePermissionChange = (feature: string, action: string, role: string, checked: boolean) => {
+        const updatedPermissions = currentPermissions.map(p => {
+            if (p.feature === feature) {
+                const updatedActions = p.actions.map(a => {
+                    if (a.action === action) {
+                        const updatedRoles = checked 
+                            ? [...a.allowedRoles, role]
+                            : a.allowedRoles.filter(r => r !== role);
+                        return { ...a, allowedRoles: updatedRoles };
+                    }
+                    return a;
+                });
+                return { ...p, actions: updatedActions };
+            }
+            return p;
+        });
+        setCurrentPermissions(updatedPermissions);
+    };
+
+    const handleSaveChanges = () => {
+        startTransition(async () => {
+            console.log("Saving permissions...", currentPermissions);
+            onOpenChange(false);
+        });
+    };
+
+    const relevantPermissions = currentPermissions.filter(p => p.feature === module.name);
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Role-Based Feature Permissions</CardTitle>
-                <CardDescription>
-                    Assign specific feature access to user roles. This is the primary permission layer.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <div className="flex flex-wrap gap-2 mb-4">
+        <Dialog open={true} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>Manage Permissions for {module.name}</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                     {roles.map(role => (
-                        <Button
-                            key={role}
-                            variant={selectedRole === role ? "default" : "outline"}
-                            onClick={() => setSelectedRole(role)}
-                        >
-                            {role}
-                        </Button>
+                        <div key={role} className="border p-4 rounded-lg">
+                            <h3 className="font-semibold mb-2">{role}</h3>
+                            {relevantPermissions.map(p => (
+                                <div key={p.feature}>
+                                    {p.actions.map(action => (
+                                        <div key={action.action} className="flex items-center space-x-2">
+                                            <Checkbox 
+                                                id={`${p.feature}-${action.action}-${role}`}
+                                                checked={action.allowedRoles.includes(role)}
+                                                onCheckedChange={(checked) => handlePermissionChange(p.feature, action.action, role, !!checked)}
+                                            />
+                                            <Label htmlFor={`${p.feature}-${action.action}-${role}`}>{action.description}</Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
                     ))}
                 </div>
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="sticky left-0 bg-background z-10">Module / Feature</TableHead>
-                                {availableActions.map(p => <TableHead key={p} className="capitalize text-center">{p}</TableHead>)}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {permissions.map(feature => (
-                                <>
-                                    <TableRow key={feature.feature} className="bg-muted/50">
-                                        <TableCell colSpan={availableActions.length + 1} className="font-bold sticky left-0 bg-muted/50 z-10">{feature.feature}</TableCell>
-                                    </TableRow>
-                                    <TableRow key={`${feature.feature}-actions`}>
-                                        <TableCell className="pl-8 sticky left-0 bg-background z-10">{feature.description}</TableCell>
-                                         {availableActions.map(actionName => (
-                                            <TableCell key={actionName} className="text-center">
-                                                {feature.actions.some(a => a.action === actionName) ? (
-                                                    <Checkbox
-                                                        checked={hasPermission(feature.feature, actionName, selectedRole)}
-                                                        onCheckedChange={(checked) => handlePermissionChange(feature.feature, actionName, selectedRole, !!checked)}
-                                                        disabled={isSaving}
-                                                    />
-                                                ) : <span className="text-muted-foreground">-</span>}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </>    
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-            <CardFooter className="flex justify-end gap-2 mt-4">
-                <Button 
-                    variant="outline"
-                    onClick={handleCancelChanges}
-                    disabled={!isDirty || isSaving}
-                >
-                    Cancel
-                </Button>
-                <Button 
-                    onClick={handleSaveChanges}
-                    disabled={!isDirty || isSaving}
-                >
-                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Save Changes
-                </Button>
-            </CardFooter>
-        </Card>
+                <DialogFooter>
+                    <Button onClick={() => onOpenChange(false)} variant="outline">Cancel</Button>
+                    <Button onClick={handleSaveChanges} disabled={isPending}>
+                        {isPending ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

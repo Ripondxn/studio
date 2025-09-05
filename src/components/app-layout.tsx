@@ -115,9 +115,9 @@ const navLinks = [
         { href: '/vendors/agents', label: 'Agents' },
       ]
     },
-    { 
+    {
         id: 'finance',
-        label: 'Finance', 
+        label: 'Finance',
         icon: <Banknote />,
         subItems: [
             { href: '/finance/book-management', label: 'Book Management' },
@@ -129,6 +129,7 @@ const navLinks = [
             { href: '/finance/due-payments', label: 'Due Payments' },
             { href: '/finance/cheque-print', label: 'Cheque Print' },
             { href: '/finance/daily-checkout', label: 'Daily Checkout' },
+            { id: 'expense', href: '/finance/expense', label: 'Expense' },
         ]
     },
     {

@@ -35,7 +35,7 @@ export const salaryScaleSchema = z.object({
 });
 
 export const employeeSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   employeeId: z.string().min(1, "Employee ID is required."),
   name: z.string().min(1, "Name is required."),
   dateOfBirth: z.string().optional(),
