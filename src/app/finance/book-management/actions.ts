@@ -1,7 +1,7 @@
 
 'use server';
 
-import { firestore } from "@/lib/firebase/config";
+import { firestoreAdmin } from "@/lib/firebase/admin-config";
 import { collection, addDoc, getDocs, doc, updateDoc } from "firebase/firestore";
 import { journalEntrySchema } from "./data";
 import { z } from "zod";
@@ -9,7 +9,7 @@ import { z } from "zod";
 export async function createJournalEntry(entry: Omit<z.infer<typeof journalEntrySchema>, 'id' | 'status'>) {
   const validatedEntry = journalEntrySchema.omit({ id: true }).parse({ ...entry, status: "DRAFT" });
   try {
-    const docRef = await addDoc(collection(firestore, "journal_entries"), validatedEntry);
+    const docRef = await firestoreAdmin.collection("journal_entries").add(validatedEntry);
     return { id: docRef.id };
   } catch (e) {
     console.error("Error adding document: ", e);
@@ -20,7 +20,7 @@ export async function createJournalEntry(entry: Omit<z.infer<typeof journalEntry
 export async function getJournalEntries() {
   try {
     console.log("Fetching journal entries...");
-    const querySnapshot = await getDocs(collection(firestore, "journal_entries"));
+    const querySnapshot = await firestoreAdmin.collection("journal_entries").get();
     console.log("querySnapshot:", querySnapshot);
     const entries = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as z.infer<typeof journalEntrySchema>[];
     console.log("Fetched entries:", entries);
@@ -46,8 +46,8 @@ export async function getAccounts() {
 
 export async function updateJournalEntryStatus(id: string, status: z.infer<typeof journalEntrySchema>['status']) {
   try {
-    const entryRef = doc(firestore, "journal_entries", id);
-    await updateDoc(entryRef, { status });
+    const entryRef = firestoreAdmin.collection("journal_entries").doc(id);
+    await entryRef.update({ status });
     return { success: true };
   } catch (e) {
     console.error("Error updating document: ", e);
