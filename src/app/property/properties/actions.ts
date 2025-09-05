@@ -1,130 +1,95 @@
 
-
 'use server';
 
-import { promises as fs } from 'fs';
-import path from 'path';
+import { firestoreAdmin } from '@/lib/firebase/admin-config';
 import { type Unit } from '@/app/property/units/schema';
 import { type Contract } from '@/app/tenancy/contract/schema';
 import { type Room } from '../rooms/schema';
-import { type Partition } from '../partitions/schema';
-
-const propertiesFilePath = path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json');
-const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
-const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
-const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
-const partitionsFilePath = path.join(process.cwd(), 'src/app/property/partitions/partitions-data.json');
-
-
-async function readData(filePath: string) {
-    try {
-        await fs.access(filePath);
-        const data = await fs.readFile(filePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
-    }
-}
-
 
 async function getProperties() {
-    try {
-        const data = await fs.readFile(propertiesFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        // If the file doesn't exist, return an empty array
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
-    }
+    const propertiesCollection = firestoreAdmin.collection('properties');
+    const snapshot = await propertiesCollection.get();
+    return snapshot.docs.map(doc => doc.data());
 }
 
 async function writeProperties(data: any) {
-    await fs.writeFile(propertiesFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    const propertiesCollection = firestoreAdmin.collection('properties');
+    for (const property of data) {
+        await propertiesCollection.doc(property.id).set(property);
+    }
 }
 
-
-// This is a placeholder for your real database logic.
 export async function savePropertyData(dataToSave: any, isNewRecord: boolean) {
-  try {
-    const allProperties = await getProperties();
+    try {
+        const allProperties:any = await getProperties();
 
-    if (isNewRecord) {
-        const propertyExists = allProperties.some((p: any) => (p.propertyData ? p.propertyData.code : p.code) === dataToSave.propertyData.code);
-        if (propertyExists) {
-            return { success: false, error: `Property with code "${dataToSave.propertyData.code}" already exists.` };
-        }
-        const newProperty = {
-            id: `PROP-${Date.now()}`, // Generate a unique ID
-            ...dataToSave
-        };
-        allProperties.push(newProperty);
-    } else {
-        const index = allProperties.findIndex((p: any) => {
-            const code = p.propertyData ? p.propertyData.code : p.code;
-            return code === dataToSave.propertyData.code;
-        });
-
-        if (index !== -1) {
-            allProperties[index] = {
-                ...allProperties[index],
-                ...dataToSave,
-                id: allProperties[index].id
-            };
-        } else {
-             // If for some reason we are editing but can't find the record, add it as new
+        if (isNewRecord) {
+            const propertyExists = allProperties.some((p: any) => (p.propertyData ? p.propertyData.code : p.code) === dataToSave.propertyData.code);
+            if (propertyExists) {
+                return { success: false, error: `Property with code "${dataToSave.propertyData.code}" already exists.` };
+            }
             const newProperty = {
                 id: `PROP-${Date.now()}`,
-                ...dataToSave,
+                ...dataToSave
             };
-            allProperties.push(newProperty);
-        }
-    }
-    
-    await writeProperties(allProperties);
+            await firestoreAdmin.collection('properties').doc(newProperty.id).set(newProperty);
+        } else {
+            const property = allProperties.find((p: any) => {
+                const code = p.propertyData ? p.propertyData.code : p.code;
+                return code === dataToSave.propertyData.code;
+            });
 
-    return { success: true };
-  } catch (error) {
-    console.error('Failed to save property data:', error);
-    return { success: false, error: (error as Error).message || 'An unknown error occurred' };
-  }
+            if (property) {
+                const updatedProperty = {
+                    ...property,
+                    ...dataToSave,
+                    id: property.id
+                };
+                await firestoreAdmin.collection('properties').doc(property.id).set(updatedProperty);
+            } else {
+                const newProperty = {
+                    id: `PROP-${Date.now()}`,
+                    ...dataToSave,
+                };
+                await firestoreAdmin.collection('properties').doc(newProperty.id).set(newProperty);
+            }
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to save property data:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
+    }
 }
 
 export async function findPropertyData(propertyCode: string) {
-  try {
-    const allProperties = await getProperties();
-    const property = allProperties.find((p: any) => (p.propertyData ? p.propertyData.code : p.code) === propertyCode);
+    try {
+        const propertiesCollection = firestoreAdmin.collection('properties');
+        const snapshot = await propertiesCollection.where('propertyData.code', '==', propertyCode).get();
+        
+        if (snapshot.empty) {
+            return { success: false, error: "Not Found" };
+        }
 
-    if (property) {
-       return { success: true, data: property };
-    } else {
-       return { success: false, error: "Not Found" };
+        return { success: true, data: snapshot.docs[0].data() };
+    } catch (error) {
+        console.error('Failed to find property data:', error);
+        return { success: false, error: (error as Error).message || 'An unknown error occurred' };
     }
-  } catch (error) {
-    console.error('Failed to find property data:', error);
-    return { success: false, error: (error as Error).message || 'An unknown error occurred' };
-  }
 }
 
 export async function deletePropertyData(propertyCode: string) {
     try {
-        const allProperties = await getProperties();
-        const updatedProperties = allProperties.filter((p: any) => {
-            // Handle both nested and flat structures
-            const code = p.propertyData ? p.propertyData.code : p.code;
-            return code !== propertyCode;
-        });
+        const propertiesCollection = firestoreAdmin.collection('properties');
+        const snapshot = await propertiesCollection.where('propertyData.code', '==', propertyCode).get();
 
-        if (allProperties.length === updatedProperties.length) {
-            // No property was deleted, which means it wasn't found
+        if (snapshot.empty) {
             return { success: false, error: 'Property not found.' };
         }
 
-        await writeProperties(updatedProperties);
+        const docId = snapshot.docs[0].id;
+        await propertiesCollection.doc(docId).delete();
+
         return { success: true };
     } catch (error) {
         console.error('Failed to delete property data:', error);
@@ -134,16 +99,16 @@ export async function deletePropertyData(propertyCode: string) {
 
 export async function getOccupancyInfoForProperty(propertyCode: string) {
     try {
-        const contractsData = await fs.readFile(contractsFilePath, 'utf-8');
-        const allContracts = JSON.parse(contractsData);
-        
-        const occupancyInfo = allContracts
-            .filter((c: any) => c.property === propertyCode)
-            .map((c: any) => ({
-                unitCode: c.unitCode,
-                tenantName: c.tenantName,
-                contractId: c.id,
-            }));
+        const contractsCollection = firestoreAdmin.collection('contracts');
+        const snapshot = await contractsCollection.where('property', '==', propertyCode).get();
+        const occupancyInfo = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                unitCode: data.unitCode,
+                tenantName: data.tenantName,
+                contractId: data.id,
+            };
+        });
 
         return { success: true, data: occupancyInfo };
     } catch (error) {
@@ -153,27 +118,15 @@ export async function getOccupancyInfoForProperty(propertyCode: string) {
 }
 
 async function readUnits(): Promise<Unit[]> {
-    try {
-        const data = await fs.readFile(unitsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
-    }
+    const unitsCollection = firestoreAdmin.collection('units');
+    const snapshot = await unitsCollection.get();
+    return snapshot.docs.map(doc => doc.data() as Unit);
 }
 
 async function readRooms(): Promise<Room[]> {
-    try {
-        const data = await fs.readFile(roomsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
-    }
+    const roomsCollection = firestoreAdmin.collection('rooms');
+    const snapshot = await roomsCollection.get();
+    return snapshot.docs.map(doc => doc.data() as Room);
 }
 
 
@@ -181,8 +134,9 @@ export async function getUnitsForProperty(propertyCode: string): Promise<{ succe
     try {
         const allUnits = await readUnits();
         const allRooms = await readRooms();
-        const contractsData = await fs.readFile(contractsFilePath, 'utf-8').catch(() => '[]');
-        const allContracts: Contract[] = JSON.parse(contractsData);
+        const contractsCollection = firestoreAdmin.collection('contracts');
+        const contractsSnapshot = await contractsCollection.get();
+        const allContracts: Contract[] = contractsSnapshot.docs.map(doc => doc.data() as Contract);
 
         const activeContracts = allContracts.filter(c => c.status === 'New' || c.status === 'Renew');
         
@@ -227,16 +181,13 @@ export async function getUnitsForProperty(propertyCode: string): Promise<{ succe
 }
 
 async function readLandlords() {
-    try {
-        const data = await fs.readFile(path.join(process.cwd(), 'src/app/landlord/landlords-data.json'), 'utf-8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
+    const landlordsCollection = firestoreAdmin.collection('landlords');
+    const snapshot = await landlordsCollection.get();
+    return snapshot.docs.map(doc => doc.data());
 }
 
 export async function getPropertyLookups() {
-    const landlords = await readLandlords();
+    const landlords:any = await readLandlords();
     return {
         landlords: landlords.map((l: any) => ({ code: l.landlordData.code, name: l.landlordData.name })),
     }

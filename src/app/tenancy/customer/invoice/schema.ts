@@ -1,5 +1,4 @@
 
-
 import { z } from 'zod';
 
 export const invoiceItemSchema = z.object({
@@ -8,7 +7,6 @@ export const invoiceItemSchema = z.object({
   quantity: z.number().min(1, 'Quantity must be at least 1.'),
   unitPrice: z.number().min(0, 'Unit price must be positive.'),
   total: z.number(),
-  expenseAccountId: z.string().optional(),
 });
 
 export const invoiceSchema = z.object({
@@ -32,7 +30,10 @@ export const invoiceSchema = z.object({
   remainingBalance: z.number().optional(),
   status: z.enum(['Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled']),
   notes: z.string().optional(),
-  expenseAccountId: z.string().optional(),
+});
+
+export const subscriptionInvoiceSchema = invoiceSchema.extend({
+  isSubscription: z.boolean().optional(),
 });
 
 export type Invoice = z.infer<typeof invoiceSchema>;

@@ -30,9 +30,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Trash2, Loader2, Printer, X } from 'lucide-react';
-import { saveSubscriptionInvoice, getNextSubscriptionInvoiceNumber } from './actions';
+import { saveSubscriptionInvoice, getNextSubscriptionInvoiceNumber } from '@/app/tenancy/customer/invoice/actions';
 import { getLookups } from '@/app/lookups/actions';
-import { type Invoice, subscriptionInvoiceSchema } from './schema';
+import { type Invoice, subscriptionInvoiceSchema } from '@/app/tenancy/customer/invoice/schema';
 import { format } from 'date-fns';
 import { InvoiceView } from '@/app/tenancy/customer/invoice/invoice-view';
 import { Switch } from '@/components/ui/switch';
@@ -48,10 +48,9 @@ interface SubscriptionInvoiceDialogProps {
   invoice: Invoice | null;
   tenant: { code: string; name: string, isSubscriptionActive?: boolean, subscriptionStatus?: 'Yearly' | 'Monthly', subscriptionAmount?: number, property?: string, unitCode?: string, roomCode?: string };
   onSuccess: () => void;
-  isViewMode?: boolean;
 }
 
-export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess, isViewMode = false }: SubscriptionInvoiceDialogProps) {
+export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, onSuccess }: SubscriptionInvoiceDialogProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
@@ -216,27 +215,6 @@ export function SubscriptionInvoiceDialog({ isOpen, setIsOpen, invoice, tenant, 
     } else {
         setValue(`items.${index}.description`, label || value);
     }
-  }
-
-  if (isViewMode && invoice) {
-    return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="sm:max-w-4xl">
-                 <DialogHeader>
-                    <DialogTitle>View Invoice: {invoice.invoiceNo}</DialogTitle>
-                </DialogHeader>
-                <div className="max-h-[70vh] overflow-y-auto" ref={printRef}>
-                    <InvoiceView invoice={invoice} />
-                </div>
-                <DialogFooter>
-                    <Button type="button" variant="outline" onClick={handlePrint}>
-                        <Printer className="mr-2 h-4 w-4" /> Print
-                    </Button>
-                    <DialogClose asChild><Button type="button">Close</Button></DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
   }
 
   return (

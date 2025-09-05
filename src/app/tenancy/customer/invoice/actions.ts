@@ -1,89 +1,15 @@
 
-
 'use server';
 
-import { promises as fs } from 'fs';
-import path from 'path';
 import { revalidatePath } from 'next/cache';
-import { invoiceSchema } from './schema';
-import { type Invoice } from './schema';
-import { addPayment } from '@/app/finance/payment/actions';
-import { type Contract } from '../../contract/schema';
+import { firestoreAdmin } from '@/lib/firebase/admin-config';
+import { invoiceSchema, type Invoice } from './schema';
 
-const invoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/invoice/invoices-data.json');
-const subscriptionInvoicesFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/invoice/subscription-invoices-data.json');
-const contractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
-
-async function readInvoices(): Promise<Invoice[]> {
-    try {
-        await fs.access(invoicesFilePath);
-        const data = await fs.readFile(invoicesFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await writeInvoices([]);
-            return [];
-        }
-        throw error;
-    }
-}
-
-async function writeInvoices(data: Invoice[]) {
-    await fs.writeFile(invoicesFilePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-async function writeContracts(data: Contract[]) {
-    await fs.writeFile(contractsFilePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-async function readContracts(): Promise<Contract[]> {
-    try {
-        await fs.access(contractsFilePath);
-        const data = await fs.readFile(contractsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await writeContracts([]);
-            return [];
-        }
-        throw error;
-    }
-}
-
-async function readSubscriptionInvoices(): Promise<Invoice[]> {
-    try {
-        await fs.access(subscriptionInvoicesFilePath);
-        const data = await fs.readFile(subscriptionInvoicesFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await fs.writeFile(subscriptionInvoicesFilePath, JSON.stringify([], null, 2), 'utf-8');
-            return [];
-        }
-        throw error;
-    }
-}
-
-export async function getInvoicesForCustomer(customerCode: string) {
-    const generalInvoices = await readInvoices();
-    const subscriptionInvoices = await readSubscriptionInvoices();
-    
-    const allInvoices = [...generalInvoices, ...subscriptionInvoices];
-    
-    // Invoices for a tenant are those where the customerCode matches the tenantCode
-    const tenantInvoices = allInvoices.filter(inv => inv.customerCode === customerCode);
-    return tenantInvoices.map(inv => ({
-        ...inv,
-        remainingBalance: inv.total - (inv.amountPaid || 0),
-    }));
-}
-
-
-export async function getNextGeneralInvoiceNumber() {
-    const allInvoices = await readInvoices();
+async function getNextInvoiceNumber(prefix: string) {
+    const querySnapshot = await firestoreAdmin.collection("invoices").where("invoiceNo", ">=", prefix).where("invoiceNo", "<", prefix + 'z').get();
     let maxNum = 0;
-    allInvoices.forEach(i => {
-        const match = i.invoiceNo.match(/^INV-(\d+)$/);
+    querySnapshot.docs.forEach(doc => {
+        const match = doc.data().invoiceNo.match(new RegExp(`^${prefix}-(\\d+)$`));
         if (match) {
             const num = parseInt(match[1], 10);
             if (num > maxNum) {
@@ -91,12 +17,27 @@ export async function getNextGeneralInvoiceNumber() {
             }
         }
     });
-    return `INV-${(maxNum + 1).toString().padStart(4, '0')}`;
+    return `${prefix}-${(maxNum + 1).toString().padStart(4, '0')}`;
 }
 
+export async function getInvoicesForCustomer(customerCode: string) {
+    const querySnapshot = await firestoreAdmin.collection("invoices").where("customerCode", "==", customerCode).get();
+    return querySnapshot.docs.map(doc => {
+        const data = doc.data() as Invoice;
+        return { ...data, id: doc.id, remainingBalance: data.total - (data.amountPaid || 0) };
+    });
+}
 
-export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingBalance'> & { isAutoInvoiceNo?: boolean }, createdBy: string) {
-    const { isAutoInvoiceNo, ...invoiceData } = data;
+export async function getNextGeneralInvoiceNumber() {
+    return await getNextInvoiceNumber('INV');
+}
+
+export async function getNextSubscriptionInvoiceNumber() {
+    return await getNextInvoiceNumber('SUB-INV');
+}
+
+export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingBalance'> & { isAutoInvoiceNo?: boolean, isSubscription?: boolean }, createdBy: string) {
+    const { isAutoInvoiceNo, isSubscription, ...invoiceData } = data;
     const validation = invoiceSchema.omit({id: true, amountPaid: true, remainingBalance: true}).safeParse(invoiceData);
 
     if (!validation.success) {
@@ -105,64 +46,62 @@ export async function saveInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingB
     }
 
     try {
-        const allInvoices = await readInvoices();
         const isNewRecord = !data.id;
         const validatedData = validation.data;
         let savedInvoice: Invoice;
 
         if (isNewRecord) {
-             let newInvoiceNo = validatedData.invoiceNo;
-             if (isAutoInvoiceNo) {
-                newInvoiceNo = await getNextGeneralInvoiceNumber();
-             } else {
-                 const invoiceExists = allInvoices.some(inv => inv.invoiceNo === newInvoiceNo);
-                 if (invoiceExists) {
+            let newInvoiceNo = validatedData.invoiceNo;
+            if (isAutoInvoiceNo) {
+                newInvoiceNo = isSubscription ? await getNextSubscriptionInvoiceNumber() : await getNextGeneralInvoiceNumber();
+            } else {
+                const querySnapshot = await firestoreAdmin.collection("invoices").where("invoiceNo", "==", newInvoiceNo).get();
+                if (!querySnapshot.empty) {
                     return { success: false, error: `An invoice with number "${newInvoiceNo}" already exists.`};
-                 }
-             }
+                }
+            }
 
             const newInvoice: Invoice = {
                 ...validatedData,
                 invoiceNo: newInvoiceNo,
-                id: `INV-${Date.now()}`,
                 amountPaid: 0,
-                 items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`}))
+                items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`})),
+                id: ''
             };
-            allInvoices.push(newInvoice);
-            savedInvoice = newInvoice;
+            const docRef = await firestoreAdmin.collection("invoices").add(newInvoice);
+            savedInvoice = { ...newInvoice, id: docRef.id };
             
         } else {
-            const index = allInvoices.findIndex(inv => inv.id === data.id);
-            if (index === -1) {
-                return { success: false, error: 'Invoice not found.' };
-            }
-            allInvoices[index] = { ...allInvoices[index], ...validatedData, items: validatedData.items.map(item => ({...item, id: item.id || `item-${Date.now()}-${Math.random()}`})) };
-            savedInvoice = allInvoices[index];
+            const docRef = firestoreAdmin.collection("invoices").doc(data.id as string);
+            await docRef.update(validatedData);
+            const updatedDoc = await docRef.get();
+            savedInvoice = { ...updatedDoc.data(), id: updatedDoc.id } as Invoice;
         }
 
-        await writeInvoices(allInvoices);
         revalidatePath(`/tenancy/customer/add?code=${data.customerCode}`);
         revalidatePath(`/tenancy/tenants/add?code=${data.customerCode}`);
-        revalidatePath('/property/units/vacant');
-        revalidatePath('/property/properties');
         return { success: true, data: savedInvoice };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
 }
 
+export async function saveSubscriptionInvoice(data: Omit<Invoice, 'amountPaid' | 'remainingBalance'> & { isAutoInvoiceNo?: boolean }, createdBy: string) {
+    return await saveInvoice({ ...data, isSubscription: true }, createdBy);
+}
+
+
 export async function deleteInvoice(invoiceId: string) {
     try {
-        const allInvoices = await readInvoices();
-        const invoiceToDelete = allInvoices.find(inv => inv.id === invoiceId);
-        if (!invoiceToDelete) {
-             return { success: false, error: 'Invoice not found.' };
+        const docRef = firestoreAdmin.collection("invoices").doc(invoiceId);
+        const doc = await docRef.get();
+        if (!doc.exists) {
+            return { success: false, error: 'Invoice not found.' };
         }
-
-        const updatedInvoices = allInvoices.filter(inv => inv.id !== invoiceId);
-        await writeInvoices(updatedInvoices);
-        revalidatePath(`/tenancy/customer/add?code=${invoiceToDelete.customerCode}`);
-        revalidatePath(`/tenancy/tenants/add?code=${invoiceToDelete.customerCode}`);
+        const customerCode = doc.data()?.customerCode;
+        await docRef.delete();
+        revalidatePath(`/tenancy/customer/add?code=${customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${customerCode}`);
         return { success: true };
     } catch (error) {
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
@@ -171,15 +110,14 @@ export async function deleteInvoice(invoiceId: string) {
 
 export async function updateInvoiceStatus(invoiceId: string, status: Invoice['status']) {
     try {
-        const allInvoices = await readInvoices();
-        const index = allInvoices.findIndex(inv => inv.id === invoiceId);
-        if (index === -1) {
+        const docRef = firestoreAdmin.collection("invoices").doc(invoiceId);
+        const doc = await docRef.get();
+        if (!doc.exists) {
             return { success: false, error: 'Invoice not found to update status.' };
         }
-        allInvoices[index].status = status;
-        await writeInvoices(allInvoices);
-        revalidatePath(`/tenancy/customer/add?code=${allInvoices[index].customerCode}`);
-        revalidatePath(`/tenancy/tenants/add?code=${allInvoices[index].customerCode}`);
+        await docRef.update({ status });
+        revalidatePath(`/tenancy/customer/add?code=${doc.data()?.customerCode}`);
+        revalidatePath(`/tenancy/tenants/add?code=${doc.data()?.customerCode}`);
         return { success: true };
     } catch (error) {
          return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
@@ -188,39 +126,19 @@ export async function updateInvoiceStatus(invoiceId: string, status: Invoice['st
 
 export async function applyPaymentToInvoices(invoicePayments: { invoiceId: string; amount: number }[], customerCode: string) {
     try {
-        const generalInvoices = await readInvoices();
-        const subscriptionInvoices = await readSubscriptionInvoices();
-        let generalInvoicesModified = false;
-        let subscriptionInvoicesModified = false;
-
+        const batch = firestoreAdmin.batch();
         for (const payment of invoicePayments) {
-            let index = generalInvoices.findIndex(inv => inv.id === payment.invoiceId);
-            if (index !== -1) {
-                generalInvoices[index].amountPaid = (generalInvoices[index].amountPaid || 0) + payment.amount;
-                const remainingBalance = generalInvoices[index].total - generalInvoices[index].amountPaid;
-                if (remainingBalance <= 0.001) {
-                    generalInvoices[index].status = 'Paid';
-                }
-                generalInvoicesModified = true;
-            } else {
-                index = subscriptionInvoices.findIndex(inv => inv.id === payment.invoiceId);
-                if (index !== -1) {
-                    subscriptionInvoices[index].amountPaid = (subscriptionInvoices[index].amountPaid || 0) + payment.amount;
-                    const remainingBalance = subscriptionInvoices[index].total - subscriptionInvoices[index].amountPaid;
-                    if (remainingBalance <= 0.001) {
-                        subscriptionInvoices[index].status = 'Paid';
-                    }
-                    subscriptionInvoicesModified = true;
-                }
+            const docRef = firestoreAdmin.collection("invoices").doc(payment.invoiceId);
+            const doc = await docRef.get();
+            if (doc.exists) {
+                const invoice = doc.data() as Invoice;
+                const newAmountPaid = (invoice.amountPaid || 0) + payment.amount;
+                const remainingBalance = invoice.total - newAmountPaid;
+                const newStatus = remainingBalance <= 0.001 ? 'Paid' : invoice.status;
+                batch.update(docRef, { amountPaid: newAmountPaid, status: newStatus });
             }
         }
-
-        if (generalInvoicesModified) {
-            await writeInvoices(generalInvoices);
-        }
-        if (subscriptionInvoicesModified) {
-            await fs.writeFile(subscriptionInvoicesFilePath, JSON.stringify(subscriptionInvoices, null, 2), 'utf-8');
-        }
+        await batch.commit();
 
         revalidatePath(`/tenancy/customer/add?code=${customerCode}`);
         revalidatePath(`/tenancy/tenants/add?code=${customerCode}`);

@@ -1,38 +1,15 @@
 
 'use server';
 
-import { promises as fs } from 'fs';
-import path from 'path';
 import { revalidatePath } from 'next/cache';
+import { firestoreAdmin } from '@/lib/firebase/admin-config';
 import { type Payment } from '@/app/finance/payment/schema';
 
-const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
-const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
-
-
-async function getCustomers() {
-    try {
-        await fs.access(customersFilePath);
-        const data = await fs.readFile(customersFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await writeCustomers([]);
-            return [];
-        }
-        throw error;
-    }
-}
-
-async function writeCustomers(data: any) {
-    await fs.writeFile(customersFilePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
 async function getNextCustomerCode() {
-    const allCustomers = await getCustomers();
+    const querySnapshot = await firestoreAdmin.collection("customers").get();
     let maxNum = 0;
-    allCustomers.forEach((c: any) => {
-        const code = c.customerData.code || '';
+    querySnapshot.docs.forEach(doc => {
+        const code = doc.data().customerData.code || '';
         const match = code.match(/^C(\d+)$/);
         if(match) {
             const num = parseInt(match[1], 10);
@@ -44,57 +21,43 @@ async function getNextCustomerCode() {
     return `C${(maxNum + 1).toString().padStart(4, '0')}`;
 }
 
-
 export async function getAllCustomers() {
-    const customers = await getCustomers();
-    return customers.map((c: any) => ({
-        ...c.customerData,
-        attachments: c.attachments || [],
-    }));
+    const querySnapshot = await firestoreAdmin.collection("customers").get();
+    return querySnapshot.docs.map(doc => ({ ...doc.data().customerData, id: doc.id, attachments: doc.data().attachments || [] }));
 }
 
 export async function saveCustomerData(dataToSave: any, isNewRecord: boolean, isAutoCode: boolean) {
   try {
-    const allCustomers = await getCustomers();
     let customerData = dataToSave.customerData;
     let savedCustomer;
-    
+
     if (isNewRecord) {
         if (isAutoCode) {
             customerData.code = await getNextCustomerCode();
         }
 
         const { code } = customerData;
-        const customerExists = allCustomers.some((c: any) => c.customerData.code === code);
-        if (customerExists) {
+        const querySnapshot = await firestoreAdmin.collection("customers").where("customerData.code", "==", code).get();
+        if (!querySnapshot.empty) {
             return { success: false, error: `Customer with code "${code}" already exists.` };
         }
-        const newCustomer = {
-            id: `C${Date.now()}`,
-            ...dataToSave,
-            customerData,
-        };
-        allCustomers.push(newCustomer);
-        savedCustomer = newCustomer;
+
+        const docRef = await firestoreAdmin.collection("customers").add(dataToSave);
+        savedCustomer = { ...dataToSave, id: docRef.id };
     } else {
         const { code } = customerData;
-        const index = allCustomers.findIndex((c: any) => c.customerData.code === code);
+        const querySnapshot = await firestoreAdmin.collection("customers").where("customerData.code", "==", code).get();
 
-        if (index !== -1) {
-            allCustomers[index] = {
-                ...allCustomers[index],
-                ...dataToSave,
-                id: allCustomers[index].id
-            };
-            savedCustomer = allCustomers[index];
+        if (!querySnapshot.empty) {
+            const docId = querySnapshot.docs[0].id;
+            await firestoreAdmin.collection("customers").doc(docId).update(dataToSave);
+            savedCustomer = { ...dataToSave, id: docId };
         } else {
             return { success: false, error: `Customer with code "${code}" not found.` };
         }
     }
-    
-    await writeCustomers(allCustomers);
-    revalidatePath('/tenancy/customer');
 
+    revalidatePath('/tenancy/customer');
     return { success: true, data: savedCustomer.customerData };
   } catch (error) {
     console.error('Failed to save customer data:', error);
@@ -104,17 +67,16 @@ export async function saveCustomerData(dataToSave: any, isNewRecord: boolean, is
 
 export async function findCustomerData(customerCode: string) {
   try {
-    const allCustomers = await getCustomers();
-
     if (customerCode === 'new') {
         const newCode = await getNextCustomerCode();
         return { success: true, data: { customerData: { code: newCode } } };
     }
 
-    const customer = allCustomers.find((c: any) => c.customerData.code === customerCode);
+    const querySnapshot = await firestoreAdmin.collection("customers").where("customerData.code", "==", customerCode).get();
 
-    if (customer) {
-       return { success: true, data: customer };
+    if (!querySnapshot.empty) {
+       const doc = querySnapshot.docs[0];
+       return { success: true, data: { ...doc.data(), id: doc.id } };
     } else {
        return { success: false, error: "Not Found" };
     }
@@ -126,14 +88,15 @@ export async function findCustomerData(customerCode: string) {
 
 export async function deleteCustomerData(customerCode: string) {
     try {
-        const allCustomers = await getCustomers();
-        const updatedCustomers = allCustomers.filter((c: any) => c.customerData.code !== customerCode);
+        const querySnapshot = await firestoreAdmin.collection("customers").where("customerData.code", "==", customerCode).get();
 
-        if (allCustomers.length === updatedCustomers.length) {
+        if (querySnapshot.empty) {
             return { success: false, error: 'Customer not found.' };
         }
 
-        await writeCustomers(updatedCustomers);
+        const docId = querySnapshot.docs[0].id;
+        await firestoreAdmin.collection("customers").doc(docId).delete();
+
         revalidatePath('/tenancy/customer');
         return { success: true };
     } catch (error) {
@@ -142,23 +105,10 @@ export async function deleteCustomerData(customerCode: string) {
     }
 }
 
-async function readPayments(): Promise<Payment[]> {
-    try {
-        const paymentsData = await fs.readFile(paymentsFilePath, 'utf-8');
-        return JSON.parse(paymentsData);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        console.error('Failed to read payments file:', error);
-        return [];
-    }
-}
-
 export async function getPaymentsForCustomer(customerCode: string): Promise<Payment[]> {
     try {
-        const allPayments = await readPayments();
-        const customerPayments = allPayments.filter(p => p.partyName === customerCode && p.type === 'Receipt');
+        const querySnapshot = await firestoreAdmin.collection("payments").where("partyName", "==", customerCode).where("type", "==", "Receipt").get();
+        const customerPayments = querySnapshot.docs.map(doc => doc.data() as Payment);
         return customerPayments.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (error) {
         console.error('Failed to get payments for customer:', error);
