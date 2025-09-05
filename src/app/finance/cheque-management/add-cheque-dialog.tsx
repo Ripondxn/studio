@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,7 +21,8 @@ import { Plus, Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { chequeSchema, type Cheque } from './schema';
-import { addCheque, getLookups } from './actions';
+import { addCheque } from './actions';
+import { getLookups } from '@/app/admin/lookups/actions';
 import { Combobox } from '@/components/ui/combobox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type PaymentInstallment as TenancyPaymentInstallment } from '@/app/tenancy/contract/schema';

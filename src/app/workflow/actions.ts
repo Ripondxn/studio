@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -54,11 +53,10 @@ async function writeBankAccounts(data: BankAccount[]) {
 
 async function readPettyCash(): Promise<{ balance: number }> {
     const data = await readData(pettyCashFilePath);
-    // if file is empty or doesn't exist, return a default object
     if (!data || (Array.isArray(data) && data.length === 0)) {
         return { balance: 0 };
     }
-    return data;
+    return data as { balance: number };
 }
 
 async function writePettyCash(data: { balance: number }) {
@@ -70,6 +68,7 @@ export async function applyFinancialImpact(payment: Payment) {
     const { type, amount, bankAccountId, paymentFrom, partyType, partyName, expenseAccountId } = payment;
     const allAccounts: Account[] = await readData(accountsFilePath);
     const accountsPayableIndex = allAccounts.findIndex(a => a.code === '2110'); // Accounts Payable
+    const ownersEquityAccountIndex = allAccounts.findIndex(a => a.code === '3110'); // Owner's Equity
 
     // Update Cash/Bank balances
     if (paymentFrom === 'Petty Cash') {
@@ -93,14 +92,22 @@ export async function applyFinancialImpact(payment: Payment) {
         }
     }
     
-    // Update Expense/Revenue accounts
-    if (type === 'Payment' && expenseAccountId) {
+    // Update Chart of Accounts based on transaction type
+    if (partyName === 'Owner') {
+        if (ownersEquityAccountIndex !== -1) {
+            if (type === 'Payment') { // Withdrawal
+                allAccounts[ownersEquityAccountIndex].balance -= amount;
+            } else { // Contribution
+                allAccounts[ownersEquityAccountIndex].balance += amount;
+            }
+        }
+    } else if (type === 'Payment' && expenseAccountId) {
         const expenseAccountIndex = allAccounts.findIndex(a => a.code === expenseAccountId);
         if(expenseAccountIndex !== -1) {
             allAccounts[expenseAccountIndex].balance += amount;
         }
     } else if (type === 'Receipt') {
-        // Assuming all receipts are rental income for now for simplicity
+        // Assuming non-equity receipts are rental income for simplicity
         const revenueAccountIndex = allAccounts.findIndex(a => a.code === '4110');
         if (revenueAccountIndex !== -1) {
             allAccounts[revenueAccountIndex].balance += amount;
@@ -120,7 +127,6 @@ export async function applyFinancialImpact(payment: Payment) {
     
      await writeData(accountsFilePath, allAccounts);
 }
-
 
 
 type WorkflowAction = 'SUBMIT' | 'APPROVE' | 'REJECT' | 'ADD_COMMENT';
@@ -209,7 +215,6 @@ async function updateTransactionWorkflow(
             approvalHistory: [...(transaction.approvalHistory || []), newHistoryEntry],
         };
         
-        // If the transaction is now posted, update the financial accounts
         if (newStatus === 'POSTED' && previousStatus !== 'POSTED') {
             await applyFinancialImpact(allPayments[transactionIndex]);
         }
@@ -255,69 +260,43 @@ export async function addCommentToTransaction(params: z.infer<typeof workflowAct
     return await updateTransactionWorkflow(transactionId, 'ADD_COMMENT', actorId as Role, actorRole as Role, comment);
 }
 
-
 export async function reverseFinancialImpact(payment: Payment) {
-    if (payment.currentStatus !== 'POSTED') return; // Only reverse posted transactions
+    if (payment.currentStatus !== 'POSTED') return; 
 
-    // Reverse Cash/Bank balances
     if (payment.paymentFrom === 'Petty Cash') {
-        const pettyCash = await readData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'));
+        const pettyCash = await readPettyCash();
         if (payment.type === 'Payment') {
             pettyCash.balance += payment.amount;
-        } else { // Receipt
+        } else {
             pettyCash.balance -= payment.amount;
         }
-        await writeData(path.join(process.cwd(), 'src/app/finance/banking/petty-cash.json'), pettyCash);
+        await writePettyCash(pettyCash);
     } else if (payment.bankAccountId) {
-            const allBankAccounts = await readData(path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json'));
-            const accountIndex = allBankAccounts.findIndex(acc => acc.id === payment.bankAccountId);
-            if (accountIndex !== -1) {
+        const allBankAccounts = await readBankAccounts();
+        const accountIndex = allBankAccounts.findIndex(acc => acc.id === payment.bankAccountId);
+        if (accountIndex !== -1) {
             if (payment.type === 'Payment') {
                 allBankAccounts[accountIndex].balance += payment.amount;
-            } else { // Receipt
+            } else {
                 allBankAccounts[accountIndex].balance -= payment.amount;
             }
-            await writeData(path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json'), allBankAccounts);
-            }
-    }
-    
-    // Reverse invoice allocations if applicable
-    if (payment.type === 'Receipt' && payment.invoiceAllocations && payment.invoiceAllocations.length > 0) {
-        const allInvoices: Invoice[] = await readData(invoicesFilePath);
-        payment.invoiceAllocations.forEach(allocation => {
-            const invoiceIndex = allInvoices.findIndex(inv => inv.id === allocation.invoiceId);
-            if (invoiceIndex !== -1) {
-                allInvoices[invoiceIndex].amountPaid = (allInvoices[invoiceIndex].amountPaid || 0) - allocation.amount;
-                if (allInvoices[invoiceIndex].status === 'Paid') {
-                    const dueDate = parseISO(allInvoices[invoiceIndex].dueDate);
-                    allInvoices[invoiceIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
-                }
-            }
-        });
-        await writeData(invoicesFilePath, allInvoices);
-    }
-    
-    // Reverse bill allocations if applicable
-    if (payment.type === 'Payment' && payment.billAllocations && payment.billAllocations.length > 0) {
-        const allBills: Bill[] = await readData(billsFilePath);
-        payment.billAllocations.forEach(allocation => {
-            const billIndex = allBills.findIndex(bill => bill.id === allocation.billId);
-            if (billIndex !== -1) {
-                allBills[billIndex].amountPaid = (allBills[billIndex].amountPaid || 0) - allocation.amount;
-                if (allBills[billIndex].status === 'Paid') {
-                    const dueDate = parseISO(allBills[billIndex].dueDate);
-                    allBills[billIndex].status = isBefore(dueDate, new Date()) ? 'Overdue' : 'Sent';
-                }
-            }
-        });
-        await writeData(billsFilePath, allBills);
+            await writeBankAccounts(allBankAccounts);
+        }
     }
 
-    // Reverse Chart of Accounts
-    const allAccounts = await readData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'));
-    const { type, amount, expenseAccountId, partyType } = payment;
-
-    if (type === 'Payment' && expenseAccountId) {
+    const allAccounts: Account[] = await readData(accountsFilePath);
+    const { type, amount, expenseAccountId, partyType, partyName } = payment;
+    
+    if (partyName === 'Owner') {
+        const ownersEquityAccountIndex = allAccounts.findIndex(a => a.code === '3110');
+        if (ownersEquityAccountIndex !== -1) {
+            if (type === 'Payment') { // Withdrawal
+                allAccounts[ownersEquityAccountIndex].balance += amount;
+            } else { // Contribution
+                allAccounts[ownersEquityAccountIndex].balance -= amount;
+            }
+        }
+    } else if (type === 'Payment' && expenseAccountId) {
         const expenseAccountIndex = allAccounts.findIndex(a => a.code === expenseAccountId);
         if(expenseAccountIndex !== -1) {
             allAccounts[expenseAccountIndex].balance -= amount;
@@ -340,5 +319,5 @@ export async function reverseFinancialImpact(payment: Payment) {
         }
     }
 
-    await writeData(path.join(process.cwd(), 'src/app/finance/chart-of-accounts/accounts.json'), allAccounts);
+    await writeData(accountsFilePath, allAccounts);
 }

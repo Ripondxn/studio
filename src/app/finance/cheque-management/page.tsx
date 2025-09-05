@@ -1,13 +1,35 @@
 
-import { getCheques, getSummary } from './actions';
-import { ChequesClient } from './cheques-client.tsx';
+'use client';
 
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ChequeManagementTab } from './cheque-management-tab';
+import { ChequeBookTab } from './cheque-book-tab';
+import { ChequeBookReportsTab } from './cheque-book-reports-tab';
 
-export default async function ChequeManagementPage() {
-  const cheques = await getCheques();
-  const summary = await getSummary();
+export default function ChequeManagementPage() {
+    const [key, setKey] = useState(0);
 
-  return (
-    <ChequesClient initialCheques={cheques} initialSummary={summary} />
-  );
+    const handleSuccess = () => {
+        setKey(prevKey => prevKey + 1);
+    };
+
+    return (
+        <Tabs defaultValue="management">
+            <TabsList className="mb-4">
+                <TabsTrigger value="management">Cheque Management</TabsTrigger>
+                <TabsTrigger value="books">Cheque Book</TabsTrigger>
+                <TabsTrigger value="reports">Cheque Book Reports</TabsTrigger>
+            </TabsList>
+            <TabsContent value="management">
+                <ChequeManagementTab key={key} onSuccess={handleSuccess} />
+            </TabsContent>
+            <TabsContent value="books">
+                <ChequeBookTab key={key} onSuccess={handleSuccess} />
+            </TabsContent>
+            <TabsContent value="reports">
+                <ChequeBookReportsTab key={key} />
+            </TabsContent>
+        </Tabs>
+    );
 }

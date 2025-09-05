@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -19,7 +18,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CornerUpLeft } from 'lucide-react';
-import { returnCheque, getBankAccounts } from './actions';
+import { returnCheque } from './actions';
+import { getBankAccounts } from '@/app/finance/banking/actions';
 import { format } from 'date-fns';
 import { type Cheque } from './schema';
 import { useCurrency } from '@/context/currency-context';

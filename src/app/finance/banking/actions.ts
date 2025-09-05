@@ -1,5 +1,3 @@
-
-
 'use server';
 
 import { promises as fs } from 'fs';
@@ -289,6 +287,58 @@ export async function transferFunds(data: z.infer<typeof fundTransferSchema>) {
 
         revalidatePath('/finance/banking');
         revalidatePath('/workflow');
+        return { success: true };
+
+    } catch (error) {
+        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    }
+}
+
+export async function createDepositVoucher(data: { bankAccountId: string, depositDate: string, chequeIds: string[] }) {
+    const { bankAccountId, depositDate, chequeIds } = data;
+
+    try {
+        const allCheques = await readAllCheques();
+        const chequesToDeposit = allCheques.filter(c => chequeIds.includes(c.id));
+
+        if (chequesToDeposit.length === 0) {
+            return { success: false, error: 'No valid cheques found for deposit.' };
+        }
+
+        const totalAmount = chequesToDeposit.reduce((sum, cheque) => sum + cheque.amount, 0);
+        const remarks = `Deposit of ${chequesToDeposit.length} cheques. Cheque numbers: ${chequesToDeposit.map(c => c.chequeNo).join(', ')}`;
+
+        const allAccounts = await readAccounts();
+        const accountIndex = allAccounts.findIndex(acc => acc.id === bankAccountId);
+
+        if (accountIndex === -1) {
+            return { success: false, error: 'Bank account not found.' };
+        }
+
+        allAccounts[accountIndex].balance += totalAmount;
+        await writeAccounts(allAccounts);
+
+        const allPayments = await readAllPayments();
+        const newReceipt: Payment = {
+            id: `RCPT-${Date.now()}`,
+            type: 'Receipt',
+            date: depositDate,
+            partyType: 'Customer',
+            partyName: 'Cheque Deposit',
+            amount: totalAmount,
+            paymentMethod: 'Cheque',
+            bankAccountId: bankAccountId,
+            paymentFrom: 'Bank',
+            referenceNo: `DEP-${Date.now()}`,
+            remarks: remarks,
+            status: 'Received',
+            currentStatus: 'POSTED', 
+        };
+
+        allPayments.push(newReceipt);
+        await writePayments(allPayments);
+
+        revalidatePath('/finance/banking');
         return { success: true };
 
     } catch (error) {

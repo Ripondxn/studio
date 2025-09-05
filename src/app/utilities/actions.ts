@@ -44,7 +44,7 @@ async function readPayments() {
     }
 }
 
-export async function getAllUtilityAccounts(): Promise<UtilityAccount[]> {
+export async function getAccounts(): Promise<UtilityAccount[]> {
     const accounts = await readAccounts();
     const payments = await readPayments();
 

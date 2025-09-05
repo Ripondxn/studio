@@ -1,49 +1,22 @@
 
 'use server';
 
-import { promises as fs } from 'fs';
-import path from 'path';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { chequeSchema, type Cheque } from './schema';
-import { type Tenant } from '@/app/tenancy/tenants/schema';
-import { type Landlord } from '@/app/landlord/schema';
-import { type Contract as TenancyContract, type PaymentInstallment as TenancyPaymentInstallment } from '@/app/tenancy/contract/schema';
-import { type LeaseContract, type PaymentInstallment as LeasePaymentInstallment } from '@/app/lease/contract/schema';
-import { startOfWeek, endOfWeek, startOfMonth, isWithinInterval, parseISO, isBefore, startOfToday, format } from 'date-fns';
-import { type BankAccount } from '@/app/finance/banking/schema';
-import { type Payment } from '../payment/schema';
-import { type UserRole } from '@/app/admin/user-roles/schema';
-import { type Unit } from '@/app/property/units/schema';
-import { type Room } from '@/app/property/rooms/schema';
-import { getWorkflowSettings } from '@/app/admin/workflow-settings/actions';
-import { applyFinancialImpact } from '@/app/workflow/actions';
-import { type Customer } from '@/app/tenancy/customer/schema';
-import { type Vendor } from '@/app/vendors/schema';
-import { type Agent } from '@/app/vendors/agents/schema';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { Cheque, chequeSchema, ChequeBook, chequeBookSchema, ChequeLeaf } from './schema';
 
-const chequesFilePath = path.join(process.cwd(), 'src/app/finance/cheque-management/cheques-data.json');
-const tenantsFilePath = path.join(process.cwd(), 'src/app/tenancy/tenants/tenants-data.json');
-const landlordsFilePath = path.join(process.cwd(), 'src/app/landlord/landlords-data.json');
-const vendorsFilePath = path.join(process.cwd(), 'src/app/vendors/vendors-data.json');
-const agentsFilePath = path.join(process.cwd(), 'src/app/vendors/agents/agents-data.json');
-const customersFilePath = path.join(process.cwd(), 'src/app/tenancy/customer/customers-data.json');
-const tenancyContractsFilePath = path.join(process.cwd(), 'src/app/tenancy/contract/contracts-data.json');
-const leaseContractsFilePath = path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json');
-const bankAccountsFilePath = path.join(process.cwd(), 'src/app/finance/banking/accounts-data.json');
-const paymentsFilePath = path.join(process.cwd(), 'src/app/finance/payment/payments-data.json');
-const unitsFilePath = path.join(process.cwd(), 'src/app/property/units/units-data.json');
-const roomsFilePath = path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json');
+const chequesFilePath = path.join(process.cwd(), 'src/data/cheques-data.json');
+const chequeBooksFilePath = path.join(process.cwd(), 'src/data/cheque-books-data.json');
 
-
-async function readCheques(): Promise<Cheque[]> {
+async function readData(filePath: string) {
     try {
-        await fs.access(chequesFilePath);
-        const data = await fs.readFile(chequesFilePath, 'utf-8');
+        await fs.access(filePath);
+        const data = await fs.readFile(filePath, 'utf-8');
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await writeCheques([]);
             return [];
         }
         throw error;
@@ -54,500 +27,168 @@ async function writeCheques(data: Cheque[]) {
     await fs.writeFile(chequesFilePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-export async function getBankAccounts(): Promise<BankAccount[]> {
-    try {
-        await fs.access(bankAccountsFilePath);
-        const data = await fs.readFile(bankAccountsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
+async function writeChequeBooks(data: ChequeBook[]) {
+    await fs.writeFile(chequeBooksFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+export async function getCheques(filters: { party?: string; status?: string } = {}) {
+    let cheques = await readData(chequesFilePath);
+    if (filters.party) {
+        cheques = cheques.filter(cheque => cheque.partyName.toLowerCase().includes(filters.party!.toLowerCase()));
     }
-}
-
-async function writeBankAccounts(data: BankAccount[]) {
-    await fs.writeFile(bankAccountsFilePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-async function readPayments(): Promise<Payment[]> {
-    try {
-        await fs.access(paymentsFilePath);
-        const data = await fs.readFile(paymentsFilePath, 'utf-8');
-        return JSON.parse(data);
-    } catch (error) {
-         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return [];
-        }
-        throw error;
+    if (filters.status) {
+        cheques = cheques.filter(cheque => cheque.status === filters.status);
     }
+    return cheques;
 }
 
-async function writePayments(data: Payment[]) {
-     await fs.writeFile(paymentsFilePath, JSON.stringify(data, null, 2), 'utf-8');
+export async function addCheque(data: Omit<Cheque, 'id' | 'status'>) {
+    const validation = chequeSchema.omit({ id: true, status: true }).safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: 'Invalid data format.' };
+    }
+    const allCheques = await readData(chequesFilePath);
+    const newCheque: Cheque = {
+        ...validation.data,
+        id: `CHQ-${Date.now()}`,
+        status: 'In Hand',
+    };
+    allCheques.push(newCheque);
+    await writeCheques(allCheques);
+    revalidatePath('/finance/cheque-management');
+    return { success: true };
 }
 
-
-export async function getCheques() {
-    const cheques = await readCheques();
-    return cheques.sort((a,b) => new Date(b.chequeDate).getTime() - new Date(a.chequeDate).getTime());
+export async function depositCheques(chequeIds: string[], depositDate: string, bankAccountId: string) {
+    if (!chequeIds || chequeIds.length === 0) return { success: false, error: 'No cheques selected.' };
+    let allCheques = await readData(chequesFilePath);
+    allCheques = allCheques.map(cheque => 
+        chequeIds.includes(cheque.id) 
+            ? { ...cheque, status: 'Deposited', depositDate, bankAccountId } 
+            : cheque
+    );
+    await writeCheques(allCheques);
+    revalidatePath('/finance/cheque-management');
+    return { success: true };
 }
 
-export async function addCheque(data: Omit<Cheque, 'id'>) {
-    const validation = chequeSchema.omit({ id: true }).safeParse(data);
+export async function returnCheque(chequeId: string, returnDate: string, reason: string) {
+    let allCheques = await readData(chequesFilePath);
+    const chequeIndex = allCheques.findIndex(c => c.id === chequeId);
+    if (chequeIndex === -1) return { success: false, error: 'Cheque not found.' };
+    allCheques[chequeIndex] = { ...allCheques[chequeIndex], status: 'Returned', returnDate, returnReason: reason };
+    await writeCheques(allCheques);
+    revalidatePath('/finance/cheque-management');
+    return { success: true };
+}
+
+export async function withdrawCheques(chequeIds: string[]) {
+    if (!chequeIds || chequeIds.length === 0) return { success: false, error: 'No cheques selected.' };
+    let allCheques = await readData(chequesFilePath);
+    allCheques = allCheques.map(cheque => chequeIds.includes(cheque.id) ? { ...cheque, status: 'Withdrawn' } : cheque);
+    await writeCheques(allCheques);
+    revalidatePath('/finance/cheque-management');
+    return { success: true };
+}
+
+export async function getChequeBooks() {
+    return await readData(chequeBooksFilePath);
+}
+
+export async function getChequeLeaves(filters: { bank?: string; bookNo?: string; status?: string } = {}): Promise<ChequeLeaf[]> {
+    const books = await getChequeBooks();
+    const cheques = await getCheques();
+    let leaves: ChequeLeaf[] = [];
+
+    for (const book of books) {
+        for (let i = book.chequeStartNo; i <= book.chequeEndNo; i++) {
+            const chequeNo = i.toString().padStart(6, '0');
+            const usedCheque = cheques.find(c => c.chequeNo === chequeNo && c.bookNo === book.bookNo);
+            leaves.push({
+                id: `${book.id}-${chequeNo}`,
+                chequeNo: chequeNo,
+                bookNo: book.bookNo,
+                bankName: book.bankName,
+                status: usedCheque ? 'Used' : 'Unused',
+                partyName: usedCheque?.partyName,
+                date: usedCheque?.date,
+                amount: usedCheque?.amount
+            });
+        }
+    }
+
+    if (filters.bank) {
+        leaves = leaves.filter(leaf => leaf.bankName === filters.bank);
+    }
+    if (filters.bookNo) {
+        leaves = leaves.filter(leaf => leaf.bookNo === filters.bookNo);
+    }
+    if (filters.status) {
+        leaves = leaves.filter(leaf => leaf.status === filters.status);
+    }
+
+    return leaves;
+}
+
+export async function addChequeBook(data: Omit<ChequeBook, 'id' | 'leafsUsed'>) {
+    const validation = chequeBookSchema.omit({ id: true, leafsUsed: true }).safeParse(data);
+    if (!validation.success) {
+        return { success: false, error: 'Invalid data format.' };
+    }
+    
+    const allBooks = await getChequeBooks();
+    const newBook: ChequeBook = {
+        ...validation.data,
+        id: `CB-${Date.now()}`,
+        leafsUsed: 0,
+    };
+
+    if (allBooks.some(book => book.bookNo === newBook.bookNo)) {
+        return { success: false, error: 'A cheque book with this book number already exists.' };
+    }
+
+    allBooks.push(newBook);
+    
+    await writeChequeBooks(allBooks);
+    revalidatePath('/finance/cheque-management');
+    return { success: true };
+}
+
+export async function updateChequeBook(data: Omit<ChequeBook, 'leafsUsed'>) {
+    const validation = chequeBookSchema.omit({ leafsUsed: true }).safeParse(data);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
     }
 
-    try {
-        const allCheques = await readCheques();
-        const newCheque: Cheque = {
-            ...validation.data,
-            id: `CHQ-${Date.now()}`,
-        };
-
-        allCheques.push(newCheque);
-        await writeCheques(allCheques);
-        
-        revalidatePath('/finance/cheque-management');
-        return { success: true, data: newCheque };
-
-    } catch (error) {
-        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+    const allBooks = await getChequeBooks();
+    const bookIndex = allBooks.findIndex(b => b.id === data.id);
+    if (bookIndex === -1) {
+        return { success: false, error: 'Cheque book not found.' };
     }
-}
 
-
-export async function updateChequeStatus(chequeId: string, status: Cheque['status'], date: string, user: { email: string, name: string, role: string }, bankAccountId?: string) {
-    try {
-        const allCheques = await readCheques();
-        const allPayments = await readPayments();
-        const workflowSettings = await getWorkflowSettings();
-
-        const chequeIndex = allCheques.findIndex(c => c.id === chequeId);
-
-        if (chequeIndex === -1) {
-            return { success: false, error: 'Cheque not found.' };
-        }
-        
-        const originalCheque = allCheques[chequeIndex];
-        
-        const cashReturnRef = `CASH-FOR-${originalCheque.chequeNo}`;
-        const hasExistingTransaction = allPayments.some(p => 
-            p.status !== 'Cancelled' && 
-            p.referenceNo &&
-            (p.referenceNo === originalCheque.chequeNo || p.referenceNo === cashReturnRef)
-        );
-        
-
-        if (hasExistingTransaction && (status === 'Cleared' || status === 'Returned with Cash')) {
-             return { success: false, error: `A financial transaction for cheque #${originalCheque.chequeNo} already exists. Cannot create another.` };
-        }
-        
-        const updatedCheque = { ...originalCheque, status, bankAccountId };
-        const initialStatus = workflowSettings.approvalProcessEnabled ? 'PENDING_ADMIN_APPROVAL' : 'POSTED';
-        
-        if(status === 'Deposited' && bankAccountId) {
-            updatedCheque.depositDate = date;
-        } else if (status === 'Cleared' && bankAccountId) {
-            updatedCheque.clearanceDate = date;
-        } else if (status === 'Bounced') {
-            updatedCheque.clearanceDate = date;
-        } else if (status === 'Returned with Cash') {
-            updatedCheque.clearanceDate = date;
-        }
-        
-        allCheques[chequeIndex] = updatedCheque;
-        
-        const basePayment: Omit<Payment, 'id'> = {
-            type: originalCheque.type === 'Incoming' ? 'Receipt' : 'Payment',
-            date: date,
-            partyType: originalCheque.partyType,
-            partyName: originalCheque.partyName,
-            amount: originalCheque.amount,
-            property: originalCheque.property,
-            unitCode: originalCheque.unitCode,
-            roomCode: originalCheque.roomCode,
-            createdByUser: user.name,
-            currentStatus: initialStatus,
-            approvalHistory: [{
-                action: 'Created & Submitted',
-                actorId: user.email,
-                actorRole: user.role,
-                timestamp: new Date().toISOString(),
-                comments: `Status updated to ${status}`
-            }]
-        };
-
-        let newPayment: Payment | null = null;
-        
-        if (status === 'Returned with Cash') {
-             newPayment = {
-                ...basePayment,
-                id: `PAY-${Date.now()}`,
-                paymentMethod: 'Cash',
-                bankAccountId: bankAccountId,
-                paymentFrom: bankAccountId ? 'Bank' : 'Petty Cash',
-                referenceNo: cashReturnRef,
-                description: `Cash received for returned cheque #${originalCheque.chequeNo}`,
-                status: 'Received',
-            };
-        } else if (status === 'Cleared') {
-            if (!bankAccountId) {
-                 return { success: false, error: 'Bank account is required to clear a cheque.' };
-            }
-            newPayment = {
-                ...basePayment,
-                id: `PAY-${Date.now()}`,
-                paymentMethod: 'Cheque',
-                bankAccountId: bankAccountId,
-                paymentFrom: 'Bank',
-                referenceNo: originalCheque.chequeNo,
-                remarks: `Cleared Cheque: ${originalCheque.chequeNo}`,
-                status: originalCheque.type === 'Incoming' ? 'Received' : 'Paid',
-            };
-        }
-
-        if (newPayment) {
-            if(initialStatus === 'POSTED') {
-                await applyFinancialImpact(newPayment);
-            }
-            allPayments.push(newPayment);
-            await writePayments(allPayments);
-            revalidatePath('/workflow');
-        }
-        
-        await writeCheques(allCheques);
-        revalidatePath('/finance/cheque-management');
-        revalidatePath('/finance/banking');
-        return { success: true };
-    } catch (error) {
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-export async function deleteCheque(chequeId: string) {
-    try {
-        const allCheques = await readCheques();
-        const paymentToDelete = allCheques.find(p => p.id === chequeId);
-        
-        if (!paymentToDelete) {
-             return { success: false, error: 'Cheque not found.' };
-        }
-        
-        if (paymentToDelete.status === 'Cleared') {
-            const allPayments = await readPayments();
-            const linkedPaymentIndex = allPayments.findIndex(p => p.referenceNo === paymentToDelete.chequeNo);
-            
-            if (linkedPaymentIndex !== -1) {
-                if (allPayments[linkedPaymentIndex].currentStatus === 'POSTED') {
-                    return { success: false, error: 'Cannot delete a cheque linked to a posted payment. Please reverse the payment first.' };
-                }
-                allPayments.splice(linkedPaymentIndex, 1);
-                await writePayments(allPayments);
-            }
-        }
-        
-        const updatedCheques = allCheques.filter(c => c.id !== chequeId);
-
-        await writeCheques(updatedCheques);
-        revalidatePath('/finance/cheque-management');
-        return { success: true };
-    } catch (error) {
-        return { success: false, error: (error as Error).message };
-    }
-}
-
-export async function getLookups() {
-    const tenants: {tenantData: Tenant}[] = await fs.readFile(tenantsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const landlords: {landlordData: Landlord}[] = await fs.readFile(landlordsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const vendors: {vendorData: Vendor}[] = await fs.readFile(vendorsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const agents: Agent[] = await fs.readFile(agentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const customers: {customerData: Customer}[] = await fs.readFile(customersFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const tenancyContracts: TenancyContract[] = await fs.readFile(tenancyContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const leaseContracts: LeaseContract[] = await fs.readFile(leaseContractsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const bankAccounts: BankAccount[] = await fs.readFile(bankAccountsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const units: Unit[] = await fs.readFile(unitsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const rooms: Room[] = await fs.readFile(roomsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const existingCheques = await readCheques();
-    
-    const existingChequeNumbers = new Set(existingCheques.map(c => c.chequeNo));
-
-    const landlordMap = new Map<string, string>();
-    landlords.forEach(l => landlordMap.set(l.landlordData.code, l.landlordData.name));
-
-    const filterPaymentSchedule = (schedule?: (TenancyPaymentInstallment | LeasePaymentInstallment)[]) => {
-        if (!schedule) return [];
-        return schedule.filter(installment => !installment.chequeNo || !existingChequeNumbers.has(installment.chequeNo));
-    };
-
-    return {
-        tenants: tenants.map(t => ({ value: t.tenantData.code, label: t.tenantData.name, contractNo: t.tenantData.contractNo })),
-        landlords: landlords.map(l => ({ value: l.landlordData.code, label: l.landlordData.name })),
-        vendors: vendors.map(v => ({ value: v.vendorData.code, label: v.vendorData.name })),
-        agents: agents.map(a => ({ value: a.code, label: a.name })),
-        customers: customers.map(c => ({ value: c.customerData.code, label: c.customerData.name })),
-        tenancyContracts: tenancyContracts.map(c => ({ 
-            value: c.contractNo, 
-            label: c.contractNo, 
-            property: c.property, 
-            unitCode: c.unitCode, 
-            roomCode: c.roomCode, 
-            partyName: c.tenantName, 
-            paymentSchedule: filterPaymentSchedule(c.paymentSchedule) 
-        })),
-        leaseContracts: leaseContracts.map(c => ({ 
-            value: c.contractNo, 
-            label: c.contractNo, 
-            property: c.property, 
-            partyName: c.landlordCode ? (landlordMap.get(c.landlordCode) || c.landlordCode) : 'Unknown', 
-            paymentSchedule: filterPaymentSchedule(c.paymentSchedule) 
-        })),
-        bankAccounts: bankAccounts.map(b => ({ value: b.id, label: `${b.accountName} (${b.bankName})`})),
-        units: units.map(u => ({ value: u.unitCode, label: u.unitCode, propertyCode: u.propertyCode})),
-        rooms: rooms.map(r => ({ value: r.roomCode, label: r.roomCode, unitCode: r.unitCode, propertyCode: r.propertyCode })),
-    }
-}
-
-export async function getSummary() {
-    const cheques = await readCheques();
-    const now = new Date();
-    const today = startOfToday();
-    const startOfThisWeek = startOfWeek(now);
-    const endOfThisWeek = endOfWeek(now);
-    const startOfThisMonth = startOfMonth(now);
-
-    const summary = {
-        inHandCount: 0,
-        inHandTotal: 0,
-        dueThisWeekCount: 0,
-        dueThisWeekTotal: 0,
-        depositedCount: 0,
-        depositedTotal: 0,
-        clearedThisMonthCount: 0,
-        clearedThisMonthTotal: 0,
-        overdueCount: 0,
-        overdueTotal: 0,
-    };
-
-    for (const cheque of cheques) {
-        const chequeDate = parseISO(cheque.chequeDate);
-
-        if (cheque.status === 'In Hand') {
-            summary.inHandCount++;
-            summary.inHandTotal += cheque.amount;
-
-            if (isWithinInterval(chequeDate, { start: startOfThisWeek, end: endOfThisWeek })) {
-                summary.dueThisWeekCount++;
-                summary.dueThisWeekTotal += cheque.amount;
-            }
-
-            if (isBefore(chequeDate, today)) {
-                summary.overdueCount++;
-                summary.overdueTotal += cheque.amount;
-            }
-
-        } else if (cheque.status === 'Deposited') {
-            summary.depositedCount++;
-            summary.depositedTotal += cheque.amount;
-        } else if (cheque.status === 'Cleared' && cheque.clearanceDate) {
-             const clearanceDate = parseISO(cheque.clearanceDate);
-             if (isWithinInterval(clearanceDate, { start: startOfThisMonth, end: now })) {
-                summary.clearedThisMonthCount++;
-                summary.clearedThisMonthTotal += cheque.amount;
-             }
-        }
+    if (allBooks.some(book => book.bookNo === data.bookNo && book.id !== data.id)) {
+        return { success: false, error: 'A cheque book with this book number already exists.' };
     }
     
-    return summary;
-}
-
-export async function createDepositVoucher(
-  chequeIds: string[],
-  depositDate: string,
-  bankAccountId: string,
-  user: { email: string; name: string; role: string }
-) {
-  try {
-    const allCheques = await readCheques();
-    const allPayments = await fs.readFile(paymentsFilePath, 'utf-8').then(JSON.parse).catch(() => []);
-    const workflowSettings = await getWorkflowSettings();
-
-    const selectedCheques = allCheques.filter(c => chequeIds.includes(c.id) && c.status === 'In Hand');
-
-    if (selectedCheques.length === 0) {
-      return { success: false, error: "No valid 'In Hand' cheques were selected." };
-    }
-
-    const totalAmount = selectedCheques.reduce((sum, c) => sum + c.amount, 0);
-    const chequeNumbers = selectedCheques.map(c => c.chequeNo).join(', ');
-    const initialStatus = workflowSettings.approvalProcessEnabled ? 'PENDING_ADMIN_APPROVAL' : 'POSTED';
-
-
-    const newPayment: Payment = {
-      id: `PAY-${Date.now()}`,
-      type: 'Receipt',
-      date: depositDate,
-      partyType: 'Customer', // Simplified for deposit voucher
-      partyName: `Cheque Deposit - ${depositDate}`,
-      amount: totalAmount,
-      paymentMethod: 'Cheque',
-      paymentFrom: 'Bank',
-      bankAccountId: bankAccountId,
-      referenceNo: `DEP-${Date.now()}`,
-      description: `Deposit of ${selectedCheques.length} cheques: ${chequeNumbers}`,
-      remarks: `Cheque IDs: ${chequeIds.join(', ')}`,
-      status: 'Received', // Final status upon posting
-      createdByUser: user.name,
-      currentStatus: initialStatus,
-      approvalHistory: [
-        {
-          action: 'Created & Submitted',
-          actorId: user.email,
-          actorRole: user.role,
-          timestamp: new Date().toISOString(),
-          comments: 'Cheque deposit voucher created.',
-        },
-      ],
+    const currentBook = allBooks[bookIndex];
+    allBooks[bookIndex] = {
+      ...currentBook,
+      ...validation.data,
+      id: currentBook.id,
     };
     
-    if (initialStatus === 'POSTED') {
-        await applyFinancialImpact(newPayment);
-    }
-    
-    allPayments.push(newPayment);
-    await fs.writeFile(paymentsFilePath, JSON.stringify(allPayments, null, 2), 'utf-8');
-
-    // Mark cheques as pending deposit
-    const updatedCheques = allCheques.map(cheque => {
-      if (chequeIds.includes(cheque.id)) {
-        return {
-          ...cheque,
-          status: 'Deposited' as const,
-          depositDate,
-          bankAccountId,
-        };
-      }
-      return cheque;
-    });
-
-    await writeCheques(updatedCheques);
-
+    await writeChequeBooks(allBooks);
     revalidatePath('/finance/cheque-management');
-    revalidatePath('/workflow');
-    return { success: true, count: selectedCheques.length };
-
-  } catch (error) {
-    return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
-  }
+    return { success: true };
 }
 
-interface ReturnChequeParams {
-    chequeIds: string[];
-    returnWithCash: boolean;
-    paymentDetails?: {
-        paymentFrom: 'Petty Cash' | 'Bank';
-        bankAccountId?: string;
-        user: { email: string, name: string, role: UserRole['role'] };
+export async function deleteChequeBook(id: string) {
+    const allBooks = await getChequeBooks();
+    const updatedBooks = allBooks.filter(b => b.id !== id);
+    if (allBooks.length === updatedBooks.length) {
+        return { success: false, error: 'Cheque book not found.' };
     }
-}
-
-export async function returnCheque({ chequeIds, returnWithCash, paymentDetails }: ReturnChequeParams) {
-    try {
-        const allCheques = await readCheques();
-        const allPayments = await readPayments();
-        const workflowSettings = await getWorkflowSettings();
-        let updatedCount = 0;
-        const newStatus = returnWithCash ? 'Returned with Cash' : 'Returned';
-        const initialStatus = workflowSettings.approvalProcessEnabled ? 'PENDING_ADMIN_APPROVAL' : 'POSTED';
-
-        const selectedCheques = allCheques.filter(c => chequeIds.includes(c.id) && c.status === 'In Hand');
-
-        if (selectedCheques.length === 0) {
-            return { success: false, error: "No valid 'In Hand' cheques were selected to return." };
-        }
-
-        const updatedCheques = allCheques.map(cheque => {
-            if (chequeIds.includes(cheque.id) && cheque.status === 'In Hand') {
-                updatedCount++;
-                return {
-                    ...cheque,
-                    status: newStatus,
-                };
-            }
-            return cheque;
-        });
-
-        if (returnWithCash && paymentDetails) {
-            for (const cheque of selectedCheques) {
-                 const newPayment: Payment = {
-                    id: `PAY-${Date.now()}-${cheque.id}`,
-                    type: 'Payment',
-                    date: format(new Date(), 'yyyy-MM-dd'),
-                    partyType: cheque.partyType,
-                    partyName: cheque.partyName,
-                    amount: cheque.amount,
-                    paymentMethod: 'Cash',
-                    paymentFrom: paymentDetails.paymentFrom,
-                    bankAccountId: paymentDetails.bankAccountId,
-                    referenceNo: `RTRN-${cheque.chequeNo}`,
-                    description: `Cash return for Cheque #${cheque.chequeNo}`,
-                    remarks: `Cheque returned with cash settlement.`,
-                    status: 'Paid',
-                    createdByUser: paymentDetails.user.name,
-                    currentStatus: initialStatus,
-                    approvalHistory: [{
-                        action: 'Created & Submitted',
-                        actorId: paymentDetails.user.email,
-                        actorRole: paymentDetails.user.role,
-                        timestamp: new Date().toISOString(),
-                        comments: 'Cheque returned with cash payment.',
-                    }],
-                };
-                if(initialStatus === 'POSTED') await applyFinancialImpact(newPayment);
-                allPayments.push(newPayment);
-            }
-            await writePayments(allPayments);
-            revalidatePath('/workflow');
-        } else if (!returnWithCash && paymentDetails) { // Logic for 'Returned' status
-             for (const cheque of selectedCheques) {
-                 const newPayment: Payment = {
-                    id: `PAY-${Date.now()}-${cheque.id}`,
-                    type: 'Payment',
-                    date: format(new Date(), 'yyyy-MM-dd'),
-                    partyType: cheque.partyType,
-                    partyName: cheque.partyName,
-                    amount: cheque.amount,
-                    paymentMethod: 'Cash', // Or another appropriate method
-                    paymentFrom: paymentDetails.paymentFrom,
-                    bankAccountId: paymentDetails.bankAccountId,
-                    referenceNo: `RTRN-${cheque.chequeNo}`,
-                    description: `Reversal for returned Cheque #${cheque.chequeNo}`,
-                    remarks: `Cheque returned.`,
-                    status: 'Paid',
-                    createdByUser: paymentDetails.user.name,
-                    currentStatus: initialStatus,
-                    approvalHistory: [{
-                        action: 'Created & Submitted',
-                        actorId: paymentDetails.user.email,
-                        actorRole: paymentDetails.user.role,
-                        timestamp: new Date().toISOString(),
-                        comments: 'Cheque returned.',
-                    }],
-                };
-                if(initialStatus === 'POSTED') await applyFinancialImpact(newPayment);
-                allPayments.push(newPayment);
-            }
-            await writePayments(allPayments);
-            revalidatePath('/workflow');
-        }
-
-        await writeCheques(updatedCheques);
-        revalidatePath('/finance/cheque-management');
-        return { success: true, count: updatedCount };
-
-    } catch (error) {
-        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
-    }
+    await writeChequeBooks(updatedBooks);
+    revalidatePath('/finance/cheque-management');
+    return { success: true };
 }

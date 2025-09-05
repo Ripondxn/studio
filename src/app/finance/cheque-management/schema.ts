@@ -1,24 +1,41 @@
 
 import { z } from 'zod';
 
+// Schema for individual cheques
 export const chequeSchema = z.object({
   id: z.string(),
-  chequeNo: z.string().min(1, "Cheque number is required."),
-  chequeDate: z.string().min(1, "Cheque date is required."),
-  amount: z.number().min(0.01, "Amount must be greater than 0."),
-  bankName: z.string().min(1, "Bank name is required."),
-  status: z.enum(['In Hand', 'Deposited', 'Cleared', 'Bounced', 'Cancelled', 'Returned', 'Returned with Cash']),
   type: z.enum(['Incoming', 'Outgoing']),
-  partyType: z.enum(['Tenant', 'Landlord', 'Customer', 'Vendor', 'Agent']),
-  partyName: z.string().min(1, "Party name is required."),
-  property: z.string().optional(),
-  unitCode: z.string().optional(),
-  roomCode: z.string().optional(),
-  contractNo: z.string().optional(),
-  remarks: z.string().optional(),
-  depositDate: z.string().optional(), // Date it was actually deposited
-  clearanceDate: z.string().optional(), // Date it cleared or bounced
-  bankAccountId: z.string().optional(), // The bank account it was deposited into
+  party: z.string(),
+  bankName: z.string(),
+  chequeNo: z.string(),
+  dueDate: z.string(),
+  amount: z.number(),
+  status: z.enum(['In Hand', 'Deposited', 'Cleared', 'Returned', 'Cancelled']),
+});
+
+export const chequeBookSchema = z.object({
+    id: z.string(),
+    bankName: z.string(),
+    bookNo: z.string(),
+    chequeStartNo: z.number(),
+    chequeEndNo: z.number(),
+    noOfLeafs: z.number(),
+    leafsUsed: z.number().optional().default(0),
+    status: z.enum(['Active', 'Finished', 'Cancelled']),
+});
+
+export const chequeLeafSchema = z.object({
+    chequeNo: z.string(),
+    bookNo: z.string(),
+    bankName: z.string(),
+    status: z.enum(['Used', 'Unused', 'Cancelled']),
+    date: z.string().optional(),
+    partyName: z.string().optional(),
+    property: z.string().optional(),
+    unitCode: z.string().optional(),
+    amount: z.number().optional(),
 });
 
 export type Cheque = z.infer<typeof chequeSchema>;
+export type ChequeBook = z.infer<typeof chequeBookSchema>;
+export type ChequeLeaf = z.infer<typeof chequeLeafSchema>;
