@@ -1,53 +1,17 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useForm, FormProvider, Controller } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Save,
-  Trash2,
-  Plus,
-  Pencil,
-  Loader2,
-  X,
-  FileUp,
-  Link2,
-  Move,
-  Eye
-} from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { Save, Trash2, Plus, Pencil, Loader2, X, FileUp, Link2, Eye } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { saveTenantData, findTenantData, deleteTenantData } from '../actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -91,7 +55,6 @@ const initialTenantData: Tenant = {
     subscriptionAmount: 0,
 };
 
-// Helper function to read a file as a Base64 string on the client
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -117,7 +80,7 @@ export default function TenantPage() {
   const [isSubscriptionEditing, setIsSubscriptionEditing] = useState(false);
   const [savingAttachmentId, setSavingAttachmentId] = useState<number | null>(null);
   const [isSubInvoiceOpen, setIsSubInvoiceOpen] = useState(false);
-
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const formMethods = useForm<Tenant>({
     resolver: zodResolver(tenantSchema),
@@ -136,15 +99,14 @@ export default function TenantPage() {
     setIsLoadingInvoices(false);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      attachments.forEach(attachment => {
-        if (attachment.url) {
-          URL.revokeObjectURL(attachment.url);
-        }
-      });
-    };
-  }, [attachments]);
+  const handleNewRecord = useCallback(() => {
+    reset(initialTenantData);
+    setAttachments([]);
+    setIsNewRecord(true);
+    setIsEditing(true);
+    setIsAutoCode(true);
+    setInitialLoadComplete(true);
+  }, [reset]);
 
   const handleFindClick = useCallback(async (code: string) => {
     try {
@@ -160,23 +122,17 @@ export default function TenantPage() {
             url: a.file && a.isLink === false && typeof a.file === 'string' && a.file.startsWith('data:') ? a.file : undefined
         })) : []);
         
-        if (code !== 'new') {
-            setIsNewRecord(false);
-            setIsEditing(false);
-            setIsAutoCode(false);
-            fetchInvoices(result.data.tenantData.code);
-        } else {
-            setIsNewRecord(true);
-            setIsEditing(true);
-            setIsAutoCode(true);
-        }
+        setIsNewRecord(false);
+        setIsEditing(false);
+        setIsAutoCode(false);
+        fetchInvoices(result.data.tenantData.code);
       } else {
         toast({
           variant: 'destructive',
           title: 'Not Found',
           description: `No record found for Tenant Code: ${code}. You can create a new one.`,
         });
-        handleFindClick('new');
+        router.push('/tenancy/tenants/add?code=new');
       }
     } catch (error) {
       toast({
@@ -184,19 +140,31 @@ export default function TenantPage() {
         title: 'Error',
         description: (error as Error).message || 'Failed to find tenant data.',
       });
+    } finally {
+        setInitialLoadComplete(true);
     }
-  }, [reset, toast, fetchInvoices]);
+  }, [reset, toast, fetchInvoices, router]);
 
   useEffect(() => {
+    if (initialLoadComplete) return;
     const tenantCodeParam = searchParams.get('code');
-    if (tenantCodeParam) {
+    if (tenantCodeParam && tenantCodeParam.toLowerCase() !== 'new') {
       handleFindClick(tenantCodeParam);
     } else {
-      handleFindClick('new');
+      handleNewRecord();
     }
-  }, [searchParams, handleFindClick]);
+  }, [searchParams, handleFindClick, handleNewRecord, initialLoadComplete]);
 
-  
+  useEffect(() => {
+    return () => {
+      attachments.forEach(attachment => {
+        if (attachment.url) {
+          URL.revokeObjectURL(attachment.url);
+        }
+      });
+    };
+  }, [attachments]);
+
   const handleAttachmentChange = (id: number, field: keyof Attachment, value: any) => {
     setAttachments(prev => prev.map(item => {
         if (item.id === id) {
@@ -265,7 +233,7 @@ export default function TenantPage() {
         );
         
       const dataToSave = {
-        tenantData: data,
+        ...data,
         attachments: processedAttachments.map(a => ({...a, file: typeof a.file === 'string' ? a.file : null})),
       };
 
@@ -273,15 +241,17 @@ export default function TenantPage() {
       if (result.success && result.data) {
         toast({
           title: "Success",
-          description: `Tenant "${data.name}" successfully saved.`,
+          description: `Tenant "${result.data.tenantData.name}" successfully saved.`,
         });
         setIsEditing(false);
         setIsSubscriptionEditing(false);
         if (isNewRecord) {
-            router.push(`/tenancy/tenants/add?code=${result.data?.code}`);
+            router.push(`/tenancy/tenants/add?code=${result.data.tenantData.code}`);
+            // Force a reload to ensure the new state is loaded correctly, avoiding the loop
+            window.location.href = `/tenancy/tenants/add?code=${result.data.tenantData.code}`;
         } else {
-            reset(data);
-            setAttachments(processedAttachments.map(a => ({...a, url: undefined})));
+            reset(result.data.tenantData);
+            setAttachments(result.data.attachments.map((a:any) => ({...a, url: undefined})));
         }
       } else {
         throw new Error(result.error || 'An unknown error occurred');
@@ -301,8 +271,7 @@ export default function TenantPage() {
      if (isNewRecord) {
         router.push('/tenancy/tenants');
      } else {
-        reset();
-        setAttachments(getValues().attachments || []);
+        handleFindClick(getValues('code'));
         setIsEditing(false);
         setIsSubscriptionEditing(false);
      }
@@ -331,25 +300,15 @@ export default function TenantPage() {
     }
   };
   
-  const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${watch('name')}`;
-
-  const getViewLink = (item: Attachment): string => {
-    if (item.isLink && typeof item.file === 'string') {
-        return item.file;
-    }
-    if (item.url) { // This is for new, unsaved file uploads
-        return item.url;
-    }
-    if (typeof item.file === 'string' && (item.file.startsWith('data:') || item.file.startsWith('gdrive:'))) { // For saved base64 or gdrive files
-        // Note: gdrive links aren't directly viewable and would need a download route
-        return item.file;
-    }
-    return '#';
-  };
-  
   const handleOpenSubscriptionDialog = () => {
     setIsSubInvoiceOpen(true);
   };
+
+  const pageTitle = isNewRecord ? 'Add New Tenant' : `Edit Tenant: ${watch('name')}`;
+
+  if (!initialLoadComplete) {
+    return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
 
   return (
     <div className="container mx-auto p-4 bg-background">
@@ -580,19 +539,9 @@ export default function TenantPage() {
                                                         {item.isLink ? <FileUp className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                                                     </Button>
                                                 </div>
-                                                 <div className="mt-1">
-                                                    <a href={getViewLink(item)} target="_blank" className="text-primary hover:underline text-sm" rel="noopener noreferrer">
-                                                        <Button type="button" variant="link" size="sm" className="p-0 h-auto" disabled={!item.file}>
-                                                            <Eye className="mr-1 h-3 w-3"/> View
-                                                        </Button>
-                                                    </a>
-                                                 </div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    <Button size="icon" type="button" onClick={() => handleSubmit(data => onSave(data, true, item.id))()} disabled={savingAttachmentId === item.id || !isEditing}>
-                                                        {savingAttachmentId === item.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4" />}
-                                                    </Button>
                                                     <Button type="button" variant="ghost" size="icon" className="text-destructive" disabled={!isEditing} onClick={() => removeAttachmentRow(item.id)}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
@@ -635,5 +584,3 @@ export default function TenantPage() {
   </div>
   );
 }
-
-    

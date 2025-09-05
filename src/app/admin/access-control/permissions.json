@@ -1,4 +1,3 @@
-
 [
   {
     "feature": "Properties",
@@ -27,7 +26,8 @@
         "action": "delete",
         "description": "Delete a property",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin"
         ]
       }
     ]
@@ -59,7 +59,9 @@
         "action": "delete",
         "description": "Delete a unit",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin",
+          "Property Manager"
         ]
       }
     ]
@@ -73,7 +75,8 @@
         "description": "View rental agreements",
         "allowedRoles": [
           "Super Admin",
-          "Admin"
+          "Admin",
+          "Property Manager"
         ]
       },
       {
@@ -243,7 +246,8 @@
         "action": "delete",
         "description": "Delete assets from the register",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin"
         ]
       }
     ]
@@ -373,7 +377,8 @@
         "action": "delete",
         "description": "Delete a landlord",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin"
         ]
       }
     ]
@@ -405,7 +410,8 @@
         "action": "delete",
         "description": "Delete a vendor",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin"
         ]
       }
     ]
@@ -437,7 +443,8 @@
         "action": "delete",
         "description": "Delete a tenant",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin"
         ]
       }
     ]
@@ -452,7 +459,8 @@
         "allowedRoles": [
           "Super Admin",
           "Admin",
-          "Accountant"
+          "Accountant",
+          "Developer"
         ]
       },
       {
@@ -460,14 +468,17 @@
         "description": "Edit customer information",
         "allowedRoles": [
           "Super Admin",
-          "Admin"
+          "Admin",
+          "Developer"
         ]
       },
       {
         "action": "delete",
         "description": "Delete a customer",
         "allowedRoles": [
-          "Super Admin"
+          "Super Admin",
+          "Admin",
+          "Developer"
         ]
       }
     ]

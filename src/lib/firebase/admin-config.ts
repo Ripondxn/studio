@@ -14,6 +14,7 @@ import * as admin from 'firebase-admin';
 // 7. You also need to add your Firebase project ID to the environment variables:
 //    NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
 
+/*
 const serviceAccountKeyBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_BASE64;
 const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
@@ -33,6 +34,12 @@ if (!admin.apps.length) {
     projectId: projectId,
   });
 }
+*/
+
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
+
 
 const firestoreAdmin = admin.firestore();
 

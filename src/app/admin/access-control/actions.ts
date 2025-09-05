@@ -20,6 +20,11 @@ async function readData(filePath: string) {
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            // Return a default structure that can be safely merged
+            if (filePath.endsWith('permissions.json')) return [];
+            if (filePath.endsWith('users.json')) return [];
+            if (filePath.endsWith('module-settings.json')) return { modules: [] }; 
+            if (filePath.endsWith('user-overrides.json')) return [];
             return [];
         }
         throw error;
@@ -56,6 +61,25 @@ export async function savePermissions(permissions: FeaturePermission[]) {
         return { success: false, error: 'Failed to save permissions.' };
     }
 }
+
+export async function updatePermission(featureName: string, actionName: string, role: string, isChecked: boolean) {
+    const currentPermissions = await getPermissions();
+    const feature = currentPermissions.find(f => f.feature === featureName);
+    if (feature) {
+        const action = feature.actions.find(a => a.action === actionName);
+        if (action) {
+            if (isChecked) {
+                if (!action.allowedRoles.includes(role)) {
+                    action.allowedRoles.push(role);
+                }
+            } else {
+                action.allowedRoles = action.allowedRoles.filter(r => r !== role);
+            }
+        }
+    }
+    return await savePermissions(currentPermissions);
+}
+
 
 export async function getRoles(): Promise<string[]> {
     try {

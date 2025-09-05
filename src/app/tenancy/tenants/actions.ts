@@ -1,35 +1,28 @@
 
 'use server';
 
-// import { firestoreAdmin } from '@/lib/firebase/admin-config';
+import { firestoreAdmin } from '@/lib/firebase/admin-config';
 import { revalidatePath } from 'next/cache';
 import { type Contract } from '../contract/schema';
-import { type Unit } from '@/app/property/units/schema';
-import { type Room } from '@/app/property/rooms/schema';
 import { type Tenant } from '@/app/tenancy/tenants/schema';
 import { type Invoice } from '@/app/tenancy/customer/invoice/schema';
-import { getUnits } from '@/app/property/units/actions';
-import { getRooms } from '@/app/property/rooms/actions';
 
 async function getTenants() {
-    // const tenantsCollection = firestoreAdmin.collection('tenants');
-    // const snapshot = await tenantsCollection.get();
-    // return snapshot.docs.map(doc => doc.data());
-    return [];
+    const tenantsCollection = firestoreAdmin.collection('tenants');
+    const snapshot = await tenantsCollection.get();
+    return snapshot.docs.map(doc => doc.data());
 }
 
 async function getContracts(): Promise<Contract[]> {
-    // const contractsCollection = firestoreAdmin.collection('contracts');
-    // const snapshot = await contractsCollection.get();
-    // return snapshot.docs.map(doc => doc.data() as Contract);
-    return [];
+    const contractsCollection = firestoreAdmin.collection('contracts');
+    const snapshot = await contractsCollection.get();
+    return snapshot.docs.map(doc => doc.data() as Contract);
 }
 
 async function getInvoices(): Promise<Invoice[]> {
-    // const invoicesCollection = firestoreAdmin.collection('invoices');
-    // const snapshot = await invoicesCollection.get();
-    // return snapshot.docs.map(doc => doc.data() as Invoice);
-    return [];
+    const invoicesCollection = firestoreAdmin.collection('invoices');
+    const snapshot = await invoicesCollection.get();
+    return snapshot.docs.map(doc => doc.data() as Invoice);
 }
 
 export async function getAllTenants() {
@@ -93,37 +86,95 @@ export async function getAllTenants() {
 }
 
 async function getNextTenantCode() {
-    // const allTenants:any = await getTenants();
-    // let maxNum = 0;
-    // allTenants.forEach((t: any) => {
-    //     const code = t.tenantData.code || '';
-    //     const match = code.match(/^T(\d+)$/);
-    //     if(match) {
-    //         const num = parseInt(match[1], 10);
-    //         if (num > maxNum) {
-    //             maxNum = num;
-    //         }
-    //     }
-    // });
-    return `T0001`;
+    const allTenants:any = await getTenants();
+    let maxNum = 0;
+    allTenants.forEach((t: any) => {
+        const code = t.tenantData.code || '';
+        const match = code.match(/^T(\d+)$/);
+        if(match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) {
+                maxNum = num;
+            }
+        }
+    });
+    const nextNum = maxNum + 1;
+    return `T${nextNum.toString().padStart(4, '0')}`;
 }
 
 export async function saveTenantData(dataToSave: any, isNewRecord: boolean, isAutoCode: boolean) {
-    return { success: true, data: {} };
+    try {
+        const { attachments, ...tenantData } = dataToSave;
+        let tenantCode = tenantData.code;
+        if (isNewRecord && isAutoCode) {
+            tenantCode = await getNextTenantCode();
+            tenantData.code = tenantCode;
+        }
+
+        const docRef = firestoreAdmin.collection('tenants').doc(tenantCode);
+
+        const dataForDb = { tenantData, attachments };
+
+        if (isNewRecord) {
+            await docRef.set(dataForDb);
+        } else {
+            await docRef.update(dataForDb);
+        }
+
+        revalidatePath('/tenancy/tenants');
+        return { success: true, data: dataForDb };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
 }
 
 export async function findTenantData(tenantCode: string) {
-    return { success: true, data: { tenantData: { code: 'new' } } };
+    try {
+        const docRef = firestoreAdmin.collection('tenants').doc(tenantCode);
+        const doc = await docRef.get();
+
+        if (doc.exists) {
+            return { success: true, data: doc.data() };
+        } else {
+            return { success: false, error: 'Tenant not found' };
+        }
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
 }
 
 export async function deleteTenantData(tenantCode: string) {
-    return { success: true };
+    try {
+        const docRef = firestoreAdmin.collection('tenants').doc(tenantCode);
+        await docRef.delete();
+
+        revalidatePath('/tenancy/tenants');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
 }
 
 export async function cancelSubscription(tenantCode: string) {
-    return { success: true };
+    try {
+        const docRef = firestoreAdmin.collection('tenants').doc(tenantCode);
+        await docRef.update({ 'tenantData.isSubscriptionActive': false });
+
+        revalidatePath('/tenancy/tenants');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
 }
 
 export async function saveSubscriptionSettings(tenantCode: string, settings: Partial<Tenant>) {
-    return { success: true };
+    try {
+        const docRef = firestoreAdmin.collection('tenants').doc(tenantCode);
+        await docRef.update({ 'tenantData.subscription': settings });
+
+        revalidatePath('/tenancy/tenants');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
 }

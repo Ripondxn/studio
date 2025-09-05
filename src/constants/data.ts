@@ -23,6 +23,12 @@ export const navItems: NavItem[] = [
     ]
   },
   {
+    title: "Expense",
+    href: "/expense",
+    icon: "receipt",
+    label: "Expense",
+  },
+  {
     title: "Vault",
     href: "/vault",
     icon: "shieldCheck",
