@@ -18,9 +18,17 @@ export async function createJournalEntry(entry: Omit<z.infer<typeof journalEntry
 }
 
 export async function getJournalEntries() {
-  const querySnapshot = await getDocs(collection(firestore, "journal_entries"));
-  const entries = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as z.infer<typeof journalEntrySchema>[];
-  return entries;
+  try {
+    console.log("Fetching journal entries...");
+    const querySnapshot = await getDocs(collection(firestore, "journal_entries"));
+    console.log("querySnapshot:", querySnapshot);
+    const entries = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as z.infer<typeof journalEntrySchema>[];
+    console.log("Fetched entries:", entries);
+    return entries;
+  } catch (error) {
+    console.error("Error fetching journal entries:", error);
+    return [];
+  }
 }
 
 export async function getAccounts() {
