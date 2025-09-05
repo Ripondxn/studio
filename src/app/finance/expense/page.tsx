@@ -11,7 +11,7 @@ import { taskSchema } from "./schema"
 // Simulate a call to the database
 async function getTasks() {
   const data = await fs.readFile(
-    path.join(process.cwd(), "src/app/expense/expenses-data.json")
+    path.join(process.cwd(), "src/app/finance/expense/expenses-data.json")
   )
 
   const tasks = JSON.parse(data.toString())

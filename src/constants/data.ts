@@ -19,14 +19,14 @@ export const navItems: NavItem[] = [
             href: "/finance/book-management",
             icon: "book",
             label: "Book Management",
+        },
+        {
+            title: "Expense",
+            href: "/finance/expense",
+            icon: "receipt",
+            label: "Expense",
         }
     ]
-  },
-  {
-    title: "Expense",
-    href: "/expense",
-    icon: "receipt",
-    label: "Expense",
   },
   {
     title: "Vault",

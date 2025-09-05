@@ -83,5 +83,10 @@
     "id": "settings",
     "name": "Settings",
     "enabled": true
+  },
+  "expense": {
+    "id": "expense",
+    "name": "Expense Module",
+    "enabled": true
   }
 }
