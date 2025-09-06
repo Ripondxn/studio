@@ -1,7 +1,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { differenceInDays, parseISO, format, getMonth, getYear, isFuture } from 'date-fns';
+import { differenceInDays, parseISO } from 'date-fns';
 import { getAllContracts } from '@/app/tenancy/contract/actions';
 import { getUnits } from '@/app/property/units/actions';
 import { getAllTenants } from '@/app/tenancy/tenants/actions';
@@ -9,13 +9,11 @@ import { Contract } from '@/app/tenancy/contract/schema';
 import { Unit } from '@/app/property/units/schema';
 import { DashboardClient } from './dashboard-client';
 import { type LeaseContract } from '@/app/lease/contract/schema';
-import { type Cheque } from '@/app/finance/cheque-deposit/schema';
 import { getBankAccounts } from '@/app/finance/banking/actions';
 import { getMovementHistory } from './admin/contract-continuity/actions';
 import { type Room } from '@/app/property/rooms/schema';
 
-async function getExpiryReport() {
-    const contracts = await getAllContracts();
+function getExpiryReport(contracts: Contract[]) {
     const today = new Date();
     
     const expiringSoon = contracts.filter(contract => {
@@ -33,27 +31,14 @@ async function getExpiryReport() {
     return Array.from(uniqueContracts.values());
 }
 
-async function getDashboardData() {
-    const contracts = await getAllContracts();
-    const allUnits = await getUnits();
-    const tenants = await getAllTenants();
-    
-    const propertiesData = await fs.readFile(
-      path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json')
-    );
-    const allProperties = JSON.parse(propertiesData.toString());
-    const allRoomsData = await fs.readFile(
-        path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json'), 'utf-8'
-    ).catch(() => '[]');
-    const allRooms: Room[] = JSON.parse(allRoomsData);
-
-
-    const leaseContractsData = await fs.readFile(
-      path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json'), 'utf-8'
-    ).catch(() => '[]');
-    const allLeaseContracts: LeaseContract[] = JSON.parse(leaseContractsData);
-    
-    // KPI: Vacant Units & Rooms
+function getDashboardData(
+    contracts: Contract[],
+    allUnits: Unit[],
+    tenants: any[],
+    allProperties: any[],
+    allRooms: Room[],
+    allLeaseContracts: LeaseContract[]
+) {
     const activeContracts = contracts.filter(c => c.status === 'New' || c.status === 'Renew');
     const occupiedUnitCodes = new Set(activeContracts.filter(c => !c.roomCode).map(c => c.unitCode));
     const occupiedRoomCodes = new Set(activeContracts.filter(c => c.roomCode).map(c => c.roomCode));
@@ -67,14 +52,12 @@ async function getDashboardData() {
     const totalUnits = allUnits.length;
     const totalRooms = allRooms.length;
     
-    // KPI: Tenancy Contracts Expiring
     const today = new Date();
     const expiringSoonCount = contracts.filter(contract => {
         const daysRemaining = differenceInDays(parseISO(contract.endDate), today);
         return daysRemaining >= 0 && daysRemaining <= 30;
     }).length;
 
-    // KPI: Lease Contracts Expiring
     const leaseExpiringSoonCount = allLeaseContracts.filter(contract => {
         const daysRemaining = differenceInDays(parseISO(contract.endDate), today);
         return daysRemaining >= 0 && daysRemaining <= 30;
@@ -94,10 +77,32 @@ async function getDashboardData() {
 
 
 export default async function DashboardPage() {
-    const dashboardData = await getDashboardData();
-    const expiringContracts = await getExpiryReport();
-    const bankAccounts = await getBankAccounts();
-    const movementHistory = await getMovementHistory();
+    const [
+        contracts,
+        allUnits,
+        tenants,
+        propertiesData,
+        allRoomsData,
+        leaseContractsData,
+        bankAccounts,
+        movementHistory
+    ] = await Promise.all([
+        getAllContracts(),
+        getUnits(),
+        getAllTenants(),
+        fs.readFile(path.join(process.cwd(), 'src/app/property/properties/list/properties-data.json')),
+        fs.readFile(path.join(process.cwd(), 'src/app/property/rooms/rooms-data.json'), 'utf-8').catch(() => '[]'),
+        fs.readFile(path.join(process.cwd(), 'src/app/lease/contract/contracts-data.json'), 'utf-8').catch(() => '[]'),
+        getBankAccounts(),
+        getMovementHistory()
+    ]);
+
+    const allProperties = JSON.parse(propertiesData.toString());
+    const allRooms: Room[] = JSON.parse(allRoomsData as string);
+    const allLeaseContracts: LeaseContract[] = JSON.parse(leaseContractsData as string);
+
+    const dashboardData = getDashboardData(contracts, allUnits, tenants, allProperties, allRooms, allLeaseContracts);
+    const expiringContracts = getExpiryReport(contracts);
 
     return (
         <DashboardClient

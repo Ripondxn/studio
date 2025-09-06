@@ -221,10 +221,10 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   handler satisfies AppPageConfig<"/finance/expense">
 }
 
-// Validate ../../src/app/finance/journal-entries/page.tsx
+// Validate ../../src/app/finance/journal-entry/page.tsx
 {
-  const handler = {} as typeof import("../../src/app/finance/journal-entries/page.js")
-  handler satisfies AppPageConfig<"/finance/journal-entries">
+  const handler = {} as typeof import("../../src/app/finance/journal-entry/page.js")
+  handler satisfies AppPageConfig<"/finance/journal-entry">
 }
 
 // Validate ../../src/app/finance/payment/add/page.tsx

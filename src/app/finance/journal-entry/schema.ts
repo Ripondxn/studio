@@ -2,12 +2,13 @@
 import { z } from 'zod';
 
 export const journalEntrySchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   date: z.string(),
-  debitAccount: z.string(),
-  creditAccount: z.string(),
-  amount: z.coerce.number(),
+  accountId: z.string(),
+  accountName: z.string(),
   description: z.string(),
+  debit: z.number(),
+  credit: z.number(),
 });
 
 export type JournalEntry = z.infer<typeof journalEntrySchema>;

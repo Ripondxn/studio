@@ -4522,8 +4522,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$admin$2f$contr
 ;
 ;
 ;
-async function getExpiryReport() {
-    const contracts = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$tenancy$2f$contract$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAllContracts"])();
+function getExpiryReport(contracts) {
     const today = new Date();
     const expiringSoon = contracts.filter((contract)=>{
         const daysRemaining = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$differenceInDays$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["differenceInDays"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$parseISO$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["parseISO"])(contract.endDate), today);
@@ -4537,17 +4536,7 @@ async function getExpiryReport() {
     }
     return Array.from(uniqueContracts.values());
 }
-async function getDashboardData() {
-    const contracts = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$tenancy$2f$contract$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAllContracts"])();
-    const allUnits = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$property$2f$units$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getUnits"])();
-    const tenants = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$tenancy$2f$tenants$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAllTenants"])();
-    const propertiesData = await __TURBOPACK__imported__module__$5b$externals$5d2f$fs__$5b$external$5d$__$28$fs$2c$__cjs$29$__["promises"].readFile(__TURBOPACK__imported__module__$5b$externals$5d2f$path__$5b$external$5d$__$28$path$2c$__cjs$29$__["default"].join(process.cwd(), 'src/app/property/properties/list/properties-data.json'));
-    const allProperties = JSON.parse(propertiesData.toString());
-    const allRoomsData = await __TURBOPACK__imported__module__$5b$externals$5d2f$fs__$5b$external$5d$__$28$fs$2c$__cjs$29$__["promises"].readFile(__TURBOPACK__imported__module__$5b$externals$5d2f$path__$5b$external$5d$__$28$path$2c$__cjs$29$__["default"].join(process.cwd(), 'src/app/property/rooms/rooms-data.json'), 'utf-8').catch(()=>'[]');
-    const allRooms = JSON.parse(allRoomsData);
-    const leaseContractsData = await __TURBOPACK__imported__module__$5b$externals$5d2f$fs__$5b$external$5d$__$28$fs$2c$__cjs$29$__["promises"].readFile(__TURBOPACK__imported__module__$5b$externals$5d2f$path__$5b$external$5d$__$28$path$2c$__cjs$29$__["default"].join(process.cwd(), 'src/app/lease/contract/contracts-data.json'), 'utf-8').catch(()=>'[]');
-    const allLeaseContracts = JSON.parse(leaseContractsData);
-    // KPI: Vacant Units & Rooms
+function getDashboardData(contracts, allUnits, tenants, allProperties, allRooms, allLeaseContracts) {
     const activeContracts = contracts.filter((c)=>c.status === 'New' || c.status === 'Renew');
     const occupiedUnitCodes = new Set(activeContracts.filter((c)=>!c.roomCode).map((c)=>c.unitCode));
     const occupiedRoomCodes = new Set(activeContracts.filter((c)=>c.roomCode).map((c)=>c.roomCode));
@@ -4555,13 +4544,11 @@ async function getDashboardData() {
     const vacantRoomsCount = allRooms.filter((room)=>!occupiedRoomCodes.has(room.roomCode)).length;
     const totalUnits = allUnits.length;
     const totalRooms = allRooms.length;
-    // KPI: Tenancy Contracts Expiring
     const today = new Date();
     const expiringSoonCount = contracts.filter((contract)=>{
         const daysRemaining = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$differenceInDays$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["differenceInDays"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$parseISO$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["parseISO"])(contract.endDate), today);
         return daysRemaining >= 0 && daysRemaining <= 30;
     }).length;
-    // KPI: Lease Contracts Expiring
     const leaseExpiringSoonCount = allLeaseContracts.filter((contract)=>{
         const daysRemaining = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$differenceInDays$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["differenceInDays"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$date$2d$fns$2f$parseISO$2e$mjs__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["parseISO"])(contract.endDate), today);
         return daysRemaining >= 0 && daysRemaining <= 30;
@@ -4578,10 +4565,21 @@ async function getDashboardData() {
     };
 }
 async function DashboardPage() {
-    const dashboardData = await getDashboardData();
-    const expiringContracts = await getExpiryReport();
-    const bankAccounts = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$finance$2f$banking$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getBankAccounts"])();
-    const movementHistory = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$admin$2f$contract$2d$continuity$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getMovementHistory"])();
+    const [contracts, allUnits, tenants, propertiesData, allRoomsData, leaseContractsData, bankAccounts, movementHistory] = await Promise.all([
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$tenancy$2f$contract$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAllContracts"])(),
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$property$2f$units$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getUnits"])(),
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$tenancy$2f$tenants$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAllTenants"])(),
+        __TURBOPACK__imported__module__$5b$externals$5d2f$fs__$5b$external$5d$__$28$fs$2c$__cjs$29$__["promises"].readFile(__TURBOPACK__imported__module__$5b$externals$5d2f$path__$5b$external$5d$__$28$path$2c$__cjs$29$__["default"].join(process.cwd(), 'src/app/property/properties/list/properties-data.json')),
+        __TURBOPACK__imported__module__$5b$externals$5d2f$fs__$5b$external$5d$__$28$fs$2c$__cjs$29$__["promises"].readFile(__TURBOPACK__imported__module__$5b$externals$5d2f$path__$5b$external$5d$__$28$path$2c$__cjs$29$__["default"].join(process.cwd(), 'src/app/property/rooms/rooms-data.json'), 'utf-8').catch(()=>'[]'),
+        __TURBOPACK__imported__module__$5b$externals$5d2f$fs__$5b$external$5d$__$28$fs$2c$__cjs$29$__["promises"].readFile(__TURBOPACK__imported__module__$5b$externals$5d2f$path__$5b$external$5d$__$28$path$2c$__cjs$29$__["default"].join(process.cwd(), 'src/app/lease/contract/contracts-data.json'), 'utf-8').catch(()=>'[]'),
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$finance$2f$banking$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getBankAccounts"])(),
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$admin$2f$contract$2d$continuity$2f$actions$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getMovementHistory"])()
+    ]);
+    const allProperties = JSON.parse(propertiesData.toString());
+    const allRooms = JSON.parse(allRoomsData);
+    const allLeaseContracts = JSON.parse(leaseContractsData);
+    const dashboardData = getDashboardData(contracts, allUnits, tenants, allProperties, allRooms, allLeaseContracts);
+    const expiringContracts = getExpiryReport(contracts);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$dashboard$2d$client$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["DashboardClient"], {
         initialDashboardData: dashboardData,
         initialExpiringContracts: expiringContracts,
@@ -4589,7 +4587,7 @@ async function DashboardPage() {
         initialMovementHistoryCount: movementHistory.length
     }, void 0, false, {
         fileName: "[project]/src/app/page.tsx",
-        lineNumber: 103,
+        lineNumber: 108,
         columnNumber: 9
     }, this);
 }

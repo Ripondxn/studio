@@ -5,7 +5,7 @@ import { navItems } from "@/constants/data";
 import { cn } from "@/lib/utils";
 import { ChevronLeft } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Nav } from "@/components/ui/nav";
 import { Button } from "@/components/ui/button";
 
@@ -32,6 +32,10 @@ const userHasPermission = (item: any) => {
   // Logic to show links based on module permissions
   switch(item.href) {
     case "/finance/book-management": 
+      return userRoles.includes('accountant') || userRoles.includes('admin');
+    case "/finance/chart-of-accounts":
+      return userRoles.includes('accountant') || userRoles.includes('admin');
+    case "/finance/journal-entry":
       return userRoles.includes('accountant') || userRoles.includes('admin');
     case "/finance/expense":
         return true;
@@ -71,7 +75,7 @@ export function SideNav({ isCollapsed, setIsCollapsed }: SideNavProps) {
         links={filteredNavItems.map((item) => ({
           ...item,
           variant: pathname.startsWith(item.href) ? "default" : "ghost",
-          subLinks: item.subLinks?.map((sub:any) => ({
+          subLinks: item.subLinks?.filter(userHasPermission).map((sub:any) => ({
             ...sub,
             variant: pathname === sub.href ? "default" : "ghost"
           }))

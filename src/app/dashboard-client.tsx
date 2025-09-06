@@ -80,14 +80,13 @@ export function DashboardClient({ initialDashboardData, initialExpiringContracts
 
   const getVisibleKPIs = () => {
     const allKPIs = [
-      { id: 'lease', title: 'Total Properties', value: totalProperties, change: 'buildings and lands', icon: <Home className="h-6 w-6 text-muted-foreground" />, href: '/property/properties/list' },
-      { id: 'tenant', title: 'Total Tenants', value: totalTenants, change: 'currently active tenants', icon: <Users className="h-6 w-6 text-muted-foreground" />, href: '/tenancy/tenants' },
-      { id: 'lease', title: 'Vacant Units', value: `${vacantUnitsCount} / ${totalUnits}`, change: 'View all vacant units', icon: <Home className="h-6 w-6 text-muted-foreground" />, href: '/property/units/vacant' },
-      { id: 'lease', title: 'Vacant Rooms', value: `${vacantRoomsCount} / ${totalRooms}`, change: 'View all vacant rooms', icon: <DoorOpen className="h-6 w-6 text-muted-foreground" />, href: '/property/rooms/list' },
-      { id: 'tenant', title: 'Tenancy Expiring (30d)', value: expiringSoonCount, change: 'View tenancy contracts', icon: <FileClock className="h-6 w-6 text-muted-foreground" />, href: '/tenancy/contracts' },
-      { id: 'lease', title: 'Lease Expiring (30d)', value: leaseExpiringSoonCount, change: 'View lease contracts', icon: <FileClock className="h-6 w-6 text-muted-foreground" />, href: '/lease/contracts' },
-      { id: 'workflow', title: 'Tenant Movements', value: initialMovementHistoryCount, change: 'Total recorded relocations', icon: <Shuffle className="h-6 w-6 text-muted-foreground" />, href: '/admin/contract-continuity' },
-      { id: 'vault', title: 'Vault', value: 'Securely store and manage your credentials', change: 'Go to Vault', icon: <Lock className="h-6 w-6 text-muted-foreground" />, href: '/vault' }
+      { id: 'dashboard', title: 'Total Properties', value: totalProperties, change: 'buildings and lands', icon: <Home className="h-6 w-6 text-muted-foreground" />, href: '/property/properties/list' },
+      { id: 'dashboard', title: 'Total Tenants', value: totalTenants, change: 'currently active tenants', icon: <Users className="h-6 w-6 text-muted-foreground" />, href: '/tenancy/tenants' },
+      { id: 'dashboard', title: 'Vacant Units', value: `${vacantUnitsCount} / ${totalUnits}`, change: 'View all vacant units', icon: <Home className="h-6 w-6 text-muted-foreground" />, href: '/property/units/vacant' },
+      { id: 'dashboard', title: 'Vacant Rooms', value: `${vacantRoomsCount} / ${totalRooms}`, change: 'View all vacant rooms', icon: <DoorOpen className="h-6 w-6 text-muted-foreground" />, href: '/property/rooms/list' },
+      { id: 'dashboard', title: 'Tenancy Expiring (30d)', value: expiringSoonCount, change: 'View tenancy contracts', icon: <FileClock className="h-6 w-6 text-muted-foreground" />, href: '/tenancy/contracts' },
+      { id: 'dashboard', title: 'Lease Expiring (30d)', value: leaseExpiringSoonCount, change: 'View lease contracts', icon: <FileClock className="h-6 w-6 text-muted-foreground" />, href: '/lease/contracts' },
+      { id: 'dashboard', title: 'Tenant Movements', value: initialMovementHistoryCount, change: 'Total recorded relocations', icon: <Shuffle className="h-6 w-6 text-muted-foreground" />, href: '/admin/contract-continuity' },
     ];
 
     return allKPIs.filter(kpi => isModuleEnabled(kpi.id));

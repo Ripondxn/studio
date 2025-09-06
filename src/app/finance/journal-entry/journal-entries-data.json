@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "date": "2024-07-21",
+    "accountId": "1",
+    "accountName": "Cash",
+    "description": "Initial cash deposit",
+    "debit": 10000,
+    "credit": 0
+  },
+  {
+    "id": "2",
+    "date": "2024-07-21",
+    "accountId": "2",
+    "accountName": "Office Supplies",
+    "description": "Purchase of office supplies",
+    "debit": 500,
+    "credit": 0
+  }
+]
