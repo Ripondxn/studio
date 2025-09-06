@@ -1,6 +1,7 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/admin/access-control/page": "app/admin/access-control/page.js",
+  "/admin/profile/page": "app/admin/profile/page.js",
   "/admin/user-roles/page": "app/admin/user-roles/page.js",
   "/finance/cheque-management/page": "app/finance/cheque-management/page.js",
   "/finance/due-payments/page": "app/finance/due-payments/page.js",

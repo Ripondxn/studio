@@ -14,6 +14,12 @@
           "exportedName": "getCompanyProfile",
           "filename": "src/app/admin/company-profile/actions.ts"
         },
+        "app/admin/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/profile/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        },
         "app/admin/user-roles/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -66,6 +72,7 @@
       "layer": {
         "app/_not-found/page": "action-browser",
         "app/admin/access-control/page": "action-browser",
+        "app/admin/profile/page": "action-browser",
         "app/admin/user-roles/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/finance/due-payments/page": "action-browser",
@@ -88,6 +95,12 @@
         },
         "app/admin/access-control/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/access-control/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/access-control/module-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        },
+        "app/admin/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/profile/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
           "exportedName": "saveCompanyProfile",
           "filename": "src/app/admin/company-profile/actions.ts"
@@ -144,6 +157,7 @@
       "layer": {
         "app/_not-found/page": "rsc",
         "app/admin/access-control/page": "rsc",
+        "app/admin/profile/page": "rsc",
         "app/admin/user-roles/page": "rsc",
         "app/finance/cheque-management/page": "rsc",
         "app/finance/due-payments/page": "rsc",
@@ -170,6 +184,12 @@
           "exportedName": "checkLicenseStatus",
           "filename": "src/lib/license.ts"
         },
+        "app/admin/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/profile/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "checkLicenseStatus",
+          "filename": "src/lib/license.ts"
+        },
         "app/admin/user-roles/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -222,6 +242,7 @@
       "layer": {
         "app/_not-found/page": "action-browser",
         "app/admin/access-control/page": "action-browser",
+        "app/admin/profile/page": "action-browser",
         "app/admin/user-roles/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/finance/due-payments/page": "action-browser",
@@ -248,6 +269,12 @@
           "exportedName": "getCurrencySettings",
           "filename": "src/app/admin/currency/actions.ts"
         },
+        "app/admin/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/profile/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCurrencySettings",
+          "filename": "src/app/admin/currency/actions.ts"
+        },
         "app/admin/user-roles/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -300,6 +327,7 @@
       "layer": {
         "app/_not-found/page": "action-browser",
         "app/admin/access-control/page": "action-browser",
+        "app/admin/profile/page": "action-browser",
         "app/admin/user-roles/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/finance/due-payments/page": "action-browser",
@@ -326,6 +354,12 @@
           "exportedName": "getCombinedAccessControlData",
           "filename": "src/app/admin/access-control/actions.ts"
         },
+        "app/admin/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/profile/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCombinedAccessControlData",
+          "filename": "src/app/admin/access-control/actions.ts"
+        },
         "app/admin/user-roles/page": {
           "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -378,6 +412,7 @@
       "layer": {
         "app/_not-found/page": "action-browser",
         "app/admin/access-control/page": "action-browser",
+        "app/admin/profile/page": "action-browser",
         "app/admin/user-roles/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/finance/due-payments/page": "action-browser",
@@ -1900,6 +1935,36 @@
       },
       "filename": "src/app/vendors/bill/actions.ts",
       "exportedName": "getBillsForVendor"
+    },
+    "401a149ed193fc0250dad042db2d6275c91dca6d07": {
+      "workers": {
+        "app/admin/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/profile/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateUserProfile",
+          "filename": "src/app/admin/profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/profile/page": "action-browser"
+      },
+      "filename": "src/app/admin/profile/actions.ts",
+      "exportedName": "updateUserProfile"
+    },
+    "00e8d585c937b055c1d8985a93ccba213d87b3607e": {
+      "workers": {
+        "app/admin/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/profile/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "loadUserProfile",
+          "filename": "src/app/admin/profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/profile/page": "action-browser"
+      },
+      "filename": "src/app/admin/profile/actions.ts",
+      "exportedName": "loadUserProfile"
     }
   },
   "edge": {},
