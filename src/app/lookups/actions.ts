@@ -22,13 +22,18 @@ import { type Account } from '@/app/finance/chart-of-accounts/schema';
 
 async function readData<T>(filePath: string, defaultValue: T[] = []): Promise<T[]> {
     try {
-        await fs.access(filePath);
         const data = await fs.readFile(filePath, 'utf-8');
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            await fs.writeFile(filePath, JSON.stringify(defaultValue, null, 2), 'utf-8');
-            return defaultValue;
+            try {
+                await fs.mkdir(path.dirname(filePath), { recursive: true });
+                await fs.writeFile(filePath, JSON.stringify(defaultValue, null, 2), 'utf-8');
+                return defaultValue;
+            } catch (writeError) {
+                console.error(`Error creating file ${filePath}:`, writeError);
+                throw writeError;
+            }
         }
         throw error;
     }

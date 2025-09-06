@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { type UtilityAccount } from './schema';
-import { getAllUtilityAccounts } from './actions';
+import { getAccounts } from './actions';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, FileSpreadsheet, Printer } from 'lucide-react';
 import { AddUtilityAccountDialog } from './add-utility-account-dialog';
@@ -49,7 +49,7 @@ export function UtilityClient({ initialAccounts }: { initialAccounts: UtilityAcc
   }, []);
 
   const refreshAccounts = async () => {
-    const updatedAccounts = await getAllUtilityAccounts();
+    const updatedAccounts = await getAccounts();
     setAccounts(updatedAccounts);
   };
   

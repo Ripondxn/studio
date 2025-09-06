@@ -1,0 +1,185 @@
+{
+  "node": {
+    "00b6be478acfdf6b7794a7b34be547b3606ebfd51c": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "action-browser"
+      },
+      "exportedName": "getCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "40c9350172a0cc49767c134a7e5ed44affe0683337": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "rsc"
+      },
+      "exportedName": "saveCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "008a29e84bd260b304f797613c7c39c01029f96950": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "checkLicenseStatus",
+          "filename": "src/lib/license.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "action-browser"
+      },
+      "exportedName": "checkLicenseStatus",
+      "filename": "src/lib/license.ts"
+    },
+    "00bf02fbdbf2069a58be66f4c215b7083c555f2e0f": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCurrencySettings",
+          "filename": "src/app/admin/currency/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "action-browser"
+      },
+      "exportedName": "getCurrencySettings",
+      "filename": "src/app/admin/currency/actions.ts"
+    },
+    "00484ec9aa59cb806ed9f49233b1daa442fefc4db8": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCombinedAccessControlData",
+          "filename": "src/app/admin/access-control/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "action-browser"
+      },
+      "exportedName": "getCombinedAccessControlData",
+      "filename": "src/app/admin/access-control/actions.ts"
+    },
+    "00b1ebe317367791d5f70b764d08349bd9c02ef33c": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getRooms",
+          "filename": "src/app/property/rooms/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "rsc"
+      },
+      "exportedName": "getRooms",
+      "filename": "src/app/property/rooms/actions.ts"
+    },
+    "4023c3eb56adbb239c5560193b399ee2492bd900f0": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addRoom",
+          "filename": "src/app/property/rooms/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "rsc"
+      },
+      "exportedName": "addRoom",
+      "filename": "src/app/property/rooms/actions.ts"
+    },
+    "4044e14ab75ff70890912bfc2d3d4fafbbd833f1ca": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "importRooms",
+          "filename": "src/app/property/rooms/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "rsc"
+      },
+      "exportedName": "importRooms",
+      "filename": "src/app/property/rooms/actions.ts"
+    },
+    "4058c67745e0064e1678711947654824be147cafc2": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getRoomLookups",
+          "filename": "src/app/property/rooms/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "action-browser"
+      },
+      "exportedName": "getRoomLookups",
+      "filename": "src/app/property/rooms/actions.ts"
+    },
+    "406c1afcbb6346d0d80153380e54e1434ff763cc4c": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getRoomsForProperty",
+          "filename": "src/app/property/rooms/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "rsc"
+      },
+      "exportedName": "getRoomsForProperty",
+      "filename": "src/app/property/rooms/actions.ts"
+    },
+    "407c1163a0fb9226bb8e7d1e6e99f16cfc7c548e5c": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "deleteRoom",
+          "filename": "src/app/property/rooms/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "action-browser"
+      },
+      "exportedName": "deleteRoom",
+      "filename": "src/app/property/rooms/actions.ts"
+    },
+    "40c720ba235f2c41c6f29626d6f17db1a6984f48b2": {
+      "workers": {
+        "app/property/rooms/list/page": {
+          "moduleId": "[project]/.next-internal/server/app/property/rooms/list/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateRoom",
+          "filename": "src/app/property/rooms/actions.ts"
+        }
+      },
+      "layer": {
+        "app/property/rooms/list/page": "action-browser"
+      },
+      "exportedName": "updateRoom",
+      "filename": "src/app/property/rooms/actions.ts"
+    }
+  },
+  "edge": {}
+}

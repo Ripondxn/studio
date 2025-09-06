@@ -1,0 +1,230 @@
+{
+  "node": {
+    "00b6be478acfdf6b7794a7b34be547b3606ebfd51c": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "getCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "40c9350172a0cc49767c134a7e5ed44affe0683337": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "rsc"
+      },
+      "exportedName": "saveCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "008a29e84bd260b304f797613c7c39c01029f96950": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "checkLicenseStatus",
+          "filename": "src/lib/license.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "checkLicenseStatus",
+      "filename": "src/lib/license.ts"
+    },
+    "00bf02fbdbf2069a58be66f4c215b7083c555f2e0f": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCurrencySettings",
+          "filename": "src/app/admin/currency/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "getCurrencySettings",
+      "filename": "src/app/admin/currency/actions.ts"
+    },
+    "00484ec9aa59cb806ed9f49233b1daa442fefc4db8": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCombinedAccessControlData",
+          "filename": "src/app/admin/access-control/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "getCombinedAccessControlData",
+      "filename": "src/app/admin/access-control/actions.ts"
+    },
+    "00337bc9d50a0fee1dcbbba421c50a176318824a9f": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getStores",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "getStores",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "00a85791a9263f4c62a70736a3d3ba3acc98929e6e": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getTransactionHistory",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "getTransactionHistory",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "00f48d28fba7234dd3db669df6462f5acac6cf5367": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getAggregatedStock",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "rsc"
+      },
+      "exportedName": "getAggregatedStock",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "00f49101eb6ba63f37ac44115efcb2879c6728e42d": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getProductsForSelect",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "getProductsForSelect",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "4025ddf3c7fa1f5b8f1f7270611c4cb0fccd189900": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "deleteStockTransaction",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "deleteStockTransaction",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "40407b5223f53d4db087ebcd056e566067c6210d43": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "deleteStore",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "deleteStore",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "4077edb68deca97984f6cfe2b2eae197c28d3712cd": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "transferStock",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "transferStock",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "4083aa8dbe47948ba080f8176cf852ad12710a3d1e": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getStockForStore",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "getStockForStore",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "40b22c63b06bcdec074112767c268f793872040680": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "recordStockTransaction",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "recordStockTransaction",
+      "filename": "src/app/stores/actions.ts"
+    },
+    "40e2d08fc3143601702469366b5245c8f27397061a": {
+      "workers": {
+        "app/stores/page": {
+          "moduleId": "[project]/.next-internal/server/app/stores/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/stores/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveStore",
+          "filename": "src/app/stores/actions.ts"
+        }
+      },
+      "layer": {
+        "app/stores/page": "action-browser"
+      },
+      "exportedName": "saveStore",
+      "filename": "src/app/stores/actions.ts"
+    }
+  },
+  "edge": {}
+}
