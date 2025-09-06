@@ -1,11 +1,16 @@
+
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { auth } from '@/lib/firebase/config';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
+import { getUserByEmail } from '@/app/admin/user-roles/actions';
+import { UserRole } from '@/app/admin/user-roles/schema';
+
+interface AppUser extends User, Omit<UserRole, 'id' | 'email'> {}
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -14,16 +19,26 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-      if (user) {
-        sessionStorage.setItem('user', JSON.stringify(user));
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userProfile = await getUserByEmail(firebaseUser.email || '');
+        if (userProfile) {
+          const appUser: AppUser = {
+            ...firebaseUser,
+            ...userProfile,
+          };
+          setUser(appUser);
+          sessionStorage.setItem('user', JSON.stringify(appUser));
+        }
+      } else {
+        setUser(null);
+        sessionStorage.removeItem('user');
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();

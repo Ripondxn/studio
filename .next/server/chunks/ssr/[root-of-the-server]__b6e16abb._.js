@@ -3383,6 +3383,8 @@ module.exports = mod;
 "use strict";
 
 __turbopack_context__.s([
+    "authAdmin",
+    ()=>authAdmin,
     "firestoreAdmin",
     ()=>firestoreAdmin
 ]);
@@ -3421,6 +3423,7 @@ try {
     }
 }
 const firestoreAdmin = __TURBOPACK__imported__module__$5b$externals$5d2f$firebase$2d$admin__$5b$external$5d$__$28$firebase$2d$admin$2c$__cjs$29$__["firestore"]();
+const authAdmin = __TURBOPACK__imported__module__$5b$externals$5d2f$firebase$2d$admin__$5b$external$5d$__$28$firebase$2d$admin$2c$__cjs$29$__["auth"]();
 ;
 }),
 "[project]/src/app/tenancy/tenants/actions.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {

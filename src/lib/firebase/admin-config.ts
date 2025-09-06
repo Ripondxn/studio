@@ -43,5 +43,6 @@ try {
 }
 
 const firestoreAdmin = admin.firestore();
+const authAdmin = admin.auth();
 
-export { firestoreAdmin };
+export { firestoreAdmin, authAdmin };

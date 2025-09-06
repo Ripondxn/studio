@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, Loader2 } from 'lucide-react';
-import { handleLogin } from './actions';
+import { useAuth } from '@/context/auth-context';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -40,6 +40,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { login, user } = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -51,24 +52,18 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    
-    const result = await handleLogin(data);
-
-    if (result.success) {
-      // For demonstration purposes, storing user info in sessionStorage.
-      // In a real app, you would use a secure session management approach.
-      sessionStorage.setItem('userProfile', JSON.stringify(result.data));
-
+    try {
+      await login(data.email, data.password);
       toast({
         title: 'Login Successful',
-        description: `Welcome back, ${result.data?.name}! You're being redirected.`,
+        description: `Welcome back! You are being redirected.`,
       });
       router.push('/');
-    } else {
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: result.error,
+        description: error.message,
       });
       setIsLoading(false);
     }

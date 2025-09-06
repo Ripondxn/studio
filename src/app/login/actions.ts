@@ -34,6 +34,7 @@ export async function handleLogin(credentials: z.infer<typeof loginSchema>) {
     return { success: true, data: userProfile };
 
   } catch (error: any) {
+    console.error('Login error:', error);
     let errorMessage = 'An unexpected error occurred during login.';
 
     switch (error.code) {
@@ -44,8 +45,6 @@ export async function handleLogin(credentials: z.infer<typeof loginSchema>) {
       case 'auth/user-disabled':
         errorMessage = 'Your account is inactive. Please contact an administrator.';
         break;
-      default:
-        console.error('Login error:', error);
     }
 
     return { success: false, error: errorMessage };

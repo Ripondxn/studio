@@ -1121,6 +1121,7 @@ async function handleLogin(credentials) {
             data: userProfile
         };
     } catch (error) {
+        console.error('Login error:', error);
         let errorMessage = 'An unexpected error occurred during login.';
         switch(error.code){
             case 'auth/user-not-found':
@@ -1130,8 +1131,6 @@ async function handleLogin(credentials) {
             case 'auth/user-disabled':
                 errorMessage = 'Your account is inactive. Please contact an administrator.';
                 break;
-            default:
-                console.error('Login error:', error);
         }
         return {
             success: false,

@@ -29,15 +29,6 @@
     "lastLogin": "2024-07-25T09:00:00Z"
   },
   {
-    "id": "USR-004",
-    "name": "Super Admin",
-    "email": "superadmin@atlaspm.com",
-    "password": "superadmin",
-    "role": "Super Admin",
-    "status": "Active",
-    "lastLogin": "2024-07-29T11:00:00Z"
-  },
-  {
     "id": "USR-005",
     "name": "Developer",
     "email": "developer@atlaspm.com",
@@ -77,28 +68,6 @@
     "id": "USR-1756975402858",
     "lastLogin": "2025-09-04T08:43:22.858Z",
     "createdAt": "2025-09-04T08:43:22.858Z",
-    "createdBy": "Super Admin"
-  },
-  {
-    "name": "Tanvir",
-    "email": "Tanvir@atlaspm.com",
-    "password": "Tanvir@U",
-    "role": "User",
-    "status": "Active",
-    "id": "USR-1756975453051",
-    "lastLogin": "2025-09-04T08:44:13.051Z",
-    "createdAt": "2025-09-04T08:44:13.051Z",
-    "createdBy": "Super Admin"
-  },
-  {
-    "name": "Joynal Abedin",
-    "email": "Joynal@atlaspm.com",
-    "password": "Joynal@adm",
-    "role": "Admin",
-    "status": "Active",
-    "id": "USR-1756975728805",
-    "lastLogin": "2025-09-04T08:48:48.805Z",
-    "createdAt": "2025-09-04T08:48:48.805Z",
     "createdBy": "Super Admin"
   }
 ]

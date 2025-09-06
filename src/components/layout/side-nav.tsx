@@ -14,18 +14,8 @@ interface SideNavProps {
   setIsCollapsed: Dispatch<SetStateAction<boolean>>;
 }
 
-// A mock function to simulate checking user permissions
-// In a real app, you would have a proper RBAC check here
-const userHasPermission = (item: any) => {
-  return true;
-};
-
-
 export function SideNav({ isCollapsed, setIsCollapsed }: SideNavProps) {
   const pathname = usePathname();
-
-  // Filter nav items based on user permissions
-  const filteredNavItems = navItems.filter(item => userHasPermission(item));
 
   return (
     <div className={cn(
@@ -45,10 +35,10 @@ export function SideNav({ isCollapsed, setIsCollapsed }: SideNavProps) {
       )}
       <Nav
         isCollapsed={isCollapsed}
-        links={filteredNavItems.map((item) => ({
+        links={navItems.map((item) => ({
           ...item,
           variant: pathname.startsWith(item.href) ? "default" : "ghost",
-          subLinks: item.subLinks?.filter(userHasPermission).map((sub:any) => ({
+          subLinks: item.subLinks?.map((sub) => ({
             ...sub,
             variant: pathname === sub.href ? "default" : "ghost"
           }))

@@ -103,7 +103,7 @@ export function Nav({ links, isCollapsed }: NavProps) {
                     </span>
                   )}
                 </Link>
-                {link.subLinks && (
+                {!isCollapsed && link.subLinks && (
                   <div className="ml-7 mt-2 grid gap-1">
                     {link.subLinks.map((subLink, subIndex) => {
                       const SubLinkIcon = Icons[subLink.icon];

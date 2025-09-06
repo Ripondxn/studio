@@ -6,7 +6,8 @@ import path from 'path';
 import { z } from 'zod';
 import { userRoleSchema, UserRole } from './schema';
 import { revalidatePath } from 'next/cache';
-
+import { authAdmin } from '@/lib/firebase/admin-config';
+import * as admin from 'firebase-admin';
 
 const usersFilePath = path.join(process.cwd(), 'src/app/admin/user-roles/users.json');
 
@@ -16,7 +17,7 @@ async function readUsers(): Promise<UserRole[]> {
         return JSON.parse(data);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            return []; // Return empty array if file doesn't exist
+            return [];
         }
         throw error;
     }
@@ -30,6 +31,12 @@ export async function getUsers() {
     return await readUsers();
 }
 
+export async function getUserByEmail(email: string): Promise<UserRole | null> {
+    const allUsers = await readUsers();
+    const user = allUsers.find(u => u.email === email);
+    return user || null;
+}
+
 const addUserFormSchema = userRoleSchema.omit({ id: true, lastLogin: true });
 
 export async function addUser(userData: z.infer<typeof addUserFormSchema>, creator: { name: string }) {
@@ -39,16 +46,25 @@ export async function addUser(userData: z.infer<typeof addUserFormSchema>, creat
     }
 
     try {
+        const { email, password, ...otherUserData } = validation.data;
+
+        const userRecord = await authAdmin.createUser({
+            email: email,
+            password: password,
+            disabled: otherUserData.status !== 'active'
+        });
+
         const allUsers = await readUsers();
 
-        const userExists = allUsers.some(u => u.email === userData.email);
+        const userExists = allUsers.some(u => u.email === email);
         if (userExists) {
-            return { success: false, error: `User with email "${userData.email}" already exists.` };
+            await authAdmin.deleteUser(userRecord.uid);
+            return { success: false, error: `User with email \"${email}\" already exists.` };
         }
 
         const newUser: UserRole = {
             ...validation.data,
-            id: `USR-${Date.now()}`,
+            id: userRecord.uid,
             lastLogin: new Date().toISOString(),
             createdAt: new Date().toISOString(),
             createdBy: creator.name,
@@ -60,9 +76,15 @@ export async function addUser(userData: z.infer<typeof addUserFormSchema>, creat
         revalidatePath('/admin/user-roles');
         return { success: true, data: newUser };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to add user:', error);
-        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+        let errorMessage = 'An unknown error occurred.';
+        if (error.code === 'auth/email-already-exists') {
+            errorMessage = `The email address is already in use by another account.`;
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        return { success: false, error: errorMessage };
     }
 }
 
@@ -70,30 +92,63 @@ export async function addUser(userData: z.infer<typeof addUserFormSchema>, creat
 const updateUserFormSchema = userRoleSchema.omit({ lastLogin: true }).partial();
 
 export async function updateUser(userData: z.infer<typeof updateUserFormSchema>, modifier: { name: string }) {
-     const validation = userRoleSchema.partial().safeParse(userData);
+    const validation = userRoleSchema.partial().safeParse(userData);
     if (!validation.success) {
         return { success: false, error: 'Invalid data format.' };
     }
     
     const { id, ...dataToUpdate } = validation.data;
 
-    try {
-        const allUsers = await readUsers();
+    if (!id) {
+        return { success: false, error: 'User ID is required for an update.' };
+    }
 
-        const userIndex = allUsers.findIndex(u => u.id === id);
-        if (userIndex === -1) {
-            return { success: false, error: 'User not found.' };
-        }
-        
-        // Check if email is being changed to one that already exists
-        if (dataToUpdate.email && dataToUpdate.email !== allUsers[userIndex].email) {
-            const emailExists = allUsers.some((u, index) => index !== userIndex && u.email === dataToUpdate.email);
-            if(emailExists){
-                return { success: false, error: `Another user with email "${dataToUpdate.email}" already exists.` };
+    try {
+        let userRecord;
+        try {
+            userRecord = await authAdmin.getUser(id);
+        } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+                // User doesn't exist in Firebase, so let's create it.
+                const { email, password, status } = dataToUpdate;
+                if (!email || !password) {
+                    return { success: false, error: 'Email and password are required to create a new user.' };
+                }
+                userRecord = await authAdmin.createUser({
+                    email: email,
+                    password: password,
+                    disabled: status !== 'active'
+                });
+
+                // Replace old non-firebase ID with the new Firebase UID
+                const allUsers = await readUsers();
+                const userIndex = allUsers.findIndex(u => u.id === id);
+                if(userIndex !== -1) {
+                    allUsers[userIndex].id = userRecord.uid;
+                    await writeUsers(allUsers);
+                }
+                
+            } else {
+                throw error; // Re-throw other Firebase errors
             }
         }
 
-        // If password is not provided, keep the old one
+        const allUsers = await readUsers();
+        const userIndex = allUsers.findIndex(u => u.id === userRecord.uid || u.id === id);
+
+        if (userIndex === -1) {
+            return { success: false, error: 'User not found in local data.' };
+        }
+        
+        const firebaseUpdateData: admin.auth.UpdateRequest = {};
+        if (dataToUpdate.email) firebaseUpdateData.email = dataToUpdate.email;
+        if (dataToUpdate.password) firebaseUpdateData.password = dataToUpdate.password;
+        if (dataToUpdate.status) firebaseUpdateData.disabled = dataToUpdate.status !== 'active';
+
+        if (Object.keys(firebaseUpdateData).length > 0) {
+            await authAdmin.updateUser(userRecord.uid, firebaseUpdateData);
+        }
+        
         if (!dataToUpdate.password) {
             dataToUpdate.password = allUsers[userIndex].password;
         }
@@ -101,6 +156,7 @@ export async function updateUser(userData: z.infer<typeof updateUserFormSchema>,
         allUsers[userIndex] = { 
             ...allUsers[userIndex], 
             ...dataToUpdate,
+            id: userRecord.uid, // Ensure ID is the Firebase UID
             modifiedAt: new Date().toISOString(),
             modifiedBy: modifier.name,
         };
@@ -110,26 +166,41 @@ export async function updateUser(userData: z.infer<typeof updateUserFormSchema>,
         revalidatePath('/admin/user-roles');
         return { success: true, data: allUsers[userIndex] };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to update user:', error);
-        return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
+        let errorMessage = (error as Error).message || 'An unknown error occurred.';
+        if (error.code === 'auth/email-already-exists') {
+            errorMessage = 'The new email is already in use by another account.';
+        }
+        return { success: false, error: errorMessage };
     }
 }
 
 
 export async function deleteUser(userId: string) {
     try {
+        // First, try to delete from Firebase
+        try {
+             await authAdmin.deleteUser(userId);
+        } catch(error: any) {
+            if (error.code !== 'auth/user-not-found') {
+                throw error; // re-throw if it's not a 'user-not-found' error
+            }
+            // if user is not in firebase, we can ignore the error and proceed to delete from local data
+        }
+        
         const allUsers = await readUsers();
         const updatedUsers = allUsers.filter(u => u.id !== userId);
 
         if (allUsers.length === updatedUsers.length) {
-            return { success: false, error: 'User not found.' };
+            return { success: false, error: 'User not found in local data.' };
         }
         
         await writeUsers(updatedUsers);
         revalidatePath('/admin/user-roles');
-        return { success: true };
-    } catch (error) {
+        return { success: true, message: 'User successfully deleted.' };
+
+    } catch (error: any) {
         console.error('Failed to delete user:', error);
         return { success: false, error: (error as Error).message || 'An unknown error occurred.' };
     }
