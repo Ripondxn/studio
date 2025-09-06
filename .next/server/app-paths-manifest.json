@@ -7,6 +7,7 @@
   "/admin/workflow-settings/page": "app/admin/workflow-settings/page.js",
   "/assets/page": "app/assets/page.js",
   "/car-sales/page": "app/car-sales/page.js",
+  "/finance/banking/page": "app/finance/banking/page.js",
   "/finance/cheque-management/page": "app/finance/cheque-management/page.js",
   "/finance/due-payments/page": "app/finance/due-payments/page.js",
   "/finance/expense/page": "app/finance/expense/page.js",

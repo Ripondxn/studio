@@ -50,6 +50,12 @@
           "exportedName": "getCompanyProfile",
           "filename": "src/app/admin/company-profile/actions.ts"
         },
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        },
         "app/finance/cheque-management/page": {
           "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -210,6 +216,7 @@
         "app/admin/workflow-settings/page": "action-browser",
         "app/assets/page": "action-browser",
         "app/car-sales/page": "action-browser",
+        "app/finance/banking/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/finance/due-payments/page": "action-browser",
         "app/finance/expense/page": "action-browser",
@@ -285,6 +292,12 @@
         },
         "app/car-sales/page": {
           "moduleId": "[project]/.next-internal/server/app/car-sales/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/car-sales/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        },
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
           "exportedName": "saveCompanyProfile",
           "filename": "src/app/admin/company-profile/actions.ts"
@@ -449,6 +462,7 @@
         "app/admin/workflow-settings/page": "rsc",
         "app/assets/page": "rsc",
         "app/car-sales/page": "rsc",
+        "app/finance/banking/page": "rsc",
         "app/finance/cheque-management/page": "rsc",
         "app/finance/due-payments/page": "rsc",
         "app/finance/expense/page": "rsc",
@@ -528,6 +542,12 @@
           "exportedName": "checkLicenseStatus",
           "filename": "src/lib/license.ts"
         },
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "checkLicenseStatus",
+          "filename": "src/lib/license.ts"
+        },
         "app/finance/cheque-management/page": {
           "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -688,6 +708,7 @@
         "app/admin/workflow-settings/page": "action-browser",
         "app/assets/page": "action-browser",
         "app/car-sales/page": "action-browser",
+        "app/finance/banking/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/finance/due-payments/page": "action-browser",
         "app/finance/expense/page": "action-browser",
@@ -767,6 +788,12 @@
           "exportedName": "getCurrencySettings",
           "filename": "src/app/admin/currency/actions.ts"
         },
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCurrencySettings",
+          "filename": "src/app/admin/currency/actions.ts"
+        },
         "app/finance/cheque-management/page": {
           "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -927,6 +954,7 @@
         "app/admin/workflow-settings/page": "action-browser",
         "app/assets/page": "action-browser",
         "app/car-sales/page": "action-browser",
+        "app/finance/banking/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/finance/due-payments/page": "action-browser",
         "app/finance/expense/page": "action-browser",
@@ -1006,6 +1034,12 @@
           "exportedName": "getCombinedAccessControlData",
           "filename": "src/app/admin/access-control/actions.ts"
         },
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCombinedAccessControlData",
+          "filename": "src/app/admin/access-control/actions.ts"
+        },
         "app/finance/cheque-management/page": {
           "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -1166,6 +1200,7 @@
         "app/admin/workflow-settings/page": "action-browser",
         "app/assets/page": "action-browser",
         "app/car-sales/page": "action-browser",
+        "app/finance/banking/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/finance/due-payments/page": "action-browser",
         "app/finance/expense/page": "action-browser",
@@ -1816,6 +1851,12 @@
     },
     "006a88420b11906d11a02e60bbc1d08a3ff381a608": {
       "workers": {
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getBankAccounts",
+          "filename": "src/app/finance/banking/actions.ts"
+        },
         "app/finance/cheque-management/page": {
           "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -1830,6 +1871,7 @@
         }
       },
       "layer": {
+        "app/finance/banking/page": "action-browser",
         "app/finance/cheque-management/page": "action-browser",
         "app/page": "rsc"
       },
@@ -1838,6 +1880,12 @@
     },
     "00d3d1c13e5b326b206ba4708cc47f513877954c3a": {
       "workers": {
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getAllTransactions",
+          "filename": "src/app/finance/banking/actions.ts"
+        },
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/tenancy/contract/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/property/units/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/tenancy/tenants/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE7 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE8 => \"[project]/src/app/admin/contract-continuity/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE9 => \"[project]/src/app/finance/cheque-deposit/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE10 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE11 => \"[project]/src/app/admin/workflow-settings/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE12 => \"[project]/src/app/workflow/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -1846,6 +1894,7 @@
         }
       },
       "layer": {
+        "app/finance/banking/page": "action-browser",
         "app/page": "rsc"
       },
       "filename": "src/app/finance/banking/actions.ts",
@@ -1868,6 +1917,12 @@
     },
     "400c481d00070cb57c56ac30b3016042b9ac563f1e": {
       "workers": {
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getTransactionsForAccount",
+          "filename": "src/app/finance/banking/actions.ts"
+        },
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/tenancy/contract/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/property/units/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/tenancy/tenants/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE7 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE8 => \"[project]/src/app/admin/contract-continuity/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE9 => \"[project]/src/app/finance/cheque-deposit/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE10 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE11 => \"[project]/src/app/admin/workflow-settings/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE12 => \"[project]/src/app/workflow/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -1876,6 +1931,7 @@
         }
       },
       "layer": {
+        "app/finance/banking/page": "action-browser",
         "app/page": "rsc"
       },
       "filename": "src/app/finance/banking/actions.ts",
@@ -1920,6 +1976,12 @@
     },
     "40c681baaa6ac4134faf54796bcecb422ad060e160": {
       "workers": {
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "transferFunds",
+          "filename": "src/app/finance/banking/actions.ts"
+        },
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/tenancy/contract/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/property/units/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/tenancy/tenants/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE7 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE8 => \"[project]/src/app/admin/contract-continuity/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE9 => \"[project]/src/app/finance/cheque-deposit/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE10 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE11 => \"[project]/src/app/admin/workflow-settings/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE12 => \"[project]/src/app/workflow/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -1928,6 +1990,7 @@
         }
       },
       "layer": {
+        "app/finance/banking/page": "action-browser",
         "app/page": "rsc"
       },
       "filename": "src/app/finance/banking/actions.ts",
@@ -1935,6 +1998,12 @@
     },
     "40eadf85ff8bd172b35e07036c54b6a9cf4a6ae9cb": {
       "workers": {
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "deleteBankAccount",
+          "filename": "src/app/finance/banking/actions.ts"
+        },
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/tenancy/contract/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/property/units/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/tenancy/tenants/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE7 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE8 => \"[project]/src/app/admin/contract-continuity/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE9 => \"[project]/src/app/finance/cheque-deposit/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE10 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE11 => \"[project]/src/app/admin/workflow-settings/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE12 => \"[project]/src/app/workflow/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -1943,6 +2012,7 @@
         }
       },
       "layer": {
+        "app/finance/banking/page": "action-browser",
         "app/page": "rsc"
       },
       "filename": "src/app/finance/banking/actions.ts",
@@ -1950,6 +2020,12 @@
     },
     "606ba51a1c7455d0fac84142011d1e63ca94ea5790": {
       "workers": {
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveBankAccount",
+          "filename": "src/app/finance/banking/actions.ts"
+        },
         "app/page": {
           "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/tenancy/contract/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/property/units/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/tenancy/tenants/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE7 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE8 => \"[project]/src/app/admin/contract-continuity/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE9 => \"[project]/src/app/finance/cheque-deposit/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE10 => \"[project]/src/app/property/rooms/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE11 => \"[project]/src/app/admin/workflow-settings/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE12 => \"[project]/src/app/workflow/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -1958,6 +2034,7 @@
         }
       },
       "layer": {
+        "app/finance/banking/page": "action-browser",
         "app/page": "rsc"
       },
       "filename": "src/app/finance/banking/actions.ts",
@@ -2943,6 +3020,12 @@
     },
     "40bf7b83aadd69dd72d817b755f99ee278568979fd": {
       "workers": {
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "deletePayment",
+          "filename": "src/app/finance/payment/actions.ts"
+        },
         "app/vendors/agents/page": {
           "moduleId": "[project]/.next-internal/server/app/vendors/agents/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/vendors/agents/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE7 => \"[project]/src/app/finance/chart-of-accounts/lookups.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE8 => \"[project]/src/app/tenancy/contract/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE9 => \"[project]/src/app/tenancy/customer/invoice/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE10 => \"[project]/src/app/vendors/bill/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
@@ -2957,6 +3040,7 @@
         }
       },
       "layer": {
+        "app/finance/banking/page": "action-browser",
         "app/vendors/agents/page": "action-browser",
         "app/workflow/page": "action-browser"
       },
@@ -4566,6 +4650,21 @@
       },
       "filename": "src/app/admin/license/actions.ts",
       "exportedName": "getLicenseSettings"
+    },
+    "40206df2cbd8afbc398669667f5a8c030c15ae4731": {
+      "workers": {
+        "app/finance/banking/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/banking/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/finance/payment/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/equity/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "recordEquityTransaction",
+          "filename": "src/app/finance/equity/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/banking/page": "action-browser"
+      },
+      "filename": "src/app/finance/equity/actions.ts",
+      "exportedName": "recordEquityTransaction"
     }
   },
   "edge": {},

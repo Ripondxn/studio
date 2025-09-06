@@ -1,4 +1,20 @@
-git ignore
+# dependencies
+node_modules/
+
+# build output
+.next/
+out/
+build/
+
+# local env files
+.env.local
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Ignore large data files
 src/app/admin/developer-credit/data.json
-node_modules
