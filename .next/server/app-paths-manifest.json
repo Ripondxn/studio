@@ -14,6 +14,7 @@
   "/finance/receipt-vouchers/page": "app/finance/receipt-vouchers/page.js",
   "/landlord/page": "app/landlord/page.js",
   "/lease/contracts/page": "app/lease/contracts/page.js",
+  "/login/page": "app/login/page.js",
   "/maintenance/contracts/page": "app/maintenance/contracts/page.js",
   "/maintenance/ticket-issue/page": "app/maintenance/ticket-issue/page.js",
   "/page": "app/page.js",

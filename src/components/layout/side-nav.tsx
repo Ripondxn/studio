@@ -17,34 +17,7 @@ interface SideNavProps {
 // A mock function to simulate checking user permissions
 // In a real app, you would have a proper RBAC check here
 const userHasPermission = (item: any) => {
-  // For now, let's assume the user is a super admin, admin or accountant
-  // and has access to everything we have built.
-  const userRoles = ['super admin', 'admin', 'accountant'];
-
-  if (userRoles.includes('super admin')) {
-    return true;
-  }
-
-  if (item.subLinks) {
-    return item.subLinks.some((sub:any) => userHasPermission(sub));
-  }
-
-  // Logic to show links based on module permissions
-  switch(item.href) {
-    case "/finance/book-management": 
-      return userRoles.includes('accountant') || userRoles.includes('admin');
-    case "/finance/chart-of-accounts":
-      return userRoles.includes('accountant') || userRoles.includes('admin');
-    case "/finance/journal-entry":
-      return userRoles.includes('accountant') || userRoles.includes('admin');
-    case "/finance/expense":
-        return true;
-    case "/vault":
-        return true;
-    // Add other specific checks here
-    default: 
-      return true; // Default to show if no specific rule
-  }
+  return true;
 };
 
 

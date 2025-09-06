@@ -47,7 +47,7 @@
   "human-resource": {
     "id": "human-resource",
     "name": "Human Resource Module",
-    "enabled": false
+    "enabled": true
   },
   "rent-a-car": {
     "id": "rent-a-car",
