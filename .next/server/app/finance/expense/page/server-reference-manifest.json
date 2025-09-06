@@ -1,0 +1,185 @@
+{
+  "node": {
+    "00b6be478acfdf6b7794a7b34be547b3606ebfd51c": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "getCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "40c9350172a0cc49767c134a7e5ed44affe0683337": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "rsc"
+      },
+      "exportedName": "saveCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "008a29e84bd260b304f797613c7c39c01029f96950": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "checkLicenseStatus",
+          "filename": "src/lib/license.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "checkLicenseStatus",
+      "filename": "src/lib/license.ts"
+    },
+    "00bf02fbdbf2069a58be66f4c215b7083c555f2e0f": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCurrencySettings",
+          "filename": "src/app/admin/currency/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "getCurrencySettings",
+      "filename": "src/app/admin/currency/actions.ts"
+    },
+    "00484ec9aa59cb806ed9f49233b1daa442fefc4db8": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCombinedAccessControlData",
+          "filename": "src/app/admin/access-control/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "getCombinedAccessControlData",
+      "filename": "src/app/admin/access-control/actions.ts"
+    },
+    "40662b9e16da444fc0ea64694b13048c194a811ca7": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addEmployeeData",
+          "filename": "src/app/human-resource/employees/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "addEmployeeData",
+      "filename": "src/app/human-resource/employees/actions.ts"
+    },
+    "00975d3d750b51dd600b9f308a635e09d0710956ab": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "generateNewEmployeeId",
+          "filename": "src/app/human-resource/employees/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "generateNewEmployeeId",
+      "filename": "src/app/human-resource/employees/actions.ts"
+    },
+    "002d5724044e05bc34acc93df6ccb419a2f9d0e585": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getAllEmployees",
+          "filename": "src/app/human-resource/employees/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "getAllEmployees",
+      "filename": "src/app/human-resource/employees/actions.ts"
+    },
+    "4063e725b5725a3807f08b348753faa91b298e6004": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "deleteEmployeeData",
+          "filename": "src/app/human-resource/employees/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "deleteEmployeeData",
+      "filename": "src/app/human-resource/employees/actions.ts"
+    },
+    "6048476ff0d08b3e85d96775cf878b5a404d2168a1": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateEmployeeData",
+          "filename": "src/app/human-resource/employees/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "updateEmployeeData",
+      "filename": "src/app/human-resource/employees/actions.ts"
+    },
+    "4036d495ecd937ab35854caa7817d0416efcba0c1c": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getEmployeeDataById",
+          "filename": "src/app/human-resource/employees/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "getEmployeeDataById",
+      "filename": "src/app/human-resource/employees/actions.ts"
+    },
+    "403c6918326c756b5bb6ad0322c0c5787cdb22d82f": {
+      "workers": {
+        "app/finance/expense/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/expense/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/human-resource/employees/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getEmployeeHistory",
+          "filename": "src/app/human-resource/employees/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/expense/page": "action-browser"
+      },
+      "exportedName": "getEmployeeHistory",
+      "filename": "src/app/human-resource/employees/actions.ts"
+    }
+  },
+  "edge": {}
+}

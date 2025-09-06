@@ -1,0 +1,9 @@
+{
+  "/admin/access-control/page": "app/admin/access-control/page.js",
+  "/admin/user-roles/page": "app/admin/user-roles/page.js",
+  "/finance/cheque-management/page": "app/finance/cheque-management/page.js",
+  "/finance/expense/page": "app/finance/expense/page.js",
+  "/finance/receipt-vouchers/page": "app/finance/receipt-vouchers/page.js",
+  "/page": "app/page.js",
+  "/workflow/page": "app/workflow/page.js"
+}

@@ -1,0 +1,140 @@
+{
+  "node": {
+    "00b6be478acfdf6b7794a7b34be547b3606ebfd51c": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "action-browser"
+      },
+      "exportedName": "getCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "40c9350172a0cc49767c134a7e5ed44affe0683337": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "rsc"
+      },
+      "exportedName": "saveCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "008a29e84bd260b304f797613c7c39c01029f96950": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "checkLicenseStatus",
+          "filename": "src/lib/license.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "action-browser"
+      },
+      "exportedName": "checkLicenseStatus",
+      "filename": "src/lib/license.ts"
+    },
+    "00bf02fbdbf2069a58be66f4c215b7083c555f2e0f": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCurrencySettings",
+          "filename": "src/app/admin/currency/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "action-browser"
+      },
+      "exportedName": "getCurrencySettings",
+      "filename": "src/app/admin/currency/actions.ts"
+    },
+    "00484ec9aa59cb806ed9f49233b1daa442fefc4db8": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCombinedAccessControlData",
+          "filename": "src/app/admin/access-control/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "action-browser"
+      },
+      "exportedName": "getCombinedAccessControlData",
+      "filename": "src/app/admin/access-control/actions.ts"
+    },
+    "00f5c0f81dfebb93fc0dde01f8ad87f999a43173cc": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getUsers",
+          "filename": "src/app/admin/user-roles/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "rsc"
+      },
+      "exportedName": "getUsers",
+      "filename": "src/app/admin/user-roles/actions.ts"
+    },
+    "40f5abbabedf4017328968085c1d970756e7d526f5": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "deleteUser",
+          "filename": "src/app/admin/user-roles/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "action-browser"
+      },
+      "exportedName": "deleteUser",
+      "filename": "src/app/admin/user-roles/actions.ts"
+    },
+    "602810d73127d93c47a75b37cb1ebda73195cb9f9c": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addUser",
+          "filename": "src/app/admin/user-roles/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "action-browser"
+      },
+      "exportedName": "addUser",
+      "filename": "src/app/admin/user-roles/actions.ts"
+    },
+    "609dd347865f382aa6c68958aed5957f900ac94a42": {
+      "workers": {
+        "app/admin/user-roles/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/user-roles/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/admin/user-roles/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateUser",
+          "filename": "src/app/admin/user-roles/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/user-roles/page": "action-browser"
+      },
+      "exportedName": "updateUser",
+      "filename": "src/app/admin/user-roles/actions.ts"
+    }
+  },
+  "edge": {}
+}

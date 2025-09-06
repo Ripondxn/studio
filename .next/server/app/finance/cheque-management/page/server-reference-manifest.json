@@ -1,0 +1,260 @@
+{
+  "node": {
+    "00b6be478acfdf6b7794a7b34be547b3606ebfd51c": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "getCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "40c9350172a0cc49767c134a7e5ed44affe0683337": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveCompanyProfile",
+          "filename": "src/app/admin/company-profile/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "rsc"
+      },
+      "exportedName": "saveCompanyProfile",
+      "filename": "src/app/admin/company-profile/actions.ts"
+    },
+    "008a29e84bd260b304f797613c7c39c01029f96950": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "checkLicenseStatus",
+          "filename": "src/lib/license.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "checkLicenseStatus",
+      "filename": "src/lib/license.ts"
+    },
+    "00bf02fbdbf2069a58be66f4c215b7083c555f2e0f": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCurrencySettings",
+          "filename": "src/app/admin/currency/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "getCurrencySettings",
+      "filename": "src/app/admin/currency/actions.ts"
+    },
+    "00484ec9aa59cb806ed9f49233b1daa442fefc4db8": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCombinedAccessControlData",
+          "filename": "src/app/admin/access-control/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "getCombinedAccessControlData",
+      "filename": "src/app/admin/access-control/actions.ts"
+    },
+    "40fa0f0f6e4ca502c41ea829e3c188ad0318199c36": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getCheques",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "getCheques",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    },
+    "0083b8824699ae6ac7b832d5be692bd6b1a92de913": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getChequeBooks",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "getChequeBooks",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    },
+    "40edad29825e6598a31c485a3630fdf400b87296fb": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getChequeLeaves",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "getChequeLeaves",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    },
+    "408e5533152c2fcb2c9b26758b13ec3b4cd8609477": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addCheque",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "addCheque",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    },
+    "00d1ca97fa72f592f5eb6b08e536cb05b366dbc7d4": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getLookups",
+          "filename": "src/app/admin/lookups/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "getLookups",
+      "filename": "src/app/admin/lookups/actions.ts"
+    },
+    "704e299648a5a083f96fb7f6d6de2f3d505467c5e7": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "depositCheques",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "depositCheques",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    },
+    "006a88420b11906d11a02e60bbc1d08a3ff381a608": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getBankAccounts",
+          "filename": "src/app/finance/banking/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "getBankAccounts",
+      "filename": "src/app/finance/banking/actions.ts"
+    },
+    "4087b09237d80718e6c7722daca35c3b40e916d9fd": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "createDepositVoucher",
+          "filename": "src/app/finance/banking/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "createDepositVoucher",
+      "filename": "src/app/finance/banking/actions.ts"
+    },
+    "70a30e1e4c6d58e6b6336e829e4761825fde617445": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "returnCheque",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "returnCheque",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    },
+    "4038890961408ac9b962fcb490dafbf32f28dc4519": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "withdrawCheques",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "withdrawCheques",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    },
+    "407fb2ab47c0256e98610a300e7e0f152753db4767": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addChequeBook",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "addChequeBook",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    },
+    "40feaeab3837765cc74381ee0df7e63bbeaa0b4a76": {
+      "workers": {
+        "app/finance/cheque-management/page": {
+          "moduleId": "[project]/.next-internal/server/app/finance/cheque-management/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/admin/company-profile/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/lib/license.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/admin/currency/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/admin/access-control/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE4 => \"[project]/src/app/finance/cheque-management/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE5 => \"[project]/src/app/admin/lookups/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE6 => \"[project]/src/app/finance/banking/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateChequeBook",
+          "filename": "src/app/finance/cheque-management/actions.ts"
+        }
+      },
+      "layer": {
+        "app/finance/cheque-management/page": "action-browser"
+      },
+      "exportedName": "updateChequeBook",
+      "filename": "src/app/finance/cheque-management/actions.ts"
+    }
+  },
+  "edge": {}
+}
